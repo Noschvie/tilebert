@@ -21,7 +21,8 @@ TbView (eigene Kiosk-App): `docs/TBVIEW.md`.
   1. Version erhöhen in `plugin.cfg`, `release.cfg`, `APP_VERSION` (webvisu.py)
   2. Changelog-Eintrag ganz oben in `README.md` unter „Eigene Funktionen dieses
      Forks“ (neueste zuerst, nichts angepinnt): `- **Titel (0.20.x)** — Text`
-  3. `python3 -m py_compile config/app/bin/webvisu.py`
+  3. Englische Übersetzung nachziehen (i18n.js, günstiger Agent) – `qa/quickcheck/qc.sh pre` muss QC-S09 grün melden;
+     dann `python3 -m py_compile config/app/bin/webvisu.py`
   4. Commit `0.20.x: Titel`, push `main` und Spiegel `claude/festive-sagan-avv9if`
      (alte Installationen lesen dort `release.cfg`; Spiegel bleibt, bis alle ≥ 0.19.114 haben)
   5. Plugin-ZIP: `git archive --format=zip --prefix=loxpanelfav/ -o loxpanelfav-0.20.x.zip HEAD`

@@ -211,11 +211,13 @@ export function i18nData() {
   const set = new Set(keys);
   // verwendete Texte
   const used = new Map();   // text -> "datei:zeile"
-  const add = (t, f, line) => { t = t.replace(/\s+/g, ' ').trim(); if (t && /[A-Za-zÄÖÜäöüß]/.test(t) && !used.has(t)) used.set(t, `${f}:${line}`); };
+  // exakt: keine Trim-/Leerraum-Normalisierung (T()-Schluessel muessen Leerzeichen am Rand treffen); nur Element-Text wird wie apply() getrimmt
+  const add = (t, f, line, raw) => { if (!raw) t = t.replace(/\s+/g, ' ').trim(); if (t && /[A-Za-zÄÖÜäöüß]/.test(t) && !used.has(t)) used.set(t, `${f}:${line}`); };
   for (const f of ['config.html', 'settings.html']) {
     const t = read(`${H}/${f}`); const lineOf = i => t.slice(0, i).split('\n').length;
-    for (const m of t.matchAll(/\bT\(\s*('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")/g)) { try { add(new Function('return ' + m[1])(), f, lineOf(m.index)); } catch (e) {} }
-    for (const m of t.matchAll(/\bdata-i18n(?:-ph|-title)?="([^"]*)"/g)) add(m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"'), f, lineOf(m.index));
+    for (const m of t.matchAll(/\bT\(\s*('(?:[^'\\\n]|\\.)*'|"(?:[^"\\\n]|\\.)*")/g)) { try { add(new Function('return ' + m[1])(), f, lineOf(m.index), true); } catch (e) {} }
+    for (const m of t.matchAll(/\bdata-i18n(?:-ph|-title)?="([^"]*)"/g)) add(m[1].replace(/&amp;/g, '&').replace(/&quot;/g, '"'), f, lineOf(m.index), true);
+    for (const m of t.matchAll(/<([a-z][a-z0-9]*)\b[^>]*\bdata-i18n-html(?![-\w])(?!=)[^>]*>([\s\S]*?)<\/\1>/gi)) add(m[2].trim(), f, lineOf(m.index), true);
     for (const m of t.matchAll(/<([a-z][a-z0-9]*)\b[^>]*\bdata-i18n(?![-\w])(?!=)[^>]*>([\s\S]*?)<\/\1>/gi)) add(m[2].replace(/<[^>]+>/g, '').replace(/&amp;/g, '&').replace(/&middot;/g, '·').replace(/&lt;/g, '<').replace(/&gt;/g, '>'), f, lineOf(m.index));
   }
   return { keys, set, dup, used, regionStart: src.slice(0, a).split('\n').length };

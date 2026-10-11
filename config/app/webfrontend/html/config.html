@@ -1389,7 +1389,7 @@
             </div>
             <label class="chk" style="margin-top:12px"><input type="checkbox" id="ms_tls"><span data-i18n>Zertifikat prüfen (Gen2 mit selbstsigniertem Zertifikat: aus)</span></label>
             <div class="actions"><button class="btn" id="ms_save" data-i18n>Verbinden &amp; Speichern</button><span class="toast" id="ms_toast"></span></div>
-            <p class="note keep"><a href="/api/types?format=text" target="_blank" rel="noopener">Bausteintypen der Anlage anzeigen</a> <span>(welche Typen vorkommen und welche tilebert noch nicht unterstützt; als JSON unter /api/types)</span></p>
+            <p class="note keep"><a data-i18n href="/api/types?format=text" target="_blank" rel="noopener">Bausteintypen der Anlage anzeigen</a> <span data-i18n>(welche Typen vorkommen und welche tilebert noch nicht unterstützt; als JSON unter /api/types)</span></p>
           </div>
           <div class="card">
             <h3 data-i18n>Wetter</h3>
@@ -1538,29 +1538,29 @@
 
         <!-- Unterstützte Geräte (Referenz) -->
         <section class="spane" data-sub="supported"><div class="ovw">
-        <p class="lead">tilebert läuft auf <b>Android-Wandpanels</b> (App TbViewer per <code>adb</code>) im Zielformat <b>480×480</b>. Diese Geräte sind erprobt – 4″-Panels 1:1, höher aufgelöste oder größere per Zoom, breite Geräte als zwei Panes.</p>
-        <h3>Wandpanels · ein Pane</h3>
+        <p class="lead" data-i18n-html>tilebert läuft auf <b>Android-Wandpanels</b> (App TbViewer per <code>adb</code>) im Zielformat <b>480×480</b>. Diese Geräte sind erprobt – 4″-Panels 1:1, höher aufgelöste oder größere per Zoom, breite Geräte als zwei Panes.</p>
+        <h3 data-i18n>Wandpanels · ein Pane</h3>
         <div class="devcat">
 
           <figure>
             <div class="pane"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
-            <div class="nm">4″-Standardpanel <span class="badge ref">Referenz</span></div>
-            <div class="spec">480×480 · Android 11 / Debian 11 · WLAN oder LAN/PoE</div>
-            <div class="desc">YC-SM41P / YC-SM41xx (Portworld) &amp; baugleiche – die <b>xx</b>-Varianten auch mit <b>LAN/PoE</b> (Strom + Netzwerk über ein Kabel). 1 Pane, fix – native Auflösung. Debian + Chromium-Kiosk = primäres Ziel.</div>
+            <div class="nm" data-i18n-html>4″-Standardpanel <span class="badge ref">Referenz</span></div>
+            <div class="spec" data-i18n>480×480 · Android 11 / Debian 11 · WLAN oder LAN/PoE</div>
+            <div class="desc" data-i18n-html>YC-SM41P / YC-SM41xx (Portworld) &amp; baugleiche – die <b>xx</b>-Varianten auch mit <b>LAN/PoE</b> (Strom + Netzwerk über ein Kabel). 1 Pane, fix – native Auflösung. Debian + Chromium-Kiosk = primäres Ziel.</div>
           </figure>
 
           <figure>
             <div class="pane"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
-            <div class="nm">Sonoff NSPanel Pro 86 <span class="badge">1 Pane · Fix</span></div>
-            <div class="spec">3,95″ · 480×480 · Android</div>
-            <div class="desc">Natives Format, 1:1. Android gesperrt → App TbViewer per adb. 2 Relais onboard.</div>
+            <div class="nm" data-i18n-html>Sonoff NSPanel Pro 86 <span class="badge">1 Pane · Fix</span></div>
+            <div class="spec" data-i18n>3,95″ · 480×480 · Android</div>
+            <div class="desc" data-i18n-html>Natives Format, 1:1. Android gesperrt → App TbViewer per adb. 2 Relais onboard.</div>
           </figure>
 
           <figure>
             <div class="pane"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
-            <div class="nm">Shelly Wall Display X1i <span class="badge">1 Pane · Zoom</span></div>
-            <div class="spec">4″ · 720×720 · Android 11</div>
-            <div class="desc">Quadratisch, höher aufgelöst – das 480×480-Pane wird sauber auf 720² gezoomt.</div>
+            <div class="nm" data-i18n-html>Shelly Wall Display X1i <span class="badge">1 Pane · Zoom</span></div>
+            <div class="spec" data-i18n>4″ · 720×720 · Android 11</div>
+            <div class="desc" data-i18n-html>Quadratisch, höher aufgelöst – das 480×480-Pane wird sauber auf 720² gezoomt.</div>
           </figure>
 
           <figure class="wide">
@@ -1568,14 +1568,14 @@
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
               <span class="fpmm">76 × 120 mm</span>
             </div>
-            <div class="nm">Sonoff NSPanel Pro 120 <span class="badge">1 Pane · Zoom</span></div>
-            <div class="spec">4,7″ · Hochformat 76×120 mm</div>
-            <div class="desc">Anderer Formfaktor als die quadratischen 4″-Panels: höher als breit. Ein Pane, gezoomt.</div>
+            <div class="nm" data-i18n-html>Sonoff NSPanel Pro 120 <span class="badge">1 Pane · Zoom</span></div>
+            <div class="spec" data-i18n>4,7″ · Hochformat 76×120 mm</div>
+            <div class="desc" data-i18n-html>Anderer Formfaktor als die quadratischen 4″-Panels: höher als breit. Ein Pane, gezoomt.</div>
           </figure>
 
         </div>
 
-        <h3>Breite Wandpanels · zwei Panes</h3>
+        <h3 data-i18n>Breite Wandpanels · zwei Panes</h3>
         <div class="devcat">
 
           <figure class="wide">
@@ -1583,9 +1583,9 @@
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
             </div>
-            <div class="nm">Shelly Wall Display X2 / X2i <span class="badge">2 Panes</span></div>
-            <div class="spec">6,95″ · 87×176 mm · Android 11</div>
-            <div class="desc">Breites Gerät (~2:1): ein Gerät mit zwei 480×480-Panes nebeneinander. Wie zwei 4″-Displays in einem Rahmen.</div>
+            <div class="nm" data-i18n-html>Shelly Wall Display X2 / X2i <span class="badge">2 Panes</span></div>
+            <div class="spec" data-i18n>6,95″ · 87×176 mm · Android 11</div>
+            <div class="desc" data-i18n-html>Breites Gerät (~2:1): ein Gerät mit zwei 480×480-Panes nebeneinander. Wie zwei 4″-Displays in einem Rahmen.</div>
           </figure>
 
           <figure class="wide">
@@ -1593,14 +1593,14 @@
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
             </div>
-            <div class="nm">YC-SM55P (Portworld) <span class="badge">2 Panes · LAN/PoE</span></div>
-            <div class="spec">5,5″ · 720×1280 · Android 11 (RK3566) · PoE</div>
-            <div class="desc">5,5″-Gerät in der Klasse des Shelly X2 – zwei 480×480-Panes nebeneinander, zusätzlich mit <b>LAN/PoE</b> (Strom + Netzwerk über ein Kabel). Hoch- und Querformat möglich; der Hochformat-Feinschliff kommt später.</div>
+            <div class="nm" data-i18n-html>YC-SM55P (Portworld) <span class="badge">2 Panes · LAN/PoE</span></div>
+            <div class="spec" data-i18n>5,5″ · 720×1280 · Android 11 (RK3566) · PoE</div>
+            <div class="desc" data-i18n-html>5,5″-Gerät in der Klasse des Shelly X2 – zwei 480×480-Panes nebeneinander, zusätzlich mit <b>LAN/PoE</b> (Strom + Netzwerk über ein Kabel). Hoch- und Querformat möglich; der Hochformat-Feinschliff kommt später.</div>
           </figure>
 
         </div>
 
-        <h3>Tablets · zwei Panes</h3>
+        <h3 data-i18n>Tablets · zwei Panes</h3>
         <div class="devcat">
 
           <figure class="wide">
@@ -1608,9 +1608,9 @@
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
               <div class="miniscr"><div class="p2"><div class="p2h">Wetter</div><div class="wxr"><svg viewBox="0 0 24 24" fill="none" stroke="#5aa9e6" stroke-width="1.7" stroke-linecap="round"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.5A4 4 0 0 0 6.5 19z"/></svg><b>13°</b></div><div class="fore"><span></span><span></span><span></span><span></span></div></div></div>
             </div>
-            <div class="nm">7–8″-Tablet <span class="badge">2 Panes / Zoom</span></div>
-            <div class="spec">~1024×600 / 1280×800 · Android · iPad mini · quer</div>
-            <div class="desc">Zwei Panes (Visu + Zusatz) nebeneinander – oder Zoom auf den ganzen Schirm.</div>
+            <div class="nm" data-i18n-html>7–8″-Tablet <span class="badge">2 Panes / Zoom</span></div>
+            <div class="spec" data-i18n>~1024×600 / 1280×800 · Android · iPad mini · quer</div>
+            <div class="desc" data-i18n-html>Zwei Panes (Visu + Zusatz) nebeneinander – oder Zoom auf den ganzen Schirm.</div>
           </figure>
 
         </div>
@@ -1679,14 +1679,14 @@
       </div>
     </div>
     <div class="savebar" id="savebar">
-      <button class="btn save" id="saveBtn" title="Speichern (Strg/⌘ + S)">Speichern</button>
+      <button class="btn save" id="saveBtn" data-i18n-title="Speichern (Strg/⌘ + S)">Speichern</button>
       <span class="saveinfo" id="saveInfo"></span>
       <button class="btn ghost" id="discardBtn" hidden>Verwerfen</button>
       <span id="delSlot"></span>
       <span class="toast" id="toast"></span>
     </div>
     <a class="donate" href="https://www.paypal.com/donate/?hosted_button_id=SABJHUAP97L5L" target="_blank" rel="noopener"
-       title="Danke! Ein Kaffee – bzw. ein paar Claude-Code-Tokens – fürs Weiterentwickeln">
+       data-i18n-title="Danke! Ein Kaffee – bzw. ein paar Claude-Code-Tokens – fürs Weiterentwickeln">
       <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 2v2M14 2v2M6 2v2"/><path d="M4 8h14v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M18 9h1.5a2.5 2.5 0 0 1 0 5H18"/></svg>
       <span>Buy me Claude Code Tokens</span></a>
   </main>
@@ -2177,7 +2177,7 @@ function SYS_TABS(){ const g=GLOBAL_TABS.map(t=>({k:'g:'+t.k,label:t.k==='appear
 function renderSubtabs(){
   const tabs=subTabs(), active=rubric==='global'?'g:'+subGlob:getSub();
   const bar=$('#subtabs');
-  bar.innerHTML=tabs.map(t=>'<button class="stab'+(t.k===active?' active':'')+'" data-sub="'+t.k+'">'+esc(t.label)+'</button>').join('');
+  bar.innerHTML=tabs.map(t=>'<button class="stab'+(t.k===active?' active':'')+'" data-sub="'+t.k+'">'+esc(T(t.label))+'</button>').join('');
   bar.querySelectorAll('.stab').forEach(b=>b.onclick=()=>{
     const k=b.dataset.sub;
     if(k.indexOf('g:')===0){ goTo('global',k.slice(2)); return; }          // System -> Darstellung global
@@ -2261,7 +2261,7 @@ function bindDesign(host, getUi, redraw){
 function fontField(label,key,ui,id){
   const v=ui[key];
   return '<div class="field" style="max-width:220px"><label class="lbl">'+T(label)+'</label>'+
-    '<select id="'+id+'Sel">'+FONTS.map(f=>'<option value="'+esc(f.v)+'"'+(sameFont(v,f.v)?' selected':'')+'>'+esc(f.v===''&&rubric==='global'?T('Standard'):f.label)+'</option>').join('')+
+    '<select id="'+id+'Sel">'+FONTS.map(f=>'<option value="'+esc(f.v)+'"'+(sameFont(v,f.v)?' selected':'')+'>'+esc(f.v===''&&rubric==='global'?T('Standard'):T(f.label))+'</option>').join('')+
       '<option value="__custom"'+(customFont(v)?' selected':'')+'>Eigene…</option></select>'+
     '<input type="text" id="'+id+'Custom" value="'+esc(customFont(v)?v:'')+'" placeholder="z. B. Pacifico, cursive"'+(customFont(v)?'':' style="display:none"')+'></div>';
 }
@@ -3091,7 +3091,7 @@ function tbLibHTML(p,k){
   const usedT=new Set((tbEff[k]||[]).map(it=>it.type));
   if(tbLibTab==='widgets')
     return tabs+'<div class="liblist">'+Object.keys(SV_W).filter(t=>t!=='tile').sort((a,b)=>(usedT.has(b)?1:0)-(usedT.has(a)?1:0)).map(t=>
-      '<div class="libit wg c-'+t+(usedT.has(t)?' used':'')+'" data-new="'+t+'">'+tbIcoHtml('',WG_ICONS[t])+'<span class="lnm">'+esc(SV_W[t].label)+'</span>'+
+      '<div class="libit wg c-'+t+(usedT.has(t)?' used':'')+'" data-new="'+t+'">'+tbIcoHtml('',WG_ICONS[t])+'<span class="lnm">'+esc(T(SV_W[t].label))+'</span>'+
       '<small>'+gridMin(t,g,tbTabF()).join('×')+'</small></div>').join('')+'</div>'+
       '<div class="libhint">'+T('Widget ins Raster ziehen, dann rechts den Baustein bzw. die Quelle wählen.')+'</div>';
   const q=tbLibQ.toLowerCase();
@@ -3607,7 +3607,7 @@ function renderTileEditor(hostSel){
       colorRow('Hintergrund','bg',ov)+colorRow('Rahmen','border',ov)+
       colorRow('Icon-Farbe','iconColor',ov)+colorRow('Textfarbe','textColor',ov)+
       '<div class="frow"><label class="lbl">Schrift</label>'+
-        '<select id="tfontSel">'+FONTS.map(f=>'<option value="'+esc(f.v)+'"'+(sameFont(ov.font,f.v)?' selected':'')+'>'+esc(f.label)+'</option>').join('')+
+        '<select id="tfontSel">'+FONTS.map(f=>'<option value="'+esc(f.v)+'"'+(sameFont(ov.font,f.v)?' selected':'')+'>'+esc(T(f.label))+'</option>').join('')+
           '<option value="__custom"'+(customFont(ov.font)?' selected':'')+'>Eigene…</option></select>'+
         '<span class="tgl'+(ov.bold?' on':'')+'" id="tBold" title="Fett">B</span>'+
         '<span class="tgl it'+(ov.italic?' on':'')+'" id="tItalic" title="Kursiv">I</span></div>'+
@@ -3924,7 +3924,7 @@ async function loadSettings(){
   const m=SET.miniserver||{};
   $('#ms_host').value=m.host||''; $('#ms_user').value=m.user||'';
   $('#ms_port').value=m.port||443; $('#ms_tls').checked=!!m.verify_tls;
-  $('#ms_pass').placeholder = m.hasPass ? 'unverändert lassen' : 'Passwort eingeben';
+  $('#ms_pass').placeholder = m.hasPass ? T('unverändert lassen') : T('Passwort eingeben');
   // Tatsaechlich laufender Code-Stand - unabhaengig von der Plugin-Version,
   // die LoxBerry anzeigt (die kennt nur plugin.cfg, nicht den Docker-Build).
   // Einziger Weg, ein haengendes Build-Cache-Problem direkt sichtbar zu machen.
