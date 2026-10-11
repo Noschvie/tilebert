@@ -107,7 +107,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{d8.
 - Lichtsensor meldet erst bei Änderung; bis dahin Systemhelligkeit.
 - Offen: Lichtkurve (Stufe -> Helligkeit) am Gerät abstimmen; Kamera live nur bei Näherung (0.5).
 
-## Sensor-Optionen in der Config (Profil -> Aussehen -> Display & Nacht -> Sensoren)
+## Sensor-Optionen in der Config (Panel -> Display & Nacht -> Sensoren)
 - `ui.prox`: Bei Annäherung `wake` (Standard, Display an) | `open` (Display an + Dashboard schließen) | `off`.
 - `ui.autoBright` (false = Systemeinstellung), `ui.brightMin`/`ui.brightMax` in % (Standard 10/100).
 - Server -> Panel: `sensors {prox, auto, min, max}`; Panel -> App: `setProximityWake`, `setAutoBrightness(on,min,max)`.

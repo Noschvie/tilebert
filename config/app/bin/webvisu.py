@@ -36,7 +36,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import ssl as _ssl
-from urllib.parse import quote, unquote, urlencode, urlparse
+from urllib.parse import quote, unquote, urlencode, urlparse, urlsplit
 
 import aiohttp
 from aiohttp import WSMsgType, web
@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.4"
+APP_VERSION = "0.20.5"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -198,43 +198,43 @@ DEVICE_MODELS = {
     # Einrichtung (Konfigurator). Eigenheiten je Geraet stehen in den Tipps.
     "shelly-x2": {"label": "Shelly Wall Display X2 / X2i", "os": "android", "shelly": True, "scale": "auto",
                   "panes": 2,
-                  "tips": ["Querformat, 2 Panels nebeneinander (Profil: Panel-Größe „2 Panels“).",
-                           "TbViewer: Gerät hinzufügen → Automatisch einrichten per ADB.",
-                           "Display aus/an übernimmt TbViewer; Helligkeit regelt der Lichtsensor."]},
+                  "tips": ["Querformat, zwei Hälften nebeneinander (Panel-Format „Breit (2 Hälften)“).",
+                           "TbViewer: Gerät hinzufügen → Shelly oder Android-Tablet.",
+                           "Dashboard und Abdunkeln übernimmt TbViewer, die Helligkeit regelt der Lichtsensor."]},
     "shelly-x1": {"label": "Shelly Wall Display X1i", "os": "android", "shelly": True, "scale": "auto",
                   "panes": 1,
-                  "tips": ["720×720 – Zoom „Automatisch“ vergrößert das 480er-Raster auf den ganzen Schirm.",
-                           "Profil: Panel-Größe „1 Panel“.",
+                  "tips": ["720 × 720: Zoom „Automatisch“ vergrößert das 480er-Raster auf den ganzen Schirm.",
+                           "Panel-Format „Quadratisch“.",
                            "TbViewer per ADB (Gerät hinzufügen)."]},
     "nspro86": {"label": "Sonoff NSPanel Pro 86", "os": "android", "scale": "off", "panes": 1,
-                "tips": ["480×480 – passt 1:1, kein Zoom nötig. Profil: „1 Panel“.",
-                         "TbViewer (Kiosk-App) mit Start-URL inkl. ?device=… einrichten."]},
+                "tips": ["480 × 480: passt 1:1, kein Zoom nötig. Panel-Format „Quadratisch“.",
+                         "TbViewer mit Start-Adresse inkl. ?device=… einrichten."]},
     "nspro120": {"label": "Sonoff NSPanel Pro 120", "os": "android", "scale": "auto", "panes": 1,
-                 "tips": ["Hochformat – Zoom „Automatisch“ füllt die Breite. Profil: „1 Panel“.",
-                          "TbViewer (Kiosk-App) mit Start-URL inkl. ?device=… einrichten."]},
-    "sm41-android": {"label": "4″-Standardpanel YC-SM41 (Android)", "os": "android", "scale": "off", "panes": 1,
-                     "tips": ["480×480 – Referenzgröße, kein Zoom. Profil: „1 Panel“."]},
-    "sm41-debian": {"label": "4″-Standardpanel YC-SM41 (Debian + Agent)", "os": "linux", "scale": "off", "panes": 1,
-                    "tips": ["480×480 – Referenzgröße. Agent per SSH (Gerät hinzufügen → Linux-Panel);",
+                 "tips": ["Hochformat: Zoom „Automatisch“ füllt die Breite. Panel-Format „Quadratisch“.",
+                          "TbViewer mit Start-Adresse inkl. ?device=… einrichten."]},
+    "sm41-android": {"label": "4″-Standardgerät YC-SM41 (Android)", "os": "android", "scale": "off", "panes": 1,
+                     "tips": ["480 × 480: Referenzgröße, kein Zoom. Panel-Format „Quadratisch“."]},
+    "sm41-debian": {"label": "4″-Standardgerät YC-SM41 (Debian + Agent)", "os": "linux", "scale": "off", "panes": 1,
+                    "tips": ["480 × 480: Referenzgröße. Agent per SSH (Gerät hinzufügen → Linux-Gerät).",
                              "Display und Neustart übernimmt der Agent."]},
     "sm55": {"label": "YC-SM55P", "os": "android", "scale": "auto", "panes": 2,
-             "tips": ["720×1280 quer – Zoom „Automatisch“, Profil: „2 Panels“.",
-                      "LAN/PoE: feste IP im Router vergeben (für ADB)."]},
+             "tips": ["720 × 1280 quer: Zoom „Automatisch“, Panel-Format „Breit (2 Hälften)“.",
+                      "LAN/PoE: feste IP-Adresse im Router vergeben (für ADB)."]},
     "tablet": {"label": "Android-Tablet (7–10″)", "os": "android", "scale": "auto", "wake": True, "panes": 2,
-               "tips": ["Querformat, Profil: „2 Panels“; Zoom „Automatisch“ füllt den Schirm.",
-                        "Mit TbViewer (Kiosk-App): Display aus/an und Autostart; ohne Kiosk-App hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.",
-                        "Hochkant zeigt das Tablet ein Panel; unter 600 px Breite greift der Handy-Modus."]},
+               "tips": ["Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm.",
+                        "Mit TbViewer funktionieren Autostart und Display-Steuerung; ohne die App hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.",
+                        "Hochkant zeigt das Tablet nur eine Hälfte; unter 600 px Breite greift der Handy-Modus."]},
     "ipad": {"label": "iPad / iPad mini", "os": "browser", "scale": "auto", "wake": True, "panes": 2,
-             "tips": ["Safari: Teilen → „Zum Home-Bildschirm“ – startet ohne Adressleiste als Vollbild-App (Start-URL mit ?device=…).",
-                      "Querformat, Profil: „2 Panels“; Zoom „Automatisch“ füllt den Schirm (iPad mini ≈ 118 %).",
+             "tips": ["Safari: Teilen → „Zum Home-Bildschirm“. Startet ohne Adressleiste als Vollbild-App (Start-Adresse mit ?device=…).",
+                      "Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm (iPad mini ≈ 118 %).",
                       "Die Seite hält den Schirm wach bis zur Leerlaufzeit (Display & Nacht); danach greift die iOS-Sperre.",
                       "Für Wandbetrieb: Einstellungen → Bedienungshilfen → Geführter Zugriff (App fixieren), Automatische Sperre nach Wunsch.",
-                      "Ton (Klingel) erst nach einmaligem Antippen – iOS gibt Audio nur nach Berührung frei."]},
+                      "Ton (Klingel) erst nach einmaligem Antippen: iOS gibt Audio nur nach Berührung frei."]},
     "phone": {"label": "Smartphone", "os": "browser", "scale": "off", "panes": 1,
               "tips": ["Als App installieren: iPhone Safari → Teilen → „Zum Home-Bildschirm“, Android Chrome → Menü → „App installieren“.",
-                       "Profil: Panel-Größe „Handy“ (Tabs unten, volle Höhe); hochkant greift der Handy-Modus auch automatisch."]},
+                       "Panel-Format „Handy“ (Tabs unten, volle Höhe); hochkant greift der Handy-Modus auch automatisch."]},
     "other": {"label": "Anderes Gerät / PC-Browser", "os": "browser", "scale": "off",
-              "tips": ["Fenstergröße bestimmt die Ansicht; Zoom bei Bedarf manuell setzen."]},
+              "tips": ["Die Fenstergröße bestimmt das Format; Zoom bei Bedarf manuell setzen."]},
 }
 # Skalierung je Geraet: "off" | "auto" | Faktor. Die Visu rechnet mit festen
 # 240er Kacheln (2 Panels = 960x480); auf groesseren Schirmen (7"-Tablet,
@@ -1314,6 +1314,53 @@ def _intercom_config() -> dict:
     return cfg
 
 
+# Zugangsdaten in Kamera-URLs (user:pass@host oder ?-pwd=...): an die Config nur maskiert
+# ausliefern; beim Speichern stehen gebliebene Platzhalter durch die gespeicherten Werte ersetzen.
+URL_MASK = "\u2022" * 6
+_URL_PW_RE = re.compile(r"(?i)([?&;](?:-?pwd|-?pass|password|passwd|-?pw|pin|token|key)=)([^&#;]*)")
+
+
+_URL_UI_RE = re.compile(r"^([a-z][a-z0-9+.-]*://)([^/?#]*)@", re.I)
+
+
+def _url_origin(u: str):
+    """(Schema, Host, Port) einer URL fuer den Herkunftsvergleich; None bei Fehler."""
+    try:
+        p = urlsplit(u)
+        return (p.scheme.lower(), (p.hostname or "").lower(), p.port)
+    except ValueError:
+        return None
+
+
+def _mask_url(u: str) -> str:
+    """Passwort-Teile einer URL durch URL_MASK ersetzen (Benutzername bleibt sichtbar)."""
+    if not u:
+        return u
+    u = _URL_PW_RE.sub(lambda m: m.group(1) + (URL_MASK if m.group(2) else ""), u)
+
+    def _ui(m):
+        user, sep, _pw = m.group(2).partition(":")   # Userinfo bis zum letzten '@'; Passwort darf '@' enthalten
+        return m.group(1) + user + ":" + URL_MASK + "@" if sep else m.group(0)
+    return _URL_UI_RE.sub(_ui, u, count=1)
+
+
+def _unmask_url(new: str, old: str) -> str:
+    """Platzhalter in einer aus der Config zurueckkommenden URL durch die alten Werte ersetzen -
+    nur wenn Schema, Host und Port unveraendert sind (sonst bleibt die Maske stehen)."""
+    if not new or URL_MASK not in new or not old:
+        return new
+    o1, o2 = _url_origin(old), _url_origin(new)
+    if o1 is None or o1 != o2:
+        return new
+    olds = {m.group(1).lower(): m.group(2) for m in _URL_PW_RE.finditer(old)}
+    new = _URL_PW_RE.sub(lambda m: m.group(1) + (olds.get(m.group(1).lower(), "") if m.group(2) == URL_MASK else m.group(2)), new)
+    mo = _URL_UI_RE.match(old)
+    if mo and ":" in mo.group(2):
+        opw = mo.group(2).partition(":")[2]
+        new = re.sub(r"^([a-z][a-z0-9+.-]*://[^/:@]*):" + re.escape(URL_MASK) + "@", lambda m: m.group(1) + ":" + opw + "@", new, count=1, flags=re.I)
+    return new
+
+
 def _clean_crop(v) -> dict | None:
     """Bildausschnitt einer Kamera: Fokuspunkt x/y (0..100 %), Zoom z (1..3),
     fit "cover" (fuellen, Standard) oder "contain" (ganzes Bild), bei "contain" bg
@@ -1428,6 +1475,42 @@ def _night_config() -> dict:
     except (ValueError, OSError):
         return {}
     return cfg if isinstance(cfg, dict) else {}
+
+
+_HHMM_RE = re.compile(r"^\s*([01]?\d|2[0-3]):([0-5]\d)\s*$")
+
+
+def _hhmm_clean(v, default: str) -> str | None:
+    """'H:MM'/'HH:MM' -> 'HH:MM'. Leer/None -> default, ungueltig -> None."""
+    if v is None or str(v).strip() == "":
+        return default
+    m = _HHMM_RE.match(str(v))
+    return f"{int(m.group(1)):02d}:{m.group(2)}" if m else None
+
+
+def _hhmm_min(v: str) -> int:
+    h, _, m = v.partition(":")
+    return int(h) * 60 + int(m)
+
+
+def _clock_night(cur_min: int, frm: str, to: str) -> bool:
+    """Feste Uhrzeit: Nacht von `frm` (inkl.) bis `to` (exkl.), auch ueber
+    Mitternacht (22:00-06:30). frm == to bedeutet: nie Nacht."""
+    a, b = _hhmm_min(frm), _hhmm_min(to)
+    if a == b:
+        return False
+    return (a <= cur_min < b) if a < b else (cur_min >= a or cur_min < b)
+
+
+def _night_source(cfg: dict | None) -> str:
+    """Nachtquelle aus dem night-Block: 'loxone' | 'sun' | 'clock'.
+    Migration: ohne `source` zaehlt ein gesetzter `control` als Loxone-Quelle,
+    sonst Sonnenzeiten (bisheriges Verhalten)."""
+    cfg = cfg if isinstance(cfg, dict) else {}
+    src = cfg.get("source")
+    if src in ("loxone", "sun", "clock"):
+        return src
+    return "loxone" if str(cfg.get("control") or "").strip() else "sun"
 
 
 def _calendar_config() -> dict:
@@ -3502,11 +3585,20 @@ class App:
     def _night_now(self) -> bool:
         """Ist gerade Nacht?
 
-        Rangfolge: ein in den Einstellungen gewaehlter Betriebsmodus ("opmode:<Id>",
-        Nacht = Modus laeuft) oder Baustein (sein `active`-State = Nacht), sonst die Sonnenzeiten nach _sun_minutes() (Miniserver vor
-        Wetterdienst), zuletzt NIGHT_FROM..NIGHT_TO. Ein gewaehlter, aber nicht
-        (mehr) vorhandener Baustein faellt still auf die Sonnenzeiten zurueck."""
-        u = (self.night_cfg or {}).get("control")
+        Quelle nach night.source (_night_source): "loxone" = gewaehlter Betriebsmodus
+        ("opmode:<Id>", Nacht = Modus laeuft) oder Baustein (`active`-State),
+        "clock" = feste Uhrzeit von-bis (night.from/to, auch ueber Mitternacht),
+        "sun" = Sonnenzeiten nach _sun_minutes() (Miniserver vor Wetterdienst),
+        zuletzt NIGHT_FROM..NIGHT_TO. Ein gewaehlter, aber nicht (mehr)
+        vorhandener Baustein faellt still auf die Sonnenzeiten zurueck."""
+        cfg = self.night_cfg if isinstance(self.night_cfg, dict) else {}
+        src = _night_source(cfg)
+        now = datetime.now()
+        if src == "clock":
+            frm = _hhmm_clean(cfg.get("from"), NIGHT_FROM) or NIGHT_FROM
+            to = _hhmm_clean(cfg.get("to"), NIGHT_TO) or NIGHT_TO
+            return _clock_night(now.hour * 60 + now.minute, frm, to)
+        u = cfg.get("control") if src == "loxone" else None
         if u and str(u).startswith("opmode:"):
             r = self._opmode_active(str(u)[7:])
             if r is not None and str(u)[7:] in (self.op_modes or {}):
@@ -3515,7 +3607,6 @@ class App:
             c = self.controls.get(u)
             if c:
                 return bool(self._state(c, "active"))
-        now = datetime.now()
         sun = self._sun_minutes()
         if sun:
             cur = now.hour * 60 + now.minute
@@ -3776,9 +3867,9 @@ class App:
         try:
             ip = str(ipaddress.ip_address(ip.strip()))
         except (ValueError, AttributeError):
-            return {"ok": False, "error": "IP des Geraets unbekannt - Visu am Panel einmal öffnen"}
+            return {"ok": False, "error": "IP-Adresse des Geräts unbekannt. Öffne das Panel einmal am Gerät."}
         if not shutil.which("adb"):
-            return {"ok": False, "error": "adb fehlt im Container"}
+            return {"ok": False, "error": "adb ist auf dem Server nicht installiert"}
         apk, ver, src = await self._fully_apk()
         if apk is None:
             return {"ok": False, "error": ver, "source": src}
@@ -3786,10 +3877,10 @@ class App:
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
             if "connected" not in out or "failed" in out:
-                return {"ok": False, "error": "Panel per adb nicht erreichbar - ADB über WLAN am Panel aktiv?"}
+                return {"ok": False, "error": "Gerät per adb nicht erreichbar. Ist ADB über WLAN am Gerät eingeschaltet?"}
             code, out = await _adb("-s", target, "get-state", timeout=10)
             if out != "device":
-                return {"ok": False, "error": "adb nicht freigegeben - am Panel \"USB-Debugging zulassen\" bestätigen"}
+                return {"ok": False, "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“."}
             # -g: App-Rechte (Kamera, Mikrofon, Speicher ...) gleich erteilen; alte
             # Android-Versionen (< 6) kennen -g nicht -> ohne wiederholen.
             code, out = await _adb("-s", target, "install", "-r", "-g", str(apk), timeout=240)
@@ -3807,17 +3898,17 @@ class App:
         try:
             ip = str(ipaddress.ip_address(ip.strip()))
         except (ValueError, AttributeError):
-            return {"ok": False, "error": "IP des Geraets unbekannt - Visu am Panel einmal öffnen"}
+            return {"ok": False, "error": "IP-Adresse des Geräts unbekannt. Öffne das Panel einmal am Gerät."}
         if not shutil.which("adb"):
-            return {"ok": False, "error": "adb fehlt im Container"}
+            return {"ok": False, "error": "adb ist auf dem Server nicht installiert"}
         target = f"{ip}:5555"
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
             if "connected" not in out or "failed" in out:
-                return {"ok": False, "error": "Panel per adb nicht erreichbar - ADB über WLAN am Panel aktiv?"}
+                return {"ok": False, "error": "Gerät per adb nicht erreichbar. Ist ADB über WLAN am Gerät eingeschaltet?"}
             code, out = await _adb("-s", target, "get-state", timeout=10)
             if out != "device":
-                return {"ok": False, "error": "adb nicht freigegeben - am Panel \"USB-Debugging zulassen\" bestätigen"}
+                return {"ok": False, "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“."}
             if on is not None:
                 code, out = await _adb("-s", target, "shell", "settings", "put", "system",
                                        "sound_effects_enabled", "1" if on else "0", timeout=10)
@@ -3838,17 +3929,17 @@ class App:
         try:
             ip = str(ipaddress.ip_address(ip.strip()))
         except (ValueError, AttributeError):
-            return {"ok": False, "error": "IP des Geraets unbekannt - Visu am Panel einmal öffnen"}
+            return {"ok": False, "error": "IP-Adresse des Geräts unbekannt. Öffne das Panel einmal am Gerät."}
         if not shutil.which("adb"):
-            return {"ok": False, "error": "adb fehlt im Container"}
+            return {"ok": False, "error": "adb ist auf dem Server nicht installiert"}
         target = f"{ip}:5555"
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
             if "connected" not in out or "failed" in out:
-                return {"ok": False, "error": "Panel per adb nicht erreichbar - ADB über WLAN am Panel aktiv?"}
+                return {"ok": False, "error": "Gerät per adb nicht erreichbar. Ist ADB über WLAN am Gerät eingeschaltet?"}
             code, out = await _adb("-s", target, "get-state", timeout=10)
             if out != "device":
-                return {"ok": False, "error": "adb nicht freigegeben - am Panel \"USB-Debugging zulassen\" bestätigen"}
+                return {"ok": False, "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“."}
             if auto is True:
                 code, out = await _adb("-s", target, "shell", "settings", "put", "system", "screen_brightness_mode", "1", timeout=10)
                 if code != 0:
@@ -3881,7 +3972,7 @@ class App:
         try:
             ip = str(ipaddress.ip_address(ip.strip()))
         except (ValueError, AttributeError):
-            return {"ok": False, "error": "IP des Geraets unbekannt - Visu am Panel einmal öffnen"}
+            return {"ok": False, "error": "IP-Adresse des Geräts unbekannt. Öffne das Panel einmal am Gerät."}
         model = ((self.devices.get(device) or {}) if isinstance(self.devices.get(device), dict) else {}).get("model")
         if action == "reboot" and (DEVICE_MODELS.get(model) or {}).get("shelly"):
             # Shelly Wall Display: eigene lokale Schnittstelle (Shelly-RPC) -
@@ -3897,15 +3988,15 @@ class App:
             except (aiohttp.ClientError, asyncio.TimeoutError, OSError):
                 pass
         if not shutil.which("adb"):
-            return {"ok": False, "error": "adb fehlt im Container"}
+            return {"ok": False, "error": "adb ist auf dem Server nicht installiert"}
         target = f"{ip}:5555"
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
             if "connected" not in out or "failed" in out:
-                return {"ok": False, "error": "Panel per adb nicht erreichbar - ADB über WLAN am Panel aktiv?"}
+                return {"ok": False, "error": "Gerät per adb nicht erreichbar. Ist ADB über WLAN am Gerät eingeschaltet?"}
             code, out = await _adb("-s", target, "get-state", timeout=10)
             if out != "device":
-                return {"ok": False, "error": "adb nicht freigegeben - am Panel \"USB-Debugging zulassen\" bestätigen"}
+                return {"ok": False, "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“."}
             if action == "reboot":
                 code, out = await _adb("-s", target, "reboot", timeout=15)
                 log.info("Geraet %s (%s) per adb neu gestartet: %s", device, target, out or code)
@@ -3929,14 +4020,14 @@ class App:
         try:
             ip = str(ipaddress.ip_address(ip.strip()))
         except (ValueError, AttributeError):
-            return {"ok": False, "error": "IP des Geraets unbekannt - Visu am Panel einmal öffnen"}
+            return {"ok": False, "error": "IP-Adresse des Geräts unbekannt. Öffne das Panel einmal am Gerät."}
         if not shutil.which("adb"):
-            return {"ok": False, "error": "adb fehlt im Container"}
+            return {"ok": False, "error": "adb ist auf dem Server nicht installiert"}
         target = f"{ip}:5555"
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
             if "connected" not in out or "failed" in out:
-                return {"ok": False, "error": "Panel per adb nicht erreichbar"}
+                return {"ok": False, "error": "Gerät per adb nicht erreichbar"}
             code, out = await _adb("-s", target, "get-state", timeout=10)
             if out != "device":
                 return {"ok": False, "error": "adb nicht freigegeben"}
@@ -3953,9 +4044,9 @@ class App:
         try:
             ip = str(ipaddress.ip_address(ip.strip()))
         except (ValueError, AttributeError):
-            return {"ok": False, "error": "IP des Geräts unbekannt – Visu am Panel einmal öffnen"}
+            return {"ok": False, "error": "IP-Adresse des Geräts unbekannt. Öffne das Panel einmal am Gerät."}
         if not shutil.which("adb"):
-            return {"ok": False, "error": "adb fehlt im Container"}
+            return {"ok": False, "error": "adb ist auf dem Server nicht installiert"}
         target = f"{ip}:5555"
         parts = [f"tilebert Geräte-Log · {device} ({ip}) · {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} · Version {APP_VERSION}"]
         # Naeherungssensor 10 s mitschneiden (gleich zu Beginn - die Config bittet
@@ -3993,10 +4084,10 @@ class App:
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
             if "connected" not in out or "failed" in out:
-                return {"ok": False, "error": "Panel per adb nicht erreichbar – ADB über WLAN am Panel aktiv?"}
+                return {"ok": False, "error": "Gerät per adb nicht erreichbar. Ist ADB über WLAN am Gerät eingeschaltet?"}
             code, out = await _adb("-s", target, "get-state", timeout=10)
             if out != "device":
-                return {"ok": False, "error": "adb nicht freigegeben – am Panel „USB-Debugging zulassen“ bestätigen"}
+                return {"ok": False, "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“."}
             for title, cmd in steps:
                 code, out = await _adb("-s", target, "shell", *cmd, timeout=40)
                 parts.append(f"\n===== {title} =====\n{out[-400000:] if out else '(leer)'}")
@@ -4057,7 +4148,7 @@ class App:
                                 "ok": ok, "via": "agent"})
             else:
                 results.append({"panel": name, "profile": profile,
-                                "ok": False, "error": "Panel nicht online"})
+                                "ok": False, "error": "Gerät nicht online"})
         return results
 
     def _room_ok(self, uuid: str, prof: dict | None) -> bool:
@@ -4532,7 +4623,7 @@ class App:
         """Geraet umbenennen: Einstellungen und Steckbriefe ziehen mit; verbundene
         Visu bekommt den neuen Namen (merkt ihn sich, verbindet neu)."""
         if not new or new == old:
-            return {"ok": False, "error": "neuer Name fehlt"}
+            return {"ok": False, "error": "Neuer Name fehlt"}
         if new in self.devices or any(isinstance(e, dict) and e.get("name") == new for e in self.devinfo.values()):
             return {"ok": False, "error": "Name schon vergeben"}
         devs = {(new if k == old else k): v for k, v in self.devices.items()}
@@ -8959,7 +9050,7 @@ async def api_settings(request: web.Request) -> web.Response:
         e = ic.get(uuid) or {}
         if isinstance(e, str):
             e = {"url": e}
-        return {"url": (e.get("url") or "").strip(), "user": e.get("user", ""),
+        return {"url": _mask_url((e.get("url") or "").strip()), "user": e.get("user", ""),
                 "hasPass": bool(e.get("pass")),
                 # Ton am Panel bei Klingeln (generischer Wecker-Ton, oder eigener
                 # Upload s.u.) - je Intercom einzeln abschaltbar. Default AUS:
@@ -8975,7 +9066,7 @@ async def api_settings(request: web.Request) -> web.Response:
 
     intercoms = [{"uuid": u, "name": _clean(c.get("name")), **icv(u)}
                  for u, c in app.controls.items() if c.get("type") == "Intercom"]
-    cameras = [{"id": k, "name": str(e.get("name") or ""), "url": (e.get("url") or "").strip(),
+    cameras = [{"id": k, "name": str(e.get("name") or ""), "url": _mask_url((e.get("url") or "").strip()),
                 "user": e.get("user", ""), "hasPass": bool(e.get("pass")), "crop": _clean_crop(e.get("crop"))}
                for k, e in ic.items() if k.startswith("cam_") and isinstance(e, dict)]
     am = cfg.get("audiometa", {}) if isinstance(cfg.get("audiometa"), dict) else {}
@@ -9018,6 +9109,9 @@ async def api_settings(request: web.Request) -> web.Response:
             "ms_lat": app.ms_lat, "ms_lon": app.ms_lon, "ms_location": app.ms_location,
         },
         "night": {"control": (app.night_cfg or {}).get("control") or "",
+                  "source": _night_source(app.night_cfg),
+                  "from": _hhmm_clean((app.night_cfg or {}).get("from"), NIGHT_FROM) or NIGHT_FROM,
+                  "to": _hhmm_clean((app.night_cfg or {}).get("to"), NIGHT_TO) or NIGHT_TO,
                   "options": app.night_control_options()},
         "connected": app.client is not None,
         "nControls": len(app.controls),
@@ -9192,29 +9286,42 @@ async def api_settings_diag_clear(request: web.Request) -> web.Response:
 
 
 async def api_settings_night(request: web.Request) -> web.Response:
-    """Nacht-Ausloeser: Baustein, dessen `active`-State den Nachtmodus schaltet.
-    Leer = keiner, dann entscheiden die Sonnenzeiten."""
+    """Nachtquelle: source = loxone (Betriebsmodus/Baustein in `control`), sun
+    (Sonnenzeiten) oder clock (feste Uhrzeit `from`..`to`, HH:MM)."""
     app: App = request.app["app"]
     try:
         data = await request.json()
     except (ValueError, aiohttp.ContentTypeError):
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
+    if not isinstance(data, dict):
+        return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
+    src = str(data.get("source") or "").strip()
+    if src and src not in ("loxone", "sun", "clock"):
+        return web.json_response({"ok": False, "error": "Unbekannte Nachtquelle"}, status=400)
     u = str(data.get("control") or "").strip()
+    # Auswahl bleibt bei sun/clock gespeichert (Rueckwechsel), wirkt nur bei source loxone
     if u.startswith("opmode:"):
         if u[7:] not in app.op_modes:
             return web.json_response({"ok": False, "error": "Betriebsmodus nicht gefunden"}, status=400)
     elif u and u not in app.controls:
         return web.json_response({"ok": False, "error": "Baustein nicht gefunden"}, status=400)
+    frm = _hhmm_clean(data.get("from"), NIGHT_FROM)
+    to = _hhmm_clean(data.get("to"), NIGHT_TO)
+    if frm is None or to is None:
+        return web.json_response({"ok": False, "error": "Uhrzeit bitte als HH:MM angeben"}, status=400)
     cfg = _load_cfg()
     night = dict(cfg.get("night", {}) if isinstance(cfg.get("night"), dict) else {})
     night["control"] = u
+    if src:
+        night["source"] = src
+    night["from"], night["to"] = frm, to
     cfg["night"] = night
     try:
         _write_cfg(cfg)
     except OSError as err:
         return web.json_response({"ok": False, "error": str(err)}, status=500)
     app.night_cfg = _night_config()
-    log.info("Nacht-Ausloeser gespeichert: %s", u or "(keiner -> Sonnenzeiten)")
+    log.info("Nachtquelle gespeichert: %s (%s, %s-%s)", _night_source(app.night_cfg), u or "-", frm, to)
     return web.json_response({"ok": True})
 
 
@@ -9264,7 +9371,9 @@ async def api_settings_intercom(request: web.Request) -> web.Response:
             continue
         cur = ic.get(uuid)
         cur = dict(cur) if isinstance(cur, dict) else ({"url": cur} if isinstance(cur, str) else {})
-        url, user = str(e.get("url", "")).strip(), str(e.get("user", "")).strip()
+        url, user = _unmask_url(str(e.get("url", "")).strip(), cur.get("url", "")), str(e.get("user", "")).strip()
+        if URL_MASK in url:
+            return web.json_response({"ok": False, "error": "Adresse geändert – bitte Passwort neu eingeben"}, status=400)
         # Passwort nur fuer dieselbe URL/denselben Benutzer behalten - sonst
         # ginge das gespeicherte Kamera-Passwort an eine neu eingetragene Adresse.
         if (url, user) != (cur.get("url"), cur.get("user", "")):
@@ -9298,10 +9407,12 @@ async def api_settings_intercom(request: web.Request) -> web.Response:
             cid = str(e.get("id") or "")
             if not re.match(r"^cam_[a-z0-9]{4,16}$", cid):
                 cid = "cam_" + os.urandom(4).hex()
-            url, user = str(e.get("url", "")).strip(), str(e.get("user", "")).strip()
+            cur = ic.get(cid) if isinstance(ic.get(cid), dict) else {}
+            url, user = _unmask_url(str(e.get("url", "")).strip(), cur.get("url", "")), str(e.get("user", "")).strip()
+            if URL_MASK in url:
+                return web.json_response({"ok": False, "error": "Adresse geändert – bitte Passwort neu eingeben"}, status=400)
             if not url:
                 continue
-            cur = ic.get(cid) if isinstance(ic.get(cid), dict) else {}
             ent = {"name": str(e.get("name") or "Kamera").strip()[:40], "url": url, "user": user}
             cr = _clean_crop(e.get("crop")) if "crop" in e else _clean_crop(cur.get("crop"))
             if cr:
@@ -9374,7 +9485,7 @@ async def api_settings_intercom_sound(request: web.Request) -> web.Response:
                     f.close()
                     dest.unlink(missing_ok=True)
                     return web.json_response(
-                        {"ok": False, "error": "Datei zu groß (max. 5 MB)"}, status=400)
+                        {"ok": False, "error": "Datei zu groß (höchstens 5 MB)"}, status=400)
                 f.write(chunk)
     except OSError as err:
         return web.json_response({"ok": False, "error": str(err)}, status=500)
@@ -9559,9 +9670,9 @@ async def api_agent_announce(request: web.Request) -> web.Response:
         ip = str(ipaddress.ip_address(ip))
         port = int(d.get("port") or 8130)
     except (ValueError, TypeError):
-        return web.json_response({"ok": False, "error": "ungueltige ip/port"}, status=400)
+        return web.json_response({"ok": False, "error": "Ungültige IP-Adresse oder ungültiger Port"}, status=400)
     if not 1 <= port <= 65535:
-        return web.json_response({"ok": False, "error": "ungueltiger port"}, status=400)
+        return web.json_response({"ok": False, "error": "Ungültiger Port"}, status=400)
     now = time.time()
     for k in [k for k, v in app.agents.items() if now - v["ts"] > 600]:
         del app.agents[k]   # verwaiste Eintraege aufraeumen (api_agents zeigt sie ohnehin nicht)
@@ -9594,7 +9705,7 @@ async def api_agent_command(request: web.Request) -> web.Response:
     action = str(d.get("action", ""))
     a = app.agents.get(ip)
     if not a:
-        return web.json_response({"ok": False, "error": "Panel nicht bekannt"}, status=404)
+        return web.json_response({"ok": False, "error": "Gerät nicht bekannt"}, status=404)
     if action not in ("start", "reload", "stop"):
         return web.json_response({"ok": False, "error": "unbekannte Aktion"}, status=400)
     host = f"[{a['ip']}]" if ":" in a["ip"] else a["ip"]   # IPv6 in URLs geklammert
@@ -9687,7 +9798,7 @@ async def api_device_switch(request: web.Request) -> web.Response:
     if not device:
         return web.json_response({"ok": False, "error": "device fehlt"}, status=400)
     if panel and panel not in app.panels:
-        return web.json_response({"ok": False, "error": "unbekanntes Profil"}, status=400)
+        return web.json_response({"ok": False, "error": "Unbekanntes Panel"}, status=400)
     n = await _push(app, {"t": "switch", "panel": panel}, "", device)
     if n:
         return web.json_response({"ok": True, "sent": n, "via": "ws"})
@@ -9697,7 +9808,7 @@ async def api_device_switch(request: web.Request) -> web.Response:
     if agent:
         ok = await app._agent_start(agent, panel)
         return web.json_response({"ok": ok, "sent": 1 if ok else 0, "via": "agent"})
-    return web.json_response({"ok": False, "sent": 0, "error": "Panel nicht online"})
+    return web.json_response({"ok": False, "sent": 0, "error": "Gerät nicht online"})
 
 
 async def api_device_name(request: web.Request) -> web.Response:
@@ -9781,7 +9892,7 @@ async def api_panel_bg(request: web.Request) -> web.Response:
     except Exception:
         return web.json_response({"ok": False, "error": "Upload fehlgeschlagen"}, status=400)
     if len(data) > _BG_MAX_BYTES:
-        return web.json_response({"ok": False, "error": "Bild zu groß (max. 12 MB)"}, status=400)
+        return web.json_response({"ok": False, "error": "Bild zu groß (höchstens 12 MB)"}, status=400)
     ext = ("jpg" if data[:3] == b"\xff\xd8\xff" else "png" if data[:8] == b"\x89PNG\r\n\x1a\n"
            else "webp" if data[:4] == b"RIFF" and data[8:12] == b"WEBP" else "")
     if not ext:
@@ -10306,22 +10417,22 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
         ip = str(ipaddress.ip_address(str(d.get("ip") or "").strip()))
         port = int(d.get("port") or 5555)
     except (ValueError, TypeError):
-        return web.json_response({"ok": False, "error": "ungueltige Panel-IP/Port"}, status=400)
+        return web.json_response({"ok": False, "error": "Ungültige IP-Adresse oder ungültiger Port"}, status=400)
     server = str(d.get("server") or "").strip()
     panel = str(d.get("panel") or "").strip()
     device = str(d.get("device") or "shelly").strip()
     if device not in ("shelly", "android"):
-        return web.json_response({"ok": False, "error": "unbekannter Geraetetyp"}, status=400)
+        return web.json_response({"ok": False, "error": "Unbekannter Gerätetyp"}, status=400)
     if not re.match(r"^[A-Za-z0-9.\-]{1,253}(:\d{1,5})?$", server):
-        return web.json_response({"ok": False, "error": "Server-Adresse fehlt/ungueltig"}, status=400)
+        return web.json_response({"ok": False, "error": "Server-Adresse fehlt oder ist ungültig"}, status=400)
     if panel and not re.match(r"^[a-z0-9-]{1,60}$", panel):
-        return web.json_response({"ok": False, "error": "ungueltige Profil-ID"}, status=400)
+        return web.json_response({"ok": False, "error": "Ungültige Panel-ID"}, status=400)
     if not 1 <= port <= 65535:
-        return web.json_response({"ok": False, "error": "ungueltiger Port"}, status=400)
+        return web.json_response({"ok": False, "error": "Ungültiger Port"}, status=400)
     if not shutil.which("adb"):
-        return web.json_response({"ok": False, "error": "adb fehlt im Container (Image neu bauen)"})
+        return web.json_response({"ok": False, "error": "adb ist auf dem Server nicht installiert (Image neu bauen)"})
     if not LAUNCHER_APK.is_file():
-        return web.json_response({"ok": False, "error": "LoxPanel-Launcher.apk fehlt im Container"})
+        return web.json_response({"ok": False, "error": "Die TbViewer-App (APK) fehlt auf dem Server"})
 
     target = f"{ip}:{port}"
     name = str(d.get("name") or "").strip()[:60]   # Geraetename -> erscheint unter Geraete
@@ -10340,12 +10451,11 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
         # "connected to" / "already connected" - sonst (z.B. "failed to connect") Abbruch.
         if not step("Verbinden", code, out, ok=("connected" in out and "failed" not in out)):
             return web.json_response({"ok": False, "steps": steps,
-                                      "error": "Panel nicht erreichbar - ADB/Entwickleroptionen am Panel aktiv?"})
+                                      "error": "Gerät nicht erreichbar. Ist ADB über WLAN am Gerät eingeschaltet?"})
         code, out = await _adb("-s", target, "get-state", timeout=10)
         if not step("Freigabe", code, out, ok=(out == "device")):
             return web.json_response({"ok": False, "steps": steps,
-                                      "error": "Am Panel \"USB-Debugging zulassen\" bestaetigen "
-                                               "(\"Immer erlauben\" anhaken) und erneut klicken."})
+                                      "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“ mit „Immer erlauben“ und klicke noch einmal."})
         # Schon gleiche/neuere Version drauf? Dann Installieren ueberspringen.
         apk_ver = _launcher_bundled_ver()   # 0 = unbekannt -> immer installieren
         code, out = await _adb("-s", target, "shell", "dumpsys", "package", LAUNCHER_PKG, timeout=15)
@@ -10378,8 +10488,8 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
         # einer Kommandozeile zusammen -> URL fuer die Shell am Panel quoten.
         code, out = await _adb("-s", target, "shell",
                                f"am start -n {LAUNCHER_PKG}/.Main --es url {shlex.quote(url)}" + (f" --es mode {display}" if display else ""), timeout=15)
-        if not step("URL eintragen", code, out, ok=(code == 0 and "rror" not in out)):
-            return web.json_response({"ok": False, "steps": steps, "error": "URL konnte nicht gesetzt werden"})
+        if not step("Start-Adresse eintragen", code, out, ok=(code == 0 and "rror" not in out)):
+            return web.json_response({"ok": False, "steps": steps, "error": "Start-Adresse konnte nicht gesetzt werden"})
     if display == "tbview" and name:   # Fully-Altlast zuruecksetzen (kein Fully-Neustart/-Nachtneustart mehr)
         app: App = request.app["app"]
         cfg = app.devices.get(name)

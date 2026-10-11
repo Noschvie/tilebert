@@ -38,14 +38,14 @@ async function cfgWalk(pg, each) {
 // META (async geladen) muss da sein: config.html:4579 liest META.deviceModels ohne Null-Pruefung (Race, siehe Doku)
 const CFG_READY = () => typeof setRubric === 'function' && typeof PANELS !== 'undefined' && PANELS.__global__ && typeof META !== 'undefined' && META;
 
-def({ id: 'QC-B02', stage: 'pre', role: P, must: true, mode: 'auto', title: 'Config/Geraete/Settings ohne pageerror; alle Rubriken und Reiter durchgeblaettert; Assistent (#ad_go) vorhanden' }, async () => {
+def({ id: 'QC-B02', stage: 'pre', role: P, must: true, mode: 'auto', title: 'Config/Geraete/Settings ohne pageerror; alle Rubriken und Reiter durchgeblaettert; Geraet-hinzufuegen-Formular (#np_go) vorhanden' }, async () => {
   const bad = []; let n = 0;
   let o = await openPage(`${LPDEV}/config`, { readyFn: CFG_READY, wait: 1500 });
   n = await cfgWalk(o.pg, () => {});
   const e = errList(o.st); if (e.length) bad.push('/config: ' + e.slice(0, 3).join('; '));
   await o.pg.evaluate(() => goTo('devices', 'panels')); await o.pg.waitForTimeout(400);
-  const wiz = await o.pg.evaluate(() => !!document.querySelector('#ad_go'));
-  if (!wiz) bad.push('Assistent #ad_go fehlt auf der Geraete-Seite');
+  const wiz = await o.pg.evaluate(() => !!document.querySelector('#np_go'));
+  if (!wiz) bad.push('Formular #np_go fehlt auf der Geraete-Seite');
   await o.close();
   o = await openPage(`${LPDEV}/config#devices`, { wait: 2500 });
   const e2 = errList(o.st); if (e2.length) bad.push('/config#devices: ' + e2.slice(0, 2).join('; '));
@@ -53,7 +53,7 @@ def({ id: 'QC-B02', stage: 'pre', role: P, must: true, mode: 'auto', title: 'Con
   o = await openPage(`${LPDEV}/settings`, { wait: 1500 });
   const e3 = errList(o.st); if (e3.length) bad.push('/settings: ' + e3.slice(0, 2).join('; '));
   await o.close();
-  return bad.length ? FAIL(bad.join(' | ')) : PASS(`${n} Ansichten, Assistent ok, 0 Fehler`);
+  return bad.length ? FAIL(bad.join(' | ')) : PASS(`${n} Ansichten, Formular ok, 0 Fehler`);
 });
 
 def({ id: 'QC-B03', stage: 'pre', role: U, must: true, mode: 'auto', title: 'Config schreibt beim Oeffnen/Navigieren nichts (alle Nicht-GET abgefangen = 0; de-DE und en-US)' }, async () => {
