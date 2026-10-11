@@ -1,0 +1,2 @@
+# Quickcheck-Routine (qa/) gehoert nicht ins Plugin-ZIP (git archive)
+qa/ export-ignore

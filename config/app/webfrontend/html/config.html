@@ -1281,7 +1281,7 @@
   .dev .ddelrow .ddel{margin-left:auto;order:2;}
   .devtools{margin:0 0 14px;}
   .devtools .dhint,.morehd small{font-size:12px;color:var(--muted);}
-  /* Weiteres: Fully-Quelle und Hinweise als abgesetzte Gruppe */
+  /* Weiteres: Hinweise als abgesetzte Gruppe */
   .devmore{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);}
   .devmore .morehd{font-family:var(--font-head);font-size:15px;font-weight:600;letter-spacing:-.01em;margin:0 0 12px;}
   .devmore>details.card{margin:0 0 12px;}
@@ -1433,17 +1433,6 @@
             <div class="actions"><button class="btn" id="dev_save" data-i18n>Speichern</button><span class="toast" id="dev_toast"></span><span class="toast" id="ag_toast"></span></div>
           </div>
           <div class="devmore"><div class="morehd" data-i18n>Weiteres</div>
-          <details class="card devhelp" id="fullySrc" hidden>
-            <summary><h3 data-i18n>Fully-Kiosk-Quelle</h3></summary>
-            <p class="note" data-i18n>Woher „Fully installieren“ die App holt: eigene Datei → eigene Adresse → offizielle Seite.</p>
-            <div class="note" id="fs_info">…</div>
-            <div class="field" style="max-width:none;margin-top:10px"><label class="lbl" data-i18n>Eigene Adresse (Download-Seite oder direkter .apk-Link, leer = offizielle Seite)</label>
-              <input type="text" id="fs_url" placeholder="https://www.fully-kiosk.com/en/" autocomplete="off"></div>
-            <div class="actions"><button class="btn" id="fs_save" type="button" data-i18n>Adresse speichern</button>
-              <label class="btn ghost" style="cursor:pointer"><input type="file" id="fs_file" accept=".apk,application/vnd.android.package-archive" hidden><span data-i18n>Eigene APK hochladen</span></label>
-              <button class="btn del" id="fs_del" type="button" hidden data-i18n>Eigene APK entfernen</button>
-              <span class="toast" id="fs_toast"></span></div>
-          </details>
           <details class="card devhelp">
             <summary><h3 data-i18n>Hinweise</h3></summary>
             <p class="note" data-i18n><b>Gerät:</b> Daraus ergeben sich die Knöpfe „TbViewer installieren“ und „Gerät neu starten“ (Android per adb, Shelly zuerst über seine eigene Schnittstelle).</p>
@@ -1795,6 +1784,7 @@ const DEV_TABS=[
 
 async function load(){
   const r = await fetch('/api/meta'); META = await r.json();
+  if(typeof LAST_DEVS!=='undefined' && LAST_DEVS && typeof renderDeviceList==='function') renderDeviceList(LAST_DEVS);   // Geraeteliste kam vor META: Gerätetypen nachziehen
   PANELS = JSON.parse(JSON.stringify(META.panels||{}));
   if(!PANELS.default) PANELS.default = {title:'tilebert', tabs:defaultTabs(), rooms:[], cats:[], ui:{grid:2}, states:{}};   // frische Installation: 2x2 als Standard
   PANELS.__global__ = {title:'Global (alle Panels)', ui: JSON.parse(JSON.stringify((META.theme||{}).ui||{})),
@@ -1871,7 +1861,7 @@ function helpify(root){
   });
 }
 // Sofort wirkende Aktionen (nicht ueber "Speichern" unten): Nebenaktion mit kleinem Blitz (CSS .now) + title
-const NOW_SEL='#at_send,#dg_dl,#ad_go,#secSet,#secOff,#secOut,#fs_del,label.btn:has(#fs_file),.dren_go,[data-dglog],[data-act],.dbri_get,.ddel,.ic_soundrm,.ic_soundtest,#dBgDel,.ddetuse';
+const NOW_SEL='#at_send,#dg_dl,#ad_go,#secSet,#secOff,#secOut,.dren_go,[data-dglog],[data-act],.dbri_get,.ddel,.ic_soundrm,.ic_soundtest,#dBgDel,.ddetuse';
 function markNow(root){ (root||document).querySelectorAll(NOW_SEL).forEach(el=>{ if(el.classList.contains('now')) return;
   el.classList.add('now'); const t=T('Wirkt sofort – nicht über „Speichern“'); el.title=el.title?el.title+' · '+t:t; }); }
 setTimeout(()=>markNow(),400);
@@ -2121,7 +2111,6 @@ const SECTS=[
   {k:'cw', label:'Befehls-Monitoring', btn:'#cw_save'},
   {k:'ic', label:'Kameras', btn:'#ic_save', root:'section[data-sub="intercom"]'},
   {k:'dev', label:'Meine Geräte', btn:'#dev_save', root:'#dev_list'},
-  {k:'fs', label:'Fully-Kiosk-Quelle', btn:'#fs_save', root:'#fullySrc'},
   {k:'am', label:'Audioserver', btn:'#am_save'},
   {k:'cal', label:'Kalender', btn:'#cal_save', root:'section[data-sub="calendar"]'},
   {k:'nt', label:'Nachtmodus', btn:'#nt_save'},
@@ -2455,7 +2444,7 @@ function renderEditor(){
          (((p.ui||{}).nudgeX==null)?'':(p.ui||{}).nudgeX)+'" placeholder="0"></div>'+
      '</div><p class="hint">'+T('Bildschirm füllen: auf größeren Displays hochzoomen statt im 480er-Raster zu bleiben. Versatz nur nötig, wenn das Bild am Rand abgeschnitten ist.')+'</p></div>'+
      '<div class="card"><h3>'+T('Display &amp; Nacht')+'</h3>'+
-       '<p class="note">'+T('<b>Display</b> gilt Tag und Nacht: Nach der Leerlaufzeit schaltet das Panel das Display aus (TbViewer); Klingel, Wecker und Nachrichten schalten es wieder ein. Das automatische Neuladen hält die Seite auf Dauer frisch.')+'</p>'+
+       '<p class="note">'+T('<b>Display</b>: Nach der Leerlaufzeit zeigt TbViewer tagsüber das Dashboard und schaltet das Display nur nachts (Betriebsmodus) aus; Annäherung, Berührung, Klingel, Wecker und Nachrichten schalten es wieder ein. Das automatische Neuladen hält die Seite auf Dauer frisch.')+'</p>'+
        '<p class="note">'+T('<b>Nacht</b> wirkt nur, solange Nacht ist – wann das ist, legst du unter System → Darstellung → Nachtmodus fest (Auslöser-Baustein oder Sonnenuntergang bis -aufgang). Dann legt das Panel eine Abdunklung über das Bild; Antippen macht es kurz wieder hell. 0 % = dieses Panel dunkelt nachts nicht ab.')+'</p>'+
        '<div class="lbl2">'+T('Display')+'</div><div class="sizes">'+
        '<div class="field" style="max-width:220px"><label class="lbl">'+T('Ausschalten nach Leerlauf (Sek.)')+'</label>'+
@@ -4451,7 +4440,7 @@ async function loadPanelIds(){
     });
   }catch(e){ PANEL_IDS=[]; }
 }
-const TYPE_LABEL={agent:'Agent', tbview:'TbViewer', fully:'Fully Kiosk', browser:'Browser'};
+const TYPE_LABEL={agent:'Agent', tbview:'TbViewer', browser:'Browser'};
 function profSelect(cls, cur){
   return '<select class="'+cls+'"><option value="">'+T('(Standard)')+'</option>'+
     PANEL_IDS.map(id=>'<option value="'+esc(id)+'"'+(cur===id?' selected':'')+'>'+esc(id)+'</option>').join('')+'</select>';
@@ -4466,7 +4455,7 @@ const DSI={
 };
 const dsh=(ic,t)=>'<div class="dsh"><span class="dsi">'+svg(DSI[ic])+'</span>'+t+'</div>';
 // Live-Teil einer Geraetekachel, in Abschnitten: Anzeige (welche Ansicht), Steuerung
-// (Display, Neustarts, Helligkeit, Fully). Einstellungen folgen darunter (devRow).
+// (Display, Neustarts, Helligkeit). Einstellungen folgen darunter (devRow).
 // Kurz getrennt (Server-Neustart, Seite laedt neu - schwache Panels brauchen 30-40 s):
 // innerhalb von 2 min "verbindet …" statt sofort "offline".
 function devReconnecting(d){ if(!d||d.online) return false;
@@ -4486,7 +4475,6 @@ function deviceRow(d, sel){
   let ctl='';
   if(d.agent) ctl+=btn('start',T('Start'),T('Kiosk-Browser starten'),!d.connections,1)+btn('reload',T('Reload'),T('Browser neu laden'),0,1)+btn('stop',T('Stop'),T('Kiosk-Browser beenden'),0,1);
   if(disp) ctl+=btn('dispoff',T('Display aus'),'',0,1)+btn('dispon',T('Display an'),'',0,1);
-  if(has('kioskrestart')) ctl+=btn('kioskrestart',T('Fully neu starten'),T('Fully beenden und neu öffnen (per adb)'),0,1);
   if(has('reboot')) ctl+=btn('devreboot',T('Gerät neu starten'),T('Ganzes Gerät neu starten, wenn das Display hängt'),0,1);
   const extra=devExtraHTML(d,caps,off), adb=has('reboot')||has('brightness');
   // offline: Steuerung ausblenden, nur eine Zeile (wie online wieder da)
@@ -4495,9 +4483,8 @@ function deviceRow(d, sel){
           :((ctl?'<div class="drow">'+ctl+'</div>':'')+extra+
             (adb?'<div class="dhint">'+T('Per adb: ADB über WLAN muss am Gerät aktiv und für diesen Server freigegeben sein.')+'</div>':'')))+'</div>'):
     '';
-  // Wartung: Einrichtung per adb (geht auch, solange Fully noch fehlt oder nicht laeuft)
+  // Wartung: Einrichtung per adb (geht auch, solange TbViewer noch fehlt oder nicht laeuft)
   let mt='';
-  // Fully bleibt als versteckter Fallback im Server/Launcher (adb: --es mode fully), die Config bietet nur TbViewer an
   if(has('fullyinstall')) mt+=btn('launcher',T('TbViewer installieren'),T('App TbViewer (zeigt tilebert an) per adb installieren bzw. aktualisieren und die Start-URL eintragen'));
   const tbHint=(mt && /^shelly/.test(d.model||'') && d.type!=='tbview' && d.kiosk_last!=='tbview')
     ? '<div class="dhint">'+T('Shelly läuft noch nicht mit TbViewer – „TbViewer installieren“ richtet die eigene Anzeige ein (Annäherung, Helligkeit).')+'</div>' : '';
@@ -4505,11 +4492,11 @@ function deviceRow(d, sel){
     '<div class="dhint dlver">'+launcherHint(d.name)+'</div></div>'):'';
   return {view:view, ctl:ctlH, maint:maint};
 }
-// Android: Display-Helligkeit per adb; mit Fully: Link zum Fully Remote Admin (Port 2323)
+// Android: Display-Helligkeit per adb
 function devExtraHTML(d,caps,off){
   const dis=off?' disabled':'';
-  const bri=caps.indexOf('brightness')>=0, fully=d.ip&&(d.type==='fully'||caps.indexOf('kioskrestart')>=0);
-  if(!bri&&!fully) return '';
+  const bri=caps.indexOf('brightness')>=0;
+  if(!bri) return '';
   return '<div class="devx drow" data-name="'+esc(d.name)+'" data-devip="'+esc(d.ip||'')+'">'+
     (bri?(()=>{ const st=DEV_BRI[d.name]||{}, au=st.auto!==false;   // Standard: Automatik (bis der Wert gelesen ist)
       return '<div class="dbri'+(au?' auto':'')+'"><span>'+T('Helligkeit')+'</span>'+
@@ -4518,7 +4505,6 @@ function devExtraHTML(d,caps,off){
         '<b class="dbri_v">'+(au?(st.read?T('auto'):'–'):(st.pct?st.pct+' %':'–'))+'</b>'+
         '<button type="button" class="btn sm ghost dbri_get"'+dis+' title="'+T('Aktuellen Zustand vom Gerät lesen')+'">↻</button></div>'+
         '<label class="chk dsnd" title="'+T('Android spielt bei jedem Antippen eines Bedienelements einen Klick ab')+'"><input type="checkbox" class="dsnd_on"'+(DEV_SND[d.name]?' checked':'')+dis+'> '+T('Tipp-Töne')+'</label>'; })():'')+
-    (fully?'<a class="btn sm ghost'+(off?' disabled':'')+'"'+(off?' aria-disabled="true" tabindex="-1"':'')+' href="http://'+esc(d.ip)+':2323" target="_blank" rel="noopener" title="'+T('Fully Remote Admin (in Fully unter Remote Administration aktivieren)')+'">'+T('Fully Remote Admin')+' ↗</a>':'')+
   '</div>';
 }
 const DEV_LV={};   // je Geraet: {installed, bundled} - Launcher-Version (per adb gelesen)
@@ -4562,7 +4548,7 @@ async function devBrightness(row, mode){
   }catch(e){ if(v) v.textContent='–'; flash($('#ag_toast'),'Fehler: '+e,false); }
 }
 function anonRow(a, typed){
-  const info=[a.ip, a.kiosk==='fully'?'Fully Kiosk':(a.kiosk==='tbview'?'TbViewer':T('Browser')), a.profile?(T('Ansicht')+' '+a.profile):''].filter(Boolean).join(' · ');
+  const info=[a.ip, a.kiosk==='tbview'?'TbViewer':T('Browser'), a.profile?(T('Ansicht')+' '+a.profile):''].filter(Boolean).join(' · ');
   return '<div class="ag" data-anon="'+esc(a.ip)+'">'+
     '<span class="dot on"></span><span class="agn">'+T('Ohne Kennung')+'</span>'+
     '<span class="agip">'+esc(info)+'</span><span class="sp"></span>'+
@@ -4573,10 +4559,10 @@ function renderDeviceList(j){
   { const devs=(j&&j.devices)||[], any=devs.length>0||Object.keys(DEV).length>0;
     const act=$('#dev_save')&&$('#dev_save').closest('.actions'); if(act) act.style.display=any?'':'none';   // nichts zu speichern ohne Geraete
     const dtl=$('#devTools'); if(dtl) dtl.style.display=any?'':'none';
-    const fs=$('#fullySrc'); if(fs) fs.hidden=true; }   // Fully-Quelle: nur noch Fallback ohne Config-Oberflaeche
+  }
   const box=$('#ag_list'), list=$('#dev_list'); if(!box||!list) return;
   list.querySelectorAll('.dev').forEach(dv=>{ const tp=dv.querySelector('.dtips'), ms=dv.querySelector('.dev_model'); if(!tp||!ms) return;
-    const h=devTipsHTML(dv.dataset.name,(META.deviceModels||[]).find(x=>x.key===ms.value)); if(tp.innerHTML!==h) tp.innerHTML=h;
+    const h=devTipsHTML(dv.dataset.name,((META||{}).deviceModels||[]).find(x=>x.key===ms.value)); if(tp.innerHTML!==h) tp.innerHTML=h;
     const dd=dv.querySelector('.ddet'), h2=dd?devDetHTML(dv.dataset.name,ms.value):''; if(dd&&dd.innerHTML!==h2) dd.innerHTML=h2; });
   // Waehrend jemand in einer Live-Zeile tippt oder auswaehlt, nicht neu zeichnen.
   const ae=document.activeElement;
@@ -4618,31 +4604,6 @@ function renderDeviceList(j){
   });
 }
 let LAST_DEVS=null;
-// ---- Fully-Kiosk-Quelle (Anzeige, eigene Adresse, eigener Upload) ----
-function fullySrcShow(j){
-  const i=$('#fs_info'); if(!i||!j) return;
-  const up=j.upload, d=up&&new Date(up.date);
-  i.innerHTML='<b>'+T('Aktuell')+':</b> '+(j.mode==='upload'
-      ? T('Eigene hochgeladene Datei')+' ('+Math.round(up.size/1048576*10)/10+' MB, '+d.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})+')'
-      : '<a href="'+esc(j.url||j.default)+'" target="_blank" rel="noopener">'+esc(j.url||j.default)+'</a>'+(j.url?'':' ('+T('offiziell')+')'))+
-    (j.cached&&j.mode!=='upload'?' · '+T('zuletzt geladen')+': v'+esc(j.cached):'');
-  const u=$('#fs_url'); if(u && document.activeElement!==u) u.value=j.url||'';
-  const del=$('#fs_del'); if(del) del.hidden=!up;
-}
-async function fullySrcLoad(){ try{ fullySrcShow(await (await fetch('/api/kiosk/fully/source')).json()); }catch(e){} }
-if($('#fs_save')){
-  $('#fs_save').onclick=async()=>{ try{ const j=await postJson('/api/kiosk/fully/source',{url:$('#fs_url').value.trim()});
-      flash($('#fs_toast'), j.ok?T('✓ Gespeichert'):(j.error||T('Fehler')), !!j.ok); if(j.ok) fullySrcShow(j); }catch(e){ flash($('#fs_toast'),'Fehler: '+e,false); } };
-  $('#fs_file').onchange=async()=>{ const f=$('#fs_file').files[0]; if(!f) return;
-    flash($('#fs_toast'), T('Lade hoch …'), true);
-    const fd=new FormData(); fd.append('file',f);
-    try{ const j=await (await fetch('/api/kiosk/fully/upload',{method:'POST',body:fd})).json();
-      flash($('#fs_toast'), j.ok?T('✓ Eigene APK gespeichert'):(j.error||T('Fehler')), !!j.ok); if(j.ok) fullySrcShow(j); }catch(e){ flash($('#fs_toast'),'Fehler: '+e,false); }
-    $('#fs_file').value=''; };
-  $('#fs_del').onclick=async()=>{ if(!confirm(T('Eigene APK entfernen? Danach gilt wieder die Adresse.'))) return;
-    try{ const j=await (await fetch('/api/kiosk/fully/upload?delete=1',{method:'POST'})).json(); if(j.ok) fullySrcShow(j); }catch(e){} };
-  fullySrcLoad();
-}
 async function postJson(url, body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   return r.json();
@@ -4655,13 +4616,6 @@ async function deviceAction(act, name, ip, panel, devip){
     else if(act==='wsreload') j=await postJson('/api/reload',{device:name});
     else if(act==='dispoff') j=await postJson('/api/display',{device:name,on:false});
     else if(act==='dispon') j=await postJson('/api/display',{device:name,on:true});
-    else if(act==='fullyinstall'){
-      if(!confirm(T('Fully Kiosk Browser auf „')+name+T('“ installieren bzw. aktualisieren?\n\nDer Server lädt die aktuelle Version von fully-kiosk.com und installiert sie per adb. Voraussetzung: ADB über WLAN ist am Gerät aktiv und für diesen Server freigegeben. Das dauert bis zu einer Minute.'))) return;
-      flash($('#ag_toast'), T('Lade Fully und installiere per adb …'), true);
-      j=await postJson('/api/kiosk/fully',{device:name, ip:devip||''});
-      flash($('#ag_toast'), j.ok ? '✓ '+T('Fully Kiosk')+' '+(j.version||'')+' '+T('installiert') : T('Fehler: ')+(j.error||''), !!j.ok);
-      fullySrcLoad();
-      return; }
     else if(act==='launcher'){
       const shelly=/^shelly/.test((DEV[name]||{}).model||'');
       if(!confirm(T('TbViewer auf „')+name+T('“ installieren?')+'\n\n'+
@@ -4676,13 +4630,11 @@ async function deviceAction(act, name, ip, panel, devip){
       flash($('#ag_toast'), j.ok ? '✓ '+T('TbViewer eingerichtet – öffnet')+' '+(j.url||'')
                                  : T('Fehler: ')+(j.error||'')+((j.steps||[]).length?' ('+j.steps.filter(x=>!x.ok).map(x=>x.step).join(', ')+')':''), !!j.ok);
       return; }
-    else if(act==='kioskrestart'||act==='devreboot'){
-      const reb=act==='devreboot';
-      if(!confirm(reb ? T('Gerät „')+name+T('“ komplett neu starten? Das dauert etwa eine Minute.')
-                      : T('Fully Kiosk auf „')+name+T('“ neu starten? Das Panel ist ca. 10–20 s nicht bedienbar.'))) return;
+    else if(act==='devreboot'){
+      if(!confirm(T('Gerät „')+name+T('“ komplett neu starten? Das dauert etwa eine Minute.'))) return;
       flash($('#ag_toast'), T('Verbinde per adb …'), true);
-      j=await postJson('/api/kiosk/restart',{device:name, action:reb?'reboot':'app', ip:devip||''});
-      flash($('#ag_toast'), j.ok ? '✓ '+(reb?T('Gerät startet neu'):T('Fully startet neu')) : T('Fehler: ')+(j.error||''), !!j.ok);
+      j=await postJson('/api/kiosk/restart',{device:name, action:'reboot', ip:devip||''});
+      flash($('#ag_toast'), j.ok ? '✓ '+T('Gerät startet neu') : T('Fehler: ')+(j.error||''), !!j.ok);
       return; }
     else return;
     const n=(j.sent!==undefined)?j.sent:j.reloaded;
@@ -4844,7 +4796,7 @@ function devRow(name){
       '<select class="dm_prof" style="flex:1;min-width:120px">'+profOpts(p)+'</select>'+
       '<button class="btn sm del dm_del" type="button" title="'+T('Zeile entfernen')+'" aria-label="'+T('Zeile entfernen')+'">'+T('Entfernen')+'</button>'+
     '</div>').join('');
-  const models=META.deviceModels||[], mo=models.find(m=>m.key===d.model);
+  const models=(META||{}).deviceModels||[], mo=models.find(m=>m.key===d.model);
   const isNew=DEV_NEW.has(name), open=DEV_OPEN.has(name);
   // Gruppen einzeln einklappbar (Status + Anzeige offen, Rest zu); Zustand je Sitzung merken
   const grp=(g,title,inner)=>'<div class="dgrp'+(devGOpen(name,g)?' open':'')+'" data-g="'+g+'">'+
@@ -4855,9 +4807,6 @@ function devRow(name){
       '<div class="drow devhead">'+
         '<select class="dev_model" title="'+T('Welches Gerät ist das?')+'"><option value="">'+T('– Gerätetyp wählen –')+'</option>'+
           models.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===d.model?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+
-        '<label class="chk dev_fullyl" style="display:none"><input type="checkbox" class="dev_fully"'+(d.fully?' checked':'')+'> '+T('läuft mit Fully Kiosk')+'</label>'+
-        // Fully nachts neu starten (per adb, 3:05): gibt den ueber Tage gewachsenen Speicher frei. Vorgabe: Shelly an
-        '<label class="chk dev_nrl" title="'+T('Per adb um 3:05 Uhr – gibt den Speicher der Kiosk-App frei, den das nächtliche Neuladen der Seite nicht erreicht.')+'"'+(mo&&mo.os==='android'&&d.fully?'':' style="display:none"')+'><input type="checkbox" class="dev_nr"'+((d.nrestart===undefined?!!(mo&&mo.shelly):d.nrestart)?' checked':'')+'> '+T('Fully nachts neu starten')+'</label>'+
       '</div><div class="dhint">'+(d.model?T('Bestimmt, welche Steuerung unten angeboten wird.'):T('Zuerst den Gerätetyp wählen – danach erscheinen die passenden Funktionen.'))+'</div>'+
       '<div class="ddet">'+devDetHTML(name,d.model)+'</div>'+
       '<div class="dtips">'+devTipsHTML(name,mo)+'</div></div>';
@@ -4916,7 +4865,7 @@ function devDetHTML(name,model){
   const ago=t=>{ if(!t) return ''; const m=Math.round((Date.now()/1000-t)/60); return m<2?T('gerade eben'):m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' '+T('Tage'); };
   const chips=[d.hw, d.os, d.browser, d.screen&&(T('Bildschirm')+' '+d.screen), d.view&&(T('Fenster')+' '+d.view),
     d.cores?d.cores+' '+T('Kerne'):'', d.mem?d.mem+' GB':'', d.touch?T('Touch'):'', d.pwa?T('als App'):''].filter(Boolean);
-  const gm=(META.deviceModels||[]).find(m=>m.key===d.guess);
+  const gm=((META||{}).deviceModels||[]).find(m=>m.key===d.guess);
   const sug=(gm&&d.guess!==model)?'<button type="button" class="minibtn ddetuse" data-guess="'+esc(d.guess)+'">'+T('Als')+' „'+esc(gm.label)+'“ '+T('übernehmen')+'</button>':'';
   return '<div class="ddetbox"><div class="ddeth"><b>'+T('Automatisch erkannt')+'</b><small>'+(d.ip?'IP '+esc(d.ip)+' · ':'')+T('zuletzt')+' '+ago(d.last)+'</small></div>'+
     '<div class="ddetchips">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>'+
@@ -4945,7 +4894,7 @@ function devScaleOpts(cur,mo){
     ['1.1','110 %'],['1.25','125 %'],['1.5','150 %'],['2','200 %']]
     .map(([v,l])=>'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+esc(l)+'</option>').join('');
 }
-const DRIVER_PORT={fully:2323, wallpanel:2971};
+const DRIVER_PORT={wallpanel:2971};
 // Leeres Kennwortfeld: Der Server behaelt das gespeicherte Kennwort nur fuer
 // dasselbe Ziel (Treiber und Host). Dieselbe Regel hier, damit der Platzhalter
 // sagt, was beim Speichern passiert.
@@ -4959,11 +4908,10 @@ function pwHinweisZeigen(row){
 }
 function displayRow(disp, name){
   const x=disp||{driver:'',host:'',port:'',password:''};   // password: nur selbst Eingetipptes
-  // Nur mit Fully PLUS (Remote Admin) oder WallPanel noetig - daher eingeklappt, offen nur wenn eingerichtet
+  // Nur mit WallPanel noetig - daher eingeklappt, offen nur wenn eingerichtet
   return '<details class="ddwrap"'+(x.driver?' open':'')+'><summary>'+T('Erweitert: Display-Steuerung (externer Treiber)')+'</summary>'+
     '<div class="ddrow" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:8px 0 2px">'+
     '<select class="dd_drv"><option value="">'+T('keine (nur über die Seite)')+'</option>'+
-      '<option value="fully"'+(x.driver==='fully'?' selected':'')+'>Fully Kiosk (Remote Admin)</option>'+
       '<option value="wallpanel"'+(x.driver==='wallpanel'?' selected':'')+'>WallPanel (HTTP)</option></select>'+
     '<input type="text" class="dd_host" placeholder="IP" value="'+esc(x.host||'')+'" style="width:130px">'+
     '<input type="text" class="dd_port" placeholder="Port" value="'+esc(x.port||'')+'" style="width:70px">'+
@@ -4981,9 +4929,9 @@ function readDevFromDom(){
     const display=drv?{driver:drv, host:n.querySelector('.dd_host').value.trim(),
       port:parseInt(n.querySelector('.dd_port').value)||DRIVER_PORT[drv]||0,
       password:n.querySelector('.dd_pw').value}:null;
-    const model=n.querySelector('.dev_model').value, fully=n.querySelector('.dev_fully').checked, nri=n.querySelector('.dev_nr');
-    // Nachts neu starten: nur eine eigene Wahl merken, sonst gilt die Vorgabe des Geraetetyps
-    const nrestart=(nri.dataset.touched||typeof (DEV[n.dataset.name]||{}).nrestart==='boolean')?nri.checked:undefined;
+    const model=n.querySelector('.dev_model').value;
+    // fully/nrestart: nicht mehr in der Oberflaeche, bestehende Werte unveraendert durchreichen
+    const old=DEV[n.dataset.name]||{}, fully=!!old.fully, nrestart=old.nrestart;
     const sv=n.querySelector('.dev_scale').value, scale=(sv===''||sv==='off'||sv==='auto')?sv:parseFloat(sv);
     DEV[n.dataset.name]={auto:n.querySelector('.dev_auto').checked, modes, display, model, fully, nrestart, scale};
   });
@@ -5020,15 +4968,10 @@ function renderDevices(){
   if(!box._ddet) box._ddet=1, box.addEventListener('click',e=>{ const b=e.target.closest('.ddetuse'); if(!b) return; const dv=b.closest('.dev'), sel=dv&&dv.querySelector('.dev_model');
     if(!sel) return; sel.value=b.dataset.guess; sel.dispatchEvent(new Event('change',{bubbles:true})); b.remove(); });
   box.querySelectorAll('.dev_model').forEach(sel=>sel.onchange=()=>{
-    const m=(META.deviceModels||[]).find(x=>x.key===sel.value), dv=sel.closest('.dev'), l=dv.querySelector('.dev_fullyl'), dh=dv.querySelector('.ddhost');
-    const andr=!!(m&&m.os==='android');
-    const nr=dv.querySelector('.dev_nrl'); if(nr){ nr.style.display=andr&&dv.querySelector('.dev_fully').checked?'':'none';
-      const d0=DEV[dv.dataset.name]; if(!d0||typeof d0.nrestart!=='boolean') nr.querySelector('input').checked=!!(m&&m.shelly); }
+    const m=((META||{}).deviceModels||[]).find(x=>x.key===sel.value), dv=sel.closest('.dev'), dh=dv.querySelector('.ddhost');
     const zs=dv.querySelector('.dev_scale'); if(zs) zs.innerHTML=devScaleOpts(zs.value,m);
     const tp=dv.querySelector('.dtips'); if(tp) tp.innerHTML=devTipsHTML(dv.dataset.name,m);
     if(dh) dh.hidden=!dv.querySelector('.dd_drv').value; });
-  box.querySelectorAll('.dev_nr').forEach(cb=>cb.addEventListener('change',()=>{ cb.dataset.touched='1'; }));
-  box.querySelectorAll('.dev_fully').forEach(cb=>cb.addEventListener('change',()=>{ const nr=cb.closest('.dev').querySelector('.dev_nrl'); if(nr) nr.style.display=cb.checked?'':'none'; }));
   box.querySelectorAll('.dd_drv').forEach(sel=>sel.onchange=()=>{
     const row=sel.closest('.dev'), name=row.dataset.name, drv=sel.value;
     const host=row.querySelector('.dd_host'), port=row.querySelector('.dd_port');
@@ -5147,7 +5090,7 @@ $('#ad_go').onclick=async()=>{
   const btn=$('#ad_go'); btn.disabled=true; out.style.display='block'; $('#ad_done').style.display='none';
   const lines=[]; const show=()=>{ out.innerHTML=lines.map(l=>'<div>'+esc(l)+'</div>').join(''); };
   try{
-    const display='tbview';   // Fully nur noch als Fallback per adb (--es mode fully)
+    const display='tbview';
     lines.push(T('Richte Launcher per adb ein …')); show();
     const j=await postJson('/api/panel/launcher',{ip, server, panel:panel||'', device:(NP_KINDS[NP_KIND]||{}).dev||'android', name, display});
     lines.pop();

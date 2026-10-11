@@ -21,6 +21,8 @@ Namen wie Fully/LoxKiosk, damit das Panel alle gleich behandelt:
 | `setSaver(on)` | Panel meldet eigenen Schoner (Uhr); App dunkelt danach selbst |
 | `setDisplayBrightness(prozent)` | Fensterhelligkeit in % der Systemhelligkeit; `false` bei Auto-Helligkeit -> Panel dunkelt per Overlay |
 | neu: `getDeviceId()`, `getDeviceInfo()` | stabile ID/Steckbrief (Ersatz für Fully-Steckbrief) |
+| neu: `getProximity()`, `getLightLevel()` | Näherung (bool), Lichtstufe 0–16 (-1 = noch kein Wert) |
+| neu: `setAutoBrightness(an,min,max)`, `setProximityWake(an)`, `reload()` | Auto-Helligkeit (nur Shelly), Wecken per Näherung, Seite neu laden |
 | neu: Ereignis Näherung | App ruft `window.lpHost.onProximity(nah)` |
 
 ## Näherungssensor (übernehmen)

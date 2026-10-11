@@ -20,12 +20,12 @@ TbView (eigene Kiosk-App): `docs/TBVIEW.md`.
 - Release nur auf „commit“ des Nutzers, ausgeführt von einem günstigen Agenten:
   1. Version erhöhen in `plugin.cfg`, `release.cfg`, `APP_VERSION` (webvisu.py)
   2. Changelog-Eintrag ganz oben in `README.md` unter „Eigene Funktionen dieses
-     Forks“ (neueste zuerst, nichts angepinnt): `- **Titel (0.19.x)** — Text`
+     Forks“ (neueste zuerst, nichts angepinnt): `- **Titel (0.20.x)** — Text`
   3. `python3 -m py_compile config/app/bin/webvisu.py`
-  4. Commit `0.19.x: Titel`, push `main` und Spiegel `claude/festive-sagan-avv9if`
+  4. Commit `0.20.x: Titel`, push `main` und Spiegel `claude/festive-sagan-avv9if`
      (alte Installationen lesen dort `release.cfg`; Spiegel bleibt, bis alle ≥ 0.19.114 haben)
-  5. Plugin-ZIP: `git archive --format=zip --prefix=loxpanelfav/ -o loxpanelfav-0.19.x.zip HEAD`
-     nach `~/projekte/releases/`, dann Tag `v0.19.x` + GitHub-Release mit dem ZIP
+  5. Plugin-ZIP: `git archive --format=zip --prefix=loxpanelfav/ -o loxpanelfav-0.20.x.zip HEAD`
+     nach `~/projekte/releases/`, dann Tag `v0.20.x` + GitHub-Release mit dem ZIP
 - Commit-Autor: `actionhero-zz <najrefisch@googlemail.com>`.
 
 ## Android-Launcher / TbView

@@ -5896,6 +5896,7 @@ el('saver').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation
 // position:fixed-Elementen, und die Auflage wirkt wie heruntergeregelte
 // Hintergrundbeleuchtung (Weiss wird grau, nicht nur dunkler).
 const NIGHT = { on:false, dim:0, wake:20 };
+let _dpmsIdle=false;   // TbViewer: Leerlauf am Tag erreicht (Dashboard statt aus), s. armDpms
 let nightEl=null, nightWakeTimer=null;
 function nightLayer(){
   if(!nightEl){
@@ -5917,7 +5918,8 @@ function applyNight(awake){
   if(lpHost.type==='tbview'){ try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
   nightLayer().style.opacity = real ? 0 : dim/100;
 }
-function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer); applyNight(false); camNightUpdate(); }   // Nacht nur ueber den Betriebsmodus (Config)
+function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer); applyNight(false); camNightUpdate();
+  if(NIGHT.on && _dpmsIdle && kiosk()){ _dpmsIdle=false; screenOff(); } }   // Nacht beginnt im Leerlauf: jetzt aus   // Nacht nur ueber den Betriebsmodus (Config)
 function nightWake(){          // Beruehrung -> kurz voll aufhellen, dann zurueck
   if(!NIGHT.on || NIGHT.dim<=0 || NIGHT.wake<=0) return;
   clearTimeout(nightWakeTimer);
@@ -5971,7 +5973,10 @@ function wakeOn(){
 }
 function wakeOff(){ const l=_wake; _wake=null; if(l) l.release().catch(()=>{}); }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') armDpms(); });
-function armDpms(){ clearTimeout(dpmsTimer);
+// TbViewer (echtes Abschalten): tagsueber bei Leerlauf das Dashboard statt schwarz, schwarz nur nachts
+// (Betriebsmodus) oder auf Befehl. Leerlauf am Tag merkt sich _dpmsIdle - beginnt die Nacht, geht es aus.
+function dpmsDayOnly(){ return lpHost.type==='tbview' && !NIGHT.on; }
+function armDpms(){ clearTimeout(dpmsTimer); _dpmsIdle=false;
   wakeOn(); camsDark(false);
   if(DISP.agent || !(DISP.dpmsOff>0)) return;
   // Mit Kiosk-JS (Fully) direkt abschalten; sonst dem Server Leerlauf melden,
@@ -5979,7 +5984,9 @@ function armDpms(){ clearTimeout(dpmsTimer);
   // Kamera nur anhalten, wenn das Display wirklich ausgeht (Kiosk-App, screenOff).
   // Ein normaler Browser (Laptop, Tablet ohne Fully) bleibt sichtbar - dort haelt
   // nur ein tatsaechlich verborgener Tab die Kamera an (document.hidden).
-  dpmsTimer=setTimeout(()=>{ wakeOff(); if(kiosk()) screenOff(); else send({t:'idle'}); }, DISP.dpmsOff*1000); }
+  dpmsTimer=setTimeout(()=>{ wakeOff();
+    if(dpmsDayOnly()){ _dpmsIdle=true; if(!saverOn()){ goTab(tabsCfg[0]||'favoriten'); showSaver(); } return; }   // Tag: Dashboard
+    if(kiosk()) screenOff(); else send({t:'idle'}); }, DISP.dpmsOff*1000); }
 function applyDisplayCfg(msg){
   DISP.dpmsOff = (typeof msg.dpmsOff==='number' && msg.dpmsOff>0) ? msg.dpmsOff : 0;
   // Neu laden: null = nicht eingestellt (nachts um reloadAt Uhr), sonst Stunden, 0 = aus
