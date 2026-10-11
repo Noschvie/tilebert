@@ -4134,15 +4134,43 @@ g.addEventListener('touchend',e=>{
   if(dx>60 && Math.abs(dy)<45) back();
 });
 
+// Bruecken-Token (TbViewer): die App haengt ?tbtok=... an die Panel-URL. Hier einlesen, in sessionStorage
+// merken (Panel-Wechsel/Neuladen ohne Query) und aus der sichtbaren URL entfernen. Fremde iframes
+// (Web-Kacheln) kennen es nicht -> ihre Aufrufe der Bruecke bleiben wirkungslos.
+const TB_TOK=(function(){
+  let t='';
+  try{ const q=new URLSearchParams(location.search); t=q.get('tbtok')||'';
+    if(t){ try{ sessionStorage.setItem('tbtok',t); }catch(e){}
+      q.delete('tbtok'); const qs=q.toString();
+      try{ history.replaceState(history.state,'',location.pathname+(qs?'?'+qs:'')+location.hash); }catch(e){} } }catch(e){}
+  if(!t){ try{ t=sessionStorage.getItem('tbtok')||''; }catch(e){} }
+  return t;
+})();
+// Wrapper um window.TbView: jede Methode bekommt das Token als ersten Parameter. Fully kennt kein Token (nicht gewrappt).
+function tbWrap(t){
+  if(!t) return null;
+  if(!TB_TOK){   // kein Token: TbViewer bis 5.3 (Bruecke direkt); ab 5.4 ohne Token -> Bruecke nicht nutzbar
+    const m=/TbView\/(\d+)\.(\d+)/.exec(navigator.userAgent||'');
+    return (m && (+m[1]>5 || (+m[1]===5 && +m[2]>=4))) ? null : t; }
+  const names=['turnScreenOn','turnScreenOff','isScreenOn','getDeviceId','setDisplayOff','setSaver','setDisplayBrightness',
+    'setAutoBrightness','setProximityWake','getProximity','getLightLevel','getDeviceInfo','reload'];
+  const w={};
+  names.forEach(n=>{ w[n]=function(){ return t[n].apply(t,[TB_TOK].concat([].slice.call(arguments))); }; });
+  return w;
+}
+const TB_API=tbWrap(window.TbView);
+
 let booted=false;
 // Geraete-Bruecke: TbView (eigene App) -> Fully (Fallback) -> Browser. TbView hat die
 // Fully-Namen (turnScreenOn/Off, isScreenOn), kiosk() liefert also fuer beide dasselbe.
 // Ereignisse der App kommen ueber lpHost._ev(name, wert): 'prox' (nah), 'light' (0..16), 'screen'.
 const lpHost=(()=>{
-  const t=window.TbView, f=window.fully;
+  const t=TB_API, f=window.fully;
   const type=t?'tbview':((f&&typeof f.turnScreenOff==='function'&&typeof f.turnScreenOn==='function')?'fully':'browser');
   const on={};
-  return { type, api:type==='tbview'?t:(type==='fully'?f:null),
+  let lightLevel=-1;   // -1 = noch kein Lichtwert der App
+  if(type==='tbview'){ try{ if(typeof t.getLightLevel==='function') lightLevel=+t.getLightLevel(); if(!(lightLevel>=0)) lightLevel=-1; }catch(e){} }
+  return { type, api:type==='tbview'?t:(type==='fully'?f:null), lightLevel,
     on(ev,fn){ (on[ev]=on[ev]||[]).push(fn); },
     _ev(ev,v){ (on[ev]||[]).forEach(fn=>{ try{ fn(v); }catch(e){} }); } };
 })();
@@ -4163,12 +4191,18 @@ try{ if(DEVICE_ID) localStorage.setItem('lp_device', DEVICE_ID); else DEVICE_ID 
 const DEVICE_UID=(function(){
   const ok=v=>typeof v==='string'&&/^[A-Za-z0-9._:-]{6,80}$/.test(v);
   let u='';
-  try{ const t=window.TbView, f=window.fully, src=t||f, pre=t?'tb-':'fk-';
-    if(src&&typeof src.getDeviceId==='function'){ const d=String(src.getDeviceId()||'').replace(/[^A-Za-z0-9]/g,''); if(d.length>=6) u=pre+d.slice(0,40); } }catch(e){}
+  let tbNoId=!!TB_API;   // TbViewer da: Zufalls-UID nie dauerhaft speichern, solange keine gueltige ID kommt (auch bei Fehler)
+  try{ const t=TB_API, f=window.fully, src=t||f, pre=t?'tb-':'fk-';
+    if(src&&typeof src.getDeviceId==='function'){ const d=String(src.getDeviceId()||'').replace(/[^A-Za-z0-9]/g,''); if(d.length>=6) u=pre+d.slice(0,40); }
+    if(u) tbNoId=false; }catch(e){}
   if(!u){ try{ u=localStorage.getItem('lp_uid')||''; }catch(e){} }
   if(!ok(u)){ const m=document.cookie.match(/(?:^|; )lp_uid=([^;]+)/); u=m?decodeURIComponent(m[1]):''; }
   if(!ok(u)){ const r=new Uint8Array(12); (window.crypto||{}).getRandomValues ? crypto.getRandomValues(r) : r.forEach((x,i)=>r[i]=Math.random()*256|0);
-    u='lp-'+[...r].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+    u='lp-'+[...r].map(b=>b.toString(16).padStart(2,'0')).join('');
+    if(tbNoId){   // nur diese Sitzung; kurz spaeter erneut nach der echten ID fragen (einmal neu laden)
+      try{ if(!sessionStorage.getItem('tbid_retry')) setTimeout(()=>{ try{ const d=String(TB_API.getDeviceId()||'').replace(/[^A-Za-z0-9]/g,'');
+        if(d.length>=6){ sessionStorage.setItem('tbid_retry','1'); location.reload(); } }catch(e){} }, 4000); }catch(e){}
+      return u; } }
   try{ localStorage.setItem('lp_uid',u); }catch(e){}
   try{ document.cookie='lp_uid='+encodeURIComponent(u)+'; max-age=315360000; path=/; SameSite=Lax'; }catch(e){}
   return u;
@@ -4186,7 +4220,7 @@ async function deviceInfo(){
   try{ const f=window.fully; if(f){ const g=k=>{ try{ return typeof f[k]==='function'?String(f[k]()||''):''; }catch(e){ return ''; } };
     i.fully={manuf:g('getDeviceManufacturer'), model:g('getDeviceModel'), android:g('getAndroidVersion'), ver:g('getFullyVersion'),
       mac:g('getMacAddress'), devid:g('getDeviceId'), ssid:g('getWifiSsid')}; } }catch(e){}
-  try{ if(window.TbView) i.tbview=JSON.parse(window.TbView.getDeviceInfo()); }catch(e){}
+  try{ if(TB_API) i.tbview=JSON.parse(TB_API.getDeviceInfo()); }catch(e){}
   return i;
 }
 // Uhrzeit vom Server (LoxBerry/Miniserver) statt der Geraeteuhr: falsch
@@ -5875,7 +5909,7 @@ function nightLayer(){
 // Dynamische Helligkeit: nur Shelly mit TbView und Lichtsensor bei "Helligkeit automatisch" regelt nach
 // dem Raumlicht - dann kein zusaetzliches Abdunkeln nach Betriebsmodus. Alle anderen Geraete (und Shelly
 // mit "Systemeinstellung") dunkeln wie bisher nach dem Betriebsmodus ab.
-function sensorBright(){ return lpHost.type==='tbview' && lpHost.shelly && lpHost.light && SENS.auto; }
+function sensorBright(){ return lpHost.type==='tbview' && lpHost.shelly && lpHost.light && SENS.auto && lpHost.lightLevel>=0; }   // ohne Lichtwert: Abdunkeln nach Betriebsmodus
 function applyNight(awake){
   const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !sensorBright()) ? Math.min(90,NIGHT.dim) : 0;
   // TbView: echte Fensterhelligkeit (Schwarz bleibt schwarz); lehnt die App ab, dunkelt das Overlay
@@ -5910,14 +5944,19 @@ function applySensors(s){
   if(typeof camNightUpdate==='function') camNightUpdate();
   if(lpHost.type!=='tbview') return;
   try{ lpHost.api.setProximityWake(SENS.prox!=='off'); }catch(e){}
-  try{ lpHost.api.setAutoBrightness(s.auto!==false, +s.min||10, +s.max||100); }catch(e){}
+  try{ lpHost.api.setAutoBrightness(s.auto!==false && !!lpHost.shelly, +s.min||10, +s.max||100); }catch(e){}
 }
 // "Display an + Dashboard schliessen": Annaeherung schliesst das Dashboard wie eine Beruehrung
 lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
   if(near && SENS.prox==='open' && saverOn()) wake();
   else if(near && SENS.prox!=='off') nightWake();     // nachts kurz aufhellen wie bei Beruehrung
-  camNightOpen(near); });
-lpHost.on('screen', on=>camsDark(!on));
+  if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
+lpHost.on('light', v=>{ const had=lpHost.lightLevel>=0; lpHost.lightLevel=(+v>=0)?+v:-1;
+  if(had!==(lpHost.lightLevel>=0)) applyNight(false); });   // erster Lichtwert: Sensor statt Abdunkeln
+// Annaeherung/App-Wecken: Leerlauf neu starten, naechster Tipp wird nicht verschluckt
+lpHost.on('screen', on=>{ camsDark(!on); if(on){ _screenWasOff=false; resetIdle(); } });
+// Tipp bei sichtbarem Display: Nacht-Kamera live (wie Beruehrung)
+document.addEventListener('pointerdown', ()=>{ if(lpHost.type==='tbview') camNightOpen(!!lpHost.near,true); }, true);
 function screenOff(){ const f=kiosk(); if(!f) return; _screenWasOff=true; camsDark(true); try{ f.turnScreenOff(); }catch(e){} }
 function screenOn(){ camsDark(false); const f=kiosk(); if(!f) return; _screenWasOff=false;
   try{ if(typeof f.isScreenOn!=='function' || !f.isScreenOn()) f.turnScreenOn(); }catch(e){} }

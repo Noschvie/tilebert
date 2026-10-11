@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.0"
+APP_VERSION = "0.20.1"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -200,7 +200,7 @@ DEVICE_MODELS = {
                   "panes": 2,
                   "tips": ["Querformat, 2 Panels nebeneinander (Profil: Panel-Größe „2 Panels“).",
                            "TbViewer: Gerät hinzufügen → Automatisch einrichten per ADB.",
-                           "Display aus/an über Fully (JavaScript-Schnittstelle einschalten)."]},
+                           "Display aus/an übernimmt TbViewer; Helligkeit regelt der Lichtsensor."]},
     "shelly-x1": {"label": "Shelly Wall Display X1i", "os": "android", "shelly": True, "scale": "auto",
                   "panes": 1,
                   "tips": ["720×720 – Zoom „Automatisch“ vergrößert das 480er-Raster auf den ganzen Schirm.",
@@ -208,10 +208,10 @@ DEVICE_MODELS = {
                            "TbViewer per ADB (Gerät hinzufügen)."]},
     "nspro86": {"label": "Sonoff NSPanel Pro 86", "os": "android", "scale": "off", "panes": 1,
                 "tips": ["480×480 – passt 1:1, kein Zoom nötig. Profil: „1 Panel“.",
-                         "Kiosk-App (Fully) mit Start-URL inkl. ?device=… einrichten."]},
+                         "TbViewer (Kiosk-App) mit Start-URL inkl. ?device=… einrichten."]},
     "nspro120": {"label": "Sonoff NSPanel Pro 120", "os": "android", "scale": "auto", "panes": 1,
                  "tips": ["Hochformat – Zoom „Automatisch“ füllt die Breite. Profil: „1 Panel“.",
-                          "Kiosk-App (Fully) mit Start-URL inkl. ?device=… einrichten."]},
+                          "TbViewer (Kiosk-App) mit Start-URL inkl. ?device=… einrichten."]},
     "sm41-android": {"label": "4″-Standardpanel YC-SM41 (Android)", "os": "android", "scale": "off", "panes": 1,
                      "tips": ["480×480 – Referenzgröße, kein Zoom. Profil: „1 Panel“."]},
     "sm41-debian": {"label": "4″-Standardpanel YC-SM41 (Debian + Agent)", "os": "linux", "scale": "off", "panes": 1,
@@ -219,10 +219,10 @@ DEVICE_MODELS = {
                              "Display und Neustart übernimmt der Agent."]},
     "sm55": {"label": "YC-SM55P", "os": "android", "scale": "auto", "panes": 2,
              "tips": ["720×1280 quer – Zoom „Automatisch“, Profil: „2 Panels“.",
-                      "LAN/PoE: feste IP im Router vergeben (für ADB/Fully)."]},
+                      "LAN/PoE: feste IP im Router vergeben (für ADB)."]},
     "tablet": {"label": "Android-Tablet (7–10″)", "os": "android", "scale": "auto", "wake": True, "panes": 2,
                "tips": ["Querformat, Profil: „2 Panels“; Zoom „Automatisch“ füllt den Schirm.",
-                        "Mit Fully Kiosk: Display aus/an und Autostart; ohne Fully hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.",
+                        "Mit TbViewer (Kiosk-App): Display aus/an und Autostart; ohne Kiosk-App hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.",
                         "Hochkant zeigt das Tablet ein Panel; unter 600 px Breite greift der Handy-Modus."]},
     "ipad": {"label": "iPad / iPad mini", "os": "browser", "scale": "auto", "wake": True, "panes": 2,
              "tips": ["Safari: Teilen → „Zum Home-Bildschirm“ – startet ohne Adressleiste als Vollbild-App (Start-URL mit ?device=…).",
@@ -267,6 +267,8 @@ def _clean_scale(v):
 # Server merkt sich uid -> Name in config/devinfo.json, erkennt den Geraetetyp
 # und legt das Geraet beim ersten Mal mit passenden Einstellungen an.
 DEVINFO_FILE = Path(__file__).resolve().parent.parent / "config" / "devinfo.json"
+# Zuletzt gemeldeter Kiosk-Typ je Geraetename (tbview|fully), uebersteht Offline/Neustart
+KIOSKLAST_FILE = Path(__file__).resolve().parent.parent / "config" / "kiosk_last.json"
 _UID_RE = re.compile(r"^[A-Za-z0-9._:-]{6,80}$")
 
 
@@ -310,7 +312,7 @@ def _ua_parts(info: dict) -> tuple[str, str]:
         return osn.strip(), "Fully Kiosk " + info["fully"].get("ver", "")
     if info.get("tbview"):
         t = info["tbview"]
-        return ("Android " + t.get("android", "")).strip(), ("TbView " + t.get("ver", "")).strip()
+        return ("Android " + t.get("android", "")).strip(), ("TbViewer " + t.get("ver", "")).strip()
     if "iPad" in ua or ("Macintosh" in ua and touch > 1):
         osn = "iPadOS"
     elif "iPhone" in ua:
@@ -439,6 +441,33 @@ def load_devinfo() -> dict:
         return d if isinstance(d, dict) else {}
     except (OSError, ValueError):
         return {}
+
+
+KIOSKLAST_MAX = 200
+
+
+def load_kiosk_last() -> dict:
+    """kiosk_last.json laden (Name -> 'tbview'|'fully'; Reihenfolge = zuletzt gesehen am Ende)."""
+    try:
+        d = json.loads(KIOSKLAST_FILE.read_text(encoding="utf-8"))
+        out = {str(k): v for k, v in d.items() if v in ("tbview", "fully")} if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        out = {}
+    return out
+
+
+def seed_kiosk_last(kl: dict, devinfo: dict) -> bool:
+    """Leere Eintraege aus den Steckbriefen vorbelegen (info.tbview -> tbview, info.fully -> fully)."""
+    changed = False
+    for e in devinfo.values():
+        if not isinstance(e, dict) or not e.get("name") or kl.get(e["name"]):
+            continue
+        i = e.get("info") if isinstance(e.get("info"), dict) else {}
+        k = "tbview" if i.get("tbview") else ("fully" if i.get("fully") else "")
+        if k:
+            kl[e["name"]] = k
+            changed = True
+    return changed
 
 
 # Nachtmodus: Rueckfall-Fenster, wenn keine Sonnenzeiten vorliegen (kein Wetter
@@ -1527,7 +1556,10 @@ class App:
         self.conn_chart: dict[web.WebSocketResponse, tuple[str, str]] = {}   # ws -> (Baustein-UUID, Zeitraum) der Verlaufs-Pane (via setchart)
         self.panels = load_panels()
         self.devices = load_devices()   # Agent-Name -> {auto, modes:{modus:profil}}
+        self.kiosk_last = load_kiosk_last()   # Geraetename -> zuletzt gemeldeter Kiosk-Typ
         self.devinfo = load_devinfo()   # uid -> {name, info, ip, first, last} (Geraete-Erkennung)
+        if seed_kiosk_last(self.kiosk_last, self.devinfo):
+            self._save_kiosk_last()
         self.last_mode = ""             # zuletzt gesetzter Betriebsmodus (fuer Nachziehen beim Verbinden)
         self._struct_sig: str | None = None   # Signatur der Loxone-Struktur (erkennt Config-Aenderungen)
         self._pending_reload = False          # -> Panels beim naechsten Tick neu laden ({t:"reload"})
@@ -2678,7 +2710,7 @@ class App:
             ["favoriten", "zentral", "raeume", "kategorien"]
         return {
             "id": pid or "default",
-            "title": prof.get("title") or "tilebert",
+            "title": (prof.get("title") if prof.get("title") != "LoxPanel" else "") or "tilebert",   # Altbestand "LoxPanel" = leer
             "tabs": list(tabs),
             "rooms": self._resolve_ids(prof.get("rooms"), self.rooms),
             "cats": self._resolve_ids(prof.get("cats"), self.cats),
@@ -3557,12 +3589,16 @@ class App:
             e["detected"] = self.device_summary(e["name"])
             cfg = self.devices.get(e["name"]) if isinstance(self.devices.get(e["name"]), dict) else {}
             model = cfg.get("model") or ""
-            fully = bool(cfg.get("fully")) or e["kiosk"] == "fully"
+            e["kiosk_last"] = self.kiosk_last.get(e["name"], "")
+            fully = e["kiosk"] == "fully" or (e["kiosk_last"] != "tbview" and bool(cfg.get("fully")))
+            # Fully-Neustart nur, wenn das Geraet wirklich mit Fully laeuft
+            fully_run = e["kiosk"] == "fully" or (e["kiosk"] != "tbview" and e["kiosk_last"] == "fully")
             e["model"] = model
-            e["type"] = "agent" if e["agent"] else ("tbview" if e["kiosk"] == "tbview" else ("fully" if fully else "browser"))
+            tbv = e["kiosk"] == "tbview" or (not e["kiosk"] and e["kiosk_last"] == "tbview")   # offline: zuletzt TbViewer
+            e["type"] = "agent" if e["agent"] else ("tbview" if tbv else ("fully" if fully else "browser"))
             # Aktionen je Geraetetyp: Android -> adb; Fully nur wenn angegeben
             os_ = (DEVICE_MODELS.get(model) or {}).get("os")
-            e["caps"] = ([c for c, ok in (("kioskrestart", os_ == "android" and fully),
+            e["caps"] = ([c for c, ok in (("kioskrestart", os_ == "android" and fully_run),
                                           ("fullyinstall", os_ == "android"),
                                           ("brightness", os_ == "android"),
                                           ("reboot", os_ == "android")) if ok])
@@ -4399,6 +4435,34 @@ class App:
         self._persist_panels_file(panels, self.devices)
         self.panels = load_panels()
 
+    def note_kiosk(self, dev: str, kiosk: str) -> None:
+        """Kiosk-Typ eines Geraets beim Verbinden merken (nur bei Aenderung schreiben)."""
+        if not dev or kiosk not in ("tbview", "fully"):
+            return
+        if self.kiosk_last.get(dev) == kiosk:          # unveraendert: nur ans Ende schieben (zuletzt gesehen), nicht schreiben
+            self.kiosk_last[dev] = self.kiosk_last.pop(dev)
+            return
+        self.kiosk_last.pop(dev, None)
+        self.kiosk_last[dev] = kiosk          # ans Ende = zuletzt gesehen
+        while len(self.kiosk_last) > KIOSKLAST_MAX:
+            del self.kiosk_last[next(iter(self.kiosk_last))]   # aeltesten raus
+        self._save_kiosk_last()
+
+    def _save_kiosk_last(self) -> None:
+        try:
+            _atomic_write(KIOSKLAST_FILE, json.dumps(self.kiosk_last, indent=1, ensure_ascii=False) + "\n")
+        except OSError as err:
+            log.warning("kiosk_last.json nicht geschrieben: %s", err)
+
+    def drop_kiosk_last(self, old: str, new: str = "") -> None:
+        """Eintrag beim Loeschen (new leer) bzw. Umbenennen uebernehmen."""
+        if old not in self.kiosk_last:
+            return
+        v = self.kiosk_last.pop(old)
+        if new:
+            self.kiosk_last[new] = v
+        self._save_kiosk_last()
+
     def _save_devinfo(self) -> None:
         try:
             _atomic_write(DEVINFO_FILE, json.dumps(self.devinfo, indent=1, ensure_ascii=False) + "\n")
@@ -4480,6 +4544,7 @@ class App:
             self._write_devices(devs)
         if n_info:
             self._save_devinfo()
+        self.drop_kiosk_last(old, new)
         n = await _push(self, {"t": "setdevice", "name": new}, "", old)
         log.info("Geraet umbenannt: '%s' -> '%s' (%d verbunden)", old, new, n)
         return {"ok": old in devs or new in devs or n_info > 0 or n > 0, "online": n}
@@ -4496,6 +4561,7 @@ class App:
             self._write_devices(devs)
         if uids:
             self._save_devinfo()
+        self.drop_kiosk_last(name)
         n = await _push(self, {"t": "forget"}, "", name)
         log.info("Geraet geloescht: '%s' (%d Steckbrief(e), %d verbunden)", name, len(uids), n)
         return {"ok": had or bool(uids) or n > 0, "online": n}
@@ -8213,6 +8279,8 @@ class App:
         mdl = DEVICE_MODELS.get(cfg.get("model") or "") or {}
         if mdl.get("os") != "android" or not cfg.get("fully"):
             return False
+        if self.kiosk_last.get(name) != "fully":   # nur wenn das Geraet wirklich mit Fully laeuft
+            return False
         return bool(cfg.get("nrestart", mdl.get("shelly", False)))
 
     async def _nightly_restarts(self) -> None:
@@ -8759,6 +8827,9 @@ async def api_meta(request: web.Request) -> web.Response:
              "color": app.cats[cu].get("color")}         # Loxone-Voreinstellungsfarbe der Kategorie
             for cu in app.cats_with]
     panels = {pid: app._panel_export(raw) for pid, raw in app.panels.items()}
+    for _pp in panels.values():       # Altbestand-Titel "LoxPanel" wie leer (wird beim naechsten Speichern migriert)
+        if isinstance(_pp, dict) and _pp.get("title") == "LoxPanel":
+            _pp["title"] = ""
     controls = []
     for u, c in app.controls.items():
         if not c.get("name"):
@@ -10067,6 +10138,15 @@ async def appicon_handler(request: web.Request) -> web.Response:
                         headers={"Cache-Control": "max-age=604800"})
 
 
+async def favicon_handler(request: web.Request) -> web.Response:
+    """/favicon.ico fuer Safari, Lesezeichen und Tabs ohne Data-URI-Icon."""
+    f = _APPICON_DIR / "favicon.ico"
+    if not f.is_file():
+        return web.Response(status=404)
+    return web.Response(body=f.read_bytes(), content_type="image/x-icon",
+                        headers={"Cache-Control": "max-age=604800"})
+
+
 async def manifest_handler(request: web.Request) -> web.Response:
     """Web-App-Manifest: Panel als App vom Home-Bildschirm starten (Vollbild,
     ohne Browserleiste). Startet mit dem Panel, aus dem es angelegt wurde."""
@@ -10076,7 +10156,10 @@ async def manifest_handler(request: web.Request) -> web.Response:
         pid = ""
     dev = str(request.query.get("device") or "").strip()[:60]   # Geraetename bleibt in der Home-Bildschirm-App
     prof = app.panels.get(pid or "default") or {}
-    name = _clean(prof.get("title") or "") or "tilebert"
+    name = _clean(prof.get("title") or "")
+    if name == "LoxPanel":                 # Altbestand wie leer
+        name = ""
+    name = name or "tilebert"
     bg = "#0d0f1a"
     return web.json_response({
         "name": name, "short_name": name[:12],
@@ -10266,16 +10349,18 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
             code, out = await _adb("-s", target, "install", "-r", str(LAUNCHER_APK), timeout=120)
             if not step("Installieren", code, out, ok=("Success" in out)):
                 return web.json_response({"ok": False, "steps": steps, "error": "Installation fehlgeschlagen"})
-        # Nutzungsstatistik erlauben: Launcher erkennt laufendes Fully und holt es
-        # nur nach vorn statt neu zu laden. Fehlt das Recht, laedt er wie bisher.
-        code, out = await _adb("-s", target, "shell", "appops", "set", LAUNCHER_PKG,
-                               "GET_USAGE_STATS", "allow", timeout=10)
-        step("Nutzungsstatistik", code, out or "erlaubt", ok=(code == 0 and "rror" not in out))
-        # Fully Kiosk vorhanden? Nicht mitgeliefert (kommerziell) -> nur Hinweis.
-        code, out = await _adb("-s", target, "shell", "pm", "path", "de.ozerov.fully", timeout=10)
-        has_fully = "package:" in out
-        step("Fully Kiosk", 0, "installiert" if has_fully
-             else "fehlt - bitte von fully-kiosk.com installieren", ok=has_fully)
+        has_fully = False
+        if display != "tbview":
+            # Nutzungsstatistik erlauben: Launcher erkennt laufendes Fully und holt es
+            # nur nach vorn statt neu zu laden. Fehlt das Recht, laedt er wie bisher.
+            code, out = await _adb("-s", target, "shell", "appops", "set", LAUNCHER_PKG,
+                                   "GET_USAGE_STATS", "allow", timeout=10)
+            step("Nutzungsstatistik", code, out or "erlaubt", ok=(code == 0 and "rror" not in out))
+            # Fully Kiosk vorhanden? Nicht mitgeliefert (kommerziell) -> nur Hinweis.
+            code, out = await _adb("-s", target, "shell", "pm", "path", "de.ozerov.fully", timeout=10)
+            has_fully = "package:" in out
+            step("Fully Kiosk", 0, "installiert" if has_fully
+                 else "fehlt - bitte von fully-kiosk.com installieren", ok=has_fully)
         if device == "shelly":
             # Startbildschirm: schlaegt auf alten Android-Versionen fehl - dann
             # waehlt man ihn beim ersten Druck auf Home ("Immer"). Kein Abbruch.
@@ -10288,8 +10373,16 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
                                f"am start -n {LAUNCHER_PKG}/.Main --es url {shlex.quote(url)}" + (f" --es mode {display}" if display else ""), timeout=15)
         if not step("URL eintragen", code, out, ok=(code == 0 and "rror" not in out)):
             return web.json_response({"ok": False, "steps": steps, "error": "URL konnte nicht gesetzt werden"})
+    if display == "tbview" and name:   # Fully-Altlast zuruecksetzen (kein Fully-Neustart/-Nachtneustart mehr)
+        app: App = request.app["app"]
+        cfg = app.devices.get(name)
+        if isinstance(cfg, dict) and cfg.get("fully"):
+            try:
+                app._write_devices({**app.devices, name: {k: v for k, v in cfg.items() if k != "fully"}})
+            except Exception as err:
+                log.warning("fully bei '%s' nicht zurueckgesetzt: %s", name, err)
     log.info("TbViewer auf %s eingerichtet (%s, %s, URL %s)", target, device, display or "Anzeige unveraendert", url)
-    return web.json_response({"ok": True, "steps": steps, "url": url, "fully": has_fully,
+    return web.json_response({"ok": True, "steps": steps, "url": url, "fully": has_fully, "display": display,
                               "version": max(apk_ver, have_ver)})
 
 
@@ -10645,6 +10738,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
     # Fully auch am Browser-Kennzeichen erkennen (ohne PLUS fehlt oft ?kiosk=fully)
     if not kiosk and "fully" in (request.headers.get("User-Agent") or "").lower():
         kiosk = "fully"
+    app.note_kiosk(dev, kiosk)
     app.conn_info[ws] = {"dev": dev, "kiosk": kiosk if kiosk in ("fully", "tbview") else "",
                          "ip": request.remote or "", "ts": time.time()}
     first_tab = prof["tabs"][0] if prof["tabs"] else "favoriten"
@@ -11166,6 +11260,7 @@ def main() -> None:
     a.router.add_get("/icon", icon_handler)
     a.router.add_get("/fonts/{name}", font_handler)
     a.router.add_get("/appicon/{size}.png", appicon_handler)
+    a.router.add_get("/favicon.ico", favicon_handler)
     a.router.add_get("/manifest.webmanifest", manifest_handler)
     a.router.add_get("/loxlib", loxlib_handler)
     a.router.add_get("/api/loxicons", loxicons_handler)

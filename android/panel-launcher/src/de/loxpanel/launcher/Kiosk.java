@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -26,6 +27,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import java.nio.charset.Charset;
+import java.security.MessageDigest;
+import java.security.SecureRandom;
 import java.util.List;
 
 /**
@@ -51,6 +55,8 @@ public class Kiosk extends Activity implements SensorEventListener {
 
     // Zustand
     private boolean saverOn, panelSaver, offEnabled, near, loaded;
+    private final String tok = newToken();   // Bruecken-Token: nur das Panel (Hauptframe) kennt es
+    private volatile boolean trusted;   // aktuelle Seite hat die Panel-Origin (nur dann Bruecke/Ereignisse)
     private long offMs = 0;
     private int lightLevel = -1, pendingLevel = -1;
     private long pendingSince;
@@ -100,7 +106,9 @@ public class Kiosk extends Activity implements SensorEventListener {
             web.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false);
         }
         s.setUserAgentString(s.getUserAgentString() + " TbView/" + version());
-        if (Build.VERSION.SDK_INT >= 19) WebView.setWebContentsDebuggingEnabled(true);   // chrome://inspect ueber adb
+        // chrome://inspect nur in debuggable Builds (Release: aus)
+        if (Build.VERSION.SDK_INT >= 19 && (getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0)
+            WebView.setWebContentsDebuggingEnabled(true);
         web.addJavascriptInterface(new Bridge(), "TbView");
         web.setWebViewClient(new Client());
         root.addView(web, new FrameLayout.LayoutParams(-1, -1));
@@ -124,19 +132,63 @@ public class Kiosk extends Activity implements SensorEventListener {
     }
 
     private String url() {
-        return getSharedPreferences("cfg", MODE_PRIVATE).getString("url", "");
+        String u = getSharedPreferences("cfg", MODE_PRIVATE).getString("url", "").trim();
+        // ohne Schema (z. B. 192.168.1.10:8098) http:// ergaenzen, sonst bleibt sameOrigin dauerhaft false
+        if (!u.isEmpty() && !u.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) u = "http://" + u;
+        return u;
+    }
+
+    private static String newToken() {
+        byte[] b = new byte[16];
+        new SecureRandom().nextBytes(b);
+        StringBuilder sb = new StringBuilder();
+        for (byte x : b) sb.append(String.format("%02x", x & 0xff));
+        return sb.toString();
+    }
+
+    /** Token pruefen (konstantzeitig). */
+    private boolean ok(String t) {
+        if (t == null) return false;
+        Charset c = Charset.forName("UTF-8");
+        return MessageDigest.isEqual(tok.getBytes(c), t.getBytes(c));
+    }
+
+    /** Panel-URL plus ?tbtok=... (bestehende Query bleibt, Fragment bleibt am Ende). */
+    private String urlWithToken(String u) {
+        String frag = "";
+        int h = u.indexOf('#');
+        if (h >= 0) { frag = u.substring(h); u = u.substring(0, h); }
+        return u + (u.indexOf('?') >= 0 ? (u.endsWith("?") || u.endsWith("&") ? "" : "&") : "?") + "tbtok=" + tok + frag;
     }
 
     private void load() {
         String u = url();
         if (u.isEmpty()) {
             web.loadData("<body style='background:#000;color:#aaa;font:20px sans-serif;padding:40px'>"
-                    + "TbView: keine Panel-URL gesetzt.<br><br>adb shell am start -n de.loxpanel.launcher/.Main --es url http://&lt;LoxBerry&gt;:8098/</body>",
+                    + "TbViewer: keine Panel-URL gesetzt.<br><br>adb shell am start -n de.loxpanel.launcher/.Main --es url http://&lt;LoxBerry&gt;:8098/</body>",
                     "text/html; charset=utf-8", null);
             return;
         }
         loaded = false;
-        web.loadUrl(u);
+        trusted = sameOrigin(u);   // Panel-URL ist per Definition vertrauenswuerdig; kein Fenster bis onPageStarted
+        web.loadUrl(urlWithToken(u));
+    }
+
+    /** true, wenn u dieselbe Origin (Schema, Host, Port) wie die Panel-URL hat. */
+    private boolean sameOrigin(String u) {
+        if (u == null) return false;
+        try {
+            Uri a = Uri.parse(url()), b = Uri.parse(u);
+            if (a.getScheme() == null || a.getHost() == null || b.getScheme() == null || b.getHost() == null) return false;
+            return a.getScheme().equalsIgnoreCase(b.getScheme()) && a.getHost().equalsIgnoreCase(b.getHost())
+                    && port(a) == port(b);
+        } catch (Exception e) { return false; }
+    }
+
+    private static int port(Uri u) {
+        int p = u.getPort();
+        if (p >= 0) return p;
+        return "https".equalsIgnoreCase(u.getScheme()) ? 443 : 80;
     }
 
     private final Runnable retry = new Runnable() {
@@ -144,9 +196,26 @@ public class Kiosk extends Activity implements SensorEventListener {
     };
 
     private class Client extends WebViewClient {
-        @Override public boolean shouldOverrideUrlLoading(WebView v, String u) { return false; }
+        // Fremde Origin nicht laden: Bruecke und Ereignisse nur fuer die Panel-Seite
+        // Nur die Hauptnavigation pruefen; iframes (Web-Kacheln) duerfen fremde Seiten laden.
+        // Altes API (vor API 24) kennt keinen Frame -> dort wie Hauptframe behandeln.
+        @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) {
+            if (!r.isForMainFrame()) return false;
+            return blockMain(r.getUrl().toString());
+        }
 
-        @Override public void onPageFinished(WebView v, String u) { loaded = true; emitState(); }
+        @Override public boolean shouldOverrideUrlLoading(WebView v, String u) { return blockMain(u); }
+
+        private boolean blockMain(String u) {
+            if (sameOrigin(u)) return false;
+            // blockierte Hauptnavigation: Fehlerbild + Neuversuch der Panel-URL statt stilles Schwarz
+            ui.post(new Runnable() { public void run() { if (web != null) offline(); } });
+            return true;
+        }
+
+        @Override public void onPageStarted(WebView v, String u, android.graphics.Bitmap icon) { trusted = sameOrigin(u); }
+
+        @Override public void onPageFinished(WebView v, String u) { trusted = sameOrigin(u); loaded = trusted; if (trusted) emitState(); }
 
         @Override public void onReceivedError(WebView v, int code, String desc, String failingUrl) {
             // Server noch nicht da (Boot, Neustart des Containers): leise erneut versuchen
@@ -318,15 +387,15 @@ public class Kiosk extends Activity implements SensorEventListener {
         exitSaver();
         rearmOff();
         // Panel schliesst seinen Schoner (wie Fully "onScreenOn")
-        if (web != null) web.evaluateJavascript("try{ if(typeof wake==='function') wake(); }catch(e){}", null);
+        if (web != null && trusted) web.evaluateJavascript("try{ if(typeof wake==='function') wake(); }catch(e){}", null);
     }
 
     /** Ereignis an das Panel: window.lpHost._ev(name, wert) - nur wenn das Panel es kennt. */
     private void js(final String ev, final String val) {
-        if (web == null || !loaded) return;
+        if (web == null || !loaded || !trusted) return;
         ui.post(new Runnable() {
             @Override public void run() {
-                if (web != null) web.evaluateJavascript("try{ var h=window.lpHost||(typeof lpHost!=='undefined'?lpHost:null); if(h&&h._ev) h._ev('" + ev + "'," + val + "); }catch(e){}", null);
+                if (web != null && trusted) web.evaluateJavascript("try{ var h=window.lpHost||(typeof lpHost!=='undefined'?lpHost:null); if(h&&h._ev) h._ev('" + ev + "'," + val + "); }catch(e){}", null);
             }
         });
     }
@@ -344,16 +413,16 @@ public class Kiosk extends Activity implements SensorEventListener {
     /** JS-Bruecke. Methoden laufen im Binder-Thread -> UI-Aenderungen per ui.post. */
     private class Bridge {
         // -- wie Fully Kiosk --
-        @JavascriptInterface public void turnScreenOn() { ui.post(new Runnable() { public void run() { exitSaver(); rearmOff(); } }); }
-        @JavascriptInterface public void turnScreenOff() { ui.post(new Runnable() { public void run() { enterSaver(); } }); }
-        @JavascriptInterface public boolean isScreenOn() { return !saverOn; }
-        @JavascriptInterface public String getDeviceId() {
+        @JavascriptInterface public void turnScreenOn(String t) { if (!trusted || !ok(t)) return; ui.post(new Runnable() { public void run() { exitSaver(); rearmOff(); } }); }
+        @JavascriptInterface public void turnScreenOff(String t) { if (!trusted || !ok(t)) return; ui.post(new Runnable() { public void run() { enterSaver(); } }); }
+        @JavascriptInterface public boolean isScreenOn(String t) { if (!trusted || !ok(t)) return false; return !saverOn; }
+        @JavascriptInterface public String getDeviceId(String t) { if (!trusted || !ok(t)) return "";
             return Settings.Secure.getString(getContentResolver(), Settings.Secure.ANDROID_ID);
         }
 
         // -- Schoner (wie LoxKiosk) --
         /** Backlight aus n s nach Start des Panel-Schoners; 0 = nie. */
-        @JavascriptInterface public void setDisplayOff(final int seconds) {
+        @JavascriptInterface public void setDisplayOff(String t, final int seconds) { if (!trusted || !ok(t)) return;
             ui.post(new Runnable() { public void run() {
                 offEnabled = seconds > 0;
                 offMs = seconds * 1000L;
@@ -361,7 +430,7 @@ public class Kiosk extends Activity implements SensorEventListener {
             } });
         }
         /** Panel meldet seinen eigenen Schoner (Uhr/Dashboard) an/aus. */
-        @JavascriptInterface public void setSaver(final boolean on) {
+        @JavascriptInterface public void setSaver(String t, final boolean on) { if (!trusted || !ok(t)) return;
             ui.post(new Runnable() { public void run() {
                 panelSaver = on;
                 if (on) rearmOff(); else { ui.removeCallbacks(goDark); exitSaver(); }
@@ -370,14 +439,14 @@ public class Kiosk extends Activity implements SensorEventListener {
 
         // -- Helligkeit --
         /** Nachtfaktor in % (100 = normal). true = App dunkelt echt ab, false = Panel soll per Overlay abdunkeln. */
-        @JavascriptInterface public boolean setDisplayBrightness(final int prozent) {
+        @JavascriptInterface public boolean setDisplayBrightness(String t, final int prozent) { if (!trusted || !ok(t)) return false;
             final int p = Math.max(1, Math.min(100, prozent));
             boolean ok = p >= 100 || (autoOn && lightLevel >= 0) || systemFraction() != null;
             if (ok) ui.post(new Runnable() { public void run() { nightPct = p; applyBrightness(); } });
             return ok;
         }
         /** Auto-Helligkeit aus dem Lichtsensor an/aus, Bereich min..max in %. */
-        @JavascriptInterface public void setAutoBrightness(final boolean on, final int minProzent, final int maxProzent) {
+        @JavascriptInterface public void setAutoBrightness(String t, final boolean on, final int minProzent, final int maxProzent) { if (!trusted || !ok(t)) return;
             ui.post(new Runnable() { public void run() {
                 autoOn = on && light != null;
                 minPct = Math.max(1, Math.min(100, minProzent));
@@ -386,21 +455,21 @@ public class Kiosk extends Activity implements SensorEventListener {
             } });
         }
         /** Annaeherung weckt das Display (true) oder wird nur gemeldet (false). */
-        @JavascriptInterface public void setProximityWake(final boolean on) {
+        @JavascriptInterface public void setProximityWake(String t, final boolean on) { if (!trusted || !ok(t)) return;
             ui.post(new Runnable() { public void run() { proxWake = on; } });
         }
 
         // -- Sensoren / Geraet --
-        @JavascriptInterface public boolean getProximity() { return near; }
-        @JavascriptInterface public int getLightLevel() { return lightLevel; }
-        @JavascriptInterface public String getDeviceInfo() {
-            return "{\"app\":\"TbView\",\"ver\":\"" + version() + "\",\"model\":\"" + Build.MODEL
+        @JavascriptInterface public boolean getProximity(String t) { if (!trusted || !ok(t)) return false; return near; }
+        @JavascriptInterface public int getLightLevel(String t) { if (!trusted || !ok(t)) return -1; return lightLevel; }
+        @JavascriptInterface public String getDeviceInfo(String t) { if (!trusted || !ok(t)) return "";
+            return "{\"app\":\"TbViewer\",\"ver\":\"" + version() + "\",\"model\":\"" + Build.MODEL
                     + "\",\"android\":\"" + Build.VERSION.RELEASE + "\",\"sdk\":" + Build.VERSION.SDK_INT
                     + ",\"prox\":" + (prox != null) + ",\"light\":" + (light != null)
                     + ",\"lightMax\":" + lightMax + ",\"auto\":" + autoOn + ",\"min\":" + minPct
                     + ",\"max\":" + maxPct + ",\"proxWake\":" + proxWake + "}";
         }
-        @JavascriptInterface public void reload() { ui.post(new Runnable() { public void run() { load(); } }); }
+        @JavascriptInterface public void reload(String t) { if (!trusted || !ok(t)) return; ui.post(new Runnable() { public void run() { load(); } }); }
     }
 
     /** Panel oeffnen: TbView, wenn gewaehlt, sonst Fully (Fallback). force = Seite neu laden. */

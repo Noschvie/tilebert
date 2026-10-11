@@ -73,10 +73,10 @@ sub apply_miniserver {
 # Android-Panel (Shelly Wall Display u.a.) per adb einrichten: der Container
 # installiert den LoxPanel-Launcher und traegt diese LoxBerry-Adresse ein.
 sub setup_panel {
-    my ($ip, $panel, $device) = @_;
+    my ($ip, $panel, $device, $name) = @_;
     my $ua = LWP::UserAgent->new(timeout => 180);   # Installation per WLAN kann dauern
     my $r  = $ua->post("$api/api/panel/launcher", 'X-LoxPanel-Token' => $tok, 'Content-Type' => 'application/json',
-        Content => encode_json({ ip => $ip, panel => $panel, device => $device, server => "$lbhost:8098" }));
+        Content => encode_json({ ip => $ip, panel => $panel, device => $device, name => $name, display => 'tbview', server => "$lbhost:8098" }));
     return "<div class='alert alert-danger'>Container nicht erreichbar &ndash; l&auml;uft er?</div>"
         unless $r->is_success || $r->code == 400;
     my $j = eval { decode_json($r->decoded_content) };
@@ -86,11 +86,8 @@ sub setup_panel {
         . ($_->{out} ne '' ? " <small style='color:#777'>" . h($_->{out}) . "</small>" : "") . "</li>"
     } @{ $j->{steps} // [] });
     my $list = $steps ? "<ul style='margin:8px 0 0;padding-left:18px'>$steps</ul>" : "";
-    my $nofully = ($j->{ok} && !$j->{fully})
-        ? "<br><b>Fully Kiosk fehlt noch</b> &ndash; bitte von <a href='https://www.fully-kiosk.com' target='_blank'>fully-kiosk.com</a> "
-          . "auf dem Panel installieren, danach das tilebert-Symbol antippen." : "";
-    return "<div class='alert " . ($nofully ? "alert-warning" : "alert-success") . "'>Launcher eingerichtet &ndash; "
-         . "das tilebert-Symbol &ouml;ffnet " . h($j->{url}) . " in Fully Kiosk.$nofully$list</div>" if $j->{ok};
+    return "<div class='alert alert-success'>Launcher eingerichtet &ndash; "
+         . "das tilebert-Symbol &ouml;ffnet " . h($j->{url}) . " in TbViewer.$list</div>" if $j->{ok};
     return "<div class='alert alert-danger'>" . h($j->{error} // 'Fehler') . "$list</div>";
 }
 
@@ -147,8 +144,10 @@ elsif ($action eq 'panelsetup') {
     my $ip    = scalar($cgi->param('panelip')) // '';
     my $panel = scalar($cgi->param('panelid')) // '';
     my $dev   = (scalar($cgi->param('paneldev')) // '') eq 'android' ? 'android' : 'shelly';
+    my $pname = scalar($cgi->param('panelname')) // '';   # Geraetename aus dem Formular (fuer den Fully-Reset)
     $ip =~ s/^\s+|\s+$//g;
-    $msg = setup_panel($ip, $panel, $dev);
+    $pname =~ s/^\s+|\s+$//g;
+    $msg = setup_panel($ip, $panel, $dev, $pname);
 }
 elsif ($action =~ /^(start|stop|restart)$/) {
     my $act = $1;   # durch Regex begrenzt -> shell-sicher
@@ -358,8 +357,7 @@ print <<"HTML";
     background:var(--lpx-acc);opacity:.16;}
   .lpx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;z-index:1;}
   .lpx-brand{display:flex;align-items:center;gap:12px;}
-  .lpx-logo{width:42px;height:42px;border-radius:13px;background:var(--lpx-acc);display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:8px;}
-  .lpx-logo i{background:#232838;border-radius:3px;opacity:.85;} .lpx-logo i:nth-child(2){opacity:.45;}
+  .lpx-logo{width:42px;height:42px;} .lpx-logo svg{display:block;width:100%;height:100%;}
   .lpx-brand b{display:block;font-size:20px;letter-spacing:.2px;} .lpx-brand span{font-size:12.5px;color:#c9cfdb;}
   .lpx-ver{color:#fff !important;text-decoration:none !important;background:rgba(255,255,255,.12);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600;}
   .lpx-ver small{color:#c9cfdb;font-weight:400;} .lpx-ver:hover{background:rgba(255,255,255,.2);}
@@ -411,7 +409,7 @@ print <<"HTML";
 <div class="lpx">
   <section class="lpx-hero">
     <div class="lpx-top">
-      <div class="lpx-brand"><div class="lpx-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      <div class="lpx-brand"><div class="lpx-logo" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" ><rect x="4.000" y="4.000" width="18.200" height="18.200" rx="6.952" fill="#ffc145"/><rect x="25.800" y="4.000" width="18.200" height="18.200" rx="6.952" fill="#7db7ff"/><rect x="4.000" y="25.800" width="18.200" height="18.200" rx="6.952" fill="#ff9e7a"/><rect x="25.800" y="25.800" width="18.200" height="18.200" rx="6.952" fill="#5cd6a4"/><circle cx="13.100" cy="13.100" r="3.476" fill="#1f2440"/><rect x="27.620" y="9.460" width="14.560" height="7.280" rx="3.640" fill="#1f2440"/><circle cx="38.540" cy="13.100" r="2.540" fill="#7db7ff"/></svg></div>
         <div><b>tilebert</b><span>ein LoxPanel Fork von Lenardo1 &ndash; Wandpanels, Tablets &amp; Handy f&uuml;r Loxone</span></div></div>
       <a class="lpx-ver" href="$repo" target="_blank" rel="noopener" title="GitHub-Repository &ouml;ffnen">V $ver_html</a>
     </div>

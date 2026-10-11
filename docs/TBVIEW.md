@@ -109,7 +109,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{d8.
 - `ui.prox`: Bei Annäherung `wake` (Standard, Display an) | `open` (Display an + Dashboard schließen) | `off`.
 - `ui.autoBright` (false = Systemeinstellung), `ui.brightMin`/`ui.brightMax` in % (Standard 10/100).
 - Server -> Panel: `sensors {prox, auto, min, max}`; Panel -> App: `setProximityWake`, `setAutoBrightness(on,min,max)`.
-- Nachts wirkt „Abdunkeln um“ zusätzlich auf die Auto-Helligkeit.
+- Auto-Helligkeit gilt nur für Shelly mit TbViewer: dort regelt nachts der Lichtsensor statt „Abdunkeln um“ (solange noch kein Sensorwert vorliegt, gilt „Abdunkeln um“).
 
 ## Anwendungsfälle Sensoren (Panel, ab Launcher 5.1)
 - **Nachts Kamera nur bei Annäherung** (`ui.nightCam`, Standard an): bei Nacht + TbView mit Näherungssensor
@@ -125,3 +125,13 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{d8.
 ## Namen (ab 0.20.0)
 - App (Launcher + Kiosk-Ansicht): **TbViewer**; sie zeigt die Web-App **tilebert** an.
 - Technisch bleiben: JS-Brücke `window.TbView`, `kiosk=tbview`, Geräte-ID `tb-`, Paket `de.loxpanel.launcher`, Datei `LoxPanel-Launcher.apk`.
+
+## Brücken-Token (ab TbViewer 5.4)
+- Die App erzeugt je Start ein Zufallstoken und hängt es als `tbtok` an die Panel-URL. Jede Brücken-Methode
+  nimmt das Token als ersten Parameter; ohne gültiges Token passiert nichts. So kann eine fremde Seite in einem
+  iframe (Loxone-Baustein „Webpage“) den TbViewer nicht steuern.
+- Das Panel liest `tbtok` beim Start, legt es in `sessionStorage` und entfernt es aus der sichtbaren URL;
+  `lpHost.api` hängt es automatisch an. Ohne Token: TbViewer ≤ 5.3 -> Brücke direkt, ≥ 5.4 -> Brücke aus.
+- Reihenfolge beim Update: erst Plugin (Server/Panel), dann TbViewer installieren (5.4 braucht das neue Panel).
+- Bekannt: Auf Android < 7 (API < 24) gibt es nur den alten `shouldOverrideUrlLoading`-Overload; Link-Klicks in
+  fremden Web-Kacheln könnten dort als Hauptnavigation gewertet werden (ungetestet).
