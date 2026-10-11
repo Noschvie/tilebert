@@ -296,24 +296,30 @@ def({ id: 'QC-B09', stage: 'pre', role: P, must: false, full: true, mode: 'auto'
   return badr.length ? FAIL(`${badr.length}/${rows.length} auffaellig: ` + badr.slice(0, 4).map(r => `${r.vn}/${r.p} ${r.err || 'abgeschnitten'}`).join('; ')) : PASS(`${rows.length}/${rows.length} Zellen ok`);
 });
 
-def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbViewer-Leerlauf: tagsueber Dashboard statt schwarz, nachts aus, Nacht beginnt im Leerlauf -> aus' }, async () => {
-  const o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof armDpms === 'function', wait: 2500 });
+def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbViewer nie aus (Leerlauf -> Dashboard, auch nachts), nachts abdunkeln; Licht an -> volle Helligkeit + Kamera live, Licht aus -> Nachlauf, dimmen' }, async () => {
+  const o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof armDpms === 'function' && typeof luxEval === 'function', wait: 2500 });
   const r = await o.pg.evaluate(async () => {
-    const calls = []; window.__sn = setNight; setNight = () => {}; applyDisplayCfg = () => {};   // Server-Nachrichten ignorieren
-    lpHost.type = 'tbview'; lpHost.api = { turnScreenOff: () => calls.push('off'), turnScreenOn: () => calls.push('on'), isScreenOn: () => true,
-      getDeviceInfo: () => '{}', setDisplayBrightness: () => true, setAutoBrightness() {}, setProximityWake() {} };
+    const calls = [], bri = []; window.__sn = setNight; setNight = () => {}; applyDisplayCfg = () => {};   // Server-Nachrichten ignorieren
+    lpHost.type = 'tbview'; lpHost.prox = true; lpHost.lightLevel = 1;
+    lpHost.api = { turnScreenOff: () => calls.push('off'), turnScreenOn: () => calls.push('on'), isScreenOn: () => true, getDeviceInfo: () => '{"prox":true,"light":true,"model":"Jenna"}',
+      setDisplayBrightness: p => (bri.push(p), true), setAutoBrightness() {}, setProximityWake() {}, getLightLevel: () => 1 };
     const w = ms => new Promise(r => setTimeout(r, ms)); const out = {};
-    DISP.dpmsOff = 1; __sn(false); hideSaver(); armDpms(); await w(1400);
-    out.tagOff = calls.filter(c => c === 'off').length; out.tagSaver = saverOn();
-    __sn(true); await w(200); out.nachtBeginnt = calls.filter(c => c === 'off').length;
-    calls.length = 0; hideSaver(); armDpms(); await w(1400); out.nachtOff = calls.filter(c => c === 'off').length;
+    NIGHT.dim = 60; NIGHT.wake = 1; DISP.dpmsOff = 1;
+    __sn(false); hideSaver(); armDpms(); await w(1400); out.tagOff = calls.filter(c => c === 'off').length; out.tagSaver = saverOn();
+    __sn(true); await w(200); hideSaver(); armDpms(); await w(1400); out.nachtOff = calls.filter(c => c === 'off').length; out.nachtSaver = saverOn(); out.nachtBri = bri.at(-1);
+    lpHost._ev('light', 2); await w(100); out.luxKlein = LUX.on;                 // +1 Stufe: unter Schwelle
+    lpHost._ev('light', 3); await w(150); out.luxAn = LUX.on; out.luxBri = bri.at(-1); out.camnightAn = document.documentElement.classList.contains('camnight');
+    lpHost._ev('light', 2); await w(150); out.luxAus = LUX.on; out.briNachlauf = bri.at(-1);
+    await w(1300); out.briDanach = bri.at(-1);
     return out; });
   const e = errList(o.st); await o.close();
   const bad = [];
-  if (r.tagOff !== 0) bad.push('Tag: Display darf nicht aus (off=' + r.tagOff + ')');
-  if (!r.tagSaver) bad.push('Tag: Dashboard muss erscheinen');
-  if (r.nachtBeginnt !== 1) bad.push('Nacht beginnt im Leerlauf: aus erwartet');
-  if (r.nachtOff !== 1) bad.push('Nacht: nach Leerlauf aus erwartet');
+  if (r.tagOff || r.nachtOff) bad.push(`Display darf nie aus (Tag ${r.tagOff}, Nacht ${r.nachtOff})`);
+  if (!r.tagSaver || !r.nachtSaver) bad.push('Leerlauf: Dashboard muss erscheinen');
+  if (r.nachtBri !== 40) bad.push('Nacht: abdunkeln auf 40 % erwartet, war ' + r.nachtBri);
+  if (r.luxKlein) bad.push('Licht +1 Stufe darf nicht wecken (Schwelle)');
+  if (!r.luxAn || r.luxBri !== 100 || r.camnightAn) bad.push(`Licht an: volle Helligkeit + Kamera live erwartet (on=${r.luxAn}, bri=${r.luxBri}, camnight=${r.camnightAn})`);
+  if (r.luxAus || r.briNachlauf !== 100 || r.briDanach !== 40) bad.push(`Licht aus: Nachlauf hell, dann 40 % erwartet (on=${r.luxAus}, ${r.briNachlauf} -> ${r.briDanach})`);
   if (e.length) bad.push('Fehler: ' + e[0]);
-  return bad.length ? FAIL(bad.join(' | ')) : PASS('Tag Dashboard, Nacht aus');
+  return bad.length ? FAIL(bad.join(' | ')) : PASS('nie aus, Nacht 40 %, Licht an/aus mit Schwelle');
 });

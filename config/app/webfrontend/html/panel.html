@@ -5401,7 +5401,7 @@ function camNightGate(){   // ob die Regel gerade greift
   return lpHost.type==='tbview' && SENS.nightCam!==false && NIGHT.on && lpHost.prox;
 }
 function camNightUpdate(){
-  const pause=camNightGate() && !_camNightNear && !_camNightT;
+  const pause=camNightGate() && !_camNightNear && !_camNightT && !LUX.on;   // Licht im Raum = jemand da
   if(pause===_camNight) return; _camNight=pause; camsApply();
 }
 function camNightOpen(near, touch){   // near: jemand da; weg -> Nachlauf; touch: Beruehrung/Klingel = jemand da gewesen
@@ -5896,6 +5896,7 @@ el('saver').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation
 // position:fixed-Elementen, und die Auflage wirkt wie heruntergeregelte
 // Hintergrundbeleuchtung (Weiss wird grau, nicht nur dunkler).
 const NIGHT = { on:false, dim:0, wake:20 };
+const LUX = { base:-1, on:false }, LUX_ON=2, LUX_OFF=1;   // Lichtsensor nachts: Schwelle/Hysterese in Stufen
 let _dpmsIdle=false;   // TbViewer: Leerlauf am Tag erreicht (Dashboard statt aus), s. armDpms
 let nightEl=null, nightWakeTimer=null;
 function nightLayer(){
@@ -5907,19 +5908,19 @@ function nightLayer(){
   }
   return nightEl;
 }
-// Dynamische Helligkeit: nur Shelly mit TbView und Lichtsensor bei "Helligkeit automatisch" regelt nach
-// dem Raumlicht - dann kein zusaetzliches Abdunkeln nach Betriebsmodus. Alle anderen Geraete (und Shelly
-// mit "Systemeinstellung") dunkeln wie bisher nach dem Betriebsmodus ab.
-function sensorBright(){ return lpHost.type==='tbview' && lpHost.shelly && lpHost.light && SENS.auto && lpHost.lightLevel>=0; }   // ohne Lichtwert: Abdunkeln nach Betriebsmodus
+// Nachts dunkelt jedes Geraet nach "Abdunkeln um" ab (TbViewer schaltet nie ganz aus). Aufgehoben, solange
+// Licht im Raum ist (Lichtsensor, LUX.on) bzw. kurz nach Annaeherung/Beruehrung (awake, nightWake).
+// Tagsueber regelt auf dem Shelly die Auto-Helligkeit (App) nach dem Lichtsensor.
 function applyNight(awake){
-  const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !sensorBright()) ? Math.min(90,NIGHT.dim) : 0;
+  const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !LUX.on) ? Math.min(90,NIGHT.dim) : 0;
   // TbView: echte Fensterhelligkeit (Schwarz bleibt schwarz); lehnt die App ab, dunkelt das Overlay
   let real=false;
   if(lpHost.type==='tbview'){ try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
   nightLayer().style.opacity = real ? 0 : dim/100;
 }
-function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer); applyNight(false); camNightUpdate();
-  if(NIGHT.on && _dpmsIdle && kiosk()){ _dpmsIdle=false; screenOff(); } }   // Nacht beginnt im Leerlauf: jetzt aus   // Nacht nur ueber den Betriebsmodus (Config)
+function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer);
+  LUX.base=(NIGHT.on && lpHost.lightLevel>=0) ? lpHost.lightLevel : -1; LUX.on=false;   // Nacht-Tiefstwert neu
+  applyNight(false); camNightUpdate(); }   // Nacht nur ueber den Betriebsmodus (Config)
 function nightWake(){          // Beruehrung -> kurz voll aufhellen, dann zurueck
   if(!NIGHT.on || NIGHT.dim<=0 || NIGHT.wake<=0) return;
   clearTimeout(nightWakeTimer);
@@ -5953,8 +5954,16 @@ lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
   if(near && SENS.prox==='open' && saverOn()) wake();
   else if(near && SENS.prox!=='off') nightWake();     // nachts kurz aufhellen wie bei Beruehrung
   if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
-lpHost.on('light', v=>{ const had=lpHost.lightLevel>=0; lpHost.lightLevel=(+v>=0)?+v:-1;
-  if(had!==(lpHost.lightLevel>=0)) applyNight(false); });   // erster Lichtwert: Sensor statt Abdunkeln
+lpHost.on('light', v=>{ lpHost.lightLevel=(+v>=0)?+v:-1; luxEval(lpHost.lightLevel); });
+// Nachts: Licht im Raum geht an -> Abdunkeln aus, Kamera live; geht es wieder aus -> Nachlauf, dann dimmen.
+// Leichte Schwelle mit Hysterese auf den Nacht-Tiefstwert (X2i: Stufen 0..16), nur TbViewer mit Lichtsensor.
+function luxEval(lv){
+  if(!NIGHT.on || lpHost.type!=='tbview' || lv<0) return;
+  if(LUX.base<0 || (!LUX.on && lv<LUX.base)) LUX.base=lv;            // Tiefstwert der Nacht
+  if(!LUX.on && lv>=LUX.base+LUX_ON){ LUX.on=true; clog('Licht an (Stufe '+lv+') – volle Helligkeit, Kamera live'); applyNight(false); camNightUpdate(); }
+  else if(LUX.on && lv<=LUX.base+LUX_OFF){ LUX.on=false; clog('Licht aus (Stufe '+lv+') – Nachlauf, dann abdunkeln');
+    camNightOpen(false, true); nightWake(); applyNight(!!nightWakeTimer); }   // gleicher Nachlauf wie nach Annaeherung
+}
 // Annaeherung/App-Wecken: Leerlauf neu starten, naechster Tipp wird nicht verschluckt
 lpHost.on('screen', on=>{ camsDark(!on); if(on){ _screenWasOff=false; resetIdle(); } });
 // Tipp bei sichtbarem Display: Nacht-Kamera live (wie Beruehrung)
@@ -5973,9 +5982,9 @@ function wakeOn(){
 }
 function wakeOff(){ const l=_wake; _wake=null; if(l) l.release().catch(()=>{}); }
 document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='visible') armDpms(); });
-// TbViewer (echtes Abschalten): tagsueber bei Leerlauf das Dashboard statt schwarz, schwarz nur nachts
-// (Betriebsmodus) oder auf Befehl. Leerlauf am Tag merkt sich _dpmsIdle - beginnt die Nacht, geht es aus.
-function dpmsDayOnly(){ return lpHost.type==='tbview' && !NIGHT.on; }
+// TbViewer schaltet bei Leerlauf nie aus (Tag und Nacht): nach der Leerlaufzeit steht das Dashboard,
+// nachts gedimmt (applyNight). Ausschalten nur auf ausdruecklichen Befehl (Server/Loxone).
+function dpmsDayOnly(){ return lpHost.type==='tbview'; }
 function armDpms(){ clearTimeout(dpmsTimer); _dpmsIdle=false;
   wakeOn(); camsDark(false);
   if(DISP.agent || !(DISP.dpmsOff>0)) return;
@@ -5985,7 +5994,7 @@ function armDpms(){ clearTimeout(dpmsTimer); _dpmsIdle=false;
   // Ein normaler Browser (Laptop, Tablet ohne Fully) bleibt sichtbar - dort haelt
   // nur ein tatsaechlich verborgener Tab die Kamera an (document.hidden).
   dpmsTimer=setTimeout(()=>{ wakeOff();
-    if(dpmsDayOnly()){ _dpmsIdle=true; if(!saverOn()){ goTab(tabsCfg[0]||'favoriten'); showSaver(); } return; }   // Tag: Dashboard
+    if(dpmsDayOnly()){ _dpmsIdle=true; if(!saverOn()){ goTab(tabsCfg[0]||'favoriten'); showSaver(); } return; }   // TbViewer: Dashboard statt aus
     if(kiosk()) screenOff(); else send({t:'idle'}); }, DISP.dpmsOff*1000); }
 function applyDisplayCfg(msg){
   DISP.dpmsOff = (typeof msg.dpmsOff==='number' && msg.dpmsOff>0) ? msg.dpmsOff : 0;

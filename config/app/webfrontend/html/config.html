@@ -719,6 +719,12 @@
   .dev .devlive:empty{display:none;}
   .dev .drow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
   .dev .drow+.drow{margin-top:8px;}
+  .dev .tbv_st{font-size:13px;font-weight:600;margin:2px 0 8px;line-height:1.35;}
+  .dev .tbv_active{color:var(--good);}
+  .dev .tbv_main{background:#136976;border-color:#136976;color:#fff;}
+  .dev .tbv_main:disabled,.dev .tbv_side:disabled{opacity:.55;}
+  .dev .tbv .drow .btn{min-height:44px;}
+  .dev .tbv_msg:empty{display:none;} .dev .tbv_msg.bad{color:#b3261e;}
   .dev .dhint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35;}
   .dev .dhint.dlver{color:var(--accent);font-weight:600;}
   .dev .dhint.dlver:empty{display:none;}
@@ -2444,7 +2450,7 @@ function renderEditor(){
          (((p.ui||{}).nudgeX==null)?'':(p.ui||{}).nudgeX)+'" placeholder="0"></div>'+
      '</div><p class="hint">'+T('Bildschirm füllen: auf größeren Displays hochzoomen statt im 480er-Raster zu bleiben. Versatz nur nötig, wenn das Bild am Rand abgeschnitten ist.')+'</p></div>'+
      '<div class="card"><h3>'+T('Display &amp; Nacht')+'</h3>'+
-       '<p class="note">'+T('<b>Display</b>: Nach der Leerlaufzeit zeigt TbViewer tagsüber das Dashboard und schaltet das Display nur nachts (Betriebsmodus) aus; Annäherung, Berührung, Klingel, Wecker und Nachrichten schalten es wieder ein. Das automatische Neuladen hält die Seite auf Dauer frisch.')+'</p>'+
+       '<p class="note">'+T('<b>Display</b>: Nach der Leerlaufzeit zeigt das Panel das Dashboard. TbViewer schaltet nie ganz aus – nachts dunkelt er um „Abdunkeln um“ ab. Annäherung, Licht im Raum, Berührung, Klingel, Wecker und Nachrichten holen die normale Helligkeit zurück. Das automatische Neuladen hält die Seite auf Dauer frisch.')+'</p>'+
        '<p class="note">'+T('<b>Nacht</b> wirkt nur, solange Nacht ist – wann das ist, legst du unter System → Darstellung → Nachtmodus fest (Auslöser-Baustein oder Sonnenuntergang bis -aufgang). Dann legt das Panel eine Abdunklung über das Bild; Antippen macht es kurz wieder hell. 0 % = dieses Panel dunkelt nachts nicht ab.')+'</p>'+
        '<div class="lbl2">'+T('Display')+'</div><div class="sizes">'+
        '<div class="field" style="max-width:220px"><label class="lbl">'+T('Ausschalten nach Leerlauf (Sek.)')+'</label>'+
@@ -2476,7 +2482,7 @@ function renderEditor(){
          (((p.ui||{}).brightMax==null)?'':(p.ui||{}).brightMax)+'" placeholder="100"></div>'+
      '</div><div class="sizes" style="margin-top:8px">'+
        '<label class="chk"><input type="checkbox" data-uichk="nightCam" data-def="1"'+(((p.ui||{}).nightCam===false)?'':' checked')+'> <span>'+T('Nachts Kamera nur bei Annäherung live')+'</span></label>'+
-     '</div><p class="hint">'+T('Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Helligkeit automatisch (nur Shelly mit TbViewer): dunkler Raum = Mindestwert, heller Raum = Höchstwert – dort ersetzt der Lichtsensor das nächtliche „Abdunkeln um“. Alle anderen Geräte dunkeln nachts nach dem Betriebsmodus ab. Nachts zeigt die Kamera ein abgedunkeltes Standbild und läuft erst live, wenn sich jemand nähert, das Display berührt oder es klingelt (30 s Nachlauf).')+'</p></div>'+
+     '</div><p class="hint">'+T('Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Helligkeit automatisch gilt tagsüber (nur Shelly mit TbViewer); nachts dunkelt TbViewer nach dem Betriebsmodus ab. Annäherung oder Licht im Raum (Lichtsensor, leichte Schwelle) bringen die normale Helligkeit und das Kamera-Livebild zurück, danach folgt ein Nachlauf.')+'</p></div>'+
      apCardHTML(p)+'</section>'+
 
    '<section class="spane" data-sub="tabs"><div class="card"><h3>Tabs</h3>'+
@@ -4485,11 +4491,9 @@ function deviceRow(d, sel){
     '';
   // Wartung: Einrichtung per adb (geht auch, solange TbViewer noch fehlt oder nicht laeuft)
   let mt='';
-  if(has('fullyinstall')) mt+=btn('launcher',T('TbViewer installieren'),T('App TbViewer (zeigt tilebert an) per adb installieren bzw. aktualisieren und die Start-URL eintragen'));
-  const tbHint=(mt && /^shelly/.test(d.model||'') && d.type!=='tbview' && d.kiosk_last!=='tbview')
-    ? '<div class="dhint">'+T('Shelly läuft noch nicht mit TbViewer – „TbViewer installieren“ richtet die eigene Anzeige ein (Annäherung, Helligkeit).')+'</div>' : '';
-  const maint=mt?wrap('<div class="dsec">'+dsh('setup',T('Einrichten per adb'))+'<div class="drow">'+mt+'</div>'+tbHint+
-    '<div class="dhint dlver">'+launcherHint(d.name)+'</div></div>'):'';
+  // TbViewer-Block: nur Android-Geraete (Capability fullyinstall); Zustand/Aktion siehe tbvHTML
+  if(has('fullyinstall')) mt=tbvHTML(d.name, d.type==='tbview'||d.kiosk_last==='tbview');
+  const maint=mt?wrap('<div class="dsec">'+dsh('setup',T('Einrichten per adb'))+mt+'</div>'):'';
   return {view:view, ctl:ctlH, maint:maint};
 }
 // Android: Display-Helligkeit per adb
@@ -4508,18 +4512,43 @@ function devExtraHTML(d,caps,off){
   '</div>';
 }
 const DEV_LV={};   // je Geraet: {installed, bundled} - Launcher-Version (per adb gelesen)
-// Hinweis, wenn das Update eine neuere Launcher-Version mitbringt als am Geraet installiert
-function launcherHint(name){ const v=DEV_LV[name];
-  return v&&v.installed&&v.bundled>v.installed
-    ? '⬆ '+T('Neue Launcher-Version im Update')+' ('+v.installed+' → '+v.bundled+') – '+T('„TbViewer installieren“ aktualisiert.') : ''; }
+// TbViewer-Block der Geraetekarte: eine Statuszeile + eine Hauptaktion (+ kleine Nebenaktion)
+const TBV_ST={};   // je Geraet: {busy, msg, ok} - Fortschritt/Ergebnis der letzten Aktion
+function tbvState(name,tbOn){ const v=DEV_LV[name];
+  if(!v) return {k:'unknown'};
+  if(!v.installed) return {k:'none'};
+  const nm=v.installedName||String(v.installed);
+  if(v.bundled>v.installed) return {k:'old', nm};
+  return {k:tbOn?'active':'inactive', nm}; }
+function tbvHTML(name,tbOn){
+  const st=tbvState(name,tbOn), x=TBV_ST[name]||{}, busy=!!x.busy;
+  let txt, main, mainLbl, side='';
+  if(st.k==='none'){ txt=T('TbViewer ist nicht installiert'); mainLbl=T('TbViewer installieren'); }
+  else if(st.k==='old'){ txt=T('TbViewer')+' '+st.nm+' '+T('installiert – Update auf die neueste Version verfügbar'); mainLbl=T('Update installieren'); }
+  else if(st.k==='active'){ txt=T('TbViewer')+' '+st.nm+' '+T('installiert und aktiv'); side=T('Erneut installieren'); }
+  else if(st.k==='inactive'){ txt=T('TbViewer')+' '+st.nm+' '+T('installiert, aber nicht als Anzeige aktiv'); mainLbl=T('Als Anzeige einrichten'); }
+  else { txt=T('TbViewer: Status unbekannt – Gerät nicht per adb erreichbar'); mainLbl=T('TbViewer installieren'); }
+  const dis=busy?' disabled':'';
+  const hint=st.k==='unknown'?'<div class="dhint">'+T('Voraussetzung: ADB über WLAN muss am Gerät aktiv und für diesen Server freigegeben sein.')+'</div>':'';
+  return '<div class="tbv" data-tbon="'+(tbOn?1:0)+'"><div class="tbv_st tbv_'+st.k+'">'+txt+'</div>'+
+    (mainLbl?'<div class="drow"><button class="btn sm tbv_main" data-act="launcher" data-tbmode="'+st.k+'"'+dis+'>'+mainLbl+'</button></div>':'')+
+    (side?'<div class="drow"><button class="btn sm ghost tbv_side" data-act="launcher" data-tbmode="again"'+dis+'>'+side+'</button></div>':'')+
+    hint+'<div class="dhint tbv_msg'+(x.ok===false?' bad':'')+'" role="status">'+esc(x.msg||'')+'</div></div>'; }
+function tbvRefresh(name){
+  document.querySelectorAll('.dev').forEach(dv=>{ if(dv.dataset.name!==name) return;
+    const el=dv.querySelector('.tbv'); if(!el) return;
+    const tmp=document.createElement('div'); tmp.innerHTML=tbvHTML(name, el.dataset.tbon==='1');
+    el.replaceWith(tmp.firstChild);
+    const nb=dv.querySelector('.tbv'), row=dv.querySelector('.ag[data-name]');
+    nb.querySelectorAll('button[data-act]').forEach(b=>{ b.onclick=()=>deviceAction(b.dataset.act, row.dataset.name, row.dataset.ip, (dv.querySelector('.agsel')||{}).value||'', row.dataset.devip, b.dataset.tbmode); }); });
+}
 async function devLauncherVer(row){
   const name=row.dataset.name;
   try{ const j=await postJson('/api/panel/launcher/version',{device:name, ip:row.dataset.devip||''});
-    if(!j.ok) return;   // still: adb fehlt/nicht freigegeben -> kein Hinweis
-    DEV_LV[name]={installed:j.installed||0, bundled:j.bundled||0};
-    document.querySelectorAll('.dev').forEach(dv=>{ if(dv.dataset.name!==name) return;
-      const h=dv.querySelector('.dlver'); if(h) h.textContent=launcherHint(name); });
-  }catch(e){}
+    if(!j.ok){ delete DEV_LV[name]; }   // adb nicht erreichbar -> Status unbekannt
+    else DEV_LV[name]={installed:j.installed||0, bundled:j.bundled||0, installedName:j.installedName||''};
+  }catch(e){ delete DEV_LV[name]; }
+  tbvRefresh(name);
 }
 // Zustand vom Geraet lesen: Helligkeit, Tipp-Toene, Launcher-Version
 function devAutoRead(bx){ devBrightness(bx,'read'); devTouchSound(bx,null); devLauncherVer(bx); }
@@ -4596,7 +4625,7 @@ function renderDeviceList(j){
     const nm=x.dataset.name; if(!DEV_BRI_TRY.has(nm) && x.closest('.dev.open') && !x.closest('.dev.off')){ DEV_BRI_TRY.add(nm); devAutoRead(x); } });
   list.querySelectorAll('.ag[data-name] button[data-act]').forEach(b=>{
     const row=b.closest('.ag');
-    b.onclick=()=>deviceAction(b.dataset.act, row.dataset.name, row.dataset.ip, (row.closest('.dev').querySelector('.agsel')||{}).value||'', row.dataset.devip);
+    b.onclick=()=>deviceAction(b.dataset.act, row.dataset.name, row.dataset.ip, (row.closest('.dev').querySelector('.agsel')||{}).value||'', row.dataset.devip, b.dataset.tbmode);
   });
   box.querySelectorAll('.ag[data-anon] button[data-act="name"]').forEach(b=>{
     const row=b.closest('.ag');
@@ -4608,7 +4637,7 @@ async function postJson(url, body){
   const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
   return r.json();
 }
-async function deviceAction(act, name, ip, panel, devip){
+async function deviceAction(act, name, ip, panel, devip, tbmode){
   try{
     let j;
     if(act==='start'||act==='reload'||act==='stop') j=await postJson('/api/agent/command',{ip,action:act,panel});
@@ -4618,17 +4647,20 @@ async function deviceAction(act, name, ip, panel, devip){
     else if(act==='dispon') j=await postJson('/api/display',{device:name,on:true});
     else if(act==='launcher'){
       const shelly=/^shelly/.test((DEV[name]||{}).model||'');
-      if(!confirm(T('TbViewer auf „')+name+T('“ installieren?')+'\n\n'+
-        (shelly?T('Shelly Wall Display: Der Launcher wird Startbildschirm mit den Symbolen „tilebert“ und „Shelly“.')
-               :T('Android-Tablet: Startbildschirm bleibt, das Symbol „tilebert“ erscheint im App-Menü.'))+'\n\n'+
-        T('Voraussetzung: ADB über WLAN (Port 5555) aktiv. Das Gerät erscheint danach einmal neu unter „Meine Geräte“ (Kennung tb-…). Beim ersten Mal am Panel „USB-Debugging zulassen?“ mit „Immer erlauben“ bestätigen und erneut starten.'))) return;
-      if(!devip){ flash($('#ag_toast'),T('IP des Geräts unbekannt – Visu einmal am Gerät öffnen.'),false); return; }
-      flash($('#ag_toast'), T('Richte Launcher per adb ein …'), true);
-      j=await postJson('/api/panel/launcher',{ip:devip, server:location.host, panel:panel||'', device:shelly?'shelly':'android', name, display:'tbview'});
-      if(j.ok&&j.version){ DEV_LV[name]={installed:j.version, bundled:j.version};   // aktuell -> Hinweis weg
-        document.querySelectorAll('.dev').forEach(dv=>{ if(dv.dataset.name===name){ const h=dv.querySelector('.dlver'); if(h) h.textContent=''; } }); }
-      flash($('#ag_toast'), j.ok ? '✓ '+T('TbViewer eingerichtet – öffnet')+' '+(j.url||'')
-                                 : T('Fehler: ')+(j.error||'')+((j.steps||[]).length?' ('+j.steps.filter(x=>!x.ok).map(x=>x.step).join(', ')+')':''), !!j.ok);
+      const dv=[...document.querySelectorAll('.dev')].find(e=>e.dataset.name===name);
+      const mode=tbmode||'none';
+      const setOnly=mode==='inactive';
+      if(!setOnly && !confirm((mode==='old'?T('TbViewer auf „{n}“ aktualisieren?'):mode==='again'?T('TbViewer auf „{n}“ erneut installieren?'):T('TbViewer auf „{n}“ installieren?')).replace('{n}',name)+'\n\n'+
+        T('Das Panel startet dabei kurz neu.')+'\n'+
+        T('Voraussetzung: ADB über WLAN (Port 5555) aktiv. Beim ersten Mal am Panel „USB-Debugging zulassen?“ mit „Immer erlauben“ bestätigen und erneut starten.'))) return;
+      if(!devip){ TBV_ST[name]={busy:false,ok:false,msg:T('IP des Geräts unbekannt – Visu einmal am Gerät öffnen.')}; tbvRefresh(name); return; }
+      TBV_ST[name]={busy:true,msg:setOnly?T('Richte Anzeige ein …'):T('Installiere TbViewer …')}; tbvRefresh(name);
+      try{ j=await postJson('/api/panel/launcher',{ip:devip, server:location.host, panel:panel||'', device:shelly?'shelly':'android', name, display:'tbview'}); }
+      catch(e){ j={ok:false,error:String(e)}; }
+      TBV_ST[name]={busy:false, ok:!!j.ok, msg: j.ok ? T('TbViewer eingerichtet – das Panel startet neu.')
+        : T('Fehler: ')+(j.error||'')+((j.steps||[]).length?' ('+j.steps.filter(x=>!x.ok).map(x=>x.step).join(', ')+')':'')};
+      tbvRefresh(name);
+      if(dv){ const r=dv.querySelector('.devx')||dv.querySelector('.ag[data-name]'); if(r) devLauncherVer(r); }   // Zustand neu abfragen
       return; }
     else if(act==='devreboot'){
       if(!confirm(T('Gerät „')+name+T('“ komplett neu starten? Das dauert etwa eine Minute.'))) return;

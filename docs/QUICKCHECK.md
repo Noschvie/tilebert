@@ -73,7 +73,7 @@ Reihenfolge eines Releases: `pre` → Nutzer-„commit“ → Release durch den 
 | QC-B06 | UX | UX Panel 480x480/960x480/390x844/1280x800 (Dashboard, Schoner, Wetter-Sheet): Fehler, hscroll, Abschneiden, ausserhalb Viewport, Tap-Ziele < 44 px - nur NEU gegenueber Baseline | Muss | auto |
 | QC-B07 | UX | UX Config 1920/1280/390: alle Rubriken ohne JS-Fehler und ohne horizontales Scrollen (nur NEU gegenueber Baseline) | Muss | auto |
 | QC-B08 | UX | Sichtbare Begriffe im gerenderten DOM (Panel, Config alle Reiter, Settings, Titel, Manifest): kein LoxPanel/Fully/TbView ohne er, Titel tilebert (nur NEU) | Muss | auto |
-| QC-B10 | Kritiker | TbViewer-Leerlauf: tagsueber Dashboard statt schwarz, nachts aus, Nacht beginnt im Leerlauf -> aus | Muss | auto |
+| QC-B10 | Kritiker | TbViewer nie aus (Leerlauf -> Dashboard), nachts abdunkeln; Licht an (Schwelle) -> volle Helligkeit + Kamera live, Licht aus -> Nachlauf, dimmen | Muss | auto |
 | QC-B09 | Programmierer | Wetter-Kachel im Schoner: 5 Viewports x 12 Profile (nur mit --full, ca. 2-3 min) (nur --full) | Soll | auto |
 
 ## Prüfungen post – nach der Installation (nur lesen)

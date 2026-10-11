@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.2"
+APP_VERSION = "0.20.3"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -3942,6 +3942,7 @@ class App:
                 return {"ok": False, "error": "adb nicht freigegeben"}
             code, out = await _adb("-s", target, "shell", "dumpsys", "package", LAUNCHER_PKG, timeout=15)
         return {"ok": True, "installed": _launcher_ver_of(out) if code == 0 else 0,
+                "installedName": _launcher_name_of(out) if code == 0 else "",
                 "bundled": _launcher_bundled_ver()}
 
     async def device_adblog(self, device: str, ip: str = "") -> dict:
@@ -10271,6 +10272,12 @@ def _launcher_ver_of(dumpsys: str) -> int:
     """versionCode aus "dumpsys package" (0 = nicht installiert)."""
     m = re.search(r"versionCode=(\d+)", dumpsys)
     return int(m.group(1)) if m else 0
+
+
+def _launcher_name_of(dumpsys: str) -> str:
+    """versionName aus "dumpsys package" ("" = unbekannt)."""
+    m = re.search(r"versionName=([\w.\-+]+)", dumpsys)
+    return m.group(1) if m else ""
 
 
 async def api_panel_launcher_version(request: web.Request) -> web.Response:

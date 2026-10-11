@@ -171,7 +171,7 @@ def({ id: 'QC-S07', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Ken
   const cnt = (cmd) => +sh(cmd).out || 0;
   for (const pat of ['X-LoxPanel-Token', 'LOXPANEL_']) {
     const now = cnt(`git grep -c -E '${pat}' -- . ':!qa' ':!docs/QUICKCHECK.md' | awk -F: '{s+=$NF} END{print s+0}'`);
-    const head = cnt(`git grep -c -E '${pat}' HEAD -- . | awk -F: '{s+=$NF} END{print s+0}'`);
+    const head = cnt(`git grep -c -E '${pat}' HEAD -- . ':!qa' ':!docs/QUICKCHECK.md' | awk -F: '{s+=$NF} END{print s+0}'`);
     if (now < head) bad.push(`${pat}: ${now} Treffer < HEAD ${head} (Kennung entfernt/umbenannt?)`);
   }
   if (sh('git diff --quiet HEAD -- android/panel-launcher/launcher.keystore').code) bad.push('launcher.keystore geaendert');
