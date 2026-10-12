@@ -164,14 +164,29 @@ public class Kiosk extends Activity implements SensorEventListener {
     private void load() {
         String u = url();
         if (u.isEmpty()) {
-            web.loadData("<body style='background:#000;color:#aaa;font:20px sans-serif;padding:40px'>"
-                    + "TbViewer: keine Panel-URL gesetzt.<br><br>adb shell am start -n de.loxpanel.launcher/.Main --es url http://&lt;LoxBerry&gt;:8098/</body>",
-                    "text/html; charset=utf-8", null);
+            page("<body style='margin:0;background:#0d0f1a;color:#aaa;font:20px sans-serif;padding:40px'>" + MARKE
+                    + "<p>TbViewer: keine Panel-URL gesetzt.</p><p>adb shell am start -n de.loxpanel.launcher/.Main --es url http://&lt;LoxBerry&gt;:8098/</p></body>");
             return;
         }
         loaded = false;
         trusted = sameOrigin(u);   // Panel-URL ist per Definition vertrauenswuerdig; kein Fenster bis onPageStarted
         web.loadUrl(urlWithToken(u));
+    }
+
+    /** Marke 96 px (Quelle design-system/logo/marke.svg), inline: kein Request, keine Datei. */
+    private static final String MARKE = "<svg width='96' height='96' viewBox='0 0 48 48' aria-hidden='true'>"
+            + "<rect x='4' y='4' width='19.137' height='19.137' rx='7.31' fill='#ffc145'/>"
+            + "<rect x='24.863' y='4' width='19.137' height='19.137' rx='7.31' fill='#7db7ff'/>"
+            + "<rect x='4' y='24.863' width='19.137' height='19.137' rx='7.31' fill='#ff9e7a'/>"
+            + "<rect x='24.863' y='24.863' width='19.137' height='19.137' rx='7.31' fill='#5cd6a4'/>"
+            + "<circle cx='13.569' cy='13.569' r='2.259' fill='#1f2440'/>"
+            + "<rect x='28.518' y='10.612' width='11.827' height='5.914' rx='2.957' fill='#1f2440'/>"
+            + "<circle cx='37.388' cy='13.569' r='1.921' fill='#7db7ff'/>"
+            + "<path d='M19.276 31.475H28.724A1.07 1.07 0 0 1 29.768 32.781A5.914 5.914 0 0 1 18.232 32.781A1.07 1.07 0 0 1 19.276 31.475Z' fill='#1f2440'/></svg>";
+
+    /** Lokale Hinweisseite; loadDataWithBaseURL statt loadData, weil '#' (Farben) sonst als Fragment gilt. */
+    private void page(String html) {
+        web.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
     }
 
     /** true, wenn u dieselbe Origin (Schema, Host, Port) wie die Panel-URL hat. */
@@ -234,9 +249,9 @@ public class Kiosk extends Activity implements SensorEventListener {
     }
 
     private void offline() {
-        web.loadData("<body style='background:#000;color:#666;font:18px sans-serif;display:flex;align-items:center;"
-                + "justify-content:center;height:90vh'>tilebert nicht erreichbar &ndash; neuer Versuch &hellip;</body>",
-                "text/html; charset=utf-8", null);
+        page("<body style='margin:0;background:#0d0f1a;color:#aaa;font:18px sans-serif;display:flex;flex-direction:column;"
+                + "align-items:center;justify-content:center;gap:20px;height:100vh;text-align:center'>" + MARKE
+                + "<div>tilebert nicht erreichbar &ndash; neuer Versuch &hellip;</div></body>");
         ui.removeCallbacks(retry);
         ui.postDelayed(retry, RETRY_MS);
     }

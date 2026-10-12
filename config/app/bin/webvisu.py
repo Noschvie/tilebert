@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.7"
+APP_VERSION = "0.20.8"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -630,6 +630,12 @@ PARTIAL_TYPES = {"AudioZone", "AlarmClock", "Intercom", "TextInput", "UpDownAnal
 # Standard sind - beim Speichern kein Verlust (siehe _panels_verworfen).
 # Pfad-Muster, "*" steht fuer einen beliebigen Schluessel (z. B. Kachel-UUID).
 PANEL_STANDARD = {("ui", "split"): True, ("tiles", "*", "chartStyle"): "trend"}
+# Panel-Kennungen, die im Browser Eigenschaften von Object.prototype waeren
+# (Konfigurator/Panel greifen per PANELS[id] zu). Beim Speichern abgelehnt.
+PANEL_ID_RESERVED = frozenset((
+    "__proto__", "constructor", "prototype", "toString", "toLocaleString", "valueOf",
+    "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "__defineGetter__",
+    "__defineSetter__", "__lookupGetter__", "__lookupSetter__"))
 # "Werte gross" (ui.bigValues je Panel, tiles.<uuid>.big = "on"|"off"): reine
 # Wert-Bausteine zeigen ihren Messwert gross, Piktogramm als Wasserzeichen.
 # Zahl und Einheit kommen unveraendert aus dem Loxone-Format, nur getrennt.
@@ -1317,31 +1323,97 @@ def _intercom_config() -> dict:
 # Zugangsdaten in Kamera-URLs (user:pass@host oder ?-pwd=...): an die Config nur maskiert
 # ausliefern; beim Speichern stehen gebliebene Platzhalter durch die gespeicherten Werte ersetzen.
 URL_MASK = "\u2022" * 6
-_URL_PW_RE = re.compile(r"(?i)([?&;](?:-?pwd|-?pass|password|passwd|-?pw|pin|token|key)=)([^&#;]*)")
+# Parameternamen mit Zugangsdaten (Vergleich nach unquote, ohne Gross/Klein): feste Namen
+# gaengiger Kameras (Hikvision -pwd, Instar loginpas, Base64 auth=...) und Namen, die auf
+# pass/pwd/secret/token enden (user_password, loginpass ...)
+_URL_PW_NAME_RE = re.compile(
+    r"-?(?:pwd|pass|password|passwd|pw|psw|pin|token|key|loginpas|auth|apikey|api_key|"
+    r"access_token|secret)|[a-z0-9_.-]*(?:pass|passwd|password|pwd|psw|secret|token)", re.I)
+_URL_Q_RE = re.compile(r"([?&;])([^=&#;?]+)=([^&#;]*)")
+_URL_SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.-]*://", re.I)
+_URL_HOST_RE = re.compile(r"(?:\[[0-9a-f:.]+\]|[a-z0-9._~%-]+)(?::\d*)?", re.I)
 
 
-_URL_UI_RE = re.compile(r"^([a-z][a-z0-9+.-]*://)([^/?#]*)@", re.I)
+def _url_pw_name(name: str) -> bool:
+    """Ist ein Query-Parametername ein Passwort/Schluessel?"""
+    try:
+        name = unquote(name)
+    except (ValueError, TypeError):
+        pass
+    return bool(_URL_PW_NAME_RE.fullmatch(name.strip()))
+
+
+def _url_split_ui(u: str):
+    """URL in (Schema://, Userinfo, Rest ab Host) zerlegen; None ohne Userinfo.
+    Fail-closed: Das Passwort darf unkodiert '@', '/', '?' oder '#' enthalten. Steht vor
+    dem ersten '@' ein Passwort (user:...), endet die Userinfo am LETZTEN '@', auf das ein
+    plausibler host[:port] folgt; passt kein Host, am letzten '@' der Authority (sonst der
+    ganzen URL) - lieber zu viel maskieren als ein Passwortstueck zeigen."""
+    m = _URL_SCHEME_RE.match(u or "")
+    if not m:
+        return None
+    pre, a = m.group(0), u[m.end():]
+    cut = len(a)
+    for ch in "/?#":
+        k = a.find(ch)
+        if k >= 0:
+            cut = min(cut, k)
+    auth = a[:cut]
+
+    def host_ok(j: int) -> bool:
+        rest = a[j + 1:]
+        hm = _URL_HOST_RE.match(rest)
+        return bool(hm and hm.group(0) and (hm.end() == len(rest) or rest[hm.end()] in "/?#"))
+
+    if "@" not in auth and _URL_HOST_RE.fullmatch(auth):   # host[:port] ohne Userinfo
+        return None
+    f = a.find("@")
+    if f < 0:
+        return None
+    user, sep, _pw = a[:f].partition(":")
+    if not sep:                                      # nur Benutzername, nichts Geheimes
+        if "@" not in auth:
+            return None
+        j = auth.rfind("@")
+        return (pre, a[:j], a[j + 1:]) if host_ok(j) else None
+    if any(c in user for c in "/?#"):                # ':' gehoert zu Pfad/Query, keine Userinfo
+        return None
+    js = [k for k in range(f, len(a)) if a[k] == "@" and host_ok(k)]
+    j = js[-1] if js else (auth.rfind("@") if "@" in auth else a.rfind("@"))
+    return (pre, a[:j], a[j + 1:])
 
 
 def _url_origin(u: str):
-    """(Schema, Host, Port) einer URL fuer den Herkunftsvergleich; None bei Fehler."""
+    """(Schema, Host, Port) einer URL fuer den Herkunftsvergleich; bei unparsbarem Host
+    der rohe Authority-Text (gleiche Zerlegung wie beim Maskieren)."""
+    sp = _url_split_ui(u)
+    if sp:
+        u = sp[0] + sp[2]
     try:
         p = urlsplit(u)
         return (p.scheme.lower(), (p.hostname or "").lower(), p.port)
     except ValueError:
-        return None
+        m = _URL_SCHEME_RE.match(u)
+        if not m:
+            return None
+        return ("raw", re.split(r"[/?#]", u[m.end():], 1)[0].lower(), u[:m.end()].lower())
+
+
+def _url_mask_q(rest: str) -> str:
+    return _URL_Q_RE.sub(lambda m: m.group(1) + m.group(2) + "=" + (URL_MASK if m.group(3) else "")
+                         if _url_pw_name(m.group(2)) else m.group(0), rest)
 
 
 def _mask_url(u: str) -> str:
     """Passwort-Teile einer URL durch URL_MASK ersetzen (Benutzername bleibt sichtbar)."""
     if not u:
         return u
-    u = _URL_PW_RE.sub(lambda m: m.group(1) + (URL_MASK if m.group(2) else ""), u)
-
-    def _ui(m):
-        user, sep, _pw = m.group(2).partition(":")   # Userinfo bis zum letzten '@'; Passwort darf '@' enthalten
-        return m.group(1) + user + ":" + URL_MASK + "@" if sep else m.group(0)
-    return _URL_UI_RE.sub(_ui, u, count=1)
+    sp = _url_split_ui(u)
+    if not sp:
+        return _url_mask_q(u)
+    pre, ui, rest = sp
+    user, sep, _pw = ui.partition(":")
+    return pre + (user + ":" + URL_MASK if sep else ui) + "@" + _url_mask_q(rest)
 
 
 def _unmask_url(new: str, old: str) -> str:
@@ -1352,13 +1424,20 @@ def _unmask_url(new: str, old: str) -> str:
     o1, o2 = _url_origin(old), _url_origin(new)
     if o1 is None or o1 != o2:
         return new
-    olds = {m.group(1).lower(): m.group(2) for m in _URL_PW_RE.finditer(old)}
-    new = _URL_PW_RE.sub(lambda m: m.group(1) + (olds.get(m.group(1).lower(), "") if m.group(2) == URL_MASK else m.group(2)), new)
-    mo = _URL_UI_RE.match(old)
-    if mo and ":" in mo.group(2):
-        opw = mo.group(2).partition(":")[2]
-        new = re.sub(r"^([a-z][a-z0-9+.-]*://[^/:@]*):" + re.escape(URL_MASK) + "@", lambda m: m.group(1) + ":" + opw + "@", new, count=1, flags=re.I)
-    return new
+    so, sn = _url_split_ui(old), _url_split_ui(new)
+    orest = so[2] if so else old
+    olds = {m.group(2).lower(): m.group(3) for m in _URL_Q_RE.finditer(orest) if _url_pw_name(m.group(2))}
+
+    def q(rest: str) -> str:
+        return _URL_Q_RE.sub(lambda m: m.group(1) + m.group(2) + "=" + olds.get(m.group(2).lower(), "")
+                             if m.group(3) == URL_MASK and _url_pw_name(m.group(2)) else m.group(0), rest)
+    if not sn:
+        return q(new)
+    pre, ui, rest = sn
+    user, sep, pw = ui.partition(":")
+    if sep and pw == URL_MASK and so and ":" in so[1]:
+        ui = user + ":" + so[1].partition(":")[2]
+    return pre + ui + "@" + q(rest)
 
 
 def _clean_crop(v) -> dict | None:
@@ -4246,7 +4325,8 @@ class App:
     def _sanitize_panels(panels: dict) -> dict:
         out: dict = {}
         for pid, p in panels.items():
-            if not isinstance(pid, str) or not pid or pid.startswith("_") or not isinstance(p, dict):
+            if not isinstance(pid, str) or not pid or pid.startswith("_") \
+                    or pid in PANEL_ID_RESERVED or not isinstance(p, dict):
                 continue
             e: dict = {}
             if p.get("title"):
@@ -9299,18 +9379,21 @@ async def api_settings_night(request: web.Request) -> web.Response:
     if src and src not in ("loxone", "sun", "clock"):
         return web.json_response({"ok": False, "error": "Unbekannte Nachtquelle"}, status=400)
     u = str(data.get("control") or "").strip()
-    # Auswahl bleibt bei sun/clock gespeichert (Rueckwechsel), wirkt nur bei source loxone
-    if u.startswith("opmode:"):
-        if u[7:] not in app.op_modes:
-            return web.json_response({"ok": False, "error": "Betriebsmodus nicht gefunden"}, status=400)
-    elif u and u not in app.controls:
-        return web.json_response({"ok": False, "error": "Baustein nicht gefunden"}, status=400)
+    cfg = _load_cfg()
+    night = dict(cfg.get("night", {}) if isinstance(cfg.get("night"), dict) else {})
+    # Auswahl bleibt bei sun/clock gespeichert (Rueckwechsel), wirkt nur bei source loxone.
+    # Ist sie dort nicht (mehr) in der Struktur, bleibt der bisherige Wert stehen statt Fehler.
+    fehlt = ("Betriebsmodus nicht gefunden" if u[7:] not in app.op_modes else "") if u.startswith("opmode:") \
+        else ("Baustein nicht gefunden" if u and u not in app.controls else "")
+    if fehlt:
+        if src in ("sun", "clock"):
+            u = str(night.get("control") or "").strip()
+        else:
+            return web.json_response({"ok": False, "error": fehlt}, status=400)
     frm = _hhmm_clean(data.get("from"), NIGHT_FROM)
     to = _hhmm_clean(data.get("to"), NIGHT_TO)
     if frm is None or to is None:
         return web.json_response({"ok": False, "error": "Uhrzeit bitte als HH:MM angeben"}, status=400)
-    cfg = _load_cfg()
-    night = dict(cfg.get("night", {}) if isinstance(cfg.get("night"), dict) else {})
     night["control"] = u
     if src:
         night["source"] = src

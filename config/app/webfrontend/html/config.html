@@ -24,7 +24,10 @@
   .wrap{display:grid;grid-template-columns:216px 1fr;height:100vh;}
   /* ---------- Sidebar (Panelleiste) ---------- */
   aside.side{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
-  .brand{font-size:20px;font-weight:600;letter-spacing:.2px;}
+  .brand{font-size:20px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;gap:8px;}
+  /* Marke (design-system/logo/marke-klein.svg) vor dem Schriftzug; farbig fix, steht nur auf bezel */
+  .brand .bmark{flex:none;width:28px;height:28px;display:block;}
+  .brand .btx{display:block;min-width:0;}
   .brand small{display:block;color:var(--muted);font-size:12px;font-weight:400;letter-spacing:.4px;text-transform:uppercase;margin-top:2px;}
   .sectlbl{font-size:11px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px;}
   .plist{display:flex;flex-direction:column;gap:5px;}
@@ -609,7 +612,13 @@
   .addbtn .adi{font-weight:700;} .addbtn .adt{margin-left:.3em;}
   .wrap.slim{grid-template-columns:76px 1fr;}
   .wrap.slim aside.side{padding:18px 12px;align-items:center;overflow-x:hidden;}
-  .wrap.slim .brand,.wrap.slim .sectlbl,.wrap.slim .pn,.wrap.slim .pid,.wrap.slim .adt{display:none;}
+  /* Eingeklappt: nur die Marke als 44-px-Knopf zur Uebersicht, Pfeil darunter */
+  .wrap.slim .brandrow{flex-direction:column;align-items:center;}
+  .wrap.slim .brand{flex:none;width:44px;height:44px;justify-content:center;border-radius:var(--r-m);}
+  .wrap.slim .brand:hover{background:var(--bezel-tint);}
+  .wrap.slim .brand .btx{display:none;}
+  .brand:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:var(--r-m);}
+  .wrap.slim .sectlbl,.wrap.slim .pn,.wrap.slim .pid,.wrap.slim .adt{display:none;}
   .wrap.slim .brandrow{justify-content:center;}
   .wrap.slim .sidetog{transform:rotate(180deg);}
   .wrap.slim .plist{align-items:center;gap:8px;}
@@ -645,8 +654,7 @@
   .dashprops{display:grid;grid-template-columns:minmax(96px,.6fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr);gap:10px 18px;align-items:start;padding:10px 14px;}
   details.card>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none;}
   details.card>summary::-webkit-details-marker{display:none;}
-  details.card>summary::before{content:'▸';color:var(--muted);}
-  details.card[open]>summary::before{content:'▾';}
+  /* Aufklapp-Zeichen nur rechts (details>summary::after), kein zweites links */
   details.card>summary h3{margin:0;display:inline;}
   details.card.dimmed>summary h3{color:var(--muted);}
   .dashprops .field{width:auto;margin:0;min-width:0;}
@@ -764,6 +772,7 @@
     .rub{padding:8px 12px;font-size:13px;}
     .wrap.slim{grid-template-columns:1fr;} .wrap.slim aside.side{flex-direction:row;flex-wrap:wrap;align-items:center;}
     .wrap.slim .plist{flex-direction:row;flex-wrap:wrap;}
+    .wrap.slim .brandrow{flex-direction:row;}
   }
 
   /* Raster-Editor: richtet sich nach der Breite, die er WIRKLICH hat (Container),
@@ -817,6 +826,7 @@
   /* Speicherleiste */
   .savebar{display:flex;align-items:center;gap:12px;transition:box-shadow .2s;}
   #saveBtn{transition:background .12s,color .12s,transform .1s;}
+  .btn[hidden]{display:none !important;}   /* hidden gilt auch, wenn ein Media-Block .btn auf inline-flex setzt (Handy) */
   #saveBtn.ok{background:var(--good,#2b8055) !important;border-color:var(--good,#2b8055) !important;color:var(--prim-ink,#fff) !important;animation:saveOk .2s ease;}
   #saveBtn.err{background:var(--crit,#e2695f) !important;border-color:var(--crit,#e2695f) !important;color:var(--prim-ink,#fff) !important;}
   @keyframes saveOk{40%{transform:scale(1.06)}}
@@ -1074,6 +1084,8 @@
     .wrap:not(.slim) aside.side{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;}
     .wrap:not(.slim) .brandrow{flex:1 1 100%;}
     .wrap:not(.slim) .brand small,.wrap:not(.slim) .sectlbl{display:none;}
+    .brand .bmark{width:24px;height:24px;}
+    .brand{min-height:44px;}   /* Logo ist ein Knopf (role=button): Tap-Ziel 44 px */
     .wrap:not(.slim) .plist{flex:1 1 0;min-width:0;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:8px;scrollbar-width:none;}
     .wrap:not(.slim) .plist::-webkit-scrollbar{display:none;}
     .wrap:not(.slim) .pitem{flex:0 0 auto;max-width:200px;padding:8px 34px 8px 12px;}
@@ -1530,7 +1542,8 @@
 <div class="wrap">
   <aside class="side">
     <div class="brandrow">
-      <div class="brand" id="brand" role="button" tabindex="0" style="cursor:pointer">tilebert<small>Konfiguration</small></div>
+      <!-- Marke: Quelle design-system/logo/marke-klein.svg (inline, kein Request) -->
+      <div class="brand" id="brand" role="button" tabindex="0" style="cursor:pointer"><svg class="bmark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="4" y="4" width="18.2" height="18.2" rx="6.952" fill="#ffc145"/><rect x="25.8" y="4" width="18.2" height="18.2" rx="6.952" fill="#7db7ff"/><rect x="4" y="25.8" width="18.2" height="18.2" rx="6.952" fill="#ff9e7a"/><rect x="25.8" y="25.8" width="18.2" height="18.2" rx="6.952" fill="#5cd6a4"/><circle cx="13.1" cy="13.1" r="3.476" fill="#1f2440"/><rect x="27.62" y="9.46" width="14.56" height="7.28" rx="3.64" fill="#1f2440"/><circle cx="38.54" cy="13.1" r="2.54" fill="#7db7ff"/></svg><span class="btx">tilebert<small>Konfiguration</small></span></div>
       <button type="button" class="sidetog" id="sideTog" title="Menü einklappen" aria-label="Menü einklappen">
         <svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
     </div>
@@ -1663,7 +1676,7 @@
             <p class="note" data-i18n>Video-Streams (MJPEG) von Loxone-Türstationen und eigenen Überwachungskameras. Alle erscheinen im Widget „Kamera“.</p>
             <p class="note" data-i18n>Überwachungskameras mit MJPEG-Stream, z. B. <code>http://192.168.1.60/mjpg/video.mjpg</code>. Der Server holt das Bild einmal ab und gibt es an alle Panels weiter.</p>
             <div id="cam_list"></div>
-            <button type="button" class="minibtn" id="cam_add" style="margin-top:8px">Kamera hinzufügen</button>
+            <button type="button" class="minibtn" id="cam_add" style="margin-top:8px" data-i18n>Kamera hinzufügen</button>
             <div class="actions"><button class="btn" id="ic_save" data-i18n>Speichern</button><span class="toast" id="ic_toast"></span></div>
           </div>
         </section>
@@ -1880,7 +1893,7 @@
     <div class="savebar" id="savebar">
       <button class="btn save" id="saveBtn" data-i18n-title="Speichern (Strg/⌘ + S)">Speichern</button>
       <span class="saveinfo" id="saveInfo"></span>
-      <button class="btn ghost" id="discardBtn" hidden>Verwerfen</button>
+      <button class="btn ghost" id="discardBtn" hidden data-i18n>Verwerfen</button>
       <span id="delSlot"></span>
       <span class="toast" id="toast"></span>
     </div>
@@ -1888,7 +1901,17 @@
 </div>
 <script>
 const $ = (s,r=document)=>r.querySelector(s);
-let META=null, PANELS={}, cur=null, dirty=false, tileSel=null;
+let META=null, PANELS=Object.create(null), cur=null, dirty=false, tileSel=null;
+// Panel-Kennungen, die als Schluessel von Object.prototype gelten (Deep Link #panel:constructor,
+// #panel:__proto__ ...) - nie als Panel behandeln; der Server lehnt sie beim Speichern ebenfalls ab
+const P_RESERVED=new Set(Object.getOwnPropertyNames(Object.prototype).concat(['__proto__','prototype']));
+// PANELS ohne Prototyp fuehren: PANELS[id] liefert nur eigene Panels
+function pDict(o){ const d=Object.create(null);
+  Object.keys(o||{}).forEach(k=>{ if(!P_RESERVED.has(k)) d[k]=o[k]; }); return d; }
+// Eigenes Panel (ohne __global__)? Fuer IDs aus Hash, Liste, Suche oder Eingabe
+function pOwn(id){ return typeof id==='string' && id!=='__global__' && !P_RESERVED.has(id) && Object.prototype.hasOwnProperty.call(PANELS,id); }
+// Kennung belegt oder unzulaessig (Assistent)
+function pTaken(id){ return P_RESERVED.has(id) || Object.prototype.hasOwnProperty.call(PANELS,id); }
 let rubric='overview', subPconf='tabs', subSet='loxone', subDev='list', subGlob='panels';
 function svg(inner){return '<svg viewBox="0 0 24 24">'+inner+'</svg>';}
 const BICONS = {
@@ -2020,7 +2043,7 @@ const NAV={
       {k:'night',label:'Nachtmodus',sel:'#ntCard'},
       {k:'behavior',label:'Bedienung',sel:'#bhCard',kw:'Doppeltipp Wecker'},
       {k:'catcolors',label:'Kategorie-Farben',sel:'#ccCard',open:true}]},
-    {k:'password',label:'Passwortschutz',at:'settings:password',cards:[
+    {k:'password',label:'Passwortschutz',at:'settings:password',nosave:true,cards:[
       {k:'password',label:'Passwortschutz',sel:'#ovSec',kw:'Zugriffsschutz'}]},
     {k:'diagnose',label:'Diagnose',at:'settings:diagnose',cards:[
       {k:'log',label:'Server-Protokoll',sel:'#dgCard',kw:'Protokoll Log'},
@@ -2032,7 +2055,7 @@ const NAV={
       {k:'mode',label:'Betriebsmodus',sel:'#modeCard',kw:'Betriebsmodus-Assistent',open:true},
       {k:'agents',label:'Agenten',sel:'#ag_list',need:()=>!!(((LAST_DEVS||{}).anonymous)||[]).length},
       {k:'devs',label:'Geräteliste',sel:'#dev_list'}]},
-    {k:'add',label:'Gerät hinzufügen',at:'devices:add',cards:[
+    {k:'add',label:'Gerät hinzufügen',at:'devices:add',nosave:true,cards:[
       {k:'kind',label:'Welches Gerät?',sel:'.nptiles'},
       {k:'supported',label:'Welche Geräte gehen?',sel:'#supCard',kw:'Unterstützte Geräte',open:true}]}],
   panel:[
@@ -2070,7 +2093,7 @@ async function load(){
   const h0=location.hash;   // Direktlink lesen, bevor die Startseite den Hash ueberschreibt
   const r = await fetch('/api/meta'); META = await r.json();
   if(typeof LAST_DEVS!=='undefined' && LAST_DEVS && typeof renderDeviceList==='function') renderDeviceList(LAST_DEVS);   // Geraeteliste kam vor META: Gerätetypen nachziehen
-  PANELS = JSON.parse(JSON.stringify(META.panels||{}));
+  PANELS = pDict(JSON.parse(JSON.stringify(META.panels||{})));
   if(!PANELS.default) PANELS.default = {title:'tilebert', tabs:defaultTabs(), rooms:[], cats:[], ui:{grid:2}, states:{}};   // frische Installation: 2x2 als Standard
   PANELS.__global__ = {title:'Global (alle Panels)', ui: JSON.parse(JSON.stringify((META.theme||{}).ui||{})),
                        catColors: JSON.parse(JSON.stringify((META.theme||{}).categories||{})), __global:true};
@@ -2094,7 +2117,7 @@ function copyText(t){
 function panelUrl(id){ return (id==='default'||id==='__global__') ? '/' : '/?panel='+encodeURIComponent(id); }
 function renderList(){
   const box=$('#plist'); box.innerHTML='';
-  if(cur==='__global__'||!PANELS[cur]) cur=PANELS.default?'default':Object.keys(PANELS).find(k=>k!=='__global__');
+  if(!pOwn(cur)) cur=PANELS.default?'default':Object.keys(PANELS).find(k=>k!=='__global__');
   for(const id of Object.keys(PANELS)){
     if(id==='__global__') continue;
     const p=PANELS[id];
@@ -2117,7 +2140,7 @@ function renderList(){
 // Panel loeschen (✕ in der Liste): sofort, mit Rueckgaengig; wirksam mit Speichern.
 // Das Standard-Panel "default" laesst sich nicht loeschen.
 function deletePanel(id){
-  if(id==='default'||!PANELS[id]) return;
+  if(id==='default'||!pOwn(id)) return;
   const snap=JSON.stringify(PANELS[id]), was=cur;
   delete PANELS[id]; if(cur===id){ cur='default'; tbReset(); }
   renderList(); if(rubric==='pconf') setRubric('pconf'); markDirty();
@@ -2343,7 +2366,7 @@ function palItems(){
     L.push({t:nm+' · '+T('Dashboard'),s:T('Panel'),k:PAL_KW_PANEL,ic:'▦',go:()=>{ cur=id; tbReset(); subPconf='tabs'; tbTab=DK; setRubric('pconf'); }});
     (p.tabs||[]).forEach(k=>L.push({t:nm+' · '+tbLabel(p,k),s:T('Tab'),k:PAL_KW_PANEL,ic:'▤',go:()=>{ cur=id; tbReset(); subPconf='tabs'; tbTab=k; setRubric('pconf'); }})); });
   Object.keys(DEV).forEach(n=>L.push({t:n,s:T('Gerät'),k:PAL_KW_DEV,ic:'▣',go:()=>{ goTo('devices','list'); setTimeout(()=>{ const e=[...document.querySelectorAll('#dev_list .dev')].find(d=>d.dataset.name===n); if(e){ { const ob=e.closest('.devoffb'); if(ob&&ob.hidden){ const t=ob.parentNode.querySelector('.devofft'); if(t) t.click(); } } e.scrollIntoView({block:'center'}); e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'),1200); } },80); }}));
-  L.push({t:T('Speichern'),s:T('Aktion')+' · Strg/⌘ S',ic:'✓',go:()=>{ if(dirty) save(); }});
+  L.push({t:T('Speichern'),s:T('Aktion')+' · Strg/⌘ S',ic:'✓',go:()=>{ if(dirty||SECT_DIRTY.size) save(); }});
   L.push({t:T('Betriebsmodus-Assistent'),s:T('Aktion'),ic:'🧭',go:()=>{ goTo('devices','list'); mzOpen(); }});
   L.push({t:T('Panel öffnen'),s:T('Aktion'),k:PAL_KW_PANEL,ic:'↗',go:()=>window.open(panelUrl(cur),'_blank')});
   L.push({t:T('Panel hinzufügen'),s:T('Aktion'),k:PAL_KW_PANEL,ic:'+',go:()=>$('#addBtn').click()});
@@ -2387,15 +2410,26 @@ function setRubric(r){
   const oh=$('#overviewHost'); if(oh) oh.style.display = ov?'':'none';
   $('#pconfHost').style.display = pc?'':'none';
   $('#setHost').style.display = (ov||pc)?'none':'';     // System und Geraete teilen sich setHost
-  $('#savebar').style.display = ov?'none':'';   // eine Speicherleiste fuer Panels, System und Geraete
   $('#phead').style.display = pc?'':'none';
   $('#subtabs').style.display = ov?'none':'';
+  saveBarVis();
   if(ov){ renderOverview(); refreshAdmin(); navHashWrite(); return; }
   renderList();                                          // aktives Panel nur im Panel-Editor markieren
   if(r==='global'){ renderGlobalEditor(PANELS.__global__); }
   else if(pc){ renderEditor(); }
   else { renderSubtabs(); showSub(getSub()); }
 }
+// Eine Speicherleiste fuer Panels, System und Geraete. Nicht auf der Startseite und nicht auf
+// Reitern ohne speicherbare Felder (NAV nosave), dort nur solange etwas ungespeichert ist.
+function saveBarVis(){ const sb=$('#savebar'); if(!sb) return;
+  const nk={settings:'system',global:'system',devices:'devices',pconf:'panel'}[rubric];
+  const t=nk&&(NAV[nk]||[]).find(t=>t.k===(rubric==='global'?'panels':getSub()));
+  // Rueckmeldung ("Gespeichert") steht in der Leiste: erst ausblenden, wenn der Hinweis weg ist
+  const ts=$('#toast'), toastOn=!!(ts&&ts.classList.contains('show'));
+  sb.style.display=(rubric==='overview'||(t&&t.nosave&&!(dirty||SECT_DIRTY.size)&&!toastOn))?'none':''; }
+// Hinweis ein-/ausgeblendet -> Sichtbarkeit der Leiste neu bestimmen
+{ const ts=$('#toast'); if(ts&&typeof MutationObserver!=='undefined')
+    new MutationObserver(()=>saveBarVis()).observe(ts,{attributes:true,attributeFilter:['class']}); }
 function getSub(){ return rubric==='pconf'?subPconf:rubric==='global'?subGlob:(rubric==='devices'?subDev:subSet); }
 function setSub(k){ if(rubric==='pconf') subPconf=k; else if(rubric==='global') subGlob=k; else if(rubric==='devices') subDev=k; else subSet=k; }
 document.querySelectorAll('.rub').forEach(b=>b.onclick=()=>setRubric(b.dataset.rub));
@@ -2405,6 +2439,8 @@ document.querySelectorAll('.rub').forEach(b=>b.onclick=()=>setRubric(b.dataset.r
 // Seitenleiste einklappbar (nur Panel-Kacheln), Zustand je Browser merken
 (function(){ const w=document.querySelector('.wrap'), t=$('#sideTog');
   const set=c=>{ w.classList.toggle('slim',c); t.title=c?T('Menü ausklappen'):T('Menü einklappen'); t.setAttribute('aria-label',t.title);
+    // Eingeklappt steht die Marke allein -> eigener Name fuer Screenreader
+    const br=$('#brand'); if(br){ if(c) br.setAttribute('aria-label',T('tilebert – Übersicht')); else br.removeAttribute('aria-label'); }
     try{ localStorage.setItem('lp_cfg_slim',c?'1':''); }catch(e){} };
   let c=false; try{ c=localStorage.getItem('lp_cfg_slim')==='1'; }catch(e){}
   set(c); t.onclick=()=>set(!w.classList.contains('slim')); })();
@@ -2436,23 +2472,25 @@ function navNorm(r, sub, x, y){
   if(old){ const o=old.split(':'); r=o[0]; sub=o[1]||''; x=o[2]||x; }
   const n=NAV_RUB[r]; if(!n||n==='start') return {r:'start',k:'start'};
   if(n==='panel'){ let id='', tab='';
-    if(r==='panel'){ if(x){ id=sub; tab=x; } else if(sub&&PANELS[sub]&&sub!=='__global__') id=sub; else tab=sub; }
+    if(r==='panel'){ if(x){ id=sub; tab=x; } else if(pOwn(sub)) id=sub; else tab=sub; }
     else { tab=sub; id=x; }
     tab=NAV_PTAB_OLD[tab]||tab;
     let t=NAV.panel.find(t=>t.k===tab), card='';
     if(!t&&tab){ t=NAV.panel.find(t=>(t.cards||[]).some(c=>c.k===tab)); if(t) card=tab; }
     if(t&&!card&&y&&(t.cards||[]).some(c=>c.k===y)) card=y;
-    return {r:'panel',k:t?t.k:(tab?NAV.panel[0].k:''),card,id:(id&&PANELS[id]&&id!=='__global__')?id:''}; }
+    return {r:'panel',k:t?t.k:(tab?NAV.panel[0].k:''),card,id:pOwn(id)?id:''}; }
   const tabs=NAV[n]; let t=tabs.find(t=>t.k===sub), card='';
   if(!t&&sub){ t=tabs.find(t=>(t.cards||[]).some(c=>c.k===sub)); if(t) card=sub; }
   if(!t) t=tabs[0];
   if(!card&&x&&(t.cards||[]).some(c=>c.k===x)) card=x;
+  // Karte mit need (z. B. Agenten nur bei Agenten ohne Namen): ohne Inhalt nur den Reiter zeigen
+  if(card){ const c=(t.cards||[]).find(c=>c.k===card); try{ if(c&&c.need&&!c.need()) card=''; }catch(e){ card=''; } }
   return {r:n,k:t.k,card};
 }
 // Zum normalisierten Ziel springen (heutigen internen Ort aus NAV.at), Karte scrollen/aufklappen
 function navGo(n){
   if(!n||n.r==='start'){ setRubric('overview'); return; }
-  if(n.r==='panel'){ if(n.id){ cur=n.id; tileSel=null; tbReset(); }
+  if(n.r==='panel'){ if(pOwn(n.id)){ cur=n.id; tileSel=null; tbReset(); }
     if(n.k) subPconf=navSub(NAV.panel.find(t=>t.k===n.k).at);
     rubric='pconf'; setRubric('pconf');
     const c=n.card&&n.k?(NAV.panel.find(t=>t.k===n.k).cards||[]).find(c=>c.k===n.card):null;
@@ -2527,6 +2565,7 @@ function sectBind(){
 // nach Kameras). Einmal neu laden, wenn alle Bereiche durch sind.
 let SECT_SAVING=false, SECT_RELOAD=false;
 async function sectSaveAll(){
+  if(SECT_SAVING) return false;   // laeuft schon (save() laesst keinen zweiten Lauf zu)
   let ok=true;
   SECT_SAVING=true; SECT_RELOAD=false;
   try{
@@ -2536,8 +2575,9 @@ async function sectSaveAll(){
       let res; try{ res=await b.onclick(); }catch(e){ ok=false; continue; }
       // false: abgebrochen (z. B. Rueckfrage verneint), Bereich bleibt ungespeichert
       if(res===false||(toast&&/err|bad/.test(toast.className))) ok=false; else SECT_DIRTY.delete(sc.k); }
+    // Neuladen noch im Lauf; SECT_SAVING erst danach zuruecksetzen
+    if(SECT_RELOAD){ SECT_RELOAD=false; try{ await loadSettings(true); }catch(e){} }
   }finally{ SECT_SAVING=false; }
-  if(SECT_RELOAD){ SECT_RELOAD=false; try{ await loadSettings(); }catch(e){} }
   return ok;
 }
 // Strg/⌘+S speichert, Strg/⌘+K oeffnet die Suche
@@ -2586,7 +2626,7 @@ function showSub(k){
   panes.forEach(p=>{ const on=p.dataset.sub===k; p.classList.toggle('active',on); if(on)found=true; });
   if(k==='password') renderAdminCard();
   if(!found&&panes.length){ panes[0].classList.add('active'); }
-  navHashWrite();
+  saveBarVis(); navHashWrite();
 }
 
 function bindAppearance(p){
@@ -2654,7 +2694,7 @@ function fontField(label,key,ui,id){
   return '<div class="field" style="max-width:220px"><label class="lbl">'+T(label)+'</label>'+
     '<select id="'+id+'Sel">'+FONTS.map(f=>'<option value="'+esc(f.v)+'"'+(sameFont(v,f.v)?' selected':'')+'>'+esc(f.v===''&&rubric==='global'?T('Standard'):T(f.label))+'</option>').join('')+
       '<option value="__custom"'+(customFont(v)?' selected':'')+'>Eigene…</option></select>'+
-    '<input type="text" id="'+id+'Custom" value="'+esc(customFont(v)?v:'')+'" placeholder="z. B. Pacifico, cursive"'+(customFont(v)?'':' style="display:none"')+'></div>';
+    '<input type="text" id="'+id+'Custom" value="'+esc(customFont(v)?v:'')+'" placeholder="'+esc(T('z. B. Pacifico, cursive'))+'"'+(customFont(v)?'':' style="display:none"')+'></div>';
 }
 function bindFont(p,key,id){
   const fs=$('#'+id+'Sel'), fc=$('#'+id+'Custom');
@@ -2772,16 +2812,16 @@ function renderCatColors(p){
     const on=amp?(v.on||'#e2695f'):'#e2695f', off=amp?(v.off||'#52b881'):'#52b881';
     const ms=MSCOL[nm]||'';                     // Miniserver-Farbe (falls vorhanden)
     return '<div class="ccrow">'+
-      '<span class="tgl'+(amp?' on':'')+'" data-catt="'+esc(nm)+'" title="Zustands-Ampel an/aus">◐</span>'+
+      '<span class="tgl'+(amp?' on':'')+'" data-catt="'+esc(nm)+'" title="'+esc(T('Zustands-Ampel an/aus'))+'">◐</span>'+
       '<span class="ccnm">'+esc(nm)+'</span>'+
       (amp
-        ? '<label class="cclbl">Aktiv</label><input type="color" data-catc="'+esc(nm)+'" data-slot="on" value="'+esc(on)+'">'+
-          '<label class="cclbl">OK</label><input type="color" data-catc="'+esc(nm)+'" data-slot="off" value="'+esc(off)+'">'
+        ? '<label class="cclbl">'+T('Aktiv')+'</label><input type="color" data-catc="'+esc(nm)+'" data-slot="on" value="'+esc(on)+'">'+
+          '<label class="cclbl">'+T('OK')+'</label><input type="color" data-catc="'+esc(nm)+'" data-slot="off" value="'+esc(off)+'">'
         : (single
-            ? '<label class="cclbl">Farbe</label><input type="color" data-catc="'+esc(nm)+'" data-slot="single" value="'+esc(single)+'">'
-            : '<span class="ccmut">neutral</span>'))+
-      (ms ? '<button class="minibtn ccms" data-catms="'+esc(nm)+'" title="Miniserver-Voreinstellung übernehmen" style="--sw:'+esc(ms)+'"><span class="ccsw"></span>Standard</button>' : '')+
-      (has ? '<button class="minibtn ccreset" data-catr="'+esc(nm)+'" title="Diese Kategorie auf neutral zurücksetzen">neutral</button>' : '')+
+            ? '<label class="cclbl">'+T('Farbe')+'</label><input type="color" data-catc="'+esc(nm)+'" data-slot="single" value="'+esc(single)+'">'
+            : '<span class="ccmut">'+T('neutral')+'</span>'))+
+      (ms ? '<button class="minibtn ccms" data-catms="'+esc(nm)+'" title="'+esc(T('Miniserver-Voreinstellung übernehmen'))+'" style="--sw:'+esc(ms)+'"><span class="ccsw"></span>'+T('Standard')+'</button>' : '')+
+      (has ? '<button class="minibtn ccreset" data-catr="'+esc(nm)+'" title="'+esc(T('Diese Kategorie auf neutral zurücksetzen'))+'">'+T('neutral')+'</button>' : '')+
     '</div>';
   }).join('');
   box.querySelectorAll('[data-catms]').forEach(b=>b.onclick=()=>{
@@ -3865,7 +3905,7 @@ document.addEventListener('keydown',ev=>{
 });
 function sizeField(label,key,ui){
   const v=(ui||{})[key];
-  return '<div class="field"><label class="lbl">'+label+'</label>'+
+  return '<div class="field"><label class="lbl">'+T(label)+'</label>'+
     '<input type="number" min="8" max="'+(key==='saverFcSize'?32:80)+'" data-ui="'+key+'" value="'+(v==null?'':v)+'" placeholder="—"></div>';
 }
 function statControls(){
@@ -3881,7 +3921,7 @@ let SAVED_SNAP=null;
 function snapSaved(){ try{ SAVED_SNAP=JSON.parse(JSON.stringify(PANELS)); }catch(e){ SAVED_SNAP=null; } }
 function stable(v){ return JSON.stringify(v,(k,x)=>(x&&typeof x==='object'&&!Array.isArray(x))?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x); }
 const CHG_UI={grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Bei Annäherung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Annäherung zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
-  nightWake:'Hell nach Antippen (s)',phone:'Panel-Größe (Handy)',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',motion:'Animation',iconAnim:'Animierte Symbole',contrast:'Kontrast',sceneLight:'Lichtszenen',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
+  nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',motion:'Animation',iconAnim:'Animierte Symbole',contrast:'Kontrast',sceneLight:'Lichtszenen',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
   nudgeX:'Versatz horizontal (px)',iconSize:'Symbol',nameSize:'Kachelname',subSize:'Statuszeile',bold:'Kachelnamen',dblTapOff:'Doppeltipp',alarmsEnabled:'Wecker',
   lang:'Sprache',saverFcSize:'Wettervorschau',tileShadow:'Kachel-Schatten'};
 function changeList(){ return panelChanges().concat([...SECT_DIRTY].map(k=>T((SECTS.find(x=>x.k===k)||{}).label||k))); }
@@ -3908,7 +3948,7 @@ function saveInfo(){ const i=$('#saveInfo'), sb=$('#savebar'), d=$('#discardBtn'
   if(dirty && SAVED_SNAP && !panelChanges().length){ dirty=false; dirtyN=0; }
   const n=(dirty?(SAVED_SNAP?panelChanges().length:dirtyN)||dirtyN:0)+SECT_DIRTY.size, any=dirty||SECT_DIRTY.size>0;
   i.textContent = any ? (n===1?T('1 Änderung'):n+' '+T('Änderungen')) : T('Alles gespeichert');
-  if(sb) sb.classList.toggle('dirty',any); if(d) d.hidden=!any; }
+  if(sb) sb.classList.toggle('dirty',any); if(d) d.hidden=!any; saveBarVis(); }
 // Rückfrage als eigener Dialog (statt confirm()): liefert true bei Bestätigung. Escape und Abbrechen = false.
 function dlgAsk(title, text, okLabel, danger){
   return new Promise(res=>{
@@ -3948,14 +3988,38 @@ function saveBtnFlash(ok){ const b=$('#saveBtn'); if(!b) return; clearTimeout(b.
   b.classList.remove('ok','err'); void b.offsetWidth; b.classList.add(ok?'ok':'err');
   b.textContent=ok?T('Gespeichert'):T('Fehler');
   b._ft=setTimeout(()=>{ b.classList.remove('ok','err'); b.textContent=T('Speichern'); }, 2000); }
-async function save(){
+// Laufschutz: Waehrend ein Speicherlauf laeuft, startet kein zweiter (Doppelklick, zweimal
+// Strg+S, Assistent). Ein weiterer Aufruf wartet und speichert danach nur, was dann noch offen ist.
+let SAVE_RUN=null, SAVE_NEXT=null;
+// Zeitlimit: Waehrend eines Speicherlaufs bricht jede Anfrage ohne eigenes Signal nach
+// SAVE_TO_MS ab (Hochladen mit Datei/FormData nach SAVE_TO_UP_MS). So haengt der Knopf
+// nicht, wenn der Server nicht antwortet; die Routinen melden den Fehler wie sonst auch.
+const SAVE_TO_MS=20000, SAVE_TO_UP_MS=120000; let SAVE_DEPTH=0;
+{ const f0=window.fetch.bind(window);
+  window.fetch=function(u,o){
+    if(!SAVE_DEPTH||(o&&o.signal)||typeof AbortController==='undefined') return f0(u,o);
+    const up=!!(o&&o.body&&typeof o.body!=='string'), ac=new AbortController();
+    const tm=setTimeout(()=>{ try{ ac.abort(new DOMException('timeout','TimeoutError')); }catch(e){ ac.abort(); } }, up?SAVE_TO_UP_MS:SAVE_TO_MS);
+    // Timer laeuft bis zum Abbruch weiter: deckt auch das Lesen des Antwortkoerpers ab
+    // (nach vollstaendiger Antwort ist abort() wirkungslos)
+    return f0(u,Object.assign({},o||{},{signal:ac.signal})).catch(e=>{ clearTimeout(tm); throw e; });
+  }; }
+function save(){
+  if(SAVE_NEXT) return SAVE_NEXT;
+  if(SAVE_RUN){ SAVE_NEXT=SAVE_RUN.catch(()=>{}).then(()=>{ SAVE_NEXT=null; return save(); }); return SAVE_NEXT; }
+  const b=$('#saveBtn'); if(b) b.disabled=true;
+  SAVE_DEPTH++;
+  SAVE_RUN=saveRun().finally(()=>{ SAVE_DEPTH--; SAVE_RUN=null; if(b) b.disabled=false; });
+  return SAVE_RUN;
+}
+async function saveRun(){
   const t=$('#toast');
   if(SECT_DIRTY.size){ const n=SECT_DIRTY.size, ok=await sectSaveAll(); saveInfo();
     if(!dirty){ saveBtnFlash(ok); t.className='toast show'+(ok?'':' err'); t.textContent=ok?T('Gespeichert')+' ('+n+' '+T(n===1?'Bereich':'Bereiche')+')':T('Nicht alles gespeichert. Details stehen in der markierten Karte.');
       setTimeout(()=>t.classList.remove('show'),4000); return; } }
   if(!dirty){ return; }
   try{
-    const panels={}; for(const k in PANELS){ if(k!=='__global__') panels[k]=PANELS[k]; }
+    const panels={}; Object.keys(PANELS).forEach(k=>{ if(pOwn(k)) panels[k]=PANELS[k]; });
     const r=await fetch('/api/panels',{method:'POST',headers:{'Content-Type':'application/json'},
                           body:JSON.stringify({panels})});
     const j=await r.json();
@@ -4046,12 +4110,12 @@ function renderTileEditor(hostSel){
       '<div class="frow"><label class="lbl">Schrift</label>'+
         '<select id="tfontSel">'+FONTS.map(f=>'<option value="'+esc(f.v)+'"'+(sameFont(ov.font,f.v)?' selected':'')+'>'+esc(T(f.label))+'</option>').join('')+
           '<option value="__custom"'+(customFont(ov.font)?' selected':'')+'>Eigene…</option></select>'+
-        '<span class="tgl'+(ov.bold?' on':'')+'" id="tBold" title="Fett">B</span>'+
-        '<span class="tgl it'+(ov.italic?' on':'')+'" id="tItalic" title="Kursiv">I</span></div>'+
+        '<span class="tgl'+(ov.bold?' on':'')+'" id="tBold" title="'+esc(T('Fett'))+'">B</span>'+
+        '<span class="tgl it'+(ov.italic?' on':'')+'" id="tItalic" title="'+esc(T('Kursiv'))+'">I</span></div>'+
       '<div class="frow" id="tfontCustomRow"'+(customFont(ov.font)?'':' style="display:none"')+'>'+
-        '<label class="lbl"></label><input type="text" id="tfontCustom" value="'+esc(customFont(ov.font)?ov.font:'')+'" placeholder="z. B. Pacifico, cursive" style="flex:1"></div>'+
+        '<label class="lbl"></label><input type="text" id="tfontCustom" value="'+esc(customFont(ov.font)?ov.font:'')+'" placeholder="'+esc(T('z. B. Pacifico, cursive'))+'" style="flex:1"></div>'+
       '<div class="frow"><label class="lbl">Icon</label><div class="itabs">'+
-        '<span class="itab on" data-src="builtin">Mitgeliefert</span>'+
+        '<span class="itab on" data-src="builtin">'+T('Mitgeliefert')+'</span>'+
         '<span class="itab" data-src="loxone">Loxone ('+Math.max((((META.icons||{}).loxone)||[]).length,(META.icons||{}).ms||0)+')</span>'+
         (((META.icons||{}).loxlib)?'<span class="itab" data-src="loxlib">'+T('Bibliothek')+' ('+META.icons.loxlib+')</span>':'')+
         '<span class="itab dis" title="'+T('Folgt später')+'">Google · Upload</span></div></div>'+
@@ -4197,7 +4261,7 @@ function paintLoxlib(box,tgt){
 const PW={};
 function pwId(s){ return String(s||'').trim().toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').normalize('NFD').replace(/[̀-ͯ]/g,'')
   .replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32); }
-function pwFreeId(base){ let id=base||'panel', n=2; while(PANELS[id]) id=(base||'panel')+'-'+(n++); return id; }
+function pwFreeId(base){ let id=base||'panel', n=2; while(pTaken(id)) id=(base||'panel')+'-'+(n++); return id; }
 const PW_FLOW=['start','groesse','tabs','dashboard','design','name','geraet'];
 const PW_TABS=[['favoriten','★ Favoriten','aus Loxone, vorbefüllt'],['raeume','Räume','Übersicht aller Räume'],
   ['kategorien','Kategorien','Übersicht der Kategorien'],['zentral','Zentral','Zentralbausteine'],
@@ -4279,7 +4343,7 @@ function pwRender(){
       '<div class="wznote" id="pwUrl"></div>';
     const ti=$('#pwTitle'), ii=$('#pwIdIn');
     const upd=()=>{ if(!PW.idTouched) ii.value=pwFreeId(pwId(ti.value)||'panel'); PW.title=ti.value.trim(); PW.id=pwId(ii.value);
-      $('#pwUrl').innerHTML=T('Adresse am Gerät:')+' <code>http://'+esc(location.host)+'/?panel='+esc(PW.id||'…')+'</code>'+(PANELS[PW.id]?' <b class="bad">'+T('Diese Kennung ist schon vergeben.')+'</b>':''); pwBtns(); };
+      $('#pwUrl').innerHTML=T('Adresse am Gerät:')+' <code>http://'+esc(location.host)+'/?panel='+esc(PW.id||'…')+'</code>'+(pTaken(PW.id)?' <b class="bad">'+T('Diese Kennung ist schon vergeben.')+'</b>':''); pwBtns(); };
     ti.oninput=upd; ii.oninput=()=>{ PW.idTouched=true; upd(); }; upd(); setTimeout(()=>ti.focus(),0);
   } else if(key==='geraet'){
     const url='http://'+location.host+'/?panel='+PW.id;
@@ -4309,7 +4373,7 @@ function pwBtns(){
   $('#pwNext').textContent=key==='start'?T('Anlegen'):(key==='geraet'?T('Panel anlegen'):T('Weiter')+' →');
   let ok=true;
   if(key==='tabs') ok=PW.tabs.length>0;
-  if(key==='name') ok=!!PW.id && !PANELS[PW.id];
+  if(key==='name') ok=!!PW.id && !pTaken(PW.id);
   $('#pwNext').disabled=!ok;
 }
 // Dashboard-Vorlage im Raster (x ueber beide Flaechen bei 2 Panels)
@@ -4360,6 +4424,8 @@ function flash(el,msg,ok){ if(!el)return; el.textContent=msg; el.className='toas
 function fehlerGrund(src){
   const raw=(src==null)?'':(typeof src==='string'?src:(src.error||src.message||''));
   const low=String(raw).toLowerCase();
+  if((src&&(src.name==='TimeoutError'||src.name==='AbortError'))||/timeouterror|signal is aborted|operation was aborted/.test(low))
+    return T('Der Server antwortet nicht (Zeitüberschreitung).')+' '+T('Prüfe, ob tilebert läuft, und versuche es noch einmal.');
   if((typeof TypeError!=='undefined'&&src instanceof TypeError)||/failed to fetch|networkerror|load failed|network request/.test(low))
     return T('Der Server ist nicht erreichbar.')+' '+T('Prüfe die Netzwerkverbindung und ob tilebert läuft.');
   if(/adb nicht freigegeben|unauthorized/.test(low))
@@ -4375,8 +4441,8 @@ function fehlerText(was,src){ return was+' '+fehlerGrund(src); }
 function sentText(n){ return n===1?T('Gesendet an 1 Gerät'):T('Gesendet an {n} Geräte').replace('{n}',n); }
 function flashErr(el,was,src){ flash(el,fehlerText(was,src),false); }
 
-async function loadSettings(){
-  if(SECT_SAVING){ SECT_RELOAD=true; return; }   // sectSaveAll laedt am Ende einmal neu
+async function loadSettings(force){
+  if(SECT_SAVING&&force!==true){ SECT_RELOAD=true; return; }   // sectSaveAll laedt am Ende einmal neu
   const r=await fetch('/api/settings'); SET=await r.json(); if(rubric==='overview') renderOverview();
   // Bereiche mit ungespeicherten Aenderungen nicht mit dem Serverstand ueberschreiben
   // (Neuladen nach Sofort-Aktionen wie Klingelton hochladen oder zeitversetzt nach dem Speichern)
@@ -4723,9 +4789,13 @@ $('#nt_src').onchange=ntShow; $('#nt_from').oninput=$('#nt_to').oninput=ntClockW
 $('#nt_save').onclick=async()=>{
   const src=$('#nt_src').value;
   if(src==='loxone' && !$('#nt_control').value){ flashErr($('#nt_toast'),T('Bitte einen Betriebsmodus wählen.'),{}); return; }
-  if(src==='clock' && $('#nt_from').value && $('#nt_from').value===$('#nt_to').value && !confirm(T('Nacht ab und Nacht bis sind gleich. Dann ist nie Nacht.')+'\n\n'+T('Trotzdem speichern?'))) return false;
   if(src==='clock' && (!$('#nt_from').value || !$('#nt_to').value)){ flashErr($('#nt_toast'),T('Bitte Uhrzeit von und bis angeben.'),{}); return; }
-  const body={source:src, control:src==='sun'?'':$('#nt_control').value, from:$('#nt_from').value||'', to:$('#nt_to').value||''};
+  // Rueckfrage im eigenen Dialog; bei Abbruch bleibt die Karte ungespeichert (false fuer sectSaveAll)
+  if(src==='clock' && $('#nt_from').value===$('#nt_to').value &&
+     !(await dlgAsk(T('Nachtmodus'),T('Nacht ab und Nacht bis sind gleich. Dann ist nie Nacht.')+' '+T('Trotzdem speichern?'),T('Speichern')))){
+    flash($('#nt_toast'),T('Nicht gespeichert.'),false); return false; }
+  // Loxone-Auswahl immer mitsenden: bleibt bei Sonne/Uhrzeit gespeichert (Rueckwechsel), wirkt nur bei Loxone
+  const body={source:src, control:$('#nt_control').value||'', from:$('#nt_from').value||'', to:$('#nt_to').value||''};
   $('#nt_save').disabled=true;
   try{
     const r=await fetch('/api/settings/night',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -5320,7 +5390,7 @@ function devRow(name){
     '<div class="dsec dset">'+dsh('auto',T('Einstellungen'))+
       '<div class="lblq"><label class="lbl">'+T('Gerätetyp')+'</label>'+qField(T('Der Gerätetyp bestimmt, ob die Knöpfe „TbViewer installieren“ und „Gerät neu starten“ erscheinen (Android per adb, Shelly zuerst über die eigene Schnittstelle).'))+'</div>'+
       '<select class="dev_model" title="'+T('Welches Gerät ist das?')+'"><option value="">'+T('– Gerätetyp wählen –')+'</option>'+
-        models.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===d.model?' selected':'')+'>'+esc(m.label)+'</option>').join('')+'</select>'+
+        models.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===d.model?' selected':'')+'>'+esc(T(m.label))+'</option>').join('')+'</select>'+
       '<div class="dhint">'+(d.model?T('Bestimmt, welche Steuerung angeboten wird.'):T('Wähle zuerst den Gerätetyp. Dann erscheinen die passenden Funktionen.'))+'</div>'+
       '<div class="ddet">'+devDetHTML(name,d.model)+'</div>'+
       '<div class="dtips">'+devTipsHTML(name,mo)+'</div>'+
@@ -5428,7 +5498,7 @@ function devDetHTML(name,model){
   const chips=[d.hw, d.os, d.browser, d.screen&&(T('Bildschirm')+' '+d.screen), d.view&&(T('Fenster')+' '+d.view),
     d.cores?d.cores+' '+T('Kerne'):'', d.mem?d.mem+' GB':'', d.touch?T('Touch'):'', d.pwa?T('als App'):''].filter(Boolean);
   const gm=((META||{}).deviceModels||[]).find(m=>m.key===d.guess);
-  const sug=(gm&&d.guess!==model)?'<button type="button" class="minibtn ddetuse" data-guess="'+esc(d.guess)+'">'+T('Als')+' „'+esc(gm.label)+'“ '+T('übernehmen')+'</button>':'';
+  const sug=(gm&&d.guess!==model)?'<button type="button" class="minibtn ddetuse" data-guess="'+esc(d.guess)+'">'+T('Als')+' „'+esc(T(gm.label))+'“ '+T('übernehmen')+'</button>':'';
   return '<div class="ddetbox"><div class="ddeth"><b>'+T('Automatisch erkannt')+'</b><small>'+(d.ip?'IP '+esc(d.ip)+' · ':'')+T('zuletzt')+' '+ago(d.last)+'</small></div>'+
     '<div class="ddetchips">'+chips.map(c=>'<span>'+esc(c)+'</span>').join('')+'</div>'+
     '<div class="ddetid" title="'+T('Feste Geräte-ID. Bleibt gleich, auch wenn sich die IP-Adresse ändert.')+'">ID '+esc(d.uid)+(d.mac?' · MAC '+esc(d.mac):'')+'</div>'+sug+'</div>';
@@ -5444,7 +5514,7 @@ function devTipsHTML(name,mo){
     if(mo.panes===1&&!one&&!ui.phone) warn=T('Zeigt gerade Panel „')+esc(P.title||prof)+T('“ breit. Dieses Gerät ist quadratisch und braucht das Format „Quadratisch“.'); }
   const tips=(mo.tips||[]);
   if(!tips.length&&!warn) return '';
-  return '<div class="dtip"><b>'+T('Tipps für')+' '+esc(mo.label)+'</b>'+
+  return '<div class="dtip"><b>'+T('Tipps für')+' '+esc(T(mo.label))+'</b>'+
     (warn?'<p class="dwarn">'+warn+'</p>':'')+
     '<ul>'+tips.map(t=>'<li>'+esc(T(t))+'</li>').join('')+'</ul></div>';
 }

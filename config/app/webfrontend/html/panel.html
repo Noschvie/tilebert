@@ -85,6 +85,12 @@
        Layout-Groesse aus 240er Kacheln, die Anzeige waechst gleichmaessig mit. */
     transform:translateX(var(--nudge-x,0)) scale(var(--ui-scale,1));
     display:grid;grid-template-rows:minmax(0,1fr) auto;}
+  /* Erststart: Marke + "Verbinde ..." bis zur ersten Ansicht (bootDone). Nicht tippbar,
+     liegt unter Screensaver (z 30) und Nacht-Abdunklung; keine Animation. */
+  #boot{position:absolute;inset:0;z-index:25;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    background:var(--bezel,var(--bg));color:var(--tab-idle,var(--ink-2,var(--muted)));font-size:15px;pointer-events:none;}
+  #boot svg{width:96px;height:96px;display:block;}
+  @media (max-height:480px),(max-width:480px){ #boot svg{width:72px;height:72px;} }
   /* Skaliert: Rundung darf keine Scrollleiste erzeugen (nur html, nicht body). */
   html.scaled{overflow:hidden;}
   /* Gezoomt (Tablet/iPad): Kasten bleibt im 240er-Raster (quadratische Kacheln),
@@ -1986,6 +1992,9 @@
 <audio id="ringAudio" preload="none" loop playsinline></audio>
 <div class="screen">
   <div class="conn" id="conn"></div>
+  <!-- Erststart-Marke (Quelle design-system/logo/marke.svg, inline: kein Request); verschwindet
+       mit der ersten Ansicht, spaetestens nach 20 s, und kommt bei Reconnect nicht wieder -->
+  <div id="boot" role="status"><svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="4" y="4" width="19.137" height="19.137" rx="7.31" fill="#ffc145"/><rect x="24.863" y="4" width="19.137" height="19.137" rx="7.31" fill="#7db7ff"/><rect x="4" y="24.863" width="19.137" height="19.137" rx="7.31" fill="#ff9e7a"/><rect x="24.863" y="24.863" width="19.137" height="19.137" rx="7.31" fill="#5cd6a4"/><circle cx="13.569" cy="13.569" r="2.259" fill="#1f2440"/><rect x="28.518" y="10.612" width="11.827" height="5.914" rx="2.957" fill="#1f2440"/><circle cx="37.388" cy="13.569" r="1.921" fill="#7db7ff"/><path d="M19.276 31.475H28.724A1.07 1.07 0 0 1 29.768 32.781A5.914 5.914 0 0 1 18.232 32.781A1.07 1.07 0 0 1 19.276 31.475Z" fill="#1f2440"/></svg><span data-i18n>Verbinde …</span></div>
   <div class="playerpane" id="playerpane"></div>
   <div class="frontpane" id="frontpane"></div>
   <div class="grid" id="grid"></div>
@@ -4158,6 +4167,10 @@ function tbWrap(t){
 const TB_API=tbWrap(window.TbView);
 
 let booted=false;
+// Erststart-Marke (#boot) einmalig entfernen: erste Ansicht, Nacht oder Timeout. Der Start-Screensaver
+// (Uhr, z 30) liegt darueber; sie zeigt sich nur beim Laden und wenn er vor den ersten Daten weggetippt wird.
+function bootDone(){ const b=document.getElementById('boot'); if(b) b.remove(); }
+setTimeout(bootDone, 20000);
 // Geraete-Bruecke: TbView (eigene App) -> Fully (Fallback) -> Browser. TbView hat die
 // Fully-Namen (turnScreenOn/Off, isScreenOn), kiosk() liefert also fuer beide dasselbe.
 // Ereignisse der App kommen ueber lpHost._ev(name, wert): 'prox' (nah), 'light' (0..16), 'screen'.
@@ -4450,7 +4463,7 @@ function connect(){
     if(msg.t==='cmdresult'){ if(msg.ok===false && pendingSecure){ const p=pendingSecure; pendingSecure=null; doSecure(p.uuid,p.cmd,'PIN falsch – nochmal'); } else pendingSecure=null; return; }
     if(msg.t!=='view') return;
     clearSent();
-    if(!booted){ booted=true; if(msg.route&&msg.route.view==='tab') stack=[msg.route]; }
+    if(!booted){ booted=true; bootDone(); if(msg.route&&msg.route.view==='tab') stack=[msg.route]; }
     if(msg.layout==='scheme'){
       const sameS = view && key(view.route)===key(msg.route) && el('grid').classList.contains('scheme');
       view=msg;
@@ -5915,7 +5928,7 @@ function applyNight(awake){
   if(lpHost.type==='tbview'){ try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
   nightLayer().style.opacity = real ? 0 : dim/100;
 }
-function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer);
+function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer); if(NIGHT.on) bootDone();
   LUX.base=(NIGHT.on && lpHost.lightLevel>=0) ? lpHost.lightLevel : -1; LUX.on=false;   // Nacht-Tiefstwert neu
   applyNight(false); camNightUpdate(); }   // Nacht nur ueber den Betriebsmodus (Config)
 function nightWake(){          // Beruehrung -> kurz voll aufhellen, dann zurueck

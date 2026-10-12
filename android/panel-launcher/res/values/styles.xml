@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Kiosk: wie bisher schwarz, vollflaechig, aber mit Marke als Startbild (windowBackground) -->
+    <style name="KioskSplash" parent="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+        <item name="android:windowBackground">@drawable/splash</item>
+    </style>
+</resources>

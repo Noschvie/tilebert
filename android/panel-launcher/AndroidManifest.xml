@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.loxpanel.launcher"
-    android:versionCode="9"
-    android:versionName="5.4">
+    android:versionCode="10"
+    android:versionName="5.5">
 
     <!-- target >= 24: Android 15 verweigert aeltere Apps bei der Installation -->
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="24" />
@@ -32,7 +32,7 @@
         <!-- TbView: eigene Kiosk-Ansicht (WebView) statt Fully. Ein Fenster, das bei
              Drehung/Groesse nicht neu aufgebaut wird (Seite laeuft weiter). -->
         <activity android:name=".Kiosk"
-            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+            android:theme="@style/KioskSplash"
             android:launchMode="singleTask"
             android:taskAffinity="de.loxpanel.launcher.kiosk"
             android:excludeFromRecents="true"

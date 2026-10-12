@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kaltstart von TbView: dunkle Flaeche (#0d0f1a wie Manifest/PWA) mit App-Symbol in der
+     Mitte. Nur Fensterhintergrund, keine Logik; sobald die Kiosk-Ansicht steht, deckt sie ihn ab. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item><color android:color="#ff0d0f1a" /></item>
+    <item><bitmap android:gravity="center" android:src="@drawable/icon" /></item>
+</layer-list>

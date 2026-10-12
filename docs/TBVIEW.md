@@ -1,4 +1,4 @@
-# TbView – eigene Kiosk-App statt Fully (Stand 2026-10-10)
+# TbView – eigene Kiosk-App statt Fully (Stand 2026-10-12, TbViewer 5.5)
 
 Ziel: Ersatz für Fully Kiosk. Fully bleibt Fallback. Vorbild ist `LoxKiosk` aus
 Lenardo1/Loxpanel (`android/app/src/main/java/com/loxpanel/spike/KioskActivity.kt`,
@@ -139,3 +139,12 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - Reihenfolge beim Update: erst Plugin (Server/Panel), dann TbViewer installieren (5.4 braucht das neue Panel).
 - Bekannt: Auf Android < 7 (API < 24) gibt es nur den alten `shouldOverrideUrlLoading`-Overload; Link-Klicks in
   fremden Web-Kacheln könnten dort als Hauptnavigation gewertet werden (ungetestet).
+
+## Logo (TbViewer 5.5, versionCode 10)
+- App-Symbol in allen Dichten (`res/drawable-{m,h,xh,xxh,xxxh}dpi/icon.png`, 48–192 px, aus `icons/icon.svg`);
+  `res/drawable/icon.png` bleibt als Basis.
+- Kaltstart: Theme `KioskSplash` setzt nur `windowBackground` (`res/drawable/splash.xml`: #0d0f1a + Symbol mittig),
+  keine Overlay-Logik; die Kiosk-Ansicht deckt es ab, sobald sie steht.
+- Hinweisseiten „keine Panel-URL“ und „tilebert nicht erreichbar“ zeigen die Marke (inline-SVG, `Kiosk.MARKE`)
+  über dem Text; geladen per `loadDataWithBaseURL` (sonst gilt `#` in Farben als Fragment).
+- Brücke/Token unverändert.
