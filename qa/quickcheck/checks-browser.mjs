@@ -43,9 +43,9 @@ def({ id: 'QC-B02', stage: 'pre', role: P, must: true, mode: 'auto', title: 'Con
   let o = await openPage(`${LPDEV}/config`, { readyFn: CFG_READY, wait: 1500 });
   n = await cfgWalk(o.pg, () => {});
   const e = errList(o.st); if (e.length) bad.push('/config: ' + e.slice(0, 3).join('; '));
-  await o.pg.evaluate(() => goTo('devices', 'panels')); await o.pg.waitForTimeout(400);
-  const wiz = await o.pg.evaluate(() => !!document.querySelector('#np_go'));
-  if (!wiz) bad.push('Formular #np_go fehlt auf der Geraete-Seite');
+  await o.pg.evaluate(() => goTo('devices', 'add')); await o.pg.waitForTimeout(400);
+  const wiz = await o.pg.evaluate(() => !!document.querySelector('section.spane.active[data-sub="add"] #np_go'));
+  if (!wiz) bad.push('Formular #np_go fehlt unter Geraete -> Geraet hinzufuegen');
   await o.close();
   o = await openPage(`${LPDEV}/config#devices`, { wait: 2500 });
   const e2 = errList(o.st); if (e2.length) bad.push('/config#devices: ' + e2.slice(0, 2).join('; '));

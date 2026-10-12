@@ -60,7 +60,6 @@
       'Konfiguration': 'Configuration',
       'Intercom / Kameras': 'Intercom / cameras',
       'bald': 'soon',
-      '＋ Neues Panel': '＋ New panel',
       'Panels & Kacheln': 'Panels & tiles',
       'Ansichten gestalten': 'Design views',
       'Panels · Miniserver · Intercom': 'Panels · Miniserver · Intercom',
@@ -354,7 +353,6 @@
       'Die Konfiguration ist nur mit Passwort erreichbar.': 'The configuration is only reachable with a password.',
       'Display': 'Display',
       'Display &amp; Nacht': 'Display &amp; night',
-      'Du bearbeitest': 'You are editing',
       'Effekte': 'Effects',
       'Eigene APK entfernen': 'Remove own APK',
       'Eigene APK entfernen? Danach gilt wieder die Adresse.': 'Remove own APK? Afterwards the address applies again.',
@@ -399,14 +397,12 @@
       'Hilfe': 'Help',
       'Hintergrundbild entfernt': 'Background image removed',
       'Hintergrundbild gespeichert': 'Background image saved',
-      'Hinweise': 'Notes',
       'Höchstens': 'At most',
       'Höchstens 4 Tabs': 'At most 4 tabs',
       'In diesem Tab': 'In this tab',
       'Inhalt': 'Content',
       'Kachel': 'Tile',
       'Kachel überall ausgeblendet': 'Tile hidden everywhere',
-      'Kacheln & Wecker': 'Tiles & alarm clock',
       'Kachelnamen': 'Tile names',
       'Kamera': 'Camera',
       'Kamera entfernen': 'Remove camera',
@@ -460,8 +456,8 @@
       'Passend zum Design': 'Matches the design',
       'Passwort aktiv': 'Password active',
       'Port': 'Port',
-      'Quelle: System → Kalender.': 'Source: System → Calendar.',
-      'Quelle: System → Miniserver → Wetter.': 'Source: System → Miniserver → Weather.',
+      'Quelle: System → Kalender & Kameras.': 'Source: System → Calendar & cameras.',
+      'Quelle: System → Loxone → Wetter.': 'Source: System → Loxone → Weather.',
       'Raster auf': 'Grid on',
       'Rauchmelder': 'Smoke detector',
       'Raum': 'Room',
@@ -640,7 +636,6 @@
       'Schrift für Zahlen & Titel': 'Font for numbers & titles',
 
       // Nachgezogen 2026-10-11 (T()-Reste: Design-Labels, Tabs, Passwort, Fragmente mit Leerzeichen)
-      'Theme: ': 'Theme: ',
       'Passwort eingeben': 'Enter password',
       'Speichern (Strg/⌘ + S)': 'Save (Ctrl/⌘ + S)',
       'Bausteintypen der Anlage anzeigen': 'Show block types of the system',
@@ -681,13 +676,13 @@
       'Legt für mehrere Geräte gleichzeitig fest, welches Panel zu welchem Betriebsmodus gehört.':
         'Sets which panel belongs to which operating mode for several devices at once.',
       'Geräte suchen …': 'Searching for devices …',
-      'Mehr': 'More',
-      'Gerätetyp: Er bestimmt, ob die Knöpfe „TbViewer installieren“ und „Gerät neu starten“ erscheinen (Android per adb, Shelly zuerst über die eigene Schnittstelle).':
-        'Device type: It decides whether the buttons "Install TbViewer" and "Restart device" appear (Android via adb, Shelly first via its own interface).',
-      'Neues Gerät: Linux-Geräte mit Agent erscheinen automatisch. Andere Geräte (Android, Tablet) öffnen das Panel mit Kennung ?panel=<start>&device=<name> oder bekommen hier unter „Ohne Kennung“ einen Namen.':
-        'New device: Linux devices with an agent appear automatically. Other devices (Android, tablet) open the panel with an ID ?panel=<start>&device=<name> or get a name here under "Without ID".',
-      'Betriebsmodus-Automatik: Lege in Loxone Config einen virtuellen HTTP-Ausgang an, der je Betriebsart den Modusnamen sendet. Je Gerät bestimmst du, welches Panel bei welchem Modus erscheint; ohne Eintrag bleibt das Panel unverändert.':
-        'Operating mode automation: In Loxone Config, create a virtual HTTP output that sends the mode name for each operating mode. For each device you choose which panel appears for which mode; without an entry the panel stays unchanged.',
+      'Ohne Namen erscheint es unter „Alle Geräte“ → „Ohne Kennung“ und bekommt dort einen Namen.':
+        'Without a name it appears under "All devices" → "Without ID" and gets a name there.',
+      'Der Gerätetyp bestimmt, ob die Knöpfe „TbViewer installieren“ und „Gerät neu starten“ erscheinen (Android per adb, Shelly zuerst über die eigene Schnittstelle).':
+        'The device type decides whether the buttons "Install TbViewer" and "Restart device" appear (Android via adb, Shelly first via its own interface).',
+      'Aus Loxone, nicht löschbar': 'From Loxone, cannot be removed',
+      'Lege in Loxone Config einen virtuellen HTTP-Ausgang an, der je Betriebsart den Modusnamen sendet. Je Gerät bestimmst du, welches Panel bei welchem Modus erscheint; ohne Eintrag bleibt das Panel unverändert.':
+        'In Loxone Config, create a virtual HTTP output that sends the mode name for each operating mode. For each device you choose which panel appears for which mode; without an entry the panel stays unchanged.',
       'Zeigt Cover, Titel und Favoriten vom Loxone-Audioserver. Den Test-Ton für die Lautsprecher findest du unter System → Diagnose.':
         'Shows cover, title and favourites from the Loxone Audioserver. You find the test tone for the speakers under System → Diagnostics.',
       'Audioserver': 'Audioserver',
@@ -711,8 +706,6 @@
         '"Appointments in the dashboard" is an upper limit: whatever no longer fits next to weather and clock is left out (about three on 480 × 480). The full list is in the calendar widget.',
       'Hier legst du fest, wann Nacht ist, für alle Panels gleich. Nacht gilt, solange der gewählte Loxone-Betriebsmodus läuft (z. B. „Nacht“, angelegt in Loxone Config); ohne Betriebsmodus gilt sie von Sonnenuntergang bis Sonnenaufgang oder zu einer festen Uhrzeit.':
         'Here you set when it is night, the same for all panels. Night applies while the chosen Loxone operating mode is running (e.g. "Night", created in Loxone Config); without an operating mode it applies from sunset to sunrise or at a fixed time.',
-      'Was nachts passiert, stellt jedes Panel selbst ein (Panel wählen → Einstellungen → Display & Nacht): wie stark es abdunkelt (bei 0 % gar nicht) und wie lange es nach Antippen hell bleibt. Dashboard nach Leerlauf und Neuladen gelten dort Tag und Nacht.':
-        'What happens at night is set by each panel itself (choose a panel → Settings → Display & night): how strongly it dims (not at all at 0 %) and how long it stays bright after a tap. Dashboard after idle and reload apply there day and night.',
       'Auslöser (Betriebsmodus aus Loxone)': 'Trigger (operating mode from Loxone)',
       'Kein Betriebsmodus (Sonnenzeiten)': 'No operating mode (sun times)',
       'Wann Nacht ist, gilt für alle Panels. Was nachts passiert, stellst du je Panel ein: Panel → Display & Nacht.':
@@ -745,6 +738,16 @@
         'Please enter a start and end time.',
       'Display & Nacht':
         'Display & night',
+      'Tabs & Dashboard': 'Tabs & dashboard',
+      'Kalender & Kameras': 'Calendar & cameras',
+      'Alles, was tilebert vom Miniserver übernimmt: Zugang, Befehle, Wetter und Audio.':
+        'Everything tilebert takes from the Miniserver: access, commands, weather and audio.',
+      'Kein Audioserver gefunden': 'No audio server found',
+      'Feiertage': 'Holidays',
+      'Kalender-Anzeige': 'Calendar display',
+      'Bausteintypen': 'Block types',
+      'Gilt für alle Panels. Ein einzelnes Panel (links wählen) kann unter „Aussehen“ abweichen. Datum und Uhrzeit nutzen die Sprache der Konfiguration (Seitenleiste, „Sprache“).':
+        'Applies to all panels. A single panel (choose on the left) can differ under "Appearance". Date and time use the language of the configuration (sidebar, "Language").',
       'TbViewer schaltet das Display nie aus. Berührung, Annäherung, Klingel, Wecker und Nachrichten stellen die normale Helligkeit wieder her.':
         'TbViewer never turns the display off. Touch, proximity, doorbell, alarm clock and messages restore normal brightness.',
       'Nach dieser Zeit ohne Berührung zeigt das Panel das Dashboard.':
@@ -753,10 +756,10 @@
         'Reload page',
       'Gegen Einfrieren. Nur, wenn das Dashboard steht.':
         'Prevents freezing. Only while the dashboard is shown.',
-      'Helligkeit und Tipp-Töne direkt am Gerät: Geräte → Gerät.':
-        'Brightness and tap sounds directly on the device: Devices → device.',
-      'Wann Nacht ist, legst du unter System → Standard-Aussehen → Nachtmodus fest.':
-        'You set when it is night under System → Default look → Night mode.',
+      'Helligkeit und Tipp-Töne direkt am Gerät: Geräte → Alle Geräte.':
+        'Brightness and tap sounds directly on the device: Devices → All devices.',
+      'Wann Nacht ist, legst du unter System → Alle Panels → Nachtmodus fest.':
+        'You set when it is night under System → All panels → Night mode.',
       'Kein Gerät mit TbViewer zeigt dieses Panel. Diese Optionen wirken erst dann.':
         'No device with TbViewer shows this panel. These options only take effect then.',
       'Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Die automatische Helligkeit gilt tagsüber, nachts gilt „Abdunkeln nachts“.':
@@ -797,8 +800,6 @@
       'Wanddisplay (Android)': 'Wall display (Android)',
       'Linux-Gerät': 'Linux device',
       'Per ADB einrichten': 'Set up via ADB',
-      'tilebert installiert die App „TbViewer“ auf dem Gerät und trägt die Start-Adresse ein. Voraussetzung: „ADB über WLAN“ ist am Gerät eingeschaltet (Einstellungen → Entwickleroptionen, Port 5555); beim ersten Mal „USB-Debugging zulassen?“ mit „Immer erlauben“ bestätigen und den Knopf noch einmal drücken.':
-        'tilebert installs the "TbViewer" app on the device and enters the start address. Requirement: "ADB over WLAN" is switched on at the device (Settings → Developer options, port 5555); the first time, confirm "Allow USB debugging?" with "Always allow" and press the button again.',
       'Einrichten': 'Set up',
       'Start-Adresse erzeugen': 'Generate start address',
       'Kopieren': 'Copy',
@@ -809,25 +810,29 @@
       'Gerätename': 'Device name',
       'Danke! Ein Kaffee geht auch, aber Tokens schmecken besser.': 'Thanks! Coffee works too, but tokens taste better.',
       'Spendier mir Claude-Code-Tokens': 'Buy me Claude Code tokens',
-      'Löst ein gewählter Baustein aus, zeigt dieses Panel ein rotes Vollbild mit <b>Stumm</b> und <b>Quittieren</b> (Rauchmelder) bzw. <b>Quittieren</b> und <b>Unscharf</b> (Alarmanlage). Die Tasten schalten sofort, abgesicherte Bausteine fragen den PIN ab. Vorgewählt sind alle Bausteine dieses Panels.':
-        'If a selected block triggers, this panel shows a red full screen with <b>Mute</b> and <b>Acknowledge</b> (smoke detector) or <b>Acknowledge</b> and <b>Disarm</b> (alarm system). The buttons act immediately, protected blocks ask for the PIN. All blocks of this panel are preselected.',
+      'Löst ein gewählter Baustein aus, zeigt dieses Panel ein rotes Vollbild mit <b>Stumm</b> und <b>Quittieren</b> (Rauchmelder) bzw. <b>Quittieren</b> und <b>Unscharf</b> (Alarmanlage). Die Tasten schalten sofort, abgesicherte Bausteine fragen den PIN ab.':
+        'If a selected block triggers, this panel shows a red full screen with <b>Mute</b> and <b>Acknowledge</b> (smoke detector) or <b>Acknowledge</b> and <b>Disarm</b> (alarm system). The buttons act immediately, protected blocks ask for the PIN.',
+      'Vorgewählt sind alle Alarm- und Rauchmelder-Bausteine aus den Räumen dieses Panels, außer ausgeblendeten.':
+        'Preselected are all alarm and smoke detector blocks from the rooms of this panel, except hidden ones.',
+      '1 Baustein': '1 block',
+      '{n} Bausteine': '{n} blocks',
+      'Piepton an': 'Beep on',
+      'Piepton aus': 'Beep off',
       'Piepton, bis „Stumm“ oder „Quittieren“ gedrückt wird oder der Alarm endet':
         'Beep until "Mute" or "Acknowledge" is pressed or the alarm ends',
       'Der Piepton kommt aus dem Browser und läuft auf Tablets, NSPanel und Shelly. Browser geben Ton erst nach einer Berührung frei: Tippe das Panel nach dem Laden einmal an, sonst zeigt das Vollbild „Ton gesperrt – Bildschirm antippen“. Testen kannst du das je Gerät unter System → Diagnose → Test-Ton.':
         'The beep is generated in the browser and works on tablets, NSPanel and Shelly. Browsers only allow sound after a touch: tap the panel once after loading, otherwise the full screen shows "Ton gesperrt – Bildschirm antippen". You can test this per device under System → Diagnostics → Test tone.',
       'Wirkt sofort, ohne Speichern': 'Takes effect immediately, without saving',
-      'Kalender einrichten (optional)': 'Set up calendar (optional)',
       'Gerätetyp festlegen': 'Set device type',
       'Panel gestalten': 'Design panel',
       'Passwort gesetzt': 'Password set',
-      'Passwort setzen (optional)': 'Set password (optional)',
       'Adresse und Zugangsdaten prüfen': 'Check address and credentials',
       'Gerät hinzufügen': 'Add device',
       'Verbunden seit': 'Connected since',
       'Aufgaben': 'Tasks',
       'Antwortzeit': 'Response time',
-      'Anmeldung abgelehnt. Prüfe Benutzer und Passwort unter System → Miniserver.':
-        'Sign-in rejected. Check user and password under System → Miniserver.',
+      'Anmeldung abgelehnt. Prüfe Benutzer und Passwort unter System → Loxone.':
+        'Sign-in rejected. Check user and password under System → Loxone.',
       'Anmeldung am Miniserver gesperrt (zu viele Fehlversuche). Prüfe die Zugangsdaten und warte etwas.':
         'Sign-in at the Miniserver is blocked (too many failed attempts). Check the credentials and wait a moment.',
       'Der Miniserver hat keine freien Live-Verbindungen mehr (höchstens 31).':
@@ -853,8 +858,6 @@
       'Seite, Panel, Tab, Gerät oder Aktion suchen': 'Search for a page, panel, tab, device or action',
       'Keine Treffer': 'No results',
       'Keine Treffer.': 'No results.',
-      'Gilt für alle Panels. Datum und Uhrzeit nutzen die Sprache der Konfiguration (oben rechts).':
-        'Applies to all panels. Date and time use the language of the configuration (top right).',
       'Doppeltipp auf eine Lichtkachel schaltet das Licht aus': 'Double tap on a light tile switches the light off',
       'Gilt nur bei eingeschaltetem Licht. Ein einfacher Tipp öffnet die Kachel dann erst nach 0,35 s.':
         'Only applies while the light is on. A single tap then opens the tile only after 0.35 s.',
@@ -865,8 +868,6 @@
       'Vorlage wählen, danach einzelne Farben anpassen.': 'Choose a template, then adjust individual colours.',
       'Farben anpassen': 'Adjust colours',
       'Größen (px, leer: Standard)': 'Sizes (px, empty: default)',
-      'Gilt für alle Panels. Ein einzelnes Panel (links wählen) kann unter „Aussehen“ abweichen.':
-        'Applies to all panels. A single panel (choose on the left) can differ under "Appearance".',
       'Vorlage, Farben und Schrift aller Panels.': 'Template, colours and font of all panels.',
       'Animierte Symbole: Klingel und Wecker wackeln, Jalousiepfeile wippen, die Heizung flackert, Symbole ploppen beim Einschalten, neue Werte ticken ein':
         'Animated icons: bell and alarm clock wobble, blind arrows bob, the heating flickers, icons pop when switched on, new values tick in',
@@ -889,8 +890,6 @@
         'Fill screen: on larger displays the picture is zoomed up instead of staying in the 480 grid. Only change the offset if the picture is cut off at the edge.',
       '<b>Display</b>: Nach der Leerlaufzeit zeigt das Panel das Dashboard; TbViewer schaltet das Display nie aus, sondern dunkelt nachts um „Abdunkeln nachts“ ab. Annäherung, Licht im Raum, Berührung, Klingel, Wecker und Nachrichten stellen die normale Helligkeit wieder her.':
         '<b>Display</b>: After the idle time the panel shows the dashboard; TbViewer never switches the display off but dims it at night by "Dim at night". Proximity, room light, touch, doorbell, alarm clock and messages restore normal brightness.',
-      '<b>Nacht</b>: Wann Nacht ist, legst du unter System → Standard-Aussehen → Nachtmodus fest (Betriebsmodus, Sonnenzeiten oder feste Uhrzeit). Nachts dunkelt das Panel das Bild ab, Antippen macht es kurz wieder hell, bei 0 % bleibt es hell.':
-        '<b>Night</b>: You set when it is night under System → Default appearance → Night mode (operating mode, sun times or fixed time). At night the panel dims the picture, a tap makes it bright for a moment, at 0 % it stays bright.',
       'Dashboard nach Leerlauf (s)': 'Dashboard after idle (s)',
       'Seite neu laden alle (h)': 'Reload page every (h)',
       'Leer: einmal pro Nacht um 3 Uhr, nur wenn das Dashboard steht. Zahl: alle so viele Stunden. 0: nie.':
@@ -908,8 +907,8 @@
         'Up to <b>4 tabs</b>, the first is the start page (★). Tap a tab to edit it. Types: <b>Free</b> (you fill it yourself), <b>Room</b>, <b>Category</b> and <b>Central</b> (prefilled from Loxone, adjustable afterwards, new blocks are added at the end) and <b>Overviews</b> (all rooms or categories like in the Loxone app).',
       'Auf diesem Panel überall ausgeblendet (Tabs, Räume, Kategorien). Antippen blendet sie wieder ein.':
         'Hidden everywhere on this panel (tabs, rooms, categories). Tap to show them again.',
-      'Gilt nur für dieses Panel. „Wie Standard“ übernimmt System → Standard-Aussehen.':
-        'Applies to this panel only. "Like default" takes over System → Default appearance.',
+      'Gilt nur für dieses Panel. „Wie Standard“ übernimmt System → Alle Panels.':
+        'Applies to this panel only. "Like default" takes over System → All panels.',
       'Auf schwachen Geräten helfen Animation „Mittel“ oder „Keine“ und Kontrast „Aus“.':
         'On weak devices, animation "Medium" or "None" and contrast "Off" help.',
       'Reine Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol als blasses Wasserzeichen, Zahl und Einheit kommen unverändert aus Loxone. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert; pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.':
@@ -963,8 +962,8 @@
         'Tick: show. Drag: order. The first camera starts, the numbers appear as buttons on the panel.',
       'Ohne Bedienung springt das Widget wieder auf Kamera 1. 0: aus.':
         'Without interaction the widget jumps back to camera 1. 0: off.',
-      'Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kameras ein.':
-        'No camera with a video address yet. Enter one under System → Cameras.',
+      'Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kalender & Kameras ein.':
+        'No camera with a video address yet. Enter one under System → Calendar & cameras.',
       'Abgewählte Bausteine zeigt dieses Panel nirgends an, auch nicht in anderen Räumen oder Kategorien.':
         'This panel does not show deselected blocks anywhere, not even in other rooms or categories.',
       'Keine Bausteine vorhanden.': 'No blocks available.',
@@ -991,7 +990,7 @@
       'Die Tabs stehen in der Reihenfolge deiner Auswahl. Später lässt sie sich per Ziehen ändern.':
         'The tabs follow the order of your selection. You can change it later by dragging.',
       'Was zeigt das Dashboard?': 'What does the dashboard show?',
-      'System → Standard-Aussehen': 'System → Default appearance',
+      'System → Alle Panels': 'System → All panels',
       'Diese Kennung ist schon vergeben.': 'This ID is already taken.',
       'Trage diese Start-Adresse in der App oder im Browser des Geräts ein. Mit „&device=Name“ erscheint das Gerät unter „Alle Geräte“.':
         'Enter this start address in the app or in the browser of the device. With "&device=Name" the device appears under "All devices".',
@@ -1094,8 +1093,8 @@
         'For larger screens (7–8″ tablet, iPad mini): both halves are zoomed evenly to full size instead of being shown with a border. Devices with 480 × 480 stay unchanged.',
       'Panel automatisch nach Betriebsmodus wechseln': 'Switch panel automatically by operating mode',
       'Modus hinzufügen': 'Add mode',
-      'Welches Panel bei welchem Modus erscheint. Loxone sendet den Modus per HTTP (siehe Hinweise unten).':
-        'Which panel appears for which mode. Loxone sends the mode via HTTP (see notes below).',
+      'Welches Panel bei welchem Modus erscheint. Loxone sendet den Modus per HTTP (siehe Karte „Betriebsmodus“ oben).':
+        'Which panel appears for which mode. Loxone sends the mode via HTTP (see card "Operating mode" above).',
       'Entfernt alle Einstellungen und die Erkennung des Geräts. Ist es verbunden, meldet es sich neu an.':
         'Removes all settings and the recognition of the device. If it is connected, it registers again.',
       'Feste Geräte-ID. Bleibt gleich, auch wenn sich die IP-Adresse ändert.':
@@ -1138,6 +1137,28 @@
       'Trage die Start-Adresse in der App oder im Browser des Geräts ein. Mit einem Gerätenamen erscheint das Gerät unter „Alle Geräte“ und lässt sich per Betriebsmodus umschalten.':
         'Enter the start address in the app or in the browser of the device. With a device name the device appears under "All devices" and can be switched by operating mode.',
       'Farbschema der Konfiguration': 'Colour scheme of the configuration',
+      // P3 Kopf/Seitenleiste, Start, Suche
+      'Farbschema': 'Colour scheme',
+      'Bunt': 'Colourful',
+      'Hell': 'Light',
+      'Dunkel': 'Dark',
+      'Suchen (Strg/⌘ + K)': 'Search (Ctrl/⌘ + K)',
+      'Kennung': 'ID',
+      'Start-Adresse kopieren': 'Copy start address',
+      'Miniserver getrennt': 'Miniserver disconnected',
+      'Gerät seit über 1 h offline': 'device offline for more than 1 h',
+      'Geräte seit über 1 h offline': 'devices offline for more than 1 h',
+      'verfügbar': 'available',
+      'Kalender einrichten': 'Set up calendar',
+      'Optional': 'Optional',
+      'Ausblenden': 'Hide',
+      'Tabs': 'Tabs',
+      'Geräteliste': 'Device list',
+      'Agenten': 'Agents',
+      'Türstationen': 'Door stations',
+      'Zugriffsschutz': 'Access protection',
+      'Doppeltipp': 'Double tap',
+      'Wecker': 'Alarm clock',
       'Panel neu laden': 'Reload panel',
       'Zeigt gerade Panel „': 'Currently shows panel "',
       '“ quadratisch. Dieses Gerät ist breit und braucht das Format „Breit (2 Hälften)“.':
@@ -1377,6 +1398,8 @@
     if (!host) return;
     var sel = document.createElement('select');
     sel.className = 'langsel';
+    sel.setAttribute('aria-label', T('Sprache'));
+    sel.title = T('Sprache');
     LANGS.forEach(function (l) {
       var o = document.createElement('option');
       o.value = l[0]; o.textContent = l[1];
@@ -1390,6 +1413,11 @@
       Promise.resolve(p).then(function () { location.reload(); }, function () { location.reload(); });
     };
     host.appendChild(sel);
+    // Kuerzel fuer die eingeklappte Seitenleiste (nur dort per CSS sichtbar)
+    var ab = document.createElement('span');
+    ab.className = 'langab'; ab.hidden = true; ab.setAttribute('aria-hidden', 'true');
+    ab.textContent = LANG.toUpperCase();
+    host.appendChild(ab);
   }
 
   // ---- Auto-Uebersetzer fuer JS-generierte Seiten (z.B. /config) ----

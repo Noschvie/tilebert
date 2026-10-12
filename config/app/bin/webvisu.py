@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.5"
+APP_VERSION = "0.20.6"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -3820,7 +3820,7 @@ class App:
         if src["mode"] == "upload":
             return FULLY_DIR / FULLY_UPLOAD, "eigene Datei", "Eigene hochgeladene Datei"
         page = src["url"] or FULLY_PAGE
-        hint = (" - unter Geräte → Fully-Quelle eine andere Adresse eintragen oder die APK hochladen")
+        hint = (" - Verbindung des Servers prüfen und später erneut versuchen")
         sess = self._drv_session
         if sess is None or sess.closed:
             sess = self._drv_session = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=6))
@@ -7160,7 +7160,7 @@ class App:
             blocks = [{"k": "video", "src": f"/mjpeg?id={quote(uuid)}", "bell": bell,
                        "reconnectH": self._cam_reconnect_h(uuid)}] if has_url else \
                      [{"k": "state", "icon": "cam", "tone": "crit" if bell else "idle",
-                       "text": "Es klingelt" if bell else "Kein Video", "sub": "" if bell else "Video-URL unter System → Kameras eintragen"}]
+                       "text": "Es klingelt" if bell else "Kein Video", "sub": "" if bell else "Video-Adresse unter System → Kalender & Kameras eintragen"}]
             if cells:
                 blocks.append({"k": "row", "act": True, "cells": cells[:4]})
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
