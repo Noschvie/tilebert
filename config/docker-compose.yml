@@ -1,4 +1,4 @@
-# LoxPanel (Favoriten-Fork) als eigener Docker-Service.
+# tilebert (frueher LoxPanel Favoriten) als eigener Docker-Service.
 #
 # WICHTIG - eigenstaendig neben einer Original-LoxPanel-Installation:
 #  - eigener Container-Name/Hostname (loxpanelfav statt loxpanel)

@@ -32,7 +32,7 @@ fi
 # Reste eines alten Containers entfernen (Daten liegen im Volume -> verlustfrei).
 docker rm -f loxpanelfav > /dev/null 2>&1
 
-# LoxPanel starten – Docker wurde (falls noetig) bereits in preroot.sh selbst
+# tilebert starten – Docker wurde (falls noetig) bereits in preroot.sh selbst
 # installiert, ein Reboot ist dafuer nicht mehr noetig. Die Pruefung bleibt als
 # Sicherheitsnetz stehen, falls die Docker-Installation dort ausnahmsweise
 # fehlgeschlagen sein sollte.

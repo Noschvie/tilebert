@@ -1,4 +1,4 @@
-"""LoxPanel Live-Anbindung (Phase 2) - Wrapper um die loxone-api-Bibliothek.
+"""tilebert Live-Anbindung (Phase 2) - Wrapper um die loxone-api-Bibliothek.
 
 Die loxone-api-LoxoneClient-API (bestaetigt an v0.1.25):
     LoxoneClient(*, host, user, password, port=443, verify_tls=True, timeout_s=120.0)

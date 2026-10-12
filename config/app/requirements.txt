@@ -1,4 +1,4 @@
-# LoxPanel Python-Abhaengigkeiten (via pip; die uebrigen kommen aus 'apt').
+# tilebert Python-Abhaengigkeiten (via pip; die uebrigen kommen aus 'apt').
 # loxone-api uebernimmt Token-Auth (getkey2/getjwt), WebSocket und Struktur.
 loxone-api>=0.1.25
 # Front (Screensaver): iCal-Abo parsen + Serientermine (RRULE) aufloesen.

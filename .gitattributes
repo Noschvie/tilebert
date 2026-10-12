@@ -1,2 +1,10 @@
 # Quickcheck-Routine (qa/) gehoert nicht ins Plugin-ZIP (git archive)
 qa/ export-ignore
+# Entwickler-Material, vom installierten Plugin nicht gebraucht (weder bei der
+# Installation noch zur Laufzeit; das fertige APK liegt in config/app/android/)
+/design-system/ export-ignore
+/docs/ export-ignore
+/android/ export-ignore
+/config/app/tools/ export-ignore
+/config/app/deploy/DEPLOY.md export-ignore
+/config/app/deploy/DOCKER.md export-ignore

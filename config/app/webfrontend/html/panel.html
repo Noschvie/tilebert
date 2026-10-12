@@ -31,7 +31,7 @@
        Auflagen auf einen Schlag um. */
     --wash:255,255,255;
     --mono:ui-monospace,"Cascadia Code",Consolas,monospace;
-    --nudge-x:0px;    /* Feinversatz der ganzen Visu; live via ?x=-6 (negativ=links) */
+    --nudge-x:0px;    /* Feinversatz der ganzen Panel-Seite; live via ?x=-6 (negativ=links) */
     /* ---- Bewegung als Variable: ein Schalter (Settings -> Global ->
        Darstellung -> "Animationen": An/Aus) steuert alle Dauern zentral ueber
        --anim-scale, ohne Code zu aendern. --r-tile/--r-ctrl bleiben als freie
@@ -125,9 +125,9 @@
      passen sich der Geraeteform an (koennen leicht rechteckig werden) statt als
      zentrierter cols:rows-Kasten mit Rand zu stehen. Gilt auch fuer Vollbreit. */
   .screen.fill{max-width:none;max-height:none;width:100vw;height:100vh;}
-  /* Split-Layout (grosse Tablets): EIN Panel = links navigierbare Visu, rechts
+  /* Split-Layout (grosse Tablets): EIN Panel = links navigierbare Ansicht, rechts
      fester Player, unten EINE gemeinsame Tab-Leiste ueber die volle Breite. */
-  /* Denke in einem 4x2-Raster: links 2x2 = Visu, rechts 2x2 = Player. Der Block
+  /* Denke in einem 4x2-Raster: links 2x2 = Ansicht, rechts 2x2 = Player. Der Block
      hat Seitenverhaeltnis 4:2 (=2:1) und wird zentriert eingepasst (quadratische
      Kacheln, kein Strecken ueber den ganzen Schirm). */
   /* Split (fill AUS): feste Kachelgroesse wie die uebrigen Tabs -> gleiche Hoehe.
@@ -722,7 +722,7 @@
   /* !important: .saver.split .sv-wrap.rich{display:grid} ist spezifischer und
      liess sonst auf Split-Panels die klassische Uhr mittig durchscheinen. */
   .saver.layout .sv-wrap{display:none !important;}
-  /* Raster genau ueber der Visu-Flaeche (wie der klassische Screensaver und das
+  /* Raster genau ueber der Ansichtsflaeche (wie der klassische Screensaver und das
      Original): die Zellen bleiben quadratisch (160 px je 480er-Display), auch
      wenn Browser/Geraet groesser sind als die Visu. Wischgesten selbst
      auswerten (kein Scrollen/Zoomen des Browsers). */
@@ -1183,8 +1183,6 @@
   /* Pfad-Symbole neben dem Zurueck-Knopf */
   /* pointer-events:auto: .tabspacer ist sonst nicht antippbar (Platzhalter) */
   .screen>.tabs .crumbs{min-width:0;display:flex;align-items:center;padding-left:4px;overflow:hidden;pointer-events:auto;}
-  .screen>.tabs .crtitle{min-width:0;flex:0 1 auto;margin-left:8px;font-family:var(--font-num,inherit);font-size:15px;font-weight:600;
-    color:rgba(var(--bezel-ink-rgb,255,255,255),.88);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .crumb{flex:0 1 44px;min-width:36px;height:52px;border-radius:var(--r-m);display:grid;place-items:center;cursor:pointer;
     color:var(--dot);animation:crumbIn calc(160ms * var(--anim-scale)) var(--ease) both;}
   .crumb.cur{background:rgba(var(--bezel-ink-rgb,255,255,255),.06);}
@@ -2096,7 +2094,7 @@ function isPhone(){ return themePhone || (window.innerWidth < 600 && window.inne
 function applyPhone(){ const on=isPhone(); document.documentElement.classList.toggle('phone', on);
   // Handy quer (flach): eigene Klasse 'pls' - nur Handys, nie Wandpanels/Tablets (siehe phoneLandscape)
   document.documentElement.classList.toggle('pls', phoneLandscape()); return on; }
-let themeSplit = true;   // Split-Screen an/aus (aus = 4"-Panel: nur die Visu, keine Pane 2)
+let themeSplit = true;   // Split-Screen an/aus (aus = 4"-Panel: nur die Panel-Seite, keine Pane 2)
 
 // Dashboard-Symbol oben links: zeichnet die Kachel-Anordnung des eigenen
 // Dashboards grob nach (eine Flaeche, saverCfg.items); ohne eigene Belegung
@@ -3391,8 +3389,7 @@ function renderTabs(){
   const backHtml = stack.length>1
     ? '<div class="tabback on" id="tabback" title="Zurück">'+svg('<path d="m15 6-6 6 6 6"/>')+'</div>'
     : '<div class="tabback dash" id="tabback" title="Dashboard">'+svg(dashIconInner())+'</div>';
-  const ptl = '';   // Seitenname im Kopf (0.19.94) wieder entfernt; .crtitle-Stil bleibt fuer spaeter
-  const bar = t => [backHtml,'<div class="tabspacer crumbs">'+crumbsHtml(Math.min(4,t.length))+ptl+'</div>'].concat(t.slice(0,4).reverse());
+  const bar = t => [backHtml,'<div class="tabspacer crumbs">'+crumbsHtml(Math.min(4,t.length))+'</div>'].concat(t.slice(0,4).reverse());
   let items;
   if(ct){
     const tabsHtml = ct.map(c => {
@@ -3988,7 +3985,7 @@ function setupSchemeZoom(viewEl, stage, sw, sh){
   requestAnimationFrame(fit); const img=stage.querySelector('.schemeimg'); if(img) img.onload=fit;
 }
 // ---- Skalierung je Geraet ("scale" vom Server: off | auto | Faktor) ----
-// Die Visu rechnet mit festen 240er Kacheln (2 Panels = 960x480). Auf einem
+// Die Panel-Seite rechnet mit festen 240er Kacheln (2 Panels = 960x480). Auf einem
 // 7"-Tablet oder iPad mini stand der Kasten bisher mit Rand; "auto" zoomt ihn
 // gleichmaessig, bis er an Breite oder Hoehe anstoesst (Schrift/Icons wachsen
 // mit). Ein Faktor gilt fest, aber nie groesser als der Schirm hergibt.
@@ -4256,7 +4253,7 @@ let LANG='de-DE';
 const _FMT={}, _FMT_OPT={t:{hour:'2-digit',minute:'2-digit'}, dl:{weekday:'long',day:'numeric',month:'long',year:'numeric'},
   ds:{weekday:'short',day:'numeric',month:'long'}};
 function fmtCached(k){ const id=LANG+'|'+k; return _FMT[id]||(_FMT[id]=new Intl.DateTimeFormat(LANG,_FMT_OPT[k])); }   // Panel-Sprache (aus dem Profil, Server sendet sie im theme); steuert Datum/Uhr
-// Horizontaler Feinversatz der ganzen Visu — live einstellbar ohne Redeploy:
+// Horizontaler Feinversatz der ganzen Panel-Seite — live einstellbar ohne Redeploy:
 //   ?x=-6  -> 6px nach links     ?x=8 -> nach rechts     ?x=0 -> zuruecksetzen
 // Der Wert wird gemerkt (localStorage) und gilt dann auch ohne Parameter weiter.
 (function(){

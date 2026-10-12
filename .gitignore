@@ -8,7 +8,6 @@ venv/
 config/app/config/loxpanel.cfg
 config/app/config/panels.json
 config/app/config/theme.json
-config/app/config/visu.json
 config/app/config/diag.log*
 config/app/config/pushlog.json
 config/app/deploy/loxpanel-kiosk.conf
@@ -24,6 +23,13 @@ dist/
 *.swp
 config/app/config/devinfo.json
 config/app/config/bg/
+# vom Server zur Laufzeit erzeugt (Config-Ordner, s. webvisu.py _CFGDIR)
+config/app/config/kiosk_last.json
+config/app/config/scene_light.json
+config/app/config/adb/
+config/app/config/sounds/
+config/app/config/.cgi_token
+config/app/bin/version.json
 
 # Claude-Laufzeitdateien
 .claude/*.lock

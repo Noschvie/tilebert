@@ -1,4 +1,13 @@
-# LoxPanel als Docker-Container
+# Docker-Container ohne LoxBerry – Entwickler-Notiz (veraltet)
+
+> **Veraltet / nur Entwickler-Notiz.** Stand aus der Zeit vor dem LoxBerry-Plugin
+> (damals „LoxPanel“). Das Plugin **tilebert** baut und startet den Container selbst
+> (`config/docker-compose.yml`, `bin/loxpanel-ctl.sh`): Host-Port **8098**, im
+> Container 8099; Config-Volume `REPLACELBPDATADIR/config` (wird bei der
+> Installation ersetzt). `.env.example` gibt es nicht mehr; die Env-Variablen
+> `LOXPANEL_MS_HOST/USER/PASS/PORT/VERIFY_TLS` liest der Server weiterhin, sonst
+> gilt `config/loxpanel.cfg` (Einstellungen-Seite). Die Datei ist nicht im Plugin-ZIP.
+
 
 Der Server (Python/aiohttp) laeuft in einem Container; die Panels sind nur
 Browser, die auf `http://<docker-host>:8099` zeigen. Verwalten der Ansichten

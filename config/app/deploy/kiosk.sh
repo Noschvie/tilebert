@@ -1,12 +1,12 @@
 #!/bin/bash
-# LoxPanel Chromium-Kiosk fuers Linux-Wandpanel (z.B. Linero / PX30, 480x480).
+# tilebert Chromium-Kiosk fuers Linux-Wandpanel (z.B. Linero / PX30, 480x480).
 # Server-Adresse + Panel-ID kommen aus einer KONFIG-DATEI (nicht im Befehl hart
 # verdrahtet) -> IP/Server aendern, ohne den Autostart anzufassen.
 #
 # Konfig (erste gefundene gewinnt): $LOXPANEL_KIOSK_CONF,
 #   <dieses-verzeichnis>/loxpanel-kiosk.conf, /etc/loxpanel/kiosk.conf
 # Inhalt (siehe loxpanel-kiosk.conf.example):
-#   SERVER=host:port    # Adresse des LoxPanel-Servers (LoxBerry oder PC)
+#   SERVER=host:port    # Adresse des tilebert-Servers (LoxBerry oder PC)
 #   PANEL=<profil-id>   # Panel-Profil (leer = Standard)
 
 for f in "$LOXPANEL_KIOSK_CONF" "$(dirname "$0")/loxpanel-kiosk.conf" /etc/loxpanel/kiosk.conf; do

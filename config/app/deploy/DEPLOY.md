@@ -1,4 +1,14 @@
-# LoxPanel auf dem PX30-Wandpanel
+# Linux-Wandpanel (PX30) von Hand einrichten – Entwickler-Notiz (veraltet)
+
+> **Veraltet / nur Entwickler-Notiz.** Stand aus der Zeit vor dem LoxBerry-Plugin
+> (damals „LoxPanel“). Heute laeuft der Server als LoxBerry-Plugin **tilebert**
+> (Docker, Port **8098**). Linux-Panels richtet man ueber die Konfiguration ein:
+> **Geraete → Geraet hinzufuegen** (Geraet mit „Debian + Agent“); der dort erzeugte SSH-
+> Befehl laedt `http://<loxberry>:8098/install-agent.sh` (= `deploy/install-agent.sh`)
+> und richtet Agent, Kiosk und Autostart ein. Variante A (Server auf dem Panel) und
+> die Pfade `/opt/loxpanel/...` unten sind nicht mehr gepflegt; Port 8099 gilt nur
+> im Container bzw. auf dem Testserver. Die Datei ist nicht im Plugin-ZIP.
+
 
 Ziel: Die Web-Visu laeuft als Dienst und startet beim Booten im Chromium-Kiosk.
 Zwei Varianten fuer den Server:

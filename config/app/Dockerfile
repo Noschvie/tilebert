@@ -1,4 +1,4 @@
-# LoxPanel — Web-Touch-Visu fuer Loxone (Server + Frontend)
+# tilebert — Web-Touch-Oberflaeche fuer Loxone (Server + Frontend)
 FROM python:3.12-slim
 # Kennzeichnung: loxpanel-ctl.sh raeumt nach einem Neubau nur verwaiste Images
 # MIT diesem Label weg - Images anderer Plugins bleiben unberuehrt.

@@ -1,6 +1,6 @@
-# LoxPanel Favoriten – Architektur-Übersicht (Nachschlagewerk)
+# tilebert – Architektur-Übersicht (Nachschlagewerk)
 
-Stand: Version 0.19.114, Arbeitsbaum mit uncommitteten Änderungen (2026-10-10). Zeilennummern = Arbeitsbaum, driften bei Edits;
+Stand: Version 0.20.6 (Dateigrößen 2026-10-12; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
 bei Zweifel `grep -n`. Pfade relativ zu `/home/dietpi/projekte/loxohnepanel`. Kürzel: `W` = `config/app/bin/webvisu.py`,
 `P` = `config/app/webfrontend/html/panel.html`, `C` = `.../config.html`.
 
@@ -33,16 +33,16 @@ Android-Panel: TbView/Kiosk.java (WebView) lädt P; Server installiert APK per a
 ### Docker (`config/app/`)
 - `Dockerfile:1-49`: python:3.12-slim, `requirements.txt` (loxone-api/aiohttp/cryptography), `adb` aus apt, `COPY . .`, `ENV LOXPANEL_PORT=8099`, `CMD python bin/webvisu.py`.
 - Persistenz nur `/app/config` (Volume): `loxpanel.cfg`, `panels.json`, `theme.json`, `devinfo.json`, `scene_light.json`, `pushlog.json`, `diag.log*`, `sounds/`, `bg/`, `adb/` (adbkey + Fully-APKs), `.cgi_token`.
-- Mitgeliefert: `android/LoxPanel-Launcher.apk` + `.version` (versionCode), `agent/` (Linux-Panel-Agent), `deploy/` (kiosk.sh, systemd), `tools/` (Diagnose-Skripte, nicht im Image: `.dockerignore`).
+- Mitgeliefert: `android/LoxPanel-Launcher.apk` + `.version` (versionCode), `agent/` (Linux-Panel-Agent), `deploy/` (kiosk.sh, systemd), `tools/` (Diagnose-Skripte, nicht im Image: `.dockerignore`; nicht im Plugin-ZIP: `.gitattributes`).
 - Testserver: Docker `lpdev` Port 8099 mit eingebundenem Quellcode (siehe CLAUDE.md).
 
 ### Android-Launcher / TbView (`android/panel-launcher/`, Java ohne Gradle)
 - `build.sh` (aapt/javac/r8/apksigner/zipalign) → schreibt `config/app/android/LoxPanel-Launcher.apk`; `launcher.keystore` nie ersetzen; bei Änderungen `versionCode`/`versionName` im `AndroidManifest.xml` (aktuell 6 / 5.1).
-- `src/de/loxpanel/launcher/`: `Main.java` (Moduswahl tbview|fully), `Kiosk.java` (426 Z., WebView + JS-Brücke, Näherung/Licht/Helligkeit; `@JavascriptInterface` ab Z.347), `Fully.java`, `Home.java`/`StockHome.java` (HOME-Launcher-Altbestand).
+- `src/de/loxpanel/launcher/`: `Main.java` (Moduswahl tbview|fully), `Kiosk.java` (495 Z., WebView + JS-Brücke, Näherung/Licht/Helligkeit; `@JavascriptInterface` ab Z.347), `Fully.java`, `Home.java`/`StockHome.java` (HOME-Launcher-Altbestand).
 - JS-Brücke `window.TbView` (Kiosk.java:347-403): `turnScreenOn/Off`, `isScreenOn`, `getDeviceId`, `setDisplayOff`, `setSaver`, `setDisplayBrightness(%)`→bool, `setAutoBrightness(on,min,max)`, `setProximityWake`, `getProximity`, `getLightLevel`, `getDeviceInfo`, `reload`. App→Panel: `window.lpHost._ev('prox'|'light'|'screen', wert)`.
 - Details/Gerätetests: `docs/TBVIEW.md`. Panel-Seite: `lpHost` (P:4141), `applySensors` (P:5913), `applyNight` (P:5875).
 
-## 2. Server `config/app/bin/webvisu.py` (11 192 Z.)
+## 2. Server `config/app/bin/webvisu.py` (11 391 Z.)
 
 ### Nachbarmodule
 | Datei | Inhalt |
@@ -55,7 +55,6 @@ Android-Panel: TbView/Kiosk.java (WebView) lädt P; Server installiert APK per a
 | `audioserver_auth.py` (93) | Gen-2-Anmeldung (RSA/AES-JWT) |
 | `audioserver_events.py` (435) | `AudioEventClient` (:41): Now-Playing/Favoriten per Push |
 | `theme_colors.py` (442) | `derive(grundfarbe)` (:276) WCAG-Theme aus einer Farbe, `DESIGN_PRESETS/KEYS`, `clean_design` (:389), `design_vars` (:411) |
-| `ebvisu.py` | **leer (0 Byte), getrackt, unbenutzt** |
 
 ### Konstanten/Hilfen (Auswahl)
 `APP_VERSION` (:79), Pfade `_CFGDIR/PANELS_FILE/CFG_FILE` (:86-91), `_atomic_write` (:153), `VALID_TABS` (:188), `DEVICE_MODELS` (:195),
@@ -63,7 +62,7 @@ Android-Panel: TbView/Kiosk.java (WebView) lädt P; Server installiert APK per a
 `STAT_*` (:488-506, Statistik), `MS_*` (:512-520, Retry/Offline), `SAVER_SIZES` (:660), `GRID_SIZES` (:683), `SAVER_WIDE_SIZES` (:693),
 `THEME_UI_KEYS` (:907), `BIG_TYPES` (:607), `AMBIENT_*` (:897), `NEULADEN_STUNDE=3` (:896), `_ADMIN_*` (:10893).
 
-### Klasse `App` (:1483-8678, ~7 200 Z.) – Zuständigkeiten
+### Klasse `App` (:1595-8835, ~7 200 Z.) – Zuständigkeiten
 | Bereich | Methoden (Zeile) |
 |---|---|
 | Init/Zustand | `__init__` (1484: controls/rooms/cats/states, `conn_*`-Dicts je WebSocket, `_last_sent`, Caches), `housekeeping` (1751), `drop_conn` (1667) |
@@ -98,7 +97,7 @@ Admin = per Passwort geschützt, wenn gesetzt (`_needs_admin` W:10952; Präfixli
 | `GET /api/settings`, `/api/msstatus`, `/api/types`, `/api/msio` | 8882, 8959, 8977, 9656 | Einstellungsstand, MS-Status, Typ-Diagnose, MS-Ein-/Ausgang lesen |
 | `POST /api/settings/{miniserver,cmdwatch,diag,intercom,night,audiometa,calendar,weather}` | 9008, 9050, 9077, 9182, 9125, 9152, 9384, 9348 | je ein Block in `loxpanel.cfg` |
 | `/api/settings/diag/{download,clear}`, `/api/settings/intercom/sound[/delete]`, `GET /api/sound` | 9099, 9110, 9261, 9316, 9334 | Diagnose-Log, Klingelton |
-| `/api/agent/announce`, `/api/agents`, `/api/agent/command` | 9478, 9508, 9517 | Linux-Panel-Agent |
+| `/api/agent/announce`, `/api/agent/command` | 9478, 9517 | Linux-Panel-Agent |
 | `/api/devices` GET/POST | 9601, 9567 | Geräteliste (Betriebsmodus-Zuordnung, Modell, Skalierung) |
 | `/api/device/{switch,name,rename,delete,adblog}` | 9608, 9634, 9678, 9739, 9764 | Geräteaktionen |
 | `/api/panel/bg`, `/bg/{pid}` | 9689, 9730 | Dashboard-Hintergrundbild |
@@ -145,7 +144,6 @@ Routen (`route`): `{view:'tab',tab}`, `{view:'group',…}`, `{view:'control',id[
 - **panels.json**: `panels{<id>:Profil}` + `devices{<Gerät>:{auto,modes{Modus→Profil},display,model,fully,nrestart,scale}}`.
   Profil: `title`, `tabs[≤4]`, `rooms[]`, `cats[]`, `roomCats`, `hide[]`, `favorites[]`, `alarmPop{uuid:bool}`, `alarmTone`, `tileOrder{scope:[uuid]}`, `saver{items[],exit[]}` (Dashboard), `layouts{tab:{…}}`, `tabIcons`, `tiles{uuid:{iconColor,textColor,bg,border,font,bold,italic,icon,big,chart,chartStyle}}`, `states{active,good,warn,crit}`, `ui{…}`.
 - **theme.json**: `states`, `categories{uuid:farbe}`, `ui` (nur `THEME_UI_KEYS`: iconSize, nameSize, subSize, saverFcSize, tileShadow, font, fontNum, textColor, baseColor, design, bold, lang, alarmsEnabled, motion, contrast, sceneLight, dblTapOff, iconAnim, bigValues). Fehlt die Datei → `theme.example.json`.
-- **visu.json**: von keinem Code gelesen (nur `visu.example.json`/`visu.schema.json`, Altlast). Ebenso unbenutzt: `ebvisu.py`.
 - Weitere: `devinfo.json` (uid→Name/Steckbrief), `scene_light.json` (gelernte Lichtszenen), `pushlog.json`, `diag.log`.
 
 ### Profil-UI-Schlüssel `ui.*` (Sanitizing: `_sanitize_panels` W:4119, ui-Teil ab ~4194; global `_sanitize_theme_ui` W:4617)
@@ -175,7 +173,7 @@ Config: `loxpanel.cfg intercom`. `mjpeg_handler` (W:10539) → `CamHub` (W:10393
 ### Update-Mechanismus
 LoxBerry-Auto-Update liest `release.cfg` (GitHub `main`); bei neuerer VERSION lädt es `main.zip`, preroot/postroot sichern/restaurieren Config, `loxpanel-ctl.sh start` baut das Image neu. `/api/update` (W:8711) vergleicht `APP_VERSION` mit `release.cfg` (5 min Cache) nur für den Hinweis in C. `/api/version` zeigt Version + Commit (`bin/version.json`). Panels laden bei geändertem `clock.build` (W:428, `_code_build` W:415) selbst neu.
 
-## 3. Panel `panel.html` (5 985 Z., eine Datei, kein Build)
+## 3. Panel `panel.html` (6 031 Z., eine Datei, kein Build)
 
 Aufbau: Zeile 1-21 Kopf/Manifest-Link · `<style>` 22-1976 · `<body>` 1978-2013 · `<script>` 2014-5983.
 CSS-Abschnitte (Auswahl): Variablen/Bewegung 35-84, Screensaver-Raster 718, Wetter&Kalender-Ansicht 1045, Layout-Redesign/Tabs 1164, Status-Widget 1427, Alarm-Vollbild 1522, animierte Symbole 1586, Handy 1627, Detail-Listenzeilen 1708, Raumregler 1745, Handy quer `html.pls` 1878, Werte gross 1945.
@@ -207,7 +205,7 @@ Body: `#conn`, `#playerpane`, `#frontpane` (Split-Pane), `#grid` (Hauptinhalt), 
 
 i18n: das Panel lädt `i18n.js` NICHT (nur Admin-UI `config.html`/`settings.html`, Sprachen de/en). Panel-Texte sind deutsch im Quelltext; `LANG` (aus `theme.lang`, W: `SUPPORTED_LANGS` de/en/fr/it/es/nl) steuert nur Datum/Uhr (`fmtCached` 4224). `data-i18n`-Attribute im Panel (P:5351, 5442, 5501) sind wirkungslos.
 
-## 4. Config `config.html` (5 722 Z.)
+## 4. Config `config.html` (5 708 Z.)
 
 Lädt `/i18n.js` (`T('…')`, `I18N.autoChrome`). Start: `load()` (C:2069) → `/api/meta` → `PANELS` (inkl. Pseudo-Profil `__global__` = theme.json) → `setRubric('overview')`.
 Navigation: zentrale Tabelle `NAV` (C:2003) Rubrik → Reiter → Karten (Hash-Schlüssel `k`, interner Ort `at`, Karten mit `sel`/`kw` = alte Namen/`open`/`need`); sie speist Reiterleisten (`navBar` 2060, `PCONF_TABS`/`DEV_TABS`/`SYS_TABS()` 2557), Hash, Weiterleitung und Suche. Alte Sprungziele (`#settings`, `devices:newpanel`, `pconf:profile` …) über `NAV_OLD`/`NAV_PTAB_OLD` → `navNorm(r,sub,x,y)` (2432) → `navGo` (2453, Karte per `navCard` 2470: aufklappen, scrollen, markieren). `goTo(r,sub,…)` (2488) und `data-goto` gehen denselben Weg; jeder Reiterwechsel schreibt den Hash per `replaceState` (`navHashWrite` 2486, Deep Links).

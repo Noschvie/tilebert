@@ -644,9 +644,13 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 | `config/app/bin/` | Server (`webvisu.py`) und seine Module – das läuft im Container |
 | `config/app/webfrontend/` | Panel, Config-Editor, Settings (HTML/JS) |
 | `config/app/android/` | Fertig gebaute App TbViewer (APK), wird per ADB installiert |
-| `android/panel-launcher/` | Quellcode + Build-Skript des Launchers |
+| `android/panel-launcher/` | Quellcode + Build-Skript der App TbViewer (nicht im Plugin-ZIP) |
 | `config/app/agent/`, `config/app/deploy/` | Panel-Agent und Installer für Linux-Anzeigegeräte |
-| `config/app/tools/` | Entwickler-Diagnoseskripte (nicht im Image) |
+| `config/app/tools/` | Entwickler-Diagnoseskripte (nicht im Image, nicht im Plugin-ZIP) |
+| `icons/` | Plugin-Symbole für LoxBerry (64–512 px) |
+| `docs/` | Entwickler-Doku: Architektur, TbView, Loxone-Notizen, Quickcheck (nicht im Plugin-ZIP) |
+| `qa/` | Quickcheck-Routine für Releases (`qa/quickcheck/qc.sh`, nicht im Plugin-ZIP) |
+| `design-system/` | Design-System: Farben, Schrift, Logo, Komponenten-Vorlagen (nicht im Plugin-ZIP) |
 
 ## Was das Plugin macht
 
@@ -706,8 +710,11 @@ $BIN/loxpanel-ctl.sh check      # starten, falls nicht läuft (Cron/Boot)
 
 ## Update
 
-Auto-Update ist für diesen Fork **bewusst deaktiviert** (`AUTOMATIC_UPDATES=false`
-in `plugin.cfg`), damit er nicht versehentlich vom Original-Repository
-überschrieben wird. Um eigenen Code zu aktualisieren: Quellcode in `config/app/`
-ändern, `plugin.cfg`-Version hochzählen und das Plugin über LoxBerry neu
-installieren (oder `loxpanel-ctl.sh restart`, das baut das Image neu).
+Auto-Update ist **aktiv** (`AUTOMATIC_UPDATES=true` in `plugin.cfg`) und zeigt
+auf das eigene Fork-Repository (`actionhero-zz/loxohnepanel`, Branch `main`):
+LoxBerry liest `release.cfg` (`RELEASECFG`), vergleicht dessen `VERSION` mit der
+installierten und lädt bei neuerer Version das Archiv von `ARCHIVEURL`. Ob
+LoxBerry nur meldet oder selbst installiert, stellt man in LoxBerry unter
+**Plugin-Verwaltung** ein. Von Hand geht ein Update jederzeit über die
+Plugin-Installation mit dem ZIP aus den GitHub-Releases; `loxpanel-ctl.sh restart`
+baut nur das Image aus dem installierten Code neu.

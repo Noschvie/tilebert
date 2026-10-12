@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LoxPanel Live-Web-Visu (Phase 3) — Navigations-Shell.
+"""tilebert Server — Navigations-Shell und API fuer Panels und Konfiguration.
 
 Baut die Loxone-App-Navigation nach, aber aufgeraeumt fuers 480x480-Panel:
 kompakter Kopf (Titel + Uhr), 2x2-Kacheln, unten 4 Tabs
@@ -236,7 +236,7 @@ DEVICE_MODELS = {
     "other": {"label": "Anderes Gerät / PC-Browser", "os": "browser", "scale": "off",
               "tips": ["Die Fenstergröße bestimmt das Format; Zoom bei Bedarf manuell setzen."]},
 }
-# Skalierung je Geraet: "off" | "auto" | Faktor. Die Visu rechnet mit festen
+# Skalierung je Geraet: "off" | "auto" | Faktor. Die Panel-Seite rechnet mit festen
 # 240er Kacheln (2 Panels = 960x480); auf groesseren Schirmen (7"-Tablet,
 # iPad mini) zoomt sie gleichmaessig hoch, statt mit Rand zu stehen.
 SCALE_MIN, SCALE_MAX = 0.5, 3.0
@@ -259,7 +259,7 @@ def _clean_scale(v):
 
 
 # ---- Geraete-Erkennung ----
-# Jede Visu meldet beim Verbinden eine dauerhafte Kennung (uid) und einen
+# Jede Panel-Seite meldet beim Verbinden eine dauerhafte Kennung (uid) und einen
 # Steckbrief (Bildschirm, Browser, Betriebssystem, Hardware; bei Fully Kiosk
 # auch Hersteller/Modell/Android-ID/MAC). Browser kennen keine MAC-Adresse und
 # die IP wechselt - Standard ist daher eine zufaellige ID, die das Geraet selbst
@@ -920,7 +920,7 @@ BAR_MAX = 6   # Statusleiste: hoechstens so viele Bausteine (480 px: kompakt ab 
 
 
 # Neuladen gegen Einfrieren ohne Agent (Android, Tablet): Ist reloadHours nicht
-# eingestellt, laedt die Visu einmal je Nacht ab dieser Stunde neu, sobald ihre
+# eingestellt, laedt die Panel-Seite einmal je Nacht ab dieser Stunde neu, sobald ihre
 # Uhr-/Dashboard-Seite steht (aus LoxPanel #82).
 NEULADEN_STUNDE = 3
 AMBIENT_MODES = ("light", "temp")
@@ -2775,7 +2775,7 @@ class App:
             v["--rows"] = "3"          # 3 Zeilen (2x3 / 3x3); Default 2
         nudge = ui.get("nudgeX")
         if nudge not in (None, ""):
-            # Horizontaler Feinversatz der ganzen Visu (px, negativ = nach links)
+            # Horizontaler Feinversatz der ganzen Panel-Seite (px, negativ = nach links)
             # gegen Display-Overscan. Wird vom Frontend als --nudge-x angewandt.
             try:
                 v["--nudge-x"] = f"{float(nudge):g}px"
@@ -2819,8 +2819,8 @@ class App:
             # Sprache fuer Datum/Uhr: immer die der Konfiguration (Backend, rechts oben) -
             # keine eigene Einstellung mehr je Panel bzw. unter "Bedienung"
             "lang": (_clean_lang(self.theme.get("ui", {}).get("lang")) or "de"),
-            "fill": bool(ui.get("fill")),       # Visu fuellt grosse Screens (quadratische Kacheln)
-            # Split-Screen an/aus (aus = 4"-Panel: nur die Visu, keine Pane 2, keine
+            "fill": bool(ui.get("fill")),       # Panel-Seite fuellt grosse Screens (quadratische Kacheln)
+            # Split-Screen an/aus (aus = 4"-Panel: nur die Panel-Seite, keine Pane 2, keine
             # Verdopplung). Default an; nur bei explizitem False aus.
             "split": ui.get("split") is not False,
             # Handy-Profil: Flaechen untereinander, Tabs unten, volle Hoehe
@@ -4352,9 +4352,9 @@ class App:
             if ui.get("rows") in (2, 3):
                 cui["rows"] = int(ui["rows"])   # Zeilen: 2 oder 3 (2x3 / 3x3)
             if ui.get("fill"):
-                cui["fill"] = True              # Visu fuellt grosse Screens (quadratische Kacheln)
+                cui["fill"] = True              # Panel-Seite fuellt grosse Screens (quadratische Kacheln)
             if ui.get("split") is False:
-                cui["split"] = False            # Split-Screen aus (4"-Panel: nur Visu)
+                cui["split"] = False            # Split-Screen aus (4"-Panel: nur Panel-Seite)
             if ui.get("phone") is True:
                 cui["phone"] = True             # Handy: Flaechen untereinander, Tabs unten
             if ui.get("bigValues") in (True, "on", "off"):
@@ -8223,7 +8223,7 @@ class App:
                 elif self.ws is None:
                     # Reiner WS-Neuaufbau (z.B. nach Miniserver-Reboot durch eine
                     # Loxone-Config-Aenderung): Struktur mitziehen, damit neue/
-                    # umbenannte Controls ohne LoxPanel-Neustart erscheinen. Fehler
+                    # umbenannte Controls ohne tilebert-Neustart erscheinen. Fehler
                     # isoliert -> Reconnect scheitert nie an der Struktur.
                     try:
                         if await self._refresh_structure():
@@ -8656,7 +8656,7 @@ class App:
         So reagiert die Front auf einen Wetter-Push des Miniservers, ohne
         Kalender und Open-Meteo erneut abzufragen. Wie oft der Miniserver
         schickt, bestimmt er selbst. Hing daran ein Kalenderabruf, fragte
-        LoxPanel iCloud Durchgang an Durchgang an, und iCloud sperrte das Abo
+        tilebert iCloud Durchgang an Durchgang an, und iCloud sperrte das Abo
         mit 503 und Retry-After. Der letzte Stand ist schon durch _front_keep()
         gelaufen; ein zweiter Durchgang wuerde die Uhrzeit des letzten guten
         Kalenderstands verfaelschen.
@@ -8950,7 +8950,7 @@ async def api_meta(request: web.Request) -> web.Response:
     return web.json_response({
         "rooms": rooms, "cats": cats, "controls": controls,
         # Zeitraeume der Verlaufs-Diagramme (Schluessel, Anzeige) fuer die Auswahl
-        # "Verlauf in der Kachel" — eine Quelle mit der Visu (STAT_RANGES).
+        # "Verlauf in der Kachel" — eine Quelle mit der Panel-Seite (STAT_RANGES).
         "statRanges": [[k, v[0]] for k, v in STAT_RANGES.items()],
         # Design-Vorlagen (Farbwaehler im Konfigurator): eine Quelle mit dem Server.
         "designPresets": theme_colors.DESIGN_PRESETS,
@@ -9675,7 +9675,7 @@ async def api_agent_announce(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "Ungültiger Port"}, status=400)
     now = time.time()
     for k in [k for k, v in app.agents.items() if now - v["ts"] > 600]:
-        del app.agents[k]   # verwaiste Eintraege aufraeumen (api_agents zeigt sie ohnehin nicht)
+        del app.agents[k]   # verwaiste Eintraege aufraeumen
     app.agents[ip] = {"ip": ip, "name": str(d.get("name") or ip)[:60],
                       "panel": str(d.get("panel") or "")[:60], "port": port,
                       "kiosk": bool(d.get("kiosk")), "ts": now}
@@ -9683,15 +9683,6 @@ async def api_agent_announce(request: web.Request) -> web.Response:
     # (der wendet sie am Geraet an, z.B. Display-Abschaltung per xset).
     return web.json_response({"ok": True, "dpmsOff": app.panel_dpms(d.get("panel")),
                               "reloadHours": app.panel_reload(d.get("panel"))})
-
-
-async def api_agents(request: web.Request) -> web.Response:
-    app: App = request.app["app"]
-    now = time.time()
-    out = [{**a, "online": (now - a["ts"]) < 60}
-           for a in app.agents.values() if (now - a["ts"]) < 600]
-    out.sort(key=lambda a: a["name"])
-    return web.json_response({"agents": out})
 
 
 async def api_agent_command(request: web.Request) -> web.Response:
@@ -10841,7 +10832,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
     pid = request.query.get("panel", "")
     # Frisch verbundenes Geraet direkt auf den aktuell laufenden Betriebsmodus
     # setzen (statt der Start-Ansicht aus ?panel=), falls dafuer eine Zuordnung
-    # existiert -> ohne Reload-Flackern gleich die richtige Visu.
+    # existiert -> ohne Reload-Flackern gleich die richtige Panel-Seite.
     if dev and app.last_mode:
         cfg = app.devices.get(dev)
         if cfg and cfg.get("auto", True):
@@ -10863,7 +10854,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
     log.info("Panel verbunden: '%s' (Tabs %s, Räume %s, Kategorien %s)", prof["id"],
              prof["tabs"], "alle" if prof["rooms"] is None else len(prof["rooms"]),
              "alle" if prof["cats"] is None else len(prof["cats"]))
-    # Display-Einstellungen gehen auch an die Visu: ohne Agent (Android-Panel,
+    # Display-Einstellungen gehen auch an die Panel-Seite: ohne Agent (Android-Panel,
     # Tablet mit Kiosk-App) schaltet die Seite das Display selbst ab und laedt
     # sich periodisch neu. `agent` sagt ihr, ob ein Agent das uebernimmt.
     # Ab hier alles im try: bricht die Verbindung schon waehrend der ersten
@@ -10987,7 +10978,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                 await app._send_or_drop(ws, {"t": "pong", "at": data.get("at"), **server_clock()})
             elif data.get("t") == "devinfo" and uid:
                 # Steckbrief -> Geraet erkennen/anlegen. Neu benannt: Name an die
-                # Visu, die verbindet sich damit neu (Zoom/Wach-Sperre greifen).
+                # Panel-Seite, die verbindet sich damit neu (Zoom/Wach-Sperre greifen).
                 info = _clean_devinfo(data.get("info"))
                 name, _new = app.device_detect(uid, dev, info, request.remote or "")
                 if name != dev:
@@ -10997,7 +10988,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                 if app.diag:
                     log.info("Panel '%s': %s", dev or request.remote or "?", str(data.get("msg") or "")[:500])
             elif data.get("t") == "idle":
-                # Visu ohne Kiosk-JS meldet Leerlauf -> Display ueber Treiber aus
+                # Panel-Seite ohne Kiosk-JS meldet Leerlauf -> Display ueber Treiber aus
                 if dev:
                     app._spawn(app.display_drivers(False, dev))
             elif data.get("t") == "cmd":
@@ -11100,7 +11091,7 @@ async def on_startup(a: web.Application) -> None:
 # lokales Token (config/.cgi_token) auf.
 _ADMIN_PAGES = ("/config", "/settings")
 _ADMIN_API = ("/api/settings", "/api/panels", "/api/theme", "/api/devices", "/api/device/",
-              "/api/kiosk/", "/api/panel/launcher", "/api/agent/command", "/api/agents",
+              "/api/kiosk/", "/api/panel/launcher", "/api/agent/command",
               "/api/tablayout", "/api/meta", "/api/types", "/api/testtone", "/api/testring",
               "/api/loxicons", "/api/admin/password", "/api/msstatus", "/api/msio",
               "/api/panel/bg")
@@ -11339,7 +11330,6 @@ def main() -> None:
     a.router.add_post("/api/settings/calendar", api_settings_calendar)
     a.router.add_post("/api/settings/weather", api_settings_weather)
     a.router.add_post("/api/agent/announce", api_agent_announce)
-    a.router.add_get("/api/agents", api_agents)
     a.router.add_post("/api/agent/command", api_agent_command)
     a.router.add_post("/api/devices", api_save_devices)
     a.router.add_get("/api/devices", api_devices_get)

@@ -1,16 +1,16 @@
 #!/bin/bash
-# LoxPanel Panel-Agent — Installer fuer das Anzeige-Geraet (Linero/PX30/Debian).
+# tilebert Panel-Agent — Installer fuer das Anzeige-Geraet (Linero/PX30/Debian).
 # Legt Agent + Config an und haengt ihn in den X-Autostart ein.
 #
 # Benutzung (auf dem Panel per SSH, als dessen Login-Benutzer, NICHT root):
-#   1) SERVER unten anpassen (IP:Port deines LoxPanel-Servers)
+#   1) SERVER unten anpassen (IP:Port deines tilebert-Servers)
 #   2) bash install-agent.sh
 #
 # Der eingebettete Agent ist ein Spiegel von agent/loxpanel-agent.py.
 set -e
 
 # ===== ANPASSEN (oder per Env uebergeben: SERVER=... bash install-agent.sh) =====
-SERVER="${SERVER:-192.168.1.10:8099}"    # IP:Port deines LoxPanel-Servers (Docker-Host/Pi)
+SERVER="${SERVER:-192.168.1.10:8099}"    # IP:Port deines tilebert-Servers (Docker-Host/Pi)
 AGENT_NAME="${AGENT_NAME:-$(hostname)}"  # Anzeigename in /settings
 PANEL="${PANEL:-}"                       # Panel-Profil-ID (leer = Standardansicht)
 AUTOSTART="${AUTOSTART:-1}"              # 1 = Kiosk beim Booten; 0 = nur Agent, Start aus /settings
@@ -35,13 +35,13 @@ sudo mkdir -p "$AGENT_DIR" /etc/loxpanel
 echo "==> 2/5 Agent schreiben ($AGENT)"
 sudo tee "$AGENT" >/dev/null <<'PYEOF'
 #!/usr/bin/env python3
-"""LoxPanel Panel-Agent — laeuft auf jedem Wandpanel (Linero/PX30).
+"""tilebert Panel-Agent — laeuft auf jedem Wandpanel (Linero/PX30).
 
-Meldet das Panel beim LoxPanel-Server (Auto-Discovery) und nimmt Start-/Reload-/
+Meldet das Panel beim tilebert-Server (Auto-Discovery) und nimmt Start-/Reload-/
 Stop-Befehle entgegen, um den Chromium-Kiosk fernzusteuern. Nur Standardlib.
 
 Config: dieselbe deploy/loxpanel-kiosk.conf wie kiosk.sh
-  SERVER=host:port     LoxPanel-Server (Pflicht)
+  SERVER=host:port     tilebert-Server (Pflicht)
   PANEL=<id>           Panel-Profil / Startseite
   AGENT_PORT=8130      HTTP-Port des Agenten (Default 8130)
   AGENT_NAME=<name>    Anzeigename (Default: Hostname)
@@ -668,7 +668,7 @@ echo "==> Backlight-Schreibrechte (echte Display-Abschaltung ohne sudo)"
 # udev-Regel, die ALLE Backlight-Devices fuer die Gruppe schreibbar macht.
 sudo usermod -aG video "$(id -un)" 2>/dev/null || true
 sudo tee /etc/udev/rules.d/90-loxpanel-backlight.rules >/dev/null <<'UDEV'
-# LoxPanel: brightness aller Backlight-Devices fuer Gruppe 'video' schreibbar.
+# tilebert: brightness aller Backlight-Devices fuer Gruppe 'video' schreibbar.
 ACTION=="add", SUBSYSTEM=="backlight", RUN+="/bin/chgrp video /sys/class/backlight/%k/brightness", RUN+="/bin/chmod g+w /sys/class/backlight/%k/brightness"
 UDEV
 sudo udevadm control --reload 2>/dev/null || true
@@ -720,7 +720,7 @@ if [ -f "$XS" ] && ! grep -qF "loxpanel-agent" "$XS"; then
 fi
 cat > "$XS" <<EOF
 #!/bin/sh
-# LoxPanel Panel-Agent -> startet den Chromium-Kiosk und meldet das Panel.
+# tilebert Panel-Agent -> startet den Chromium-Kiosk und meldet das Panel.
 # Screensaver-Blank aus; DPMS (Display-Abschaltung) richtet der Agent selbst
 # gemaess DPMS_OFF ein — daher hier NICHT mehr -dpms setzen.
 xset s off 2>/dev/null || true

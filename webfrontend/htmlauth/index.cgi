@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-# LoxBerry-Plugin-Seite fuer LoxPanel – laeuft im LoxBerry-Rahmen (lbheader/
+# LoxBerry-Plugin-Seite fuer tilebert – laeuft im LoxBerry-Rahmen (lbheader/
 # lbfooter) und LoxBerry-Design (Bootstrap-Klassen).
 #  - zeigt den Container-Status
 #  - Miniserver-Zugang -> wird an den laufenden Container weitergereicht

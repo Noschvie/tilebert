@@ -1,5 +1,5 @@
 #!/bin/bash
-# LoxPanel (Favoriten-Fork) Docker-Steuerung.
+# tilebert (frueher LoxPanel Favoriten) Docker-Steuerung.
 # Nutzung: loxpanel-ctl.sh start|stop|restart|check|backup|restore <datei>
 #   start   baut bei Bedarf das lokale Image (aus dem mitgelieferten
 #           Quellcode unter config/app) und startet den Container

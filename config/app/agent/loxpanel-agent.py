@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""LoxPanel Panel-Agent — laeuft auf jedem Wandpanel (Linero/PX30).
+"""tilebert Panel-Agent — laeuft auf jedem Wandpanel (Linero/PX30).
 
-Meldet das Panel beim LoxPanel-Server (Auto-Discovery) und nimmt Start-/Reload-/
+Meldet das Panel beim tilebert-Server (Auto-Discovery) und nimmt Start-/Reload-/
 Stop-Befehle entgegen, um den Chromium-Kiosk fernzusteuern. Nur Standardlib.
 
 Config: dieselbe deploy/loxpanel-kiosk.conf wie kiosk.sh
-  SERVER=host:port     LoxPanel-Server (Pflicht)
+  SERVER=host:port     tilebert-Server (Pflicht)
   PANEL=<id>           Panel-Profil / Startseite
   AGENT_PORT=8130      HTTP-Port des Agenten (Default 8130)
   AGENT_NAME=<name>    Anzeigename (Default: Hostname)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""LoxPanel Phase-2-Probe: ein Control auslesen und schalten.
+"""tilebert Phase-2-Probe: ein Control auslesen und schalten.
 
 Verbindungsdaten kommen aus config/loxpanel.cfg (Block "miniserver"), koennen
 aber per CLI ueberschrieben werden. So muss kein Passwort auf der Kommandozeile

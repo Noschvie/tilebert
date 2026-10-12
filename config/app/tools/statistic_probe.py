@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Read-only-Sonde: Wie gibt der Miniserver aufgezeichnete Verlaeufe (Statistik)
-heraus? Grundlage fuer Verlaufs-Diagramme in LoxPanel.
+heraus? Grundlage fuer Verlaufs-Diagramme in tilebert.
 
 Bausteine mit Aufzeichnung tragen in der Struktur `statistic` (alt) oder
 `statisticV2` (neu). Wie die Daten abgerufen werden, steht in keiner Datei im

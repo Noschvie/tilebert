@@ -1,4 +1,4 @@
-/* LoxPanel Admin-UI Uebersetzung (i18n) fuer /settings und /config.
+/* tilebert Admin-UI Uebersetzung (i18n) fuer /settings und /config.
  *
  * Ansatz: Schluessel = deutscher Quelltext (de ist die Referenz, kein Eintrag
  * noetig). Zusatzsprachen liefern eine Map deutsch->uebersetzt; fehlt ein
@@ -38,7 +38,6 @@
       'Ungültige Serveradresse.': 'Invalid server address.',
       'Adresse geändert – bitte Passwort neu eingeben': 'Address changed – please enter the password again',
       'kein gültiges JSON': 'not valid JSON',
-      // Statusleiste: Anzeige je Baustein
       // Werte groß auf Kacheln
       'Kacheln': 'Tiles',
       'Werte groß auf Kacheln': 'Large values on tiles',
@@ -48,40 +47,20 @@
       'nie groß': 'never large',
       'Symbol + Text': 'Icon + text',
       'Loxone-Statussymbol statt festem Symbol': 'Loxone status icon instead of fixed icon',
-      'Status-Baustein · jetzt: ': 'Status block · now: ',
       'kein Status-Baustein': 'not a status block',
       'Beides': 'Both',
       'Loxone-Symbol': 'Loxone icon',
       // Rahmen / Navigation
-      'Hier legst du fest, WANN Nacht ist – für alle Panels gleich. Nacht ist aktiv, solange der gewählte Betriebsmodus läuft oder der gewählte Baustein eingeschaltet ist. Ohne Auswahl: Sonnenuntergang bis Sonnenaufgang.':
-        'Here you define WHEN it is night – the same for all panels. Night is active while the selected operating mode is running or the selected block is switched on. With no selection: sunset to sunrise.',
-      'Auslöser – Betriebsmodus oder Baustein': 'Trigger – operating mode or block',
       'Betriebsmodus': 'Operating mode',
       'Konfiguration': 'Configuration',
-      'Intercom / Kameras': 'Intercom / cameras',
       'bald': 'soon',
-      'Panels & Kacheln': 'Panels & tiles',
-      'Ansichten gestalten': 'Design views',
-      'Panels · Miniserver · Intercom': 'Panels · Miniserver · Intercom',
-      'Panel-Ansicht anzeigen': 'Show panel view',
       // Miniserver
       'Benutzer': 'User',
       'Passwort': 'Password',
-      'unverändert lassen': 'leave unchanged',
-      '<b>Hier legst du fest, WANN Nacht ist – für alle Panels gleich.</b> Wähle einen Loxone-Betriebsmodus (z. B. „Nacht“): Nacht ist aktiv, solange dieser Modus läuft. Die Betriebsmodi legst du in Loxone Config an. Ohne Auswahl gilt Sonnenuntergang bis Sonnenaufgang (Zeiten vom Miniserver).': '<b>This sets WHEN it is night – the same for all panels.</b> Pick a Loxone operating mode (e.g. “Night”): night is active while this mode is running. Operating modes are created in Loxone Config. Without a choice, sunset to sunrise applies (times from the Miniserver).',
       'Verbinden & Speichern': 'Connect & save',
       // Kamera / Tuerstation
-      'Video-URL (MJPEG) und Login der Türstation(en). Wird für das Kamerabild im Intercom-Popup gebraucht. Die Liste kommt aus dem Miniserver.':
-        'Video URL (MJPEG) and login of the door station(s). Needed for the camera image in the intercom popup. The list comes from the Miniserver.',
       'Speichern': 'Save',
-      // SIP
-      'Gegensprechen über die Türstation direkt am Panel (SIP-Audio/-Video statt nur Kamerabild).':
-        'Two-way audio via the door station directly on the panel (SIP audio/video instead of just the camera image).',
-      'SIP-Anbindung ist in Arbeit.': 'SIP integration is in progress.',
-      'Coming soon': 'Coming soon',
       // Panels
-      'Noch kein Panel gefunden. Agent auf dem Panel starten (agent/loxpanel-agent.py).':
-        'No panel found yet. Start the agent on the panel (agent/loxpanel-agent.py).',
       '(Standard)': '(Default)',
       'Start': 'Start',
       'Reload': 'Reload',
@@ -94,8 +73,6 @@
       'Alle Panels': 'All panels',
       // Kalender & Wetter (Front / Screensaver)
       'Kalender & Wetter': 'Calendar & weather',
-      'Zeigt Termine aus deinen iCal-Abos und das Wetter auf der Uhr-Startseite (Screensaver) aller Panels. Serverweit — der Server holt die Daten und schickt sie an die Panels.':
-        'Shows events from your iCal subscriptions and the weather on the clock start page (screensaver) of all panels. Server-wide — the server fetches the data and pushes it to the panels.',
       'iCal-Kalender': 'iCal calendars',
       'Überschrift am Panel': 'Heading on the panel',
       // Kalenderzeile
@@ -115,8 +92,6 @@
         'The panel still shows the data from {zeit}.',
       // Wetter
       'Wetter': 'Weather',
-      'Hat die Anlage den Loxone-Wetterdienst, kommt das Wetter von dort — die Koordinaten bleiben dann unbenutzt. Sonst von Open-Meteo: kostenlos, ohne API-Schlüssel und ohne Konto, nur die Koordinaten deines Standorts eintragen (Dezimalgrad, z.B. 47.071 / 15.439). Leer lassen schaltet das Wetter aus, solange kein Wetterserver liefert.':
-        'If the installation has the Loxone weather service, the weather comes from there — the coordinates then stay unused. Otherwise from Open-Meteo: free, no API key and no account, just enter the coordinates of your location (decimal degrees, e.g. 47.071 / 15.439). Leaving them empty switches the weather off, as long as no weather server delivers.',
       'Breitengrad': 'Latitude',
       'Längengrad': 'Longitude',
       'Open-Meteo wird nicht abgefragt.': 'Open-Meteo is not queried.',
@@ -125,11 +100,7 @@
       'Automatisch vom Miniserver:': 'Automatically from the Miniserver:',
       // Anzeige am Panel
       'Anzeige': 'Display',
-      'Wetter-Vorschau (Tage)': 'Weather forecast (days)',
-      'Termine auf der Uhr-Seite (max.)': 'Events on the clock page (max.)',
       'Kalenderfarben am Panel zeigen': 'Show calendar colors on the panel',
-      '„Termine auf der Uhr-Seite" ist eine Obergrenze — was neben Wetter und Uhr nicht mehr auf den Schirm passt, bleibt weg (auf einem 480×480-Panel sind das etwa drei). Die vollständige Liste steht im Kalender-Pane.':
-        '“Events on the clock page” is an upper limit — whatever no longer fits on the screen next to the weather and the clock is left out (on a 480×480 panel that is about three). The full list is in the calendar pane.',
       // Verlaufs-Diagramme (Detailseite, Split-Haelfte, Kachel)
       'Verlauf': 'History',
       'Zeitraum': 'Period',
@@ -144,7 +115,6 @@
       '7 Tage': '7 days',
       '30 Tage': '30 days',
       // Neues Panel
-      'Neues Panel einrichten': 'Set up a new panel',
       'SSH-Benutzer': 'SSH user',
       'Befehl erzeugen': 'Generate command',
       'Fehler': 'Error',
@@ -153,95 +123,39 @@
 
       // ---- Betriebsmodus-Automatik (/settings) ----
       'Betriebsmodus-Automatik': 'Operating-mode automation',
-      'Loxone schaltet die Ansicht automatisch um: in Loxone Config einen virtuellen HTTP-Ausgang anlegen, der pro Betriebsart einen Modusnamen an diesen Server schickt. Hier legst du je Panel fest, welche Ansicht bei welchem Modus erscheint. Panel ohne Eintrag für einen Modus bleibt unverändert.':
-        'Loxone switches the view automatically: in Loxone Config create a virtual HTTP output that sends a mode name to this server per operating mode. Here you define, per panel, which view appears for which mode. A panel without an entry for a mode stays unchanged.',
-      'Noch kein Panel bekannt. Ein Panel muss sich einmal gemeldet haben (Agent läuft), dann erscheint es hier.':
-        'No panel known yet. A panel must have reported in once (agent running), then it appears here.',
-      'Automatik speichern': 'Save automation',
       'Automatik aktiv': 'Automation active',
       'Zeile entfernen': 'Remove row',
 
       // ---- /config (Panel-Editor) ----
       'Titel': 'Title',
-      'Fenstertitel des Panels.': 'Window title of the panel.',
-      'Standard-Aussehen für <b>alle</b> Panels. Einzelne Panels können es unter „Darstellung" überschreiben (leer = erbt global).':
-        'Default look for <b>all</b> panels. Individual panels can override it under "Appearance" (empty = inherits global).',
-      'Untere Leiste (Tabs)': 'Bottom bar (tabs)',
-      'Bis zu <b>4 Buttons</b> — die 4 Standard-Tabs und/oder einzelne Kategorien als Abkürzung. Der <b>erste aktive</b> ist die Startseite (★). ':
-        'Up to <b>4 buttons</b> — the 4 standard tabs and/or individual categories as shortcuts. The <b>first active</b> one is the start page (★). ',
       'Räume': 'Rooms',
-      'Welche Räume dieses Panel zeigt. <b>Nichts angehakt = alle Räume.</b>':
-        'Which rooms this panel shows. <b>Nothing checked = all rooms.</b>',
-      'Alle abwählen': 'Deselect all',
       'Kategorien': 'Categories',
-      'Welche Kategorien im Tab „Kategorien" erscheinen. <b>Nichts angehakt = alle.</b> Bei gesetzter Raum-Auswahl werden Kategorien zusätzlich auf diese Räume gefiltert.':
-        'Which categories appear in the "Categories" tab. <b>Nothing checked = all.</b> If a room selection is set, categories are additionally filtered to those rooms.',
-      'Kacheln gestalten': 'Style tiles',
-      'Klicke eine Kachel an und ändere <b>Farben, Schrift und Icon nur für diese Kachel</b> (auf diesem Panel). Farbiger Punkt = schon angepasst. Mit dem <b>Auge</b> rechts blendest du eine Kachel auf diesem Panel ganz aus. ':
-        'Click a tile and change <b>colors, font and icon for this tile only</b> (on this panel). Colored dot = already customized. Use the <b>eye</b> on the right to hide a tile entirely on this panel. ',
-      'Kachel suchen…': 'Search tile…',
-      'Darstellung (optional)': 'Appearance (optional)',
-      'Überschreibt das globale Theme nur für dieses Panel. Leer = global.':
-        'Overrides the global theme for this panel only. Empty = global.',
-      'Aktiv-Overlay': 'Active overlay',
-      'Wie eine Kachel im <b>aktiven Zustand</b> hervorgehoben wird (an = Akzent, ok = grün, kritisch = rot): Rahmen, Füllung und Deckkraft. Die <b>Farbe</b> kommt je Zustand aus dem Theme, hier stellst du das <b>Aussehen</b> ein. Gilt für dieses Panel — einzelne Kacheln können unten abweichen.':
-        'How a tile is highlighted in its <b>active state</b> (on = accent, ok = green, critical = red): border, fill and opacity. The <b>color</b> per state comes from the theme; here you set the <b>look</b>. Applies to this panel — individual tiles can differ below.',
       'Panel löschen': 'Delete panel',
       'Kein Panel gewählt.': 'No panel selected.',
-      'keine Kacheln im gewählten Raum-/Kategorie-Filter': 'no tiles in the selected room/category filter',
-      'nichts gefunden': 'nothing found',
       // Labels
-      'Icon-Größe': 'Icon size',
-      'Name-Größe': 'Name size',
-      'Sub-Größe': 'Sub size',
       'Schriftart': 'Font',
       'Schriftfarbe (Name)': 'Text color (name)',
       'Sprache': 'Language',
-      'Steuert vorerst Datum & Uhr am Panel. Gerätenamen kommen aus dem Miniserver.':
-        'For now controls date & clock on the panel. Device names come from the Miniserver.',
-      'Display aus nach (Sek.)': 'Display off after (sec.)',
-      'Auto-Neustart alle (Std.)': 'Auto-restart every (hrs.)',
-      'Kacheln pro Zeile': 'Tiles per row',
-      'Füllung': 'Fill',
       'Rahmen': 'Border',
-      'Rahmenbreite': 'Border width',
       'Hintergrund': 'Background',
       'Icon-Farbe': 'Icon color',
       'Textfarbe': 'Text color',
       'Schrift': 'Font',
       // Optionen
-      'Standard (global)': 'Default (global)',
       'System (Sans)': 'System (Sans)',
       'Eigene…': 'Custom…',
-      'Rahmen + Füllung': 'Border + fill',
-      'Nur Rahmen': 'Border only',
-      'Nur Füllung': 'Fill only',
-      '2 × 2 (4″-Panel)': '2 × 2 (4″ panel)',
-      '3 × 2 (Tablet)': '3 × 2 (tablet)',
-      'Standard (Deutsch)': 'Default (German)',
       // Icon-Reiter / Kachel-Editor
       'Google · Upload': 'Google · Upload',
       'Kachel zurücksetzen': 'Reset tile',
       'Standard': 'Default',
-      'Alle einblenden': 'Show all',
-      'Auf Standard zurücksetzen': 'Reset to default',
       'neutral': 'neutral',
       'Aktiv': 'Active',
       // Global-Editor
-      '🌐 Globale Darstellung': '🌐 Global appearance',
-      'Schrift, Größe, Farbe und Stärke der Kachel-Beschriftung — gilt global für alle Panels.':
-        'Font, size, color and weight of the tile labels — applies globally to all panels.',
       'Kategorie-Farben (Ampel)': 'Category colors (traffic light)',
-      // Dialoge
-      'ID des neuen Panels (klein, ohne Leerzeichen), z. B. wohnzimmer:':
-        'ID of the new panel (lowercase, no spaces), e.g. livingroom:',
-      'Ungültige ID.': 'Invalid ID.',
       // Gerät hinzufügen / Meine Geräte (Vereinheitlichung)
       'Welches Gerät?': 'Which device?',
       'Shelly Wall Display': 'Shelly Wall Display',
       'Sonoff NSPanel Pro': 'Sonoff NSPanel Pro',
-      'Android-Tablet oder Handy': 'Android tablet or phone',
-      'mit tilebert-App (TbViewer)': 'with tilebert app (TbViewer)',
       'Agent per SSH': 'Agent via SSH',
       'iPad, iPhone oder Browser': 'iPad, iPhone or browser',
       'Safari, Chrome …': 'Safari, Chrome …',
@@ -250,7 +164,6 @@
       'Gerätetyp': 'Device type',
       'Steuerung': 'Controls',
       'Wartung': 'Maintenance',
-      'Einrichten per adb': 'Set up via adb',
       'Display einschalten und Dashboard schließen': 'Switch display on and close the dashboard',
       'Nichts tun': 'Do nothing',
       'Automatisch (Lichtsensor)': 'Automatic (light sensor)',
@@ -268,19 +181,11 @@
       'TbViewer auf „{n}“ erneut installieren?': 'Reinstall TbViewer on “{n}”?',
       'TbViewer auf „{n}“ installieren?': 'Install TbViewer on “{n}”?',
       'Installiere TbViewer …': 'Installing TbViewer …',
-      'App TbViewer (zeigt tilebert an) per adb installieren bzw. aktualisieren und die Start-URL eintragen': 'Install or update the TbViewer app (shows tilebert) via adb and enter the start URL',
-      'Shelly läuft noch nicht mit TbViewer – „TbViewer installieren“ richtet die eigene Anzeige ein (Annäherung, Helligkeit).': 'Shelly is not running with TbViewer yet – “Install TbViewer” sets up the dedicated display (approach, brightness).',
-      '„TbViewer installieren“ aktualisiert.': '“Install TbViewer” updates it.',
       'TbViewer auf „': 'Install TbViewer on “',
-      'Android-Tablet: Startbildschirm bleibt, das Symbol „tilebert“ erscheint im App-Menü.': 'Android tablet: the home screen stays, the “tilebert” icon appears in the app menu.',
-      'TbViewer eingerichtet – öffnet': 'TbViewer set up – opens',
       'Erweitert: Display-Steuerung (externer Treiber)': 'Advanced: display control (external driver)',
       'Das Gerät regelt die Helligkeit selbst nach dem Umgebungslicht': 'The device adjusts brightness itself according to ambient light',
       '“ installieren?': '”?',
-      'Voraussetzung: ADB über WLAN (Port 5555) aktiv. Das Gerät erscheint danach einmal neu unter „Meine Geräte“ (Kennung tb-…). Beim ersten Mal am Panel „USB-Debugging zulassen?“ mit „Immer erlauben“ bestätigen und erneut starten.': 'Prerequisite: ADB over Wi-Fi (port 5555) is active. The device then appears once more under “My devices” (ID tb-…). The first time, confirm “Allow USB debugging?” on the panel with “Always allow” and start again.',
       'Gerät offline': 'Device offline',
-      'Gerät verbindet …': 'Device connecting …',
-      '– die Knöpfe gehen wieder, sobald es erreichbar ist.': '– the buttons work again as soon as it is reachable.',
       'Kalender „': 'Calendar “',
       'Hintergrundbild entfernen?': 'Remove background image?',
       'Eigenen Klingelton entfernen? Danach gilt wieder der Standardton.': 'Remove custom ring tone? The default tone applies again.',
@@ -298,7 +203,6 @@
       'Adresse am Gerät:': 'Address on the device:',
       'Adresse kopieren': 'Copy address',
       'Adresse kopiert': 'Address copied',
-      'Adresse speichern': 'Save address',
       'Adressen kopieren': 'Copy addresses',
       'Adressen kopiert': 'Addresses copied',
       'Aktion': 'Action',
@@ -318,7 +222,6 @@
       'Animation': 'Animation',
       'Animierte Symbole': 'Animated icons',
       'Anlegen': 'Create',
-      'Auch die bestehenden Tabs und das Dashboard auf': 'Also the existing tabs and the dashboard on',
       'Auf diesem Panel überall ausblenden': 'Hide everywhere on this panel',
       'Aus': 'Off',
       'Ausgeblendete Kacheln': 'Hidden tiles',
@@ -331,7 +234,6 @@
       'Baustein wählen': 'Choose block',
       'Baustein-Kachel': 'Block tile',
       'Bausteine': 'Blocks',
-      'Bestimmt, welche Steuerung unten angeboten wird.': 'Determines which controls are offered below.',
       'Betriebsmodus-Assistent': 'Operating-mode wizard',
       'Bibliothek': 'Library',
       'Bild verwischt': 'Image blurred',
@@ -354,10 +256,6 @@
       'Display': 'Display',
       'Display &amp; Nacht': 'Display &amp; night',
       'Effekte': 'Effects',
-      'Eigene APK entfernen': 'Remove own APK',
-      'Eigene APK entfernen? Danach gilt wieder die Adresse.': 'Remove own APK? Afterwards the address applies again.',
-      'Eigene APK hochladen': 'Upload own APK',
-      'Eigene Adresse (Download-Seite oder direkter .apk-Link, leer = offizielle Seite)': 'Own address (download page or direct .apk link, empty = official page)',
       'Eigene Datei': 'Own file',
       'Eigene Farben zurücksetzen': 'Reset custom colors',
       'Eigene hochgeladene Datei': 'Own uploaded file',
@@ -369,7 +267,6 @@
       'Erkannte Audioserver': 'Detected audio servers',
       'Farbig (Ampel)': 'Colored (traffic light)',
       'Farbverlauf': 'Gradient',
-      'Fehler beim Hochladen': 'Upload error',
       'Fenster': 'Window',
       'Fertig': 'Done',
       'Fett': 'Bold',
@@ -381,7 +278,6 @@
       'Ganzes Bild zeigen (nicht beschneiden)': 'Show entire image (do not crop)',
       'Ganzes Gerät neu starten, wenn das Display hängt': 'Restart entire device if the display freezes',
       'Gelöscht': 'Deleted',
-      'Gerät löschen': 'Delete device',
       'Gerät neu starten': 'Restart device',
       'Gerät startet neu': 'Device restarting',
       'Gerät verbinden': 'Connect device',
@@ -450,11 +346,9 @@
       'Nächster Versuch in': 'Next attempt in',
       'Ohne Kennung': 'Without ID',
       'Ohne Raum': 'Without room',
-      'Panel nicht erreicht': 'Panel not reached',
       'Panel „': 'Panel “',
       'Panels': 'Panels',
       'Passend zum Design': 'Matches the design',
-      'Passwort aktiv': 'Password active',
       'Port': 'Port',
       'Quelle: System → Kalender & Kameras.': 'Source: System → Calendar & cameras.',
       'Quelle: System → Loxone → Wetter.': 'Source: System → Loxone → Weather.',
@@ -471,7 +365,6 @@
       'Standard (Mitte)': 'Default (center)',
       'Standardraster': 'Default grid',
       'Standardton (Wecker-Piep)': 'Default tone (alarm beep)',
-      'Startet mit Panel': 'Starts with panel',
       'Statusleiste': 'Status bar',
       'Statusleiste oben anzeigen': 'Show status bar at top',
       'Suchen': 'Search',
@@ -485,8 +378,6 @@
       'Tab „': 'Tab “',
       'Tab-Einstellungen': 'Tab settings',
       'Tage': 'Days',
-      'Tagen nicht gesehen': 'Not seen for days',
-      'Theme:': 'Theme:',
       'Tipp-Töne': 'Tap tones',
       'Tipps für': 'Tips for',
       'Ton an': 'Sound on',
@@ -513,8 +404,6 @@
       'Wie alle Panels': 'Like all panels',
       'Wie heißt das Panel?': 'What is the panel called?',
       'Wie möchtest du anfangen?': 'How would you like to start?',
-      'X2 · X2i · X1i': 'X2 · X2i · X1i',
-      'Zeigt gerade „': 'Currently showing “',
       'Ziehen zum Umsortieren': 'Drag to reorder',
       'Zoom': 'Zoom',
       'Zuordnung': 'Assignment',
@@ -531,7 +420,6 @@
       'auto': 'auto',
       'breit': 'wide',
       'eigener Klingelton': 'own ring tone',
-      'erst andere Widgets verkleinern oder entfernen.': 'first shrink or remove other widgets.',
       'fest links': 'fixed left',
       'ganzes Bild': 'whole image',
       'gelöscht': 'deleted',
@@ -560,7 +448,6 @@
       'schon im Tab': 'already in tab',
       'seit': 'since',
       'umgestellt': 'switched',
-      'umstellen? (Abbrechen = nur für neue)': 'switch? (Cancel = only for new)',
       'und': 'and',
       'unten': 'bottom',
       'verbindet …': 'connecting …',
@@ -584,12 +471,7 @@
       '“ entfernt': '” removed',
       '“ gelöscht': '” deleted',
       '“ komplett neu starten? Das dauert etwa eine Minute.': '” restart completely? This takes about one minute.',
-      '“ löschen? Einstellungen (Typ, Betriebsmodus, Display) gehen verloren.': '” delete? Settings (type, operating mode, display) will be lost.',
-      '“ mit 1 Panel – für dieses Gerät passt „2 Panels“.': '” with 1 panel – for this device “2 panels” fits.',
-      '“ mit 2 Panels – für dieses Gerät passt „1 Panel“.': '” with 2 panels – for this device “1 panel” fits.',
-      '“ neu starten? Das Panel ist ca. 10–20 s nicht bedienbar.': '” restart? The panel cannot be operated for approx. 10–20 s.',
       '„Übernehmen“ speichert das für alle gewählten Geräte.': '“Apply” saves this for all selected devices.',
-      '✓ Eigene APK gespeichert': '✓ Own APK saved',
 
       // Nachgezogen 2026-10-11 (T()-Reste: Design-Labels, Tabs, Passwort, Fragmente mit Leerzeichen)
       'Schrift auf Rahmen': 'Text on border',
@@ -623,8 +505,6 @@
       'Fehler: ': 'Error: ',
       'Raster auf ': 'Grid on ',
       ' umgestellt': ' switched',
-      ' umstellen? (Abbrechen = nur für neue)': ' switch? (Cancel = only for new)',
-      'Auch die bestehenden Tabs und das Dashboard auf ': 'Also the existing tabs and the dashboard on ',
       'Anwesend': 'Present',
       'Abwesend': 'Absent',
       'Gäste': 'Guests',
@@ -704,10 +584,6 @@
         'Off: all appointments in one colour, with the calendar name next to them. On: each calendar gets its own colour dot, also in the month grid.',
       '„Termine im Dashboard“ ist eine Obergrenze: Was neben Wetter und Uhr nicht mehr passt, bleibt weg (auf 480 × 480 etwa drei). Die vollständige Liste steht im Kalender-Widget.':
         '"Appointments in the dashboard" is an upper limit: whatever no longer fits next to weather and clock is left out (about three on 480 × 480). The full list is in the calendar widget.',
-      'Hier legst du fest, wann Nacht ist, für alle Panels gleich. Nacht gilt, solange der gewählte Loxone-Betriebsmodus läuft (z. B. „Nacht“, angelegt in Loxone Config); ohne Betriebsmodus gilt sie von Sonnenuntergang bis Sonnenaufgang oder zu einer festen Uhrzeit.':
-        'Here you set when it is night, the same for all panels. Night applies while the chosen Loxone operating mode is running (e.g. "Night", created in Loxone Config); without an operating mode it applies from sunset to sunrise or at a fixed time.',
-      'Auslöser (Betriebsmodus aus Loxone)': 'Trigger (operating mode from Loxone)',
-      'Kein Betriebsmodus (Sonnenzeiten)': 'No operating mode (sun times)',
       'Wann Nacht ist, gilt für alle Panels. Was nachts passiert, stellst du je Panel ein: Panel → Display & Nacht.':
         'Night applies to all panels. What happens at night is set per panel: Panel → Display & night.',
       'Nacht erkennen über':
@@ -793,19 +669,9 @@
       'Alle Geräte': 'All devices',
       'Einstellungen': 'Settings',
       'Zu „Alle Geräte“': 'Go to "All devices"',
-      'Wähle zuerst das Gerät. Dann siehst du nur die passenden Schritte.':
-        'Choose the device first. Then you only see the matching steps.',
-      'tilebert richtet Android-Geräte (Shelly, Sonoff, Tablet) auf Wunsch automatisch ein, per ADB über WLAN ohne Kabel. Linux-Geräte bekommen den Agent per SSH, iPad, iPhone und Browser brauchen nur die Adresse.':
-        'tilebert can set up Android devices (Shelly, Sonoff, tablet) automatically, via ADB over WLAN without a cable. Linux devices get the agent via SSH, iPad, iPhone and browsers only need the address.',
-      'Wanddisplay (Android)': 'Wall display (Android)',
       'Linux-Gerät': 'Linux device',
-      'Per ADB einrichten': 'Set up via ADB',
       'Einrichten': 'Set up',
-      'Start-Adresse erzeugen': 'Generate start address',
       'Kopieren': 'Copy',
-      'Linux-Gerät mit Agent (SSH)': 'Linux device with agent (SSH)',
-      'Erzeugt den Befehl, der Agent und Konfiguration aufs Gerät überträgt, den Autostart einrichtet und Chromium ruhigstellt (keine Übersetzen-Leiste, keine Anmeldung). Führe ihn einmal im Terminal aus; er fragt nach dem SSH- und sudo-Passwort des Geräts.':
-        'Generates the command that copies agent and configuration to the device, sets up autostart and quietens Chromium (no translate bar, no sign-in). Run it once in a terminal; it asks for the SSH and sudo password of the device.',
       'IP-Adresse des Geräts': 'IP address of the device',
       'Gerätename': 'Device name',
       'Danke! Ein Kaffee geht auch, aber Tokens schmecken besser.': 'Thanks! Coffee works too, but tokens taste better.',
@@ -888,19 +754,12 @@
       'Versatz horizontal (px)': 'Horizontal offset (px)',
       'Bildschirm füllen: Auf größeren Displays wird hochgezoomt, statt im 480er-Raster zu bleiben. Den Versatz nur ändern, wenn das Bild am Rand abgeschnitten ist.':
         'Fill screen: on larger displays the picture is zoomed up instead of staying in the 480 grid. Only change the offset if the picture is cut off at the edge.',
-      '<b>Display</b>: Nach der Leerlaufzeit zeigt das Panel das Dashboard; TbViewer schaltet das Display nie aus, sondern dunkelt nachts um „Abdunkeln nachts“ ab. Annäherung, Licht im Raum, Berührung, Klingel, Wecker und Nachrichten stellen die normale Helligkeit wieder her.':
-        '<b>Display</b>: After the idle time the panel shows the dashboard; TbViewer never switches the display off but dims it at night by "Dim at night". Proximity, room light, touch, doorbell, alarm clock and messages restore normal brightness.',
       'Dashboard nach Leerlauf (s)': 'Dashboard after idle (s)',
-      'Seite neu laden alle (h)': 'Reload page every (h)',
-      'Leer: einmal pro Nacht um 3 Uhr, nur wenn das Dashboard steht. Zahl: alle so viele Stunden. 0: nie.':
-        'Empty: once per night at 3 am, only while the dashboard is showing. Number: every that many hours. 0: never.',
       'Abdunkeln nachts (%)': 'Dim at night (%)',
       'Hell nach Antippen (s)': 'Bright after tap (s)',
       'Helligkeit min. (%)': 'Brightness min. (%)',
       'Helligkeit max. (%)': 'Brightness max. (%)',
       'Nachts Kamerabild nur bei Annäherung zeigen': 'At night show camera image only on proximity',
-      'Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Die automatische Helligkeit gilt tagsüber; nachts dunkelt TbViewer nach dem Betriebsmodus ab, und Annäherung oder Licht im Raum bringen Helligkeit und Kamerabild kurz zurück.':
-        'Only with TbViewer on devices with sensors (e.g. Shelly Wall Display). Automatic brightness applies by day; at night TbViewer dims according to the operating mode, and proximity or room light briefly bring back brightness and camera image.',
       'Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> (Startseite) ganz rechts. Zum Umsortieren Tabs ziehen.':
         'The order matches the panel: <b>dashboard</b> on the left, tabs right-aligned, <b>tab 1</b> (start page) at the far right. Drag tabs to reorder them.',
       'Bis zu <b>4 Tabs</b>, der erste ist die Startseite (★). Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).':
@@ -1095,8 +954,6 @@
       'Modus hinzufügen': 'Add mode',
       'Welches Panel bei welchem Modus erscheint. Loxone sendet den Modus per HTTP (siehe Karte „Betriebsmodus“ oben).':
         'Which panel appears for which mode. Loxone sends the mode via HTTP (see card "Operating mode" above).',
-      'Entfernt alle Einstellungen und die Erkennung des Geräts. Ist es verbunden, meldet es sich neu an.':
-        'Removes all settings and the recognition of the device. If it is connected, it registers again.',
       'Feste Geräte-ID. Bleibt gleich, auch wenn sich die IP-Adresse ändert.':
         'Fixed device ID. Stays the same even if the IP address changes.',
       'Ohne Treiber „keine“ lassen. Dann schaltet das Panel das Display selbst.':
@@ -1111,15 +968,6 @@
       'Kopiert': 'Copied',
       'Kopieren nicht möglich. Markiere den Text und kopiere ihn von Hand.':
         'Copying is not possible. Select the text and copy it by hand.',
-      'Gerätename und Server-Adresse fehlen.': 'Device name and server address are missing.',
-      'IP-Adresse und Server-Adresse fehlen.': 'IP address and server address are missing.',
-      'Gerätename, IP-Adresse und Server-Adresse fehlen.': 'Device name, IP address and server address are missing.',
-      'Adresse für iPad, iPhone oder Browser': 'Address for iPad, iPhone or browser',
-      'Alternativ: Start-Adresse von Hand eintragen': 'Alternatively: enter the start address by hand',
-      'Öffne diese Adresse im Browser (Safari, Chrome …). Mit „Zum Home-Bildschirm“ startet sie wie eine App; mit einem Gerätenamen erscheint das Gerät unter „Alle Geräte“ und lässt sich per Betriebsmodus umschalten.':
-        'Open this address in the browser (Safari, Chrome …). With "Add to Home Screen" it starts like an app; with a device name the device appears under "All devices" and can be switched by operating mode.',
-      'Richte die App per adb ein …': 'Setting up the app via adb …',
-      'Eingerichtet. Die App „TbViewer“ öffnet sich jetzt.': 'Set up. The "TbViewer" app opens now.',
       'Sobald das Gerät das Panel geöffnet hat, erscheint es unter „Alle Geräte“.':
         'As soon as the device has opened the panel, it appears under "All devices".',
       'Keine Änderungen': 'No changes',
@@ -1134,8 +982,6 @@
         ' for all existing tabs and the dashboard as well? OK: yes, all of them. Cancel: new tabs only.',
       'Verkleinere oder entferne zuerst andere Widgets.': 'Shrink or remove other widgets first.',
       'Folgt später': 'Coming later',
-      'Trage die Start-Adresse in der App oder im Browser des Geräts ein. Mit einem Gerätenamen erscheint das Gerät unter „Alle Geräte“ und lässt sich per Betriebsmodus umschalten.':
-        'Enter the start address in the app or in the browser of the device. With a device name the device appears under "All devices" and can be switched by operating mode.',
       'Farbschema der Konfiguration': 'Colour scheme of the configuration',
       // P3 Kopf/Seitenleiste, Start, Suche
       'Farbschema': 'Colour scheme',

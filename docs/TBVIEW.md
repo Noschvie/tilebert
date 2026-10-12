@@ -76,13 +76,15 @@ Kiosk-WebView als Fully-Ersatz, Lite-Modus neben Fully möglich. Gefunden über 
 - Lux: nur `SensorManager TYPE_LIGHT` (1 s / 15 % gedrosselt). Auto-Kurve <30 lx min, >500 lx max, 3 s Hysterese.
 - Installation: normale App per `adb install -g`, kein Root.
 
-## Plan TbView (Variante A, auf LoxPanel zugeschnitten)
+## Plan TbView (Variante A, auf tilebert zugeschnitten) – erledigt
+Umgesetzt mit Launcher 5.0 (siehe „Stand Launcher 5.0“); bleibt als Herkunftsnotiz stehen.
+
 1. Gerätetest-APK: liest `/dev/input/event4,5,7` + Proximity/Light-Sensor, zeigt Werte an. Klärt Leserecht und Format.
 2. Launcher um Kiosk-Activity erweitern: WebView auf Panel-URL, Brücke `TbView`, Schoner (Overlay + Helligkeit 0),
    Wecken per Berührung/Näherung, Fensterhelligkeit + Auto-Helligkeit (Lux) + Nachtfaktor.
    Modus im Launcher: TbView oder Fully (Fallback).
 3. Panel `lpHost` (TbView -> fully -> Browser) inkl. `onProximity`, Server `kiosk=tbview`.
-Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{d8.jar,android.jar}`.
+Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.jar,p28/android.jar}` (siehe `android/panel-launcher/build.sh`).
 
 ## Gerätetest X2i (192.168.1.247, 2026-10-10, Test-App ~/projekte/tools/tbtest)
 - SELinux permissive, `/dev/input/event0-6` für alle lesbar -> normale App liest event4/5 ohne Root.
