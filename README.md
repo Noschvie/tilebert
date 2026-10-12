@@ -22,6 +22,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Aufgeräumt (0.20.7)** — Altlasten und ungenutzte Texte entfernt, Doku aktualisiert, Plugin-Paket schlanker (ohne Entwicklermaterial). Keine Funktionsänderung.
 - **Config neu geordnet (0.20.6)** — System mit 5 Reitern (Loxone, Kalender & Kameras, Alle Panels, Passwortschutz, Diagnose), Geräte mit 2 Reitern, Kamera-Karten, Startseite nur mit offenen Schritten, einzeiliger Kopf, Suche findet jede Karte, alte Links leiten weiter. Behoben: Kalender-Änderungen gingen beim gemeinsamen Speichern verloren.
 - **Config neu sortiert (0.20.5)** — Begriffe Panel/Gerät/Hälfte, Reiter „Display & Nacht“, Nachtquelle Loxone/Sonne/Uhrzeit, Kamera-Passwörter maskiert, Geräte hinzufügen/umbenennen/aufräumen mit Rückgängig, TbViewer-Status, bessere Kontraste und Tippflächen.
 - **Konfiguration vollständig auf Englisch (0.20.4)** — Die Konfigurationsseite ist jetzt komplett ins Englische übersetzt (rund 600 Texte), einschließlich der Seite „Unterstützte Geräte“, Tooltips, Platzhalter, Widget-, Schrift- und Untertab-Namen. Die Sprache wählst du oben rechts. Die Web-App auf den Panels bleibt vorerst deutsch.
