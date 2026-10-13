@@ -235,7 +235,7 @@ if ($running) {
     if ($vr->is_success) { my $vj = eval { decode_json($vr->decoded_content) };
         if ($vj) { $av = $vj->{version} // $av; $ac = substr($vj->{commit} // '', 0, 7); } }
 }
-my $repo = "https://github.com/actionhero-zz/loxohnepanel";
+my $repo = "https://github.com/actionhero-zz/tilebert";
 # Panel-Profile fuer die Auswahl "Web-App oeffnen" (id -> Titel)
 my @plist;
 if ($running) {

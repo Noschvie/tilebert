@@ -6,7 +6,7 @@ import { versionInfo } from './checks-static.mjs';
 
 const M = 'PM', K = 'Kritiker';
 const REL = process.env.QC_RELEASES || `${os.homedir()}/projekte/releases`;
-const REPO_SLUG = 'actionhero-zz/loxohnepanel', MIRROR = 'claude/festive-sagan-avv9if';
+const REPO_SLUG = 'actionhero-zz/tilebert', MIRROR = 'claude/festive-sagan-avv9if';
 const ver = () => repoVersion();
 
 def({ id: 'QC-M01', stage: 'pm', role: M, must: true, mode: 'manuell', title: 'Inhaltsliste vorab (von dir beauftragt / von mir eigenstaendig) mit Abgleich zum Diff' }, () => {

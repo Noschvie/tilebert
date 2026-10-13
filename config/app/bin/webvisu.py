@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.9"
+APP_VERSION = "0.20.10"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -8936,7 +8936,7 @@ async def index(request: web.Request) -> web.Response:
 # Update-Pruefung fuer die Config-Anzeige: dieselbe release.cfg, die LoxBerrys
 # Auto-Update liest (plugin.cfg -> RELEASECFG). Installiert wird weiter nur ueber
 # die LoxBerry-Pluginverwaltung - hier nur der Hinweis.
-RELEASE_CFG_URL = ("https://raw.githubusercontent.com/actionhero-zz/loxohnepanel/"
+RELEASE_CFG_URL = ("https://raw.githubusercontent.com/actionhero-zz/tilebert/"
                    "main/release.cfg")
 _UPD_CACHE: dict = {"ts": 0.0, "latest": ""}
 

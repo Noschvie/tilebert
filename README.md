@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Repo heißt tilebert (0.20.10)** — Das GitHub-Repo heißt jetzt actionhero-zz/tilebert; Update-Quelle und Links umgestellt (alte Adressen leiten weiter). Screenshots unter docs/img.
 - **TbViewer-Infoseite (0.20.9)** — TbViewer 5.6: 5× schnell aufs Display tippen öffnet eine Infoseite mit TbViewer- und tilebert-Version, Server und Launcher-Status; Neustart (zweimal tippen) und Launcher wählen. Sprache folgt tilebert.
 - **Logo und Feinschliff (0.20.8)** — tilebert-Logo in Config, Panel-Start und TbViewer 5.5 (Fehlerseiten, App-Icon, Startbild); sicherere Links und Passwortmaske, Speichern mit Doppelklick-Schutz und Zeitlimit, Nachtmodus behält Loxone-Auswahl, englische Texte vervollständigt.
 - **Aufgeräumt (0.20.7)** — Altlasten und ungenutzte Texte entfernt, Doku aktualisiert, Plugin-Paket schlanker (ohne Entwicklermaterial). Keine Funktionsänderung.
@@ -721,7 +722,7 @@ $BIN/loxpanel-ctl.sh check      # starten, falls nicht läuft (Cron/Boot)
 ## Update
 
 Auto-Update ist **aktiv** (`AUTOMATIC_UPDATES=true` in `plugin.cfg`) und zeigt
-auf das eigene Fork-Repository (`actionhero-zz/loxohnepanel`, Branch `main`):
+auf das eigene Fork-Repository (`actionhero-zz/tilebert`, Branch `main`):
 LoxBerry liest `release.cfg` (`RELEASECFG`), vergleicht dessen `VERSION` mit der
 installierten und lädt bei neuerer Version das Archiv von `ARCHIVEURL`. Ob
 LoxBerry nur meldet oder selbst installiert, stellt man in LoxBerry unter
