@@ -17,7 +17,7 @@ OUT=build
 rm -rf "$OUT" && mkdir -p "$OUT/classes" "$OUT/gen" "$(dirname "$DEST")"
 
 # Ressourcen + Manifest -> R.java und unsigniertes APK
-aapt package -f -m -J "$OUT/gen" -M AndroidManifest.xml -S res -I "$ANDROID_JAR" -F "$OUT/unsigned.apk"
+aapt package -f -m -J "$OUT/gen" -M AndroidManifest.xml -S res -A assets -I "$ANDROID_JAR" -F "$OUT/unsigned.apk"
 # Java -> Bytecode (Java 8) -> classes.dex (D8 aus r8.jar; dx/alte d8 stuerzen bei javac 21 ab)
 javac -source 8 -target 8 -bootclasspath "$ANDROID_JAR" -classpath "$ANDROID_JAR" -Xlint:-options \
       -d "$OUT/classes" $(find src "$OUT/gen" -name '*.java')

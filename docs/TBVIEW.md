@@ -1,4 +1,4 @@
-# TbView – eigene Kiosk-App statt Fully (Stand 2026-10-12, TbViewer 5.5)
+# TbView – eigene Kiosk-App statt Fully (Stand 2026-10-12, TbViewer 5.6)
 
 Ziel: Ersatz für Fully Kiosk. Fully bleibt Fallback. Vorbild ist `LoxKiosk` aus
 Lenardo1/Loxpanel (`android/app/src/main/java/com/loxpanel/spike/KioskActivity.kt`,
@@ -148,3 +148,21 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - Hinweisseiten „keine Panel-URL“ und „tilebert nicht erreichbar“ zeigen die Marke (inline-SVG, `Kiosk.MARKE`)
   über dem Text; geladen per `loadDataWithBaseURL` (sonst gilt `#` in Farben als Fragment).
 - Brücke/Token unverändert.
+
+## Info-Popup (TbViewer 5.6, versionCode 11)
+- Bedienung: 5 oder mehr Mal schnell aufs Display tippen (je Abstand < 500 ms). Die Tipps gehen
+  unverändert an die Seite weiter (`Kiosk.dispatchTouchEvent` zählt nur `ACTION_DOWN`).
+- HTML-Infoseite `android/panel-launcher/assets/info.html` (+ `Sora.woff2`, `Manrope.woff2`, `Sora-OFL.txt`; Marke inline),
+  `build.sh` packt `assets/` per `aapt -A`. Anzeige in transparentem Vollbild-`Dialog` mit eigener WebView
+  (`file:///android_asset/info.html`, kein Dateizugriff sonst, Navigation gesperrt). Taps im Dialog zählen nicht.
+- Schnittstelle `TbInfo` hängt nur an dieser lokalen WebView (nicht an der Panel-WebView; TbView/Token/sameOrigin unverändert):
+  `data()` (JSON: Version, Build, `Build.MODEL`, Android, Launcher-Status, Server-Origin, Sprache), `ready()`, `restart()`,
+  `chooseHome()`, `close()`. Server-Version holt weiter nativ `fetchServerVersion` (`GET <Origin>/api/version`, 3 s) und gibt
+  sie per `evaluateJavascript` → `window.tbServer(ok, version, commit)` an die Seite.
+- Zwei Spalten (960×480), unter 600 CSS-px einspaltig (480×480). Zustände: Server nicht erreichbar / Launcher „nein“ in Fehlerrot
+  mit Wort + Symbol; bei „nein“ ist „Launcher wählen“ der gelbe Primärknopf, sonst sind beide Knöpfe sekundär.
+- Neustart: erster Tap → „Nochmal tippen zum Neustart“ (3 s), zweiter Tap = `recreate()` (neue WebView, neues Token; Panel-URL bleibt).
+  Schließen: × (60×60), Tap neben die Karte, Zurück-Taste. Immersive-Modus wird danach wiederhergestellt.
+- „Launcher wählen“ öffnet `Settings.ACTION_HOME_SETTINGS`, Fallback Home-Chooser. Sprache folgt tilebert (Panel `html lang`), sonst Systemsprache.
+- Test: `audit/scripts/tbinfo.mjs` (Chromium, Stub-`TbInfo`), Screenshots `audit/shots/tbinfo/`.
+- Nachtlogik/Helligkeit/Schoner und Brücke/Token/sameOrigin bleiben unverändert.

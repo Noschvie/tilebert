@@ -27,6 +27,21 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.graphics.drawable.GradientDrawable;
+import android.view.Gravity;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.util.Locale;
 import java.nio.charset.Charset;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -301,6 +316,7 @@ public class Kiosk extends Activity implements SensorEventListener {
     // ---- Beruehrung: erster Tipp im Schoner weckt nur (loest nichts darunter aus) ----
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) countTap(ev.getEventTime());   // Tipp wird nicht verschluckt
         if (saverOn) {
             if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) userWake();
             return true;
@@ -506,5 +522,148 @@ public class Kiosk extends Activity implements SensorEventListener {
     static void setMode(Context c, String mode) {
         c.getSharedPreferences("cfg", MODE_PRIVATE).edit()
                 .putString(KEY_MODE, "tbview".equals(mode) ? "tbview" : "fully").apply();
+    }
+
+    // ---- Info-Popup: 5 oder mehr schnelle Tipps (je Abstand < 500 ms) ----
+    private long tapLast;
+    private int tapN;
+    private Dialog info;
+
+    private void countTap(long t) {
+        tapN = (tapN > 0 && t - tapLast < 500) ? tapN + 1 : 1;
+        tapLast = t;
+        if (tapN >= 5) { tapN = 0; showInfo(); }
+    }
+
+    private static boolean de() { return "de".equals(Locale.getDefault().getLanguage()); }
+    private static String tr(String d, String e) { return de() ? d : e; }
+
+    private int dp(int v) { return (int) (v * getResources().getDisplayMetrics().density + 0.5f); }
+
+    private boolean isDefaultHome() {
+        try {
+            Intent h = new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME);
+            ResolveInfo r = getPackageManager().resolveActivity(h, PackageManager.MATCH_DEFAULT_ONLY);
+            return r != null && r.activityInfo != null && getPackageName().equals(r.activityInfo.packageName);
+        } catch (Exception e) { return false; }
+    }
+
+    /** Info-Seite: HTML-Asset in eigener WebView (Vollbild-Dialog, transparent). Die Schnittstelle "TbInfo"
+     *  haengt NUR an dieser lokalen WebView, nicht an der Panel-WebView. */
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+    private void showInfo() {
+        if (info != null && info.isShowing()) return;
+        final WebView w = new WebView(this);
+        w.setBackgroundColor(Color.TRANSPARENT);
+        WebSettings ws = w.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setAllowFileAccess(false);        // android_asset bleibt erreichbar
+        ws.setAllowContentAccess(false);
+        w.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView v, String u) { return true; }
+        });
+        w.addJavascriptInterface(new InfoBridge(Kiosk.this, w), "TbInfo");
+        Dialog dlg = new Dialog(this, android.R.style.Theme_Translucent_NoTitleBar_Fullscreen) {
+            @Override public void onBackPressed() { dismiss(); }
+        };
+        dlg.setContentView(w, new FrameLayout.LayoutParams(-1, -1));
+        dlg.getWindow().setLayout(-1, -1);
+        dlg.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override public void onDismiss(DialogInterface d) { w.destroy(); info = null; immersive(); }
+        });
+        info = dlg;
+        dlg.show();
+        dlg.getWindow().getDecorView().setSystemUiVisibility(getWindow().getDecorView().getSystemUiVisibility()
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
+        // Sprache von tilebert: Panel-WebView fragen (html lang, setzt das Panel aus dem Profil), sonst Systemsprache
+        infoLang = null;
+        final boolean[] go = { false };
+        final Runnable start = new Runnable() { @Override public void run() {
+            if (go[0]) return; go[0] = true;
+            if (info != null && info.isShowing()) w.loadUrl("file:///android_asset/info.html");
+        } };
+        if (web != null && trusted) {
+            try {
+                web.evaluateJavascript("(function(){try{return document.documentElement.lang||''}catch(e){return ''}})()", new android.webkit.ValueCallback<String>() {
+                    @Override public void onReceiveValue(String v) {
+                        String l = v == null ? "" : v.replace("\"", "").trim().toLowerCase(Locale.ROOT);
+                        if (l.startsWith("de")) infoLang = "de"; else if (l.startsWith("en")) infoLang = "en";
+                        start.run();
+                    } });
+                ui.postDelayed(start, 700);
+            } catch (Exception e) { start.run(); }
+        } else start.run();
+    }
+    private volatile String infoLang;
+
+    // Zugriffe fuer InfoBridge (eigene Datei, nur an der Info-WebView)
+    String infoData() {
+        String vn = "?"; int vc = 0;
+        try {
+            PackageInfo pi = getPackageManager().getPackageInfo(getPackageName(), 0);
+            vn = pi.versionName; vc = pi.versionCode;
+        } catch (Exception ignored) { }
+        try {
+            org.json.JSONObject j = new org.json.JSONObject();
+            j.put("vn", vn); j.put("vc", vc);
+            j.put("model", Build.MODEL); j.put("android", Build.VERSION.RELEASE);
+            j.put("home", isDefaultHome());
+            j.put("origin", origin(url()));
+            String il = infoLang; j.put("lang", il != null ? il : (de() ? "de" : "en"));
+            return j.toString();
+        } catch (Exception e) { return "{}"; }
+    }
+    void infoReady(WebView w) { fetchServerVersion(w); }
+    void infoRestart() { if (info != null) info.dismiss(); recreate(); }
+    void infoHome() { chooseHome(); }
+    void infoClose() { if (info != null) info.dismiss(); }
+
+    private static String origin(String base) {
+        try {
+            Uri u = Uri.parse(base);
+            if (u.getScheme() == null || u.getHost() == null) return "";
+            return u.getScheme() + "://" + u.getHost() + (u.getPort() >= 0 ? ":" + u.getPort() : "");
+        } catch (Exception e) { return ""; }
+    }
+
+    private void chooseHome() {
+        try {
+            startActivity(new Intent(Settings.ACTION_HOME_SETTINGS));
+        } catch (Exception e) {
+            try {
+                startActivity(Intent.createChooser(new Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), null));
+            } catch (Exception e2) { /* keine Auswahl verfuegbar */ }
+        }
+    }
+
+    /** tilebert-Version vom Server (GET /api/version, gleiche Origin wie die Panel-URL), asynchron an die Info-Seite. */
+    private void fetchServerVersion(final WebView out) {
+        final String base = url();
+        new Thread(new Runnable() {
+            @Override public void run() {
+                String v = "", cm = "";
+                try {
+                    String origin = origin(base);
+                    if (origin.isEmpty()) throw new Exception();
+                    HttpURLConnection c = (HttpURLConnection) new java.net.URL(origin + "/api/version").openConnection();
+                    c.setConnectTimeout(3000);
+                    c.setReadTimeout(3000);
+                    BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+                    StringBuilder sb = new StringBuilder();
+                    String ln;
+                    while ((ln = r.readLine()) != null && sb.length() < 4096) sb.append(ln);
+                    r.close();
+                    org.json.JSONObject j = new org.json.JSONObject(sb.toString());
+                    v = j.optString("version", "");
+                    cm = j.optString("commit", "");
+                    if (cm.length() >= 7) cm = cm.substring(0, 7); else cm = "";
+                } catch (Exception e) { v = ""; }
+                final String js = "window.tbServer&&window.tbServer(" + (!v.isEmpty()) + ","
+                        + org.json.JSONObject.quote(v) + "," + org.json.JSONObject.quote(cm) + ")";
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    if (info != null && info.isShowing()) out.evaluateJavascript(js, null);
+                } });
+            }
+        }).start();
     }
 }

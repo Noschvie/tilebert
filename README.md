@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **TbViewer-Infoseite (0.20.9)** — TbViewer 5.6: 5× schnell aufs Display tippen öffnet eine Infoseite mit TbViewer- und tilebert-Version, Server und Launcher-Status; Neustart (zweimal tippen) und Launcher wählen. Sprache folgt tilebert.
 - **Logo und Feinschliff (0.20.8)** — tilebert-Logo in Config, Panel-Start und TbViewer 5.5 (Fehlerseiten, App-Icon, Startbild); sicherere Links und Passwortmaske, Speichern mit Doppelklick-Schutz und Zeitlimit, Nachtmodus behält Loxone-Auswahl, englische Texte vervollständigt.
 - **Aufgeräumt (0.20.7)** — Altlasten und ungenutzte Texte entfernt, Doku aktualisiert, Plugin-Paket schlanker (ohne Entwicklermaterial). Keine Funktionsänderung.
 - **Config neu geordnet (0.20.6)** — System mit 5 Reitern (Loxone, Kalender & Kameras, Alle Panels, Passwortschutz, Diagnose), Geräte mit 2 Reitern, Kamera-Karten, Startseite nur mit offenen Schritten, einzeiliger Kopf, Suche findet jede Karte, alte Links leiten weiter. Behoben: Kalender-Änderungen gingen beim gemeinsamen Speichern verloren.
