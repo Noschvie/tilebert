@@ -114,6 +114,7 @@ export function versionInfo() {
   const v = {};
   v.plugin = repoVersion();
   v.release = (/^VERSION=(\S+)/m.exec(read(`${R}/release.cfg`)) || [])[1] || '';
+  v.pre = (/^VERSION=(\S+)/m.exec(read(`${R}/prerelease.cfg`)) || [])[1] || '';
   v.app = (/^APP_VERSION\s*=\s*"([^"]+)"/m.exec(read(WEBVISU)) || [])[1] || '';
   const rd = read(`${R}/README.md`); const i = rd.indexOf('## Eigene Funktionen dieses Forks');
   const top = rd.slice(i).split('\n').find(l => l.startsWith('- **')) || '';
@@ -121,10 +122,17 @@ export function versionInfo() {
   v.readmeTitle = top.slice(0, 60);
   return v;
 }
-def({ id: 'QC-S05', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Versionsstellen: plugin.cfg == release.cfg == APP_VERSION == README-Changelog-Kopf; >= letzter Tag' }, () => {
+def({ id: 'QC-S05', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Versionsstellen: plugin.cfg == prerelease.cfg == APP_VERSION == README-Changelog-Kopf, release.cfg <= prerelease.cfg; ARCHIVEURL passt zur VERSION; >= letzter Tag' }, () => {
   const v = versionInfo(); const bad = [];
-  const set = new Set([v.plugin, v.release, v.app, v.readme]);
-  if (set.size !== 1 || !v.plugin) bad.push(`uneinheitlich: plugin ${v.plugin}, release ${v.release}, APP_VERSION ${v.app}, README ${v.readme || '?'}`);
+  const set = new Set([v.plugin, v.pre, v.app, v.readme]);
+  if (set.size !== 1 || !v.plugin) bad.push(`uneinheitlich: plugin ${v.plugin}, prerelease ${v.pre || '?'}, APP_VERSION ${v.app}, README ${v.readme || '?'}`);
+  if (!/^\d+\.\d+\.\d+$/.test(v.release)) bad.push('release.cfg: keine reine SemVer: ' + v.release);
+  else if (/^\d+\.\d+\.\d+$/.test(v.pre) && cmpVer(v.pre, v.release) < 0) bad.push(`prerelease ${v.pre} < release ${v.release}`);
+  for (const [n, ver] of [['release.cfg', v.release], ['prerelease.cfg', v.pre]]) {
+    const a = (/^ARCHIVEURL=(\S+)/m.exec(read(`${R}/${n}`)) || [])[1] || '';
+    if (!ver || !a.includes(ver)) bad.push(`${n}: ARCHIVEURL enthaelt nicht VERSION ${ver}`);
+  }
+  if (!/^PRERELEASECFG=\S*\/prerelease\.cfg$/m.test(read(`${R}/plugin.cfg`))) bad.push('plugin.cfg: PRERELEASECFG fehlt');
   if (!/^\d+\.\d+\.\d+$/.test(v.plugin)) bad.push('keine reine SemVer: ' + v.plugin);
   const tag = sh("git tag --list 'v*' --sort=-v:refname | head -1").out.replace(/^v/, '');
   let note = `${v.plugin}, letzter Tag v${tag}`;
@@ -182,7 +190,7 @@ def({ id: 'QC-S07', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Ken
 });
 
 // ---- S08 Release-Artefakte ----
-def({ id: 'QC-S08', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Release-Artefakte: keine untracked Release-Dateien; HEAD-Archiv enthaelt APK/.version/favicon; qa/ export-ignore; ARCHIVEURL main' }, () => {
+def({ id: 'QC-S08', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Release-Artefakte: keine untracked Release-Dateien; HEAD-Archiv enthaelt APK/.version/favicon; qa/ export-ignore; ARCHIVEURL Release-ZIP' }, () => {
   const bad = [], warn = [];
   const allow = base.allow_untracked || [];
   const un = sh("git status --short --untracked-files=all | grep '^??' | sed 's/^?? //'").out.split('\n').filter(Boolean);
@@ -191,12 +199,13 @@ def({ id: 'QC-S08', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Rel
     if (/^(config|webfrontend|android)\//.test(f)) bad.push('untracked: ' + f); else warn.push('untracked: ' + f);
   }
   const ls = sh('git archive HEAD | tar t').out;
-  for (const re of [/favicon\.ico$/, /LoxPanel-Launcher\.apk$/, /LoxPanel-Launcher\.version$/, /^plugin\.cfg$/, /^release\.cfg$/, /^sudoers\/sudoers$/])
+  for (const re of [/favicon\.ico$/, /LoxPanel-Launcher\.apk$/, /LoxPanel-Launcher\.version$/, /^plugin\.cfg$/, /^release\.cfg$/, /^prerelease\.cfg$/, /^sudoers\/sudoers$/])
     if (!ls.split('\n').some(l => re.test(l))) bad.push('HEAD-Archiv ohne ' + re.source);
   if (/(^|\n)qa\//.test(ls)) warn.push('qa/ im HEAD-Archiv (.gitattributes noch nicht eingecheckt?)');
   const ca = sh("git check-attr export-ignore -- qa/").out;
   if (!/export-ignore: set/.test(ca)) bad.push('qa/ ist nicht export-ignore (.gitattributes)');
-  if (!/^ARCHIVEURL=.*\/main\.zip$/m.test(read(`${R}/release.cfg`))) bad.push('ARCHIVEURL zeigt nicht auf main.zip');
+  for (const n of ['release.cfg', 'prerelease.cfg'])
+    if (!/^ARCHIVEURL=https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\/v[\d.]+\/loxpanelfav-[\d.]+\.zip$/m.test(read(`${R}/${n}`))) bad.push(`${n}: ARCHIVEURL zeigt nicht auf das Release-ZIP`);
   if (bad.length) return FAIL(bad.join(' | '));
   return warn.length ? WARN(warn.join(' | ')) : PASS(`${ls.split('\n').length} Dateien im HEAD-Archiv, qa/ export-ignore`);
 });

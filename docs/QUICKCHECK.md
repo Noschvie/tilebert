@@ -51,10 +51,10 @@ Reihenfolge eines Releases: `pre` → Nutzer-„commit“ → Release durch den 
 | QC-S02 | Programmierer | JS-Syntax: Inline-Skripte panel/config/settings + i18n.js (node --check) | Muss | auto |
 | QC-S03 | Kritiker | Shell-Syntax (bash -n) Install-/Update-/Daemon-Skripte; sudoers unveraendert | Muss | auto |
 | QC-S04 | Kritiker | Perl-Syntax index.cgi (LoxBerry-Module gestubbt) | Soll | auto |
-| QC-S05 | Kritiker | Versionsstellen: plugin.cfg == release.cfg == APP_VERSION == README-Changelog-Kopf; >= letzter Tag | Muss | auto |
+| QC-S05 | Kritiker | Versionsstellen: plugin.cfg == prerelease.cfg == APP_VERSION == README-Changelog-Kopf; release.cfg <= prerelease.cfg (beide reine SemVer, ARCHIVEURL enthaelt VERSION, PRERELEASECFG gesetzt); >= letzter Tag | Muss | auto |
 | QC-S06 | Programmierer | APK: versionCode Manifest == .version == APK; targetSdk >= 24; Label TbViewer; erhoeht bei Android-Aenderung | Muss | auto |
 | QC-S07 | Kritiker | Kennungen unveraendert: NAME/FOLDER loxpanelfav, Paket de.loxpanel.launcher, X-LoxPanel-Token, Keystore, Zertifikat 80ee7b07 | Muss | auto |
-| QC-S08 | Kritiker | Release-Artefakte: keine untracked Release-Dateien; HEAD-Archiv enthaelt APK/.version/favicon; qa/ export-ignore; ARCHIVEURL main | Muss | auto |
+| QC-S08 | Kritiker | Release-Artefakte: keine untracked Release-Dateien; HEAD-Archiv enthaelt APK/.version/favicon; qa/ export-ignore; ARCHIVEURL beider cfg = Release-ZIP | Muss | auto |
 | QC-S09 | Kritiker | i18n: deutsche T()/data-i18n-Texte der Config haben EN-Eintrag (nur NEU Fehlende), keine Doppelschluessel | Muss | auto |
 | QC-S10 | Kritiker | const/let-Reihenfolge im Panel: keine Nutzung auf oberster Ebene vor der Deklaration (direkt oder ueber Funktionsaufruf) | Muss | auto |
 | QC-S11 | Kritiker | Bruecke: @JavascriptInterface (Kiosk.java) == Namensliste tbWrap == docs/TBVIEW.md; Token als 1. Parameter, ok(t)-Pruefung | Muss | auto |
@@ -103,7 +103,7 @@ Reihenfolge eines Releases: `pre` → Nutzer-„commit“ → Release durch den 
 | QC-M07 | PM | Push: origin/main == HEAD und Spiegel claude/festive-sagan-avv9if == main | Muss | auto |
 | QC-M08 | PM | Release-ZIP: Praefix loxpanelfav/, VERSION, TITLE, favicon, APK, Skripte/sudoers, kein qa/ und kein __pycache__, Dateiliste == git archive HEAD | Muss | auto |
 | QC-M09 | PM | GitHub-Release vX.Y.Z vorhanden (kein Draft), ZIP-Asset, Groesse == lokales ZIP, Notes nicht leer | Muss | auto |
-| QC-M10 | Kritiker | Update-Quelle: main.zip erreichbar; raw release.cfg auf main und Spiegel liefert die Version (raw-Cache bis 5 min) | Muss | auto |
+| QC-M10 | Kritiker | Update-Quelle: ARCHIVEURL (Release-ZIP) erreichbar; raw release.cfg + prerelease.cfg auf main (release.cfg auch Spiegel) liefern die Version (raw-Cache bis 5 min) | Muss | auto |
 | QC-M11 | PM | Dashboard: dash-Projekt loxpanel-favoriten zeigt die Repo-Version | Muss | auto |
 | QC-M12 | PM | Doku-Stand: CLAUDE.md-Versionsschema (0.N.x) passt zur aktuellen Version; Nicht-aendern-Liste dort vorhanden | Soll | auto |
 | QC-M13 | PM | Regel-Compliance (Memory): Deutsch, kurz, ein naechster Schritt, Tag/Nacht nur aus Betriebsmodus, Fully nicht in Config, keine Forum-Aktion | Muss | manuell |

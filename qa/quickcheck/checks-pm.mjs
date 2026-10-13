@@ -68,7 +68,7 @@ def({ id: 'QC-M08', stage: 'pm', role: M, must: true, mode: 'auto', title: 'Rele
   if (!exists(zip)) return FAIL('ZIP fehlt: ' + zip);
   const ls = sh(`unzip -Z1 '${zip}'`).out.split('\n').filter(Boolean);
   if (ls.some(f => !f.startsWith('loxpanelfav/'))) bad.push('Eintraege ausserhalb loxpanelfav/');
-  const need = ['plugin.cfg', 'release.cfg', 'preroot.sh', 'postroot.sh', 'preupgrade.sh', 'postupgrade.sh', 'sudoers/sudoers', 'config/app/android/LoxPanel-Launcher.apk', 'config/app/android/LoxPanel-Launcher.version'];
+  const need = ['plugin.cfg', 'release.cfg', 'prerelease.cfg', 'preroot.sh', 'postroot.sh', 'preupgrade.sh', 'postupgrade.sh', 'sudoers/sudoers', 'config/app/android/LoxPanel-Launcher.apk', 'config/app/android/LoxPanel-Launcher.version'];
   for (const n of need) if (!ls.includes('loxpanelfav/' + n)) bad.push(n + ' fehlt');
   if (!ls.some(f => /favicon\.ico$/.test(f))) bad.push('favicon.ico fehlt');
   if (ls.some(f => /^loxpanelfav\/qa\//.test(f))) bad.push('qa/ im ZIP');
@@ -96,10 +96,14 @@ def({ id: 'QC-M09', stage: 'pm', role: M, must: true, mode: 'auto', title: 'GitH
   return bad.length ? FAIL(bad.join(' | ')) : PASS(`v${v}, ${a.name} ${(a.size / 1024).toFixed(0)} KB`);
 });
 
-def({ id: 'QC-M10', stage: 'pm', role: K, must: true, mode: 'auto', title: 'Update-Quelle: main.zip erreichbar; raw release.cfg auf main und Spiegel liefert die Version (raw-Cache bis 5 min)' }, async () => {
+def({ id: 'QC-M10', stage: 'pm', role: K, must: true, mode: 'auto', title: 'Update-Quelle: ARCHIVEURL (Release-ZIP) erreichbar; raw release.cfg + prerelease.cfg auf main (und release.cfg auf Spiegel) liefern die Version (raw-Cache bis 5 min)' }, async () => {
   const v = ver(), bad = [], warn = [];
-  const z = await http(`https://github.com/${REPO_SLUG}/archive/refs/heads/main.zip`, { head: true, method: 'HEAD', redirect: 'manual' });
-  if (![200, 302].includes(z.status)) bad.push('main.zip -> ' + (z.status || z.err));
+  const au = (/^ARCHIVEURL=(\S+)/m.exec(read(`${R}/release.cfg`)) || [])[1] || '';
+  const z = await http(au, { head: true, method: 'HEAD', redirect: 'manual' });
+  if (![200, 302].includes(z.status)) bad.push('ARCHIVEURL -> ' + (z.status || z.err));
+  const hp = await http(`https://raw.githubusercontent.com/${REPO_SLUG}/main/prerelease.cfg`);
+  const gp = hp.ok ? (/^VERSION=(\S+)/m.exec(hp.text()) || [])[1] : null;
+  if (!hp.ok) bad.push(`raw prerelease.cfg -> ${hp.status || hp.err}`); else if (gp !== v) warn.push(`raw prerelease.cfg liefert ${gp} statt ${v}`);
   for (const br of ['main', MIRROR]) {
     const h = await http(`https://raw.githubusercontent.com/${REPO_SLUG}/${br}/release.cfg`);
     if (!h.ok) { bad.push(`raw ${br} -> ${h.status || h.err}`); continue; }
@@ -107,7 +111,7 @@ def({ id: 'QC-M10', stage: 'pm', role: K, must: true, mode: 'auto', title: 'Upda
     if (got !== v) warn.push(`raw ${br} liefert ${got} statt ${v} (Cache bis ca. 5 min? sonst Push pruefen)`);
   }
   if (bad.length) return FAIL(bad.join(' | '));
-  return warn.length ? WARN(warn.join(' | ')) : PASS(`main.zip ${z.status}, raw main + Spiegel = ${v}`);
+  return warn.length ? WARN(warn.join(' | ')) : PASS(`Release-ZIP ${z.status}, raw main + Spiegel + prerelease = ${v}`);
 });
 
 def({ id: 'QC-M11', stage: 'pm', role: M, must: true, mode: 'auto', title: 'Dashboard: dash-Projekt loxpanel-favoriten zeigt die Repo-Version' }, () => {

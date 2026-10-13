@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Pluginseite im tilebert-Design, Prerelease-Kanal (0.20.11)** — Die LoxBerry-Pluginseite nutzt jetzt Logo, Farben und Formen von tilebert. Updates: Releases laden das geprüfte Release-ZIP; neu gibt es einen Prerelease-Kanal (in der LoxBerry-Plugin-Verwaltung wählbar).
 - **Repo heißt tilebert (0.20.10)** — Das GitHub-Repo heißt jetzt actionhero-zz/tilebert; Update-Quelle und Links umgestellt (alte Adressen leiten weiter). Screenshots unter docs/img.
 - **TbViewer-Infoseite (0.20.9)** — TbViewer 5.6: 5× schnell aufs Display tippen öffnet eine Infoseite mit TbViewer- und tilebert-Version, Server und Launcher-Status; Neustart (zweimal tippen) und Launcher wählen. Sprache folgt tilebert.
 - **Logo und Feinschliff (0.20.8)** — tilebert-Logo in Config, Panel-Start und TbViewer 5.5 (Fehlerseiten, App-Icon, Startbild); sicherere Links und Passwortmaske, Speichern mit Doppelklick-Schutz und Zeitlimit, Nachtmodus behält Loxone-Auswahl, englische Texte vervollständigt.
@@ -729,3 +730,9 @@ LoxBerry nur meldet oder selbst installiert, stellt man in LoxBerry unter
 **Plugin-Verwaltung** ein. Von Hand geht ein Update jederzeit über die
 Plugin-Installation mit dem ZIP aus den GitHub-Releases; `loxpanel-ctl.sh restart`
 baut nur das Image aus dem installierten Code neu.
+
+**Release und Prerelease:** `release.cfg` (`RELEASECFG`) ist der stabile Kanal,
+`prerelease.cfg` (`PRERELEASECFG`) der Kanal für Vorabversionen zum Testen. Beide zeigen
+mit `ARCHIVEURL` auf das ZIP des jeweiligen GitHub-Releases. Welchen Kanal LoxBerry nutzt
+(Release oder Prerelease), stellt man unter **Plugin-Verwaltung** ein; die Versionen werden
+numerisch (SemVer) verglichen. Die Update-Anzeige in der Config bezieht sich auf den stabilen Kanal.

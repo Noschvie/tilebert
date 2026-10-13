@@ -1,6 +1,6 @@
 # tilebert – Architektur-Übersicht (Nachschlagewerk)
 
-Stand: Version 0.20.10 (Dateigrößen 2026-10-12; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
+Stand: Version 0.20.11 (Dateigrößen 2026-10-12; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
 bei Zweifel `grep -n`. Pfade relativ zu `/home/dietpi/projekte/loxohnepanel`. Kürzel: `W` = `config/app/bin/webvisu.py`,
 `P` = `config/app/webfrontend/html/panel.html`, `C` = `.../config.html`.
 
@@ -18,7 +18,7 @@ Android-Panel: TbView/Kiosk.java (WebView) lädt P; Server installiert APK per a
 | Datei | Zweck |
 |---|---|
 | `plugin.cfg` | NAME/FOLDER=`loxpanelfav` (nie ändern!), VERSION, AUTOUPDATE (RELEASECFG auf GitHub `main`), ARCH, REBOOT=false |
-| `release.cfg` | VERSION + ARCHIVEURL (main.zip); muss bei jedem Release hoch (SemVer rein numerisch) |
+| `release.cfg`, `prerelease.cfg` | VERSION + ARCHIVEURL (GitHub-Release-ZIP) + INFOURL; stabiler bzw. Prerelease-Kanal; muss bei jedem Release hoch (SemVer rein numerisch) |
 | `preroot.sh` | root, vor Install: Docker nachinstallieren, Container stoppen, Config+Backups nach `/tmp` sichern, `bin/version.json` (Commit/Zeit) stempeln |
 | `postroot.sh` | root, nach Install: Config/Backups zurückspielen, Container per `loxpanel-ctl.sh start` (als `loxberry`) |
 | `preupgrade.sh`/`postupgrade.sh` | No-ops (Logik liegt in pre/postroot) |
@@ -171,7 +171,7 @@ Config: `loxpanel.cfg intercom`. `mjpeg_handler` (W:10539) → `CamHub` (W:10393
 `_adb` (W:10158) mit `HOME=config/adb`. `api_panel_launcher` (W:10203): connect → get-state → dumpsys-Version → `install -r` APK → appops (`GET_USAGE_STATS`, `WRITE_SETTINGS`) → Fully ermitteln/Home setzen → URL eintragen. Weitere: `kiosk_restart`, `device_brightness`, `device_touch_sound`, `device_adblog`, `fully_install`, `_nightly_restarts` (3:05, Android+Fully, `nrestart`). Display-Treiber ohne adb: `DISPLAY_DRIVERS` {fully:2323, wallpanel:2971} (W:191).
 
 ### Update-Mechanismus
-LoxBerry-Auto-Update liest `release.cfg` (GitHub `main`); bei neuerer VERSION lädt es `main.zip`, preroot/postroot sichern/restaurieren Config, `loxpanel-ctl.sh start` baut das Image neu. `/api/update` (W:8711) vergleicht `APP_VERSION` mit `release.cfg` (5 min Cache) nur für den Hinweis in C. `/api/version` zeigt Version + Commit (`bin/version.json`). Panels laden bei geändertem `clock.build` (W:428, `_code_build` W:415) selbst neu.
+LoxBerry-Auto-Update liest `release.cfg` (GitHub `main`); bei neuerer VERSION lädt es das Release-ZIP (`ARCHIVEURL`; Prerelease-Kanal: `prerelease.cfg`), preroot/postroot sichern/restaurieren Config, `loxpanel-ctl.sh start` baut das Image neu. `/api/update` (W:8711) vergleicht `APP_VERSION` mit `release.cfg` (5 min Cache) nur für den Hinweis in C. `/api/version` zeigt Version + Commit (`bin/version.json`). Panels laden bei geändertem `clock.build` (W:428, `_code_build` W:415) selbst neu.
 
 ## 3. Panel `panel.html` (6 031 Z., eine Datei, kein Build)
 
@@ -259,7 +259,7 @@ C: Karte „Display & Nacht → Sensoren“ (C:2476-2488, `data-ui`/`data-uisel`
 - **Server rendert Blöcke:** Neuer Bausteintyp = `_view_control_body` (W:6609ff) + ggf. Block-Art in `renderPanel` (P:3155); neue Block-Art braucht auch `updatePanel`/`patchLive`-Pfad (sonst kein Live-Update).
 - **Sanitizing:** Alles, was nicht im Sanitizer steht, wird still verworfen (`_panels_verworfen` W:4314 meldet nur einen Teil). Standardwerte werden nicht gespeichert.
 - **Reload-Kaskade:** Speichern in C → `reload` an ALLE Panels. `clock.build` (Code-Stempel) lässt Panels nach Server-Update ebenfalls neu laden.
-- **Versionsstellen beim Release (CLAUDE.md):** `plugin.cfg` VERSION, `release.cfg` VERSION, `APP_VERSION` (W:79), Changelog-Eintrag oben in `README.md`; `python3 -m py_compile config/app/bin/webvisu.py`; Launcher-Änderung: `AndroidManifest.xml` versionCode/Name + neu bauen (`.version`-Datei). Nicht ändern: `NAME/FOLDER` in `plugin.cfg`.
+- **Versionsstellen beim Release (CLAUDE.md):** `plugin.cfg` VERSION, `release.cfg`/`prerelease.cfg` VERSION, `APP_VERSION` (W:79), Changelog-Eintrag oben in `README.md`; `python3 -m py_compile config/app/bin/webvisu.py`; Launcher-Änderung: `AndroidManifest.xml` versionCode/Name + neu bauen (`.version`-Datei). Nicht ändern: `NAME/FOLDER` in `plugin.cfg`.
 - **Umlaute:** Kommentare ohne Umlaute, UI-Texte mit Umlauten über `T('…')`; Schlüssel der Übersetzung = deutscher Text (`i18n.js`), ändert man den Text, geht die en-Übersetzung verloren.
 - **Zeilenverweise in `docs/TBVIEW.md`** (~4127, ~4146, ~4271, ~5803) sind veraltet; richtig: siehe Tabellen oben.
 - **Lokal testen:** nie auf 8097 (echte Anlage) schalten/speichern; Testserver `lpdev` auf 8099.
