@@ -5409,10 +5409,10 @@ function camStills(clear){
 const CAM_NIGHT_HOLD_MS=30000;
 let _camNightNear=false, _camNightT=null;
 function camNightGate(){   // ob die Regel gerade greift
-  return lpHost.type==='tbview' && SENS.nightCam!==false && NIGHT.on && lpHost.prox;
+  return lpHost.type==='tbview' && SENS.nightCam!==false && NIGHT.on && (lpHost.prox||lpHost.light);
 }
 function camNightUpdate(){
-  const pause=camNightGate() && !_camNightNear && !_camNightT && !LUX.on;   // Licht im Raum = jemand da
+  const pause=camNightGate() && !_camNightNear && !_camNightT;   // Praesenz (Annaeherung/Lichtaenderung) oeffnet ueber camNightOpen
   if(pause===_camNight) return; _camNight=pause; camsApply();
 }
 function camNightOpen(near, touch){   // near: jemand da; weg -> Nachlauf; touch: Beruehrung/Klingel = jemand da gewesen
@@ -5912,7 +5912,7 @@ const NIGHT = { on:false, dim:0, wake:20 };
 let DEV_MODEL='';
 function phoneDev(){ return DEV_MODEL ? DEV_MODEL==='phone'
   : (lpHost.type!=='tbview' && /iPhone|iPod|Android.+Mobile/i.test(navigator.userAgent)); }
-const LUX = { base:-1, on:false }, LUX_ON=2, LUX_OFF=1;   // Lichtsensor nachts: Schwelle/Hysterese in Stufen
+const PRES = { last:-1, t:0, mute:0 }, PRES_MIN_STEP=1, PRES_GAP_MS=2000, PRES_MUTE_MS=2500;   // Praesenzerkennung: Lichtaenderung (Stufen 0..16), Entprellung
 let _dpmsIdle=false;   // TbViewer: Leerlauf am Tag erreicht (Dashboard statt aus), s. armDpms
 let nightEl=null, nightWakeTimer=null;
 function nightLayer(){
@@ -5925,17 +5925,19 @@ function nightLayer(){
   return nightEl;
 }
 // Nachts dunkelt jedes Geraet nach "Abdunkeln um" ab (TbViewer schaltet nie ganz aus). Aufgehoben, solange
-// Licht im Raum ist (Lichtsensor, LUX.on) bzw. kurz nach Annaeherung/Beruehrung (awake, nightWake).
+// kurz nach Praesenz (Annaeherung/Lichtaenderung) bzw. Beruehrung (awake, nightWake).
 // Tagsueber regelt auf dem Shelly die Auto-Helligkeit (App) nach dem Lichtsensor.
+let _lastDim=-1;
 function applyNight(awake){
-  const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !LUX.on && !phoneDev()) ? Math.min(90,NIGHT.dim) : 0;
+  const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !phoneDev()) ? Math.min(90,NIGHT.dim) : 0;
   // TbView: echte Fensterhelligkeit (Schwarz bleibt schwarz); lehnt die App ab, dunkelt das Overlay
   let real=false;
-  if(lpHost.type==='tbview'){ try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
+  if(lpHost.type==='tbview'){ if(dim!==_lastDim){ _lastDim=dim; PRES.mute=Date.now()+PRES_MUTE_MS; }   // eigene Helligkeitsaenderung nicht als Praesenz werten
+    try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
   nightLayer().style.opacity = real ? 0 : dim/100;
 }
 function setNight(on){ NIGHT.on=!!on; clearTimeout(nightWakeTimer); if(NIGHT.on) bootDone();
-  LUX.base=(NIGHT.on && lpHost.lightLevel>=0) ? lpHost.lightLevel : -1; LUX.on=false;   // Nacht-Tiefstwert neu
+  PRES.last=lpHost.lightLevel;
   applyNight(false); camNightUpdate(); }   // Nacht nur ueber den Betriebsmodus (Config)
 function nightWake(){          // Beruehrung -> kurz voll aufhellen, dann zurueck
   if(!NIGHT.on || NIGHT.dim<=0 || NIGHT.wake<=0) return;
@@ -5966,20 +5968,23 @@ function applySensors(s){
   try{ lpHost.api.setAutoBrightness(s.auto!==false && !!lpHost.shelly, +s.min||10, +s.max||100); }catch(e){}
 }
 // "Display an + Dashboard schliessen": Annaeherung schliesst das Dashboard wie eine Beruehrung
-lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
-  if(near && SENS.prox==='open' && saverOn()) wake();
-  else if(near && SENS.prox!=='off') nightWake();     // nachts kurz aufhellen wie bei Beruehrung
-  if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
-lpHost.on('light', v=>{ lpHost.lightLevel=(+v>=0)?+v:-1; luxEval(lpHost.lightLevel); });
-// Nachts: Licht im Raum geht an -> Abdunkeln aus, Kamera live; geht es wieder aus -> Nachlauf, dann dimmen.
-// Leichte Schwelle mit Hysterese auf den Nacht-Tiefstwert (X2i: Stufen 0..16), nur TbViewer mit Lichtsensor.
-function luxEval(lv){
-  if(!NIGHT.on || lpHost.type!=='tbview' || lv<0) return;
-  if(LUX.base<0 || (!LUX.on && lv<LUX.base)) LUX.base=lv;            // Tiefstwert der Nacht
-  if(!LUX.on && lv>=LUX.base+LUX_ON){ LUX.on=true; clog('Licht an (Stufe '+lv+') – volle Helligkeit, Kamera live'); applyNight(false); camNightUpdate(); }
-  else if(LUX.on && lv<=LUX.base+LUX_OFF){ LUX.on=false; clog('Licht aus (Stufe '+lv+') – Nachlauf, dann abdunkeln');
-    camNightOpen(false, true); nightWake(); applyNight(!!nightWakeTimer); }   // gleicher Nachlauf wie nach Annaeherung
+// Praesenzerkennung: Annaeherung "nah" ODER Lichtaenderung (>= PRES_MIN_STEP Stufen, max. 1 Ereignis je PRES_GAP_MS)
+// = Praesenz. Weckt wie eine Beruehrung (nachts hell + Kamera live, dann Nachlauf). Aus bei SENS.prox==='off'.
+// Licht zaehlt nur nachts (tagsueber wechselt es durch Wolken/Auto-Helligkeit); Tag/Nacht kommt nie aus dem Lichtsensor.
+function presence(src){
+  if(SENS.prox==='off') return;
+  if(SENS.prox==='open' && saverOn()) wake();
+  else nightWake();
+  if(src==='light') camNightOpen(!!lpHost.near, true);
 }
+lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
+  if(near) presence('prox');
+  if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
+lpHost.on('light', v=>{ const lv=(+v>=0)?+v:-1, prev=PRES.last; lpHost.lightLevel=lv; lpHost.light=lv>=0||lpHost.light; PRES.last=lv;
+  const now=Date.now();
+  if(!NIGHT.on || lpHost.type!=='tbview' || lv<0 || prev<0 || Math.abs(lv-prev)<PRES_MIN_STEP) return;
+  if(now<PRES.mute || now-PRES.t<PRES_GAP_MS) return;
+  PRES.t=now; clog('Lichtaenderung '+prev+' -> '+lv+' – Praesenz'); presence('light'); });
 // Annaeherung/App-Wecken: Leerlauf neu starten, naechster Tipp wird nicht verschluckt
 lpHost.on('screen', on=>{ camsDark(!on); if(on){ _screenWasOff=false; resetIdle(); } });
 // Tipp bei sichtbarem Display: Nacht-Kamera live (wie Beruehrung)

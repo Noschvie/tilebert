@@ -296,8 +296,8 @@ def({ id: 'QC-B09', stage: 'pre', role: P, must: false, full: true, mode: 'auto'
   return badr.length ? FAIL(`${badr.length}/${rows.length} auffaellig: ` + badr.slice(0, 4).map(r => `${r.vn}/${r.p} ${r.err || 'abgeschnitten'}`).join('; ')) : PASS(`${rows.length}/${rows.length} Zellen ok`);
 });
 
-def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbViewer nie aus (Leerlauf -> Dashboard, auch nachts), nachts abdunkeln; Licht an -> volle Helligkeit + Kamera live, Licht aus -> Nachlauf, dimmen' }, async () => {
-  const o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof armDpms === 'function' && typeof luxEval === 'function', wait: 2500 });
+def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbViewer nie aus (Leerlauf -> Dashboard, auch nachts), nachts abdunkeln; Praesenz (Lichtaenderung) -> volle Helligkeit + Kamera live, nach Haltezeit dimmen' }, async () => {
+  const o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof armDpms === 'function' && typeof presence === 'function', wait: 2500 });
   const r = await o.pg.evaluate(async () => {
     const calls = [], bri = []; window.__sn = setNight; setNight = () => {}; applyDisplayCfg = () => {};   // Server-Nachrichten ignorieren
     lpHost.type = 'tbview'; lpHost.prox = true; lpHost.lightLevel = 1;
@@ -307,9 +307,8 @@ def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbV
     NIGHT.dim = 60; NIGHT.wake = 1; DISP.dpmsOff = 1;
     __sn(false); hideSaver(); armDpms(); await w(1400); out.tagOff = calls.filter(c => c === 'off').length; out.tagSaver = saverOn();
     __sn(true); await w(200); hideSaver(); armDpms(); await w(1400); out.nachtOff = calls.filter(c => c === 'off').length; out.nachtSaver = saverOn(); out.nachtBri = bri.at(-1);
-    lpHost._ev('light', 2); await w(100); out.luxKlein = LUX.on;                 // +1 Stufe: unter Schwelle
-    lpHost._ev('light', 3); await w(150); out.luxAn = LUX.on; out.luxBri = bri.at(-1); out.camnightAn = document.documentElement.classList.contains('camnight');
-    lpHost._ev('light', 2); await w(150); out.luxAus = LUX.on; out.briNachlauf = bri.at(-1);
+    await w(2600);                                                                  // eigene Helligkeitsaenderung abklingen
+    lpHost._ev('light', 2); await w(150); out.luxAn = bri.at(-1) === 100; out.camnightAn = document.documentElement.classList.contains('camnight');   // Lichtaenderung = Praesenz
     await w(1300); out.briDanach = bri.at(-1);
     return out; });
   const e = errList(o.st); await o.close();
@@ -317,9 +316,8 @@ def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbV
   if (r.tagOff || r.nachtOff) bad.push(`Display darf nie aus (Tag ${r.tagOff}, Nacht ${r.nachtOff})`);
   if (!r.tagSaver || !r.nachtSaver) bad.push('Leerlauf: Dashboard muss erscheinen');
   if (r.nachtBri !== 40) bad.push('Nacht: abdunkeln auf 40 % erwartet, war ' + r.nachtBri);
-  if (r.luxKlein) bad.push('Licht +1 Stufe darf nicht wecken (Schwelle)');
-  if (!r.luxAn || r.luxBri !== 100 || r.camnightAn) bad.push(`Licht an: volle Helligkeit + Kamera live erwartet (on=${r.luxAn}, bri=${r.luxBri}, camnight=${r.camnightAn})`);
-  if (r.luxAus || r.briNachlauf !== 100 || r.briDanach !== 40) bad.push(`Licht aus: Nachlauf hell, dann 40 % erwartet (on=${r.luxAus}, ${r.briNachlauf} -> ${r.briDanach})`);
+  if (!r.luxAn || r.camnightAn) bad.push(`Lichtaenderung = Praesenz: volle Helligkeit + Kamera live erwartet (hell=${r.luxAn}, camnight=${r.camnightAn})`);
+  if (r.briDanach !== 40) bad.push(`nach Haltezeit wieder 40 % erwartet, war ${r.briDanach}`);
   if (e.length) bad.push('Fehler: ' + e[0]);
-  return bad.length ? FAIL(bad.join(' | ')) : PASS('nie aus, Nacht 40 %, Licht an/aus mit Schwelle');
+  return bad.length ? FAIL(bad.join(' | ')) : PASS('nie aus, Nacht 40 %, Praesenz per Lichtaenderung');
 });

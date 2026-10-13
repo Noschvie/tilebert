@@ -110,7 +110,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - Offen: Lichtkurve (Stufe -> Helligkeit) am Gerät abstimmen; Kamera live nur bei Näherung (0.5).
 
 ## Sensor-Optionen in der Config (Panel -> Display & Nacht -> Sensoren)
-- `ui.prox`: Bei Annäherung `wake` (Standard, Display an) | `open` (Display an + Dashboard schließen) | `off`.
+- `ui.prox` (Schlüssel unverändert): **Präsenzerkennung** `wake` (Standard, Display an) | `open` (Display an + Dashboard schließen) | `off` (Aus).
 - `ui.autoBright` (false = Systemeinstellung), `ui.brightMin`/`ui.brightMax` in % (Standard 10/100).
 - Server -> Panel: `sensors {prox, auto, min, max}`; Panel -> App: `setProximityWake`, `setAutoBrightness(on,min,max)`.
 - Auto-Helligkeit gilt nur für Shelly mit TbViewer: dort regelt nachts der Lichtsensor statt „Abdunkeln um“ (solange noch kein Sensorwert vorliegt, gilt „Abdunkeln um“).
@@ -120,7 +120,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
   sind alle Kamerabilder (Dashboard, Schoner, Widget, Türstation; alle über `camStream`) angehalten.
   Sichtbar: abgedunkeltes, unscharfes Standbild + Mond + „Live-Bild bei Annäherung“ (`html.camnight`).
   Live bei Annäherung, Berührung oder Klingel (`wake()`), 30 s Nachlauf nach „fern“.
-- **Annäherung hellt nachts kurz auf** (wie Berührung, `nightWake`), außer `prox=off`.
+- **Präsenzerkennung** (`presence(src)` im Panel): Annäherung „nah“ **oder** Änderung der Lichtstufe (0–16, ≥ 1 Stufe gegenüber dem letzten Wert, max. 1 Ereignis je 2 s, nach eigener Helligkeitsänderung 2,5 s stumm) = Präsenz. Präsenz hellt nachts kurz auf (wie Berührung, `nightWake`) und schaltet die Nacht-Kamera live (30 s Nachlauf); `open` schließt zusätzlich das Dashboard. Lichtänderung zählt nur nachts. Bei `prox=off` keine Reaktion. Es gibt keine Lux-Schwelle mehr (Licht an hält nicht mehr dauerhaft wach).
 - Tag/Nacht kommt **nur** aus dem Betriebsmodus der Config (Nutzervorgabe), nicht vom Lichtsensor.
 - **Dynamische Helligkeit** (`ui.autoBright`, min/max): nur Shelly mit TbView + Lichtsensor regelt nach dem Sensor (ohne „Abdunkeln um“); alle anderen Geräte und Option aus: Abdunkeln nach Betriebsmodus.
 - Ereignisse App -> Panel: `window.lpHost._ev(name, wert)`; Fix 5.1: `lpHost` ist `const`, daher
