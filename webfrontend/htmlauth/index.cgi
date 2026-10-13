@@ -348,13 +348,13 @@ print <<"HTML";
   .lpx h3,.lpx .lpx-stat .v{font-family:"Sora","Manrope","Segoe UI",system-ui,sans-serif;}
   .lpx h3{margin:0;font-size:18px;line-height:1.25;font-weight:600;color:var(--ink);}
   .lpx-open{display:inline-flex;align-items:center;gap:6px;background:var(--bz-act);border-radius:999px;padding:4px;}
-  .lpx-sel{height:36px;border:0;border-radius:999px;padding:0 30px 0 14px;font-size:14px;font-weight:600;color:#fff;cursor:pointer;
-    background:#363b5c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.6' fill='none'/%3E%3C/svg%3E") no-repeat right 12px center;
-    -webkit-appearance:none;appearance:none;max-width:180px;}
+  .lpx .lpx-open select.lpx-sel{display:inline-block !important;width:auto !important;min-width:110px;height:36px !important;margin:0 !important;border:0 !important;border-radius:999px !important;padding:0 32px 0 16px !important;
+    font-size:14px !important;font-weight:600 !important;line-height:36px !important;color:#fff !important;cursor:pointer;box-shadow:none !important;
+    background:#363b5c url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.6' fill='none'/%3E%3C/svg%3E") no-repeat right 13px center !important;
+    -webkit-appearance:none !important;-moz-appearance:none !important;appearance:none !important;max-width:180px;}
   .lpx-sel option{color:#1f2440;background:#fff;}
   .lpx-open .lpx-btn{height:36px;}
   .lpx-hero{position:relative;overflow:hidden;border-radius:36px;padding:24px 26px;margin-bottom:16px;background:var(--bezel);color:var(--bz-ink);}
-  .lpx-hero::after{content:"";position:absolute;right:-70px;bottom:-90px;width:210px;height:210px;border-radius:70px;transform:rotate(14deg);background:#ffc145;opacity:.12;pointer-events:none;}
   .lpx-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:relative;z-index:1;}
   .lpx-brand{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
   .lpx-wm{width:116px;flex:none;} .lpx-wm svg{display:block;width:100%;height:auto;}
@@ -387,8 +387,8 @@ print <<"HTML";
   .lpx label.l{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:0 0 4px;}
   .lpx input.i{width:100%;height:44px;border:1px solid var(--line);border-radius:14px;padding:0 14px;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);box-shadow:none;margin:0;}
   .lpx input.i:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,193,69,.5);background:#fff;}
-  .lpx-chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:12px 0 2px;color:var(--ink);font-weight:400;}
-  .lpx-chk input{width:18px;height:18px;accent-color:var(--ink);margin:0;}
+  .lpx .lpx-chk{display:flex !important;align-items:center;gap:8px;font-size:13px !important;line-height:1.4 !important;margin:12px 0 2px !important;padding:0 !important;color:var(--ink) !important;font-weight:400 !important;text-shadow:none;cursor:pointer;}
+  .lpx .lpx-chk input{position:static !important;opacity:1 !important;flex:none;width:18px !important;height:18px !important;accent-color:var(--ink);margin:0 !important;}
   .lpx-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;} .lpx-row form{margin:0;display:contents;}
   .lpx-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:44px;padding:0 22px;border-radius:999px;border:1px solid transparent;
     font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none !important;white-space:nowrap;transition:background .12s,transform .1s;box-shadow:none;margin:0;}

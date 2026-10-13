@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Pluginseite geglättet (0.20.12)** — Panel-Auswahl als Pille, Zertifikat-Zeile in normaler Schriftgröße, Kopf ohne Zierfläche.
 - **Pluginseite im tilebert-Design, Prerelease-Kanal (0.20.11)** — Die LoxBerry-Pluginseite nutzt jetzt Logo, Farben und Formen von tilebert. Updates: Releases laden das geprüfte Release-ZIP; neu gibt es einen Prerelease-Kanal (in der LoxBerry-Plugin-Verwaltung wählbar).
 - **Repo heißt tilebert (0.20.10)** — Das GitHub-Repo heißt jetzt actionhero-zz/tilebert; Update-Quelle und Links umgestellt (alte Adressen leiten weiter). Screenshots unter docs/img.
 - **TbViewer-Infoseite (0.20.9)** — TbViewer 5.6: 5× schnell aufs Display tippen öffnet eine Infoseite mit TbViewer- und tilebert-Version, Server und Launcher-Status; Neustart (zweimal tippen) und Launcher wählen. Sprache folgt tilebert.
