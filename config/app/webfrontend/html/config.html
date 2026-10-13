@@ -2642,6 +2642,7 @@ function bindAppearance(p){
     cb.onchange=()=>{ p.ui=p.ui||{}; const k=cb.dataset.uichk, def=cb.dataset.def==='1';
       if(cb.checked===def) delete p.ui[k]; else p.ui[k]=cb.checked; markDirty(); }; });
   // Auswahlfelder: leer = Standard (nicht gespeichert); autoBright "off" -> false
+  if((p.ui||{}).prox==='open') delete p.ui.prox;   // alt: 'open' = An; beim naechsten Speichern ''
   document.querySelectorAll('select[data-uisel]').forEach(sel=>{
     sel.onchange=()=>{ p.ui=p.ui||{}; const k=sel.dataset.uisel, v=sel.value;
       if(v==='') delete p.ui[k]; else p.ui[k]=(k==='autoBright')?false:v; markDirty(); }; });
@@ -2928,8 +2929,8 @@ function renderEditor(){
        '<p class="note" id="sensNote" hidden>'+T('Kein Gerät mit TbViewer zeigt dieses Panel. Diese Optionen wirken erst dann.')+'</p>'+
        '<div class="sizes">'+
        '<div class="field" style="max-width:320px"><label class="lbl">'+T('Präsenzerkennung')+'</label>'+
-         '<select data-uisel="prox">'+[['','Display einschalten'],['open','Display einschalten und Dashboard schließen'],['off','Aus']].map(([v,l])=>
-           '<option value="'+v+'"'+(((p.ui||{}).prox||'')===v?' selected':'')+'>'+T(l)+'</option>').join('')+'</select></div>'+
+         '<select data-uisel="prox">'+[['','An'],['off','Aus']].map(([v,l])=>
+           '<option value="'+v+'"'+(((p.ui||{}).prox==='off'?'off':'')===v?' selected':'')+'>'+T(l)+'</option>').join('')+'</select></div>'+
        '<div class="field" style="max-width:260px"><label class="lbl">'+T('Helligkeit')+'</label>'+
          '<select data-uisel="autoBright">'+[['','Automatisch (Lichtsensor)'],['off','Systemeinstellung']].map(([v,l])=>
            '<option value="'+v+'"'+((((p.ui||{}).autoBright===false)?'off':'')===v?' selected':'')+'>'+T(l)+'</option>').join('')+'</select></div>'+
@@ -2940,8 +2941,8 @@ function renderEditor(){
          '<input type="number" min="1" max="100" step="5" data-ui="brightMax" value="'+
          (((p.ui||{}).brightMax==null)?'':(p.ui||{}).brightMax)+'" placeholder="100"></div>'+
      '</div><div class="sizes" style="margin-top:8px">'+
-       '<label class="chk"><input type="checkbox" data-uichk="nightCam" data-def="1"'+(((p.ui||{}).nightCam===false)?'':' checked')+'> <span>'+T('Nachts Kamerabild nur bei Annäherung zeigen')+'</span></label>'+
-     '</div><p class="hint">'+T('Präsenz = Annäherung oder Änderung des Lichtwerts: weckt nachts kurz auf und zeigt die Kamera live.')+' '+T('Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Die automatische Helligkeit gilt tagsüber, nachts gilt „Abdunkeln nachts“.')+'</p></details>'+
+       '<label class="chk"><input type="checkbox" data-uichk="nightCam" data-def="1"'+(((p.ui||{}).nightCam===false)?'':' checked')+'> <span>'+T('Nachts Kamerabild nur bei Präsenz zeigen')+'</span></label>'+
+     '</div><p class="hint">'+T('Präsenz = Annäherung oder Änderung des Lichtwerts: weckt nachts kurz auf und zeigt die Kamera live. Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.')+' '+T('Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Die automatische Helligkeit gilt tagsüber, nachts gilt „Abdunkeln nachts“.')+'</p></details>'+
      apCardHTML(p)+'</section>'+
 
    '<section class="spane" data-sub="tabs"><div class="card"><h3>Tabs</h3>'+
@@ -3920,7 +3921,7 @@ function markDirty(){ dirty=true; dirtyN++; const t=$('#toast'); if(t){ t.classN
 let SAVED_SNAP=null;
 function snapSaved(){ try{ SAVED_SNAP=JSON.parse(JSON.stringify(PANELS)); }catch(e){ SAVED_SNAP=null; } }
 function stable(v){ return JSON.stringify(v,(k,x)=>(x&&typeof x==='object'&&!Array.isArray(x))?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x); }
-const CHG_UI={grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Präsenzerkennung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Annäherung zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
+const CHG_UI={grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Präsenzerkennung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Präsenz zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
   nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',motion:'Animation',iconAnim:'Animierte Symbole',contrast:'Kontrast',sceneLight:'Lichtszenen',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
   nudgeX:'Versatz horizontal (px)',iconSize:'Symbol',nameSize:'Kachelname',subSize:'Statuszeile',bold:'Kachelnamen',dblTapOff:'Doppeltipp',alarmsEnabled:'Wecker',
   lang:'Sprache',saverFcSize:'Wettervorschau',tileShadow:'Kachel-Schatten'};

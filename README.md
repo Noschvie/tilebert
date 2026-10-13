@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Dashboard bleibt Startpunkt (0.20.15)** — Präsenz schließt das Dashboard nie mehr; nur Wischen oder Tippen führt zu den Tabs. Präsenzerkennung nur noch An/Aus, „Nachts Kamerabild nur bei Präsenz zeigen“.
 - **Präsenzerkennung (0.20.14)** — TbViewer: Annäherung und Helligkeitsänderung sind jetzt eine „Präsenzerkennung“. Nachts weckt jede der beiden das Display (hell, Kamera live, danach wieder gedimmt); eingeschaltetes Licht hält nicht mehr dauerhaft wach. In der Config nur noch eine Option.
 - **Handy dunkelt nachts nie ab (0.20.13)** — Panels auf Handys werden nachts nicht mehr abgedunkelt und schalten bei Leerlauf nicht ab; das Handy regelt seine Helligkeit selbst. Erkannt über den Gerätetyp, sonst über den Browser.
 - **Pluginseite geglättet (0.20.12)** — Panel-Auswahl als Pille, Zertifikat-Zeile in normaler Schriftgröße, Kopf ohne Zierfläche.

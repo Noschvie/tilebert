@@ -164,13 +164,12 @@
       'Gerätetyp': 'Device type',
       'Steuerung': 'Controls',
       'Wartung': 'Maintenance',
-      'Display einschalten und Dashboard schließen': 'Switch display on and close the dashboard',
       'Nichts tun': 'Do nothing',
       'Automatisch (Lichtsensor)': 'Automatic (light sensor)',
       'Systemeinstellung': 'System setting',
       'Sensoren': 'Sensors',
       'Präsenzerkennung': 'Presence detection',
-      'Präsenz = Annäherung oder Änderung des Lichtwerts: weckt nachts kurz auf und zeigt die Kamera live.': 'Presence = proximity or a change of the light value: briefly wakes the display at night and shows the camera live.',
+      'Präsenz = Annäherung oder Änderung des Lichtwerts: weckt nachts kurz auf und zeigt die Kamera live. Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.': 'Presence = proximity or a change of the light value: briefly wakes the display at night and shows the camera live. The dashboard always stays the starting point; only swiping or tapping leads to the tabs.',
       'Helligkeit': 'Brightness',
       'TbViewer installieren': 'Install TbViewer',
       'TbViewer ist nicht installiert': 'TbViewer is not installed',
@@ -762,7 +761,7 @@
       'Hell nach Antippen (s)': 'Bright after tap (s)',
       'Helligkeit min. (%)': 'Brightness min. (%)',
       'Helligkeit max. (%)': 'Brightness max. (%)',
-      'Nachts Kamerabild nur bei Annäherung zeigen': 'At night show camera image only on proximity',
+      'Nachts Kamerabild nur bei Präsenz zeigen': 'At night show camera image only on presence',
       'Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> (Startseite) ganz rechts. Zum Umsortieren Tabs ziehen.':
         'The order matches the panel: <b>dashboard</b> on the left, tabs right-aligned, <b>tab 1</b> (start page) at the far right. Drag tabs to reorder them.',
       'Bis zu <b>4 Tabs</b>, der erste ist die Startseite (★). Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).':

@@ -68,7 +68,7 @@ def({ id: 'QC-B03', stage: 'pre', role: U, must: true, mode: 'auto', title: 'Con
 });
 
 // ---------- B04 Sensoren / Helligkeit / Nacht-Kamera ----------
-def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sensor-Logik mit Sollwerten: setAutoBrightness nur Shelly, Annaeherung (open/wake), Nacht-Kamera (Sperre, Annaeherung, Beruehrung, Nachlauf, Option aus), prox=off, Config-Sensorfelder' }, async () => {
+def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sensor-Logik mit Sollwerten: setAutoBrightness nur Shelly, Annaeherung (open=wake, Dashboard bleibt), Nacht-Kamera (Sperre, Annaeherung, Beruehrung, Nachlauf, Option aus), prox=off, Config-Sensorfelder' }, async () => {
   const bad = [];
   // a) Helligkeit/Auto (frueher bright.mjs)
   let o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof applySensors === 'function', wait: 1500 });
@@ -87,12 +87,15 @@ def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sen
   // b) Annaeherung "open" schliesst Schoner; "wake" weckt auch; "off" nicht (frueher senscheck.mjs)
   const s = await o.pg.evaluate(() => {
     lpHost.type = 'tbview'; const r = {};
-    SENS.prox = 'open'; showSaver(); const v = saverOn(); lpHost._ev('prox', true); r.open = [v, saverOn()];
+    window.__info = '{"prox":true,"light":true,"model":"Jenna"}'; applySensors({ prox: 'open', nightCam: true, auto: true }); r.map = [SENS.prox, SENS.nightCam, SENS.auto];
+    showSaver(); const v = saverOn(); lpHost._ev('prox', true); r.open = [v, saverOn()];
     SENS.prox = 'wake'; showSaver(); const v2 = saverOn(); lpHost._ev('prox', true); r.wake = [v2, saverOn()];
     SENS.prox = 'off'; showSaver(); const v3 = saverOn(); lpHost._ev('prox', true); r.off = [v3, saverOn()];
     try { hideSaver(); } catch (e) {} return r;
   });
-  if (!(s.open[0] === true && s.open[1] === false)) bad.push('prox=open: Schoner muss bei Annaeherung schliessen, war ' + JSON.stringify(s.open));
+  if (!(s.open[0] === true && s.open[1] === true)) bad.push('prox=open (alt): Praesenz darf das Dashboard nie schliessen, war ' + JSON.stringify(s.open));
+  if (JSON.stringify(s.map) !== '["wake",true,true]') bad.push('applySensors: open->wake, nightCam/auto gesetzt erwartet, war ' + JSON.stringify(s.map));
+  if (!(s.wake[0] === true && s.wake[1] === true)) bad.push('prox=wake: Dashboard muss bleiben, war ' + JSON.stringify(s.wake));
   if (!(s.off[0] === true && s.off[1] === true)) bad.push('prox=off: Annaeherung darf den Schoner nicht schliessen, war ' + JSON.stringify(s.off));
   const e = errList(o.st); if (e.length) bad.push('Fehler: ' + e[0]);
   await o.close();
@@ -310,6 +313,7 @@ def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbV
     await w(2600);                                                                  // eigene Helligkeitsaenderung abklingen
     lpHost._ev('light', 2); await w(150); out.luxAn = bri.at(-1) === 100; out.camnightAn = document.documentElement.classList.contains('camnight');   // Lichtaenderung = Praesenz
     await w(1300); out.briDanach = bri.at(-1);
+    showSaver(); await w(200); await w(2600); lpHost._ev('light', 5); await w(150); out.praesSaver = saverOn();   // Praesenz schliesst das Dashboard nie
     return out; });
   const e = errList(o.st); await o.close();
   const bad = [];
@@ -318,6 +322,7 @@ def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbV
   if (r.nachtBri !== 40) bad.push('Nacht: abdunkeln auf 40 % erwartet, war ' + r.nachtBri);
   if (!r.luxAn || r.camnightAn) bad.push(`Lichtaenderung = Praesenz: volle Helligkeit + Kamera live erwartet (hell=${r.luxAn}, camnight=${r.camnightAn})`);
   if (r.briDanach !== 40) bad.push(`nach Haltezeit wieder 40 % erwartet, war ${r.briDanach}`);
+  if (!r.praesSaver) bad.push('Praesenz hat das Dashboard geschlossen');
   if (e.length) bad.push('Fehler: ' + e[0]);
-  return bad.length ? FAIL(bad.join(' | ')) : PASS('nie aus, Nacht 40 %, Praesenz per Lichtaenderung');
+  return bad.length ? FAIL(bad.join(' | ')) : PASS('nie aus, Nacht 40 %, Praesenz per Lichtaenderung, Dashboard bleibt');
 });

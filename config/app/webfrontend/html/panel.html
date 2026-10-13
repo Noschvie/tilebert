@@ -5958,7 +5958,7 @@ function kiosk(){ return lpHost.api; }
 // Sensoren der Kiosk-App (nur TbView): Annaeherung und Helligkeit aus dem Lichtsensor.
 const SENS={ prox:'wake', nightCam:true, auto:true };
 function applySensors(s){
-  SENS.prox=s.prox||'wake'; SENS.nightCam=s.nightCam!==false; SENS.auto=s.auto!==false;
+  SENS.prox=(s.prox==='off')?'off':'wake'; SENS.nightCam=s.nightCam!==false; SENS.auto=s.auto!==false;   // prox 'open' (alt) = 'wake'
   if(lpHost.type==='tbview'){ try{ const i=JSON.parse(lpHost.api.getDeviceInfo()); lpHost.prox=!!i.prox; lpHost.light=!!i.light;
     lpHost.shelly=/^(jenna|blake|maverick|cally|dayna|stargate)$/i.test(i.model||'')||/shelly|sawd/i.test(i.model||''); }catch(e){} }
   applyNight(false);   // Helligkeit: Sensor ersetzt ggf. das naechtliche Abdunkeln
@@ -5967,14 +5967,12 @@ function applySensors(s){
   try{ lpHost.api.setProximityWake(SENS.prox!=='off'); }catch(e){}
   try{ lpHost.api.setAutoBrightness(s.auto!==false && !!lpHost.shelly, +s.min||10, +s.max||100); }catch(e){}
 }
-// "Display an + Dashboard schliessen": Annaeherung schliesst das Dashboard wie eine Beruehrung
 // Praesenzerkennung: Annaeherung "nah" ODER Lichtaenderung (>= PRES_MIN_STEP Stufen, max. 1 Ereignis je PRES_GAP_MS)
 // = Praesenz. Weckt wie eine Beruehrung (nachts hell + Kamera live, dann Nachlauf). Aus bei SENS.prox==='off'.
 // Licht zaehlt nur nachts (tagsueber wechselt es durch Wolken/Auto-Helligkeit); Tag/Nacht kommt nie aus dem Lichtsensor.
 function presence(src){
   if(SENS.prox==='off') return;
-  if(SENS.prox==='open' && saverOn()) wake();
-  else nightWake();
+  nightWake();   // Dashboard bleibt Startpunkt: Praesenz schliesst es nie (nur Wischen/Tippen)
   if(src==='light') camNightOpen(!!lpHost.near, true);
 }
 lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
