@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.12"
+APP_VERSION = "0.20.13"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -10956,6 +10956,8 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                             "reloadHours": app.panel_reload(prof["id"]),
                             "reloadAt": NEULADEN_STUNDE,   # nachts neu laden, wenn reloadHours fehlt
                             "night": {**app.panel_night(prof["id"]), "on": app._night_on},
+                            # Gerätetyp (leer = unbekannt): Handys regeln Helligkeit selbst, nachts kein Abdunkeln
+                            "devModel": ((app.devices.get(dev) or {}) if dev else {}).get("model") or "",
                             "sensors": app.panel_sensors(prof["id"]),
                             "screensaverCam": app._screensaver_cam(),
                             "camCrop": app.cam_crops(),

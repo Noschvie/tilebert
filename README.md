@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Handy dunkelt nachts nie ab (0.20.13)** — Panels auf Handys werden nachts nicht mehr abgedunkelt und schalten bei Leerlauf nicht ab; das Handy regelt seine Helligkeit selbst. Erkannt über den Gerätetyp, sonst über den Browser.
 - **Pluginseite geglättet (0.20.12)** — Panel-Auswahl als Pille, Zertifikat-Zeile in normaler Schriftgröße, Kopf ohne Zierfläche.
 - **Pluginseite im tilebert-Design, Prerelease-Kanal (0.20.11)** — Die LoxBerry-Pluginseite nutzt jetzt Logo, Farben und Formen von tilebert. Updates: Releases laden das geprüfte Release-ZIP; neu gibt es einen Prerelease-Kanal (in der LoxBerry-Plugin-Verwaltung wählbar).
 - **Repo heißt tilebert (0.20.10)** — Das GitHub-Repo heißt jetzt actionhero-zz/tilebert; Update-Quelle und Links umgestellt (alte Adressen leiten weiter). Screenshots unter docs/img.

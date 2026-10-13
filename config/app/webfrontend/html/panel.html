@@ -4413,6 +4413,7 @@ function connect(){
       if(msg.lang){ LANG=msg.lang; document.documentElement.lang=LANG.split('-')[0]; tickClock(); }   // lang: Silbentrennung   // Panel-Sprache -> Datum/Uhr sofort aktualisieren
       if(msg.title) document.title=msg.title;
       if(msg.tabMeta) tabMeta=msg.tabMeta;
+      DEV_MODEL=msg.devModel||'';
       if(msg.night){ NIGHT.dim=+msg.night.dim||0; NIGHT.wake=+msg.night.wake||0; setNight(msg.night.on); }
       if(msg.sensors) applySensors(msg.sensors);
       if(Array.isArray(msg.tabs)&&msg.tabs.length) tabsCfg=msg.tabs;
@@ -5906,6 +5907,11 @@ el('saver').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation
 // position:fixed-Elementen, und die Auflage wirkt wie heruntergeregelte
 // Hintergrundbeleuchtung (Weiss wird grau, nicht nur dunkler).
 const NIGHT = { on:false, dim:0, wake:20 };
+// Handy (Typ "phone" aus der Geraeteliste; unbekanntes Geraet: Handy-UA, nie TbViewer): regelt Helligkeit selbst ->
+// nachts kein Abdunkeln, kein Leerlauf-Aus, Nacht-Kamera laeuft normal (Browser hat keinen Annaeherungssensor).
+let DEV_MODEL='';
+function phoneDev(){ return DEV_MODEL ? DEV_MODEL==='phone'
+  : (lpHost.type!=='tbview' && /iPhone|iPod|Android.+Mobile/i.test(navigator.userAgent)); }
 const LUX = { base:-1, on:false }, LUX_ON=2, LUX_OFF=1;   // Lichtsensor nachts: Schwelle/Hysterese in Stufen
 let _dpmsIdle=false;   // TbViewer: Leerlauf am Tag erreicht (Dashboard statt aus), s. armDpms
 let nightEl=null, nightWakeTimer=null;
@@ -5922,7 +5928,7 @@ function nightLayer(){
 // Licht im Raum ist (Lichtsensor, LUX.on) bzw. kurz nach Annaeherung/Beruehrung (awake, nightWake).
 // Tagsueber regelt auf dem Shelly die Auto-Helligkeit (App) nach dem Lichtsensor.
 function applyNight(awake){
-  const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !LUX.on) ? Math.min(90,NIGHT.dim) : 0;
+  const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !LUX.on && !phoneDev()) ? Math.min(90,NIGHT.dim) : 0;
   // TbView: echte Fensterhelligkeit (Schwarz bleibt schwarz); lehnt die App ab, dunkelt das Overlay
   let real=false;
   if(lpHost.type==='tbview'){ try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
@@ -5997,7 +6003,7 @@ document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==
 function dpmsDayOnly(){ return lpHost.type==='tbview'; }
 function armDpms(){ clearTimeout(dpmsTimer); _dpmsIdle=false;
   wakeOn(); camsDark(false);
-  if(DISP.agent || !(DISP.dpmsOff>0)) return;
+  if(DISP.agent || !(DISP.dpmsOff>0) || phoneDev()) return;
   // Mit Kiosk-JS (Fully) direkt abschalten; sonst dem Server Leerlauf melden,
   // der schaltet ueber den Display-Treiber des Geraets (Fully REST / WallPanel).
   // Kamera nur anhalten, wenn das Display wirklich ausgeht (Kiosk-App, screenOff).
