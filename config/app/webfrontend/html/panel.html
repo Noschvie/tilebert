@@ -1183,7 +1183,7 @@
   .dsback:active{transform:scale(.97);}
   .dsrw{flex:1;min-height:0;position:relative;margin:10px 12px 12px;border-radius:var(--r-xl);background:var(--face-1,var(--screen));overflow:hidden;display:flex;flex-direction:column;}
   /* Zahnrad-Wasserzeichen wie .tile.tbig .head (8 %, ink), unten rechts angeschnitten, unter den Karten */
-  .dswm{position:absolute;right:-110px;bottom:-110px;width:300px;height:300px;opacity:.08;color:var(--ink);pointer-events:none;z-index:0;}
+  .dswm{position:absolute;left:-110px;bottom:-110px;width:300px;height:300px;opacity:.08;color:var(--ink);pointer-events:none;z-index:0;}
   .dswm svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
   .dsr{position:relative;z-index:1;flex:1;min-height:0;padding:14px;color:var(--ink);overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;}
   .dsr::-webkit-scrollbar{display:none;}
@@ -1213,7 +1213,6 @@
     background:rgba(var(--wash,255,255,255),.08);color:var(--ink);font:600 20px var(--font-num,"Sora",sans-serif);}
   .dsstep:active{transform:scale(.94);}
   .dsstd{color:var(--muted);font-size:15px;margin:auto;}
-  .dsfoot{margin:0 4px;font-size:12px;color:var(--muted);}
   .dsmsg{color:var(--crit-txt);font-size:14px;margin-top:8px;}
   .dsmsg:empty{display:none;}
   .dspw{margin:auto;width:min(440px,100%);display:flex;flex-direction:column;gap:12px;}
@@ -1233,7 +1232,7 @@
   @media (min-width:700px){
     .dsmain{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"t p" "t a";grid-template-rows:auto 1fr;}
     .dsmain>.dst-t{grid-area:t;} .dsmain>.dst-p{grid-area:p;} .dsmain>.dst-a{grid-area:a;}
-    .dsmain>.dsmsg,.dsmain>.dsfoot{grid-column:1/-1;margin:0 4px;}
+    .dsmain>.dsmsg{grid-column:1/-1;margin:0 4px;}
   }
   @media (max-height:360px){ .dsrow{min-height:48px;} }
   .pinkey.del{font-size:22px;}
@@ -2613,7 +2612,7 @@ const DS_EN={'Einstellungen':'Settings','‹ Zurück':'‹ Back','Panel':'Panel'
   'Hinweis':'Notice','Tipp':'Tap','Nachts abdunkeln':'Dim at night','Präsenzerkennung':'Presence detection','Helligkeit':'Brightness','Auto':'Auto','Fest':'Fixed',
   'Standard':'Default','Helligkeit fest':'Fixed brightness','geändert':'changed','Auf Standard zurück':'Back to default','Alarm ausschalten?':'Turn alarm off?',
   'Ton aus – das Vollbild bleibt.':'Sound off – the full screen stays.','Abdunkeln auf {n} %':'Dim to {n} %','System':'System',
-  'Alarm bleibt an':'Keep alarm on','Ausschalten':'Turn off','Mehr in der Config':'More in the config','Lade …':'Loading …',
+  'Alarm bleibt an':'Keep alarm on','Ausschalten':'Turn off','Lade …':'Loading …',
   'Geschützt. Bitte Passwort eingeben.':'Protected. Please enter the password.','Passwort':'Password','Weiter':'Continue',
   'Passwort falsch':'Wrong password','Zu viele Versuche. Bitte warten.':'Too many attempts. Please wait.',
   'Nicht gespeichert. Verbindung prüfen.':'Not saved. Check the connection.','Einstellungen nicht verfügbar.':'Settings not available.','Anzeige':'Display','Standard-Panel':'Default panel',
@@ -2720,7 +2719,7 @@ function dsMain(){
     if(!ab){ const fx=val('brightFix')||80, vs=[20,40,60,70,80,90,100]; if(vs.indexOf(fx)<0) vs.push(fx); vs.sort((a,b)=>a-b);
       h+=row('Helligkeit fest','brightFix','<button type="button" class="dsstep" data-fixstep="-1" aria-label="−">−</button><span class="dsval" data-fixval="'+fx+'" aria-live="polite">'+fx+' %</span><button type="button" class="dsstep" data-fixstep="1" aria-label="+">+</button>'); } }
   h+='</section>';
-  h+='<div class="dsmsg" role="alert">'+esc(DS.err?dsT(DS.err):'')+'</div><p class="dsfoot">'+esc(dsT('Mehr in der Config'))+'</p></div>';
+  h+='<div class="dsmsg" role="alert">'+esc(DS.err?dsT(DS.err):'')+'</div></div>';
   return h;
 }
 function dsClick(e){
