@@ -1291,6 +1291,9 @@
   .gdhd,.gdrow{display:grid;grid-template-columns:22px minmax(120px,2fr) minmax(90px,1.4fr) minmax(90px,1.2fr) minmax(110px,1.4fr) 36px;align-items:center;gap:0 12px;}
   .gdhd{padding:0 18px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;}
   .gdrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px minmax(120px,2fr) minmax(90px,1.4fr) minmax(90px,1.2fr) minmax(110px,1.4fr) 36px;align-items:center;gap:0 12px;width:100%;min-height:60px;padding:6px 18px;margin:0 0 8px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel);box-shadow:var(--shadow);cursor:pointer;color:var(--fg);}
+  .gdoffh{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:8px;min-height:44px;margin:4px 0 8px;padding:0 18px;font-size:13px;font-weight:700;color:var(--muted);}
+  .gdoffh:hover{color:var(--fg);} .gdoffh:focus-visible{outline:2px solid var(--sel);outline-offset:2px;}
+  .gdoffc{display:inline-block;transition:transform .15s;} .gdoffh[aria-expanded="true"] .gdoffc{transform:rotate(90deg);}
   .gdrow:hover{background:var(--panel2);} .gdrow:focus-visible{outline:2px solid var(--sel);outline-offset:2px;}
   .gdrow .sdot{background:var(--muted);box-shadow:none;} .gdrow .sdot.on{background:var(--good);box-shadow:0 0 0 4px rgba(82,184,129,.18);} .gdrow .sdot.wait{background:var(--accent);}
   .gdrow .gdn{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;} .gdrow .gdt,.gdrow .gdp{min-width:0;overflow:hidden;text-overflow:ellipsis;}
@@ -5463,13 +5466,22 @@ function gdStatus(n){
       :'<span class="gs off">'+(ago?T('offline seit')+' '+esc(ago):T('offline'))+'</span>'); }
   return p.join(' ');
 }
+// Offline-Bereich der Geraeteliste: auf/zu merkt sich der Browser (Standard zu)
+const GD_OFF_KEY='lp_gd_off_open';
+function gdOffOpen(){ try{ return localStorage.getItem(GD_OFF_KEY)==='1'; }catch(e){ return false; } }
+function gdOffSave(o){ try{ localStorage.setItem(GD_OFF_KEY,o?'1':'0'); }catch(e){} }
+function gdRowHTML(n){
+  const d=gdLive(n), up=!!d.online, rc=devReconnecting(d), pn=gdPanelTitle(d.profile||(((DEV[n]||{}).prefs||{}).panel)||'');
+  return '<button type="button" class="gdrow'+(devOnline(n)?'':' off')+'" data-name="'+esc(n)+'"><i class="sdot'+(up?' on':rc?' wait':'')+'"></i>'+
+    '<b class="gdn">'+esc(n)+'</b><span class="gdt">'+esc(gdTypeLabel(n))+'</span><span class="gdp">'+(pn?esc(pn):'–')+'</span>'+
+    '<span class="gst">'+gdStatus(n)+'</span><span class="gdc" aria-hidden="true">›</span></button>';
+}
 function gdListHTML(names){
-  const on=names.filter(devOnline).sort((a,b)=>a.localeCompare(b)), off=names.filter(n=>!devOnline(n)).sort((a,b)=>a.localeCompare(b));
+  const on=names.filter(devOnline).sort((a,b)=>a.localeCompare(b)), off=names.filter(n=>!devOnline(n)).sort((a,b)=>a.localeCompare(b)), open=gdOffOpen();
   return '<div class="gdhd" aria-hidden="true"><span></span><span>'+T('Gerät')+'</span><span>'+T('Typ')+'</span><span>'+T('Panel')+'</span><span>'+T('Status')+'</span><span></span></div>'+
-    on.concat(off).map(n=>{ const d=gdLive(n), up=!!d.online, rc=devReconnecting(d), pn=gdPanelTitle(d.profile||(((DEV[n]||{}).prefs||{}).panel)||'');
-      return '<button type="button" class="gdrow'+(devOnline(n)?'':' off')+'" data-name="'+esc(n)+'"><i class="sdot'+(up?' on':rc?' wait':'')+'"></i>'+
-        '<b class="gdn">'+esc(n)+'</b><span class="gdt">'+esc(gdTypeLabel(n))+'</span><span class="gdp">'+(pn?esc(pn):'–')+'</span>'+
-        '<span class="gst">'+gdStatus(n)+'</span><span class="gdc" aria-hidden="true">›</span></button>'; }).join('');
+    on.map(gdRowHTML).join('')+
+    (off.length?'<button type="button" class="gdoffh" aria-expanded="'+open+'" aria-controls="gdoff"><span class="gdoffc" aria-hidden="true">›</span>'+T('Offline')+' ('+off.length+')</button>'+
+      '<div id="gdoff" class="gdoff"'+(open?'':' hidden')+'>'+off.map(gdRowHTML).join('')+'</div>':'');
 }
 function gdSig(){ return devNames().sort().map(n=>[n,devOnline(n)?1:0,gdTypeLabel(n),gdLive(n).profile||'',gdStatus(n)].join('~')).join('|'); }
 // Werte: ungespeicherte Aenderung > gespeicherter Stand; Standard = Wert ohne Geraete-Aenderung
@@ -5619,6 +5631,7 @@ function renderDevices(){
   box.addEventListener('click',async e=>{
     const t=e.target, g=t.closest('.gd'), n=g?g.dataset.name:'';
     const row=t.closest('.gdrow'); if(row){ gdOpen(row.dataset.name); return; }
+    const oh=t.closest('.gdoffh'); if(oh){ const w=box.querySelector('#gdoff'), o=oh.getAttribute('aria-expanded')!=='true'; oh.setAttribute('aria-expanded',o); if(w) w.hidden=!o; gdOffSave(o); return; }
     if(t.closest('.gdback')){ gdClose(); return; }
     if(!g) return;
     if(t.closest('.gdrnb')){ const r=g.querySelector('.gdrn'), i=g.querySelector('.gdrn_in'); r.hidden=!r.hidden; if(!r.hidden){ i.focus(); i.select(); } return; }
