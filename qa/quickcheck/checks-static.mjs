@@ -152,7 +152,7 @@ def({ id: 'QC-S05', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Ver
 def({ id: 'QC-S06', stage: 'pre', role: P, must: true, mode: 'auto', title: 'APK: versionCode Manifest == .version == APK; targetSdk >= 24; Label TbViewer; erhoeht bei Android-Aenderung' }, () => {
   const man = read(`${R}/android/panel-launcher/AndroidManifest.xml`);
   const code = (/versionCode="(\d+)"/.exec(man) || [])[1], name = (/versionName="([^"]+)"/.exec(man) || [])[1], tsdk = (/targetSdkVersion="(\d+)"/.exec(man) || [])[1];
-  const ver = read(`${R}/config/app/android/LoxPanel-Launcher.version`).trim();
+  const ver = read(`${R}/config/app/android/LoxPanel-Launcher.version`).trim().split(/\s+/)[0];
   const bad = [];
   if (code !== ver) bad.push(`Manifest versionCode ${code} != .version ${ver}`);
   if (+tsdk < 24) bad.push('targetSdk ' + tsdk + ' < 24');

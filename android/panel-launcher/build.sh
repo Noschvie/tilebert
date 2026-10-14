@@ -35,4 +35,5 @@ apksigner sign --ks "$KEYSTORE" --ks-pass pass:loxpanel --key-pass pass:loxpanel
 apksigner verify "$DEST" && echo "OK: $DEST"
 # versionCode daneben ablegen: der Server ueberspringt "adb install", wenn das
 # Panel diese oder eine neuere Version schon hat.
-sed -n 's/.*android:versionCode="\([0-9]*\)".*/\1/p' AndroidManifest.xml > "${DEST%.apk}.version"
+{ sed -n 's/.*android:versionCode="\([0-9]*\)".*/\1/p' AndroidManifest.xml
+  sed -n 's/.*android:versionName="\([^"]*\)".*/\1/p' AndroidManifest.xml; } > "${DEST%.apk}.version"   # 2. Zeile: versionName (Konfigurator zeigt "Update")

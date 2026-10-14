@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.loxpanel.launcher"
-    android:versionCode="11"
-    android:versionName="5.6">
+    android:versionCode="15"
+    android:versionName="5.10">
 
     <!-- target >= 24: Android 15 verweigert aeltere Apps bei der Installation -->
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="24" />
@@ -10,12 +10,25 @@
          Kein Dialog - der Server erlaubt es per "appops set ... GET_USAGE_STATS allow". -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Boot: auf dem Shelly den HOME-Alias sicherstellen (StockHome.Absicherung) -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application android:label="TbViewer" android:usesCleartextTraffic="true" android:hardwareAccelerated="true" android:largeHeap="true" android:icon="@drawable/icon" android:allowBackup="false">
-        <!-- Startbildschirm (HOME) mit zwei Symbolen: tilebert (TbView bzw. Fully) und
-             dem urspruenglichen Startbildschirm (Shelly-Oberflaeche bzw. Android-
-             Launcher), startet Fully nach 10 s selbst. Auf normalen Tablets reicht das App-Symbol. Als Home setzen:
-             adb shell cmd package set-home-activity de.loxpanel.launcher/.Home -->
+        <!-- App-Symbol (LAUNCHER): .App schaltet auf Nicht-Shelly .Home ab und oeffnet tilebert;
+             auf dem Shelly zeigt es den Startbildschirm (.Home). -->
+        <activity android:name=".App"
+            android:theme="@android:style/Theme.NoDisplay"
+            android:excludeFromRecents="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Startbildschirm (HOME) mit zwei Symbolen (tilebert / urspruenglicher Startbildschirm), startet
+             tilebert nach 10 s selbst. Nur .Home traegt HOME (wie bis 5.6), damit eine
+             gespeicherte HOME-Praeferenz auf eine von beiden ein Update ueberlebt. Auf Nicht-Shelly schaltet die
+             App beide selbst ab (StockHome.ensureHome). -->
         <activity android:name=".Home"
             android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
             android:launchMode="singleTask"
@@ -26,9 +39,15 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.HOME" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- Absicherung auf dem Shelly: nach App-Update und Boot .Home auf Shelly aktiv halten -->
+        <receiver android:name=".HomeGuard" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <!-- TbView: eigene Kiosk-Ansicht (WebView) statt Fully. Ein Fenster, das bei
              Drehung/Groesse nicht neu aufgebaut wird (Seite laeuft weiter). -->
         <activity android:name=".Kiosk"

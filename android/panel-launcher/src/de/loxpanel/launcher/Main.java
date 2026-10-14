@@ -11,6 +11,7 @@ public class Main extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        StockHome.ensureHome(this);
         boolean setUrl = getIntent().hasExtra("url");
         if (setUrl) Fully.saveUrl(this, getIntent().getStringExtra("url"));
         if (getIntent().hasExtra("mode")) Kiosk.setMode(this, getIntent().getStringExtra("mode"));

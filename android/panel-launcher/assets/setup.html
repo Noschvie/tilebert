@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TbViewer</title>
+<style>
+@font-face{font-family:Sora;src:url(Sora.woff2) format("woff2");font-weight:100 800}
+@font-face{font-family:Manrope;src:url(Manrope.woff2) format("woff2");font-weight:200 800}
+:root{--bg:#0d0f1a;--card:#161a2e;--line:#262a45;--ink:#ecebff;--ink2:#9ea5c4;--y:#ffc145;--ink-on-y:#1f2440;--crit:#e2695f;--btn-line:#5f6688;--b:#7db7ff}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);font-family:Manrope,sans-serif;color:var(--ink);-webkit-tap-highlight-color:transparent}
+body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:16px}
+.card{width:520px;max-width:100%;background:var(--card);border:1px solid var(--line);border-radius:36px;padding:32px;display:flex;flex-direction:column;gap:18px}
+.brand{display:flex;align-items:center;gap:16px}
+.brand svg{width:48px;height:48px;flex:none}
+.wm{font-family:Sora;font-weight:600;font-size:32px;letter-spacing:-.03em;line-height:1}
+.sub{font-size:15px;color:var(--ink2);margin-top:6px}
+p{margin:0;font-size:16px;line-height:1.45;color:var(--ink2)}
+label{font-size:15px;color:var(--ink2);letter-spacing:.05em;text-transform:uppercase;font-weight:600}
+input{width:100%;min-height:60px;margin-top:8px;border-radius:22px;border:2px solid var(--btn-line);background:#121527;color:var(--ink);font:600 20px Manrope,sans-serif;padding:0 18px}
+input:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+button{font:600 18px Manrope,sans-serif;min-height:60px;border-radius:22px;border:2px solid transparent;background:var(--y);color:var(--ink-on-y);cursor:pointer}
+button:active{filter:brightness(1.15)}
+button:disabled{opacity:.6}
+button.sec{background:transparent;color:var(--ink);border-color:var(--btn-line)}
+button[hidden]{display:none}
+button:focus-visible{outline:3px solid var(--b);outline-offset:2px}
+.btns{display:grid;grid-template-columns:1fr;gap:12px}.btns.two{grid-template-columns:1fr 1fr}
+#msg{min-height:22px;font-size:16px;color:var(--crit);font-weight:600}
+#msg.info{color:var(--ink2)}
+</style></head><body>
+<form class="card" id="f" autocomplete="off">
+<div class="brand"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48"><rect x="4.000" y="4.000" width="19.137" height="19.137" rx="7.310" fill="#ffc145"/><rect x="24.863" y="4.000" width="19.137" height="19.137" rx="7.310" fill="#7db7ff"/><rect x="4.000" y="24.863" width="19.137" height="19.137" rx="7.310" fill="#ff9e7a"/><rect x="24.863" y="24.863" width="19.137" height="19.137" rx="7.310" fill="#5cd6a4"/><circle cx="13.569" cy="13.569" r="2.259" fill="#1f2440"/><rect x="28.518" y="10.612" width="11.827" height="5.914" rx="2.957" fill="#1f2440"/><circle cx="37.388" cy="13.569" r="1.921" fill="#7db7ff"/><path d="M19.276 31.475H28.724A1.070 1.070 0 0 1 29.768 32.781A5.914 5.914 0 0 1 18.232 32.781A1.070 1.070 0 0 1 19.276 31.475Z" fill="#1f2440"/></svg><div><div class="wm">TbViewer</div><div class="sub" id="sub"></div></div></div>
+<p id="intro"></p>
+<div><label for="a" id="la"></label><input id="a" type="url" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="http://192.168.1.103:8098"></div>
+<div id="msg" role="status" aria-live="polite"></div>
+<div class="btns" id="btns"><button type="submit" id="go"></button><button type="button" id="cx" class="sec" hidden></button></div>
+</form>
+<script>
+(function(){
+var T={
+ de:{sub:"Viewer für tilebert",intro:"Adresse des tilebert-Servers eingeben.",la:"tilebert-Adresse",go:"Verbinden",busy:"Verbinde …",addr:"Adresse ungültig.",conn:"Nicht erreichbar.",cx:"Abbrechen",chg:"Adresse des tilebert-Servers ändern."},
+ en:{sub:"Viewer for tilebert",intro:"Enter the address of the tilebert server.",la:"tilebert address",go:"Connect",busy:"Connecting …",addr:"Invalid address.",conn:"Not reachable.",cx:"Cancel",chg:"Change the address of the tilebert server."}};
+var A=window.TbSetup||{};
+var t=T[/^de/i.test(navigator.language||"")?"de":"en"];
+function $(i){return document.getElementById(i)}
+document.documentElement.lang=/^de/i.test(navigator.language||"")?"de":"en";
+$("sub").textContent=t.sub;$("intro").textContent=t.intro;$("la").textContent=t.la;$("go").textContent=t.go;
+var msg=$("msg"),go=$("go"),inp=$("a");
+// Adresse aendern: die App haengt die bisherige Adresse als #Fragment an -> vorbelegen, "Abbrechen" zeigen
+var pre="";try{pre=decodeURIComponent((location.hash||"").slice(1))}catch(x){}
+if(pre){inp.value=pre;$("intro").textContent=t.chg;$("cx").textContent=t.cx;$("cx").hidden=false;$("btns").className="btns two";
+  $("cx").onclick=function(){try{A.cancel()}catch(e){}};}
+window.tbResult=function(ok,err){
+  go.disabled=false;go.textContent=t.go;
+  msg.className="";msg.textContent=ok?"":(t[err]||t.conn);
+};
+$("f").onsubmit=function(e){
+  e.preventDefault();
+  var v=inp.value.trim();
+  if(!v){msg.className="";msg.textContent=t.addr;inp.focus();return;}
+  go.disabled=true;go.textContent=t.busy;msg.className="info";msg.textContent="";
+  try{A.connect(v)}catch(x){window.tbResult(false,"conn")}
+};
+})();
+</script></body></html>

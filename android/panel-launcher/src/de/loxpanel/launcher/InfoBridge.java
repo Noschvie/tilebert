@@ -14,10 +14,13 @@ final class InfoBridge {
     @JavascriptInterface public void restart() { run(0); }
     @JavascriptInterface public void chooseHome() { run(1); }
     @JavascriptInterface public void close() { run(2); }
+    @JavascriptInterface public void settings() { run(3); }   // Einstellungen am Geraet (Overlay im Panel)
+    @JavascriptInterface public void changeAddr() { run(4); } // Adresse aendern (nur Tablets, setup.html vorbelegt)
 
     private void run(final int what) {
         k.runOnUiThread(new Runnable() { @Override public void run() {
-            if (what == 0) k.infoRestart(); else if (what == 1) k.infoHome(); else k.infoClose();
+            if (what == 0) k.infoRestart(); else if (what == 1) k.infoHome(); else if (what == 3) k.infoSettings();
+            else if (what == 4) k.infoAddr(); else k.infoClose();
         } });
     }
 }

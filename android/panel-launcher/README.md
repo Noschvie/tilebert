@@ -46,6 +46,7 @@ Installieren übersprungen.
 
     adb connect 192.168.1.103:5555
     adb install -r config/app/android/LoxPanel-Launcher.apk
+    adb shell pm enable de.loxpanel.launcher/.Home             # nur Shelly (HOME-Filter)
     adb shell cmd package set-home-activity de.loxpanel.launcher/.Home
     adb shell appops set de.loxpanel.launcher GET_USAGE_STATS allow
     adb shell input keyevent 3        # Home-Taste: neuer Startbildschirm erscheint
@@ -78,3 +79,7 @@ Bei Änderungen `versionCode`/`versionName` im Manifest erhöhen. `targetSdkVers
 bleibt ≥ 24 – Android 15 verweigert ältere Apps bei der Installation.
 Der Signaturschlüssel `launcher.keystore` liegt bewusst im Repo: Updates per
 `adb install -r` gehen nur mit demselben Schlüssel.
+
+Auf dem Shelly schaltet der Empfänger `HomeGuard` nach einem App-Update und beim Boot den
+HOME-Alias wieder ein. Trotzdem Updates möglichst über die Config installieren
+(Erkennung vor der Installation, Alias, Startbildschirm setzen).

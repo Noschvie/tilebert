@@ -60,7 +60,7 @@ def({ id: 'QC-P05', stage: 'post', role: K, must: false, mode: 'auto', title: 'S
   if (!devs.includes(SHELLY + '\tdevice')) { sh(`timeout 8 adb connect ${SHELLY}`, { timeout: 10000 }); if (!sh('adb devices').out.includes(SHELLY + '\tdevice')) return SKIP(`${SHELLY} nicht erreichbar`); }
   const pk = adb('shell dumpsys package de.loxpanel.launcher').out;
   const vc = (/versionCode=(\d+)/.exec(pk) || [])[1], vn = (/versionName=(\S+)/.exec(pk) || [])[1];
-  const want = read(`${R}/config/app/android/LoxPanel-Launcher.version`).trim();
+  const want = read(`${R}/config/app/android/LoxPanel-Launcher.version`).trim().split(/\s+/)[0];
   const bad = [], warn = [];
   if (!vc) return FAIL('Paket de.loxpanel.launcher nicht installiert');
   if (vc !== want) bad.push(`installiert versionCode ${vc} != APK im Repo ${want}`);

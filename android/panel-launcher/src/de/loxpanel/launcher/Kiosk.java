@@ -79,6 +79,13 @@ public class Kiosk extends Activity implements SensorEventListener {
     private boolean autoOn = true;
     private int minPct = 10, maxPct = 100, nightPct = 100;
     private boolean proxWake = true;
+    private int fixPct = 0;               // feste Helligkeit in % (0 = nicht gesetzt -> Systemhelligkeit)
+    private boolean touchSound;           // Android-Klickton bei Tipp (Panel-Einstellung sound.touch)
+    private boolean luxSensor;            // Lichtsensor meldet Lux (Bereich gross) statt Stufen (Shelly: Bereich < 100)
+    private float lightNorm = -1f;        // 0..1 (Stufen: Anteil; Lux: logarithmisch)
+    private float luxRef = -1f, luxMuted; // Bezug fuer die relative Lux-Aenderung (Praesenz)
+    private FrameLayout rootView;
+    private WebView setupWeb;
     private float shown = -2f;   // zuletzt gesetzte Fensterhelligkeit
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -89,6 +96,7 @@ public class Kiosk extends Activity implements SensorEventListener {
                 | WindowManager.LayoutParams.FLAG_FULLSCREEN
                 | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         FrameLayout root = new FrameLayout(this);
+        rootView = root;
         root.setBackgroundColor(Color.BLACK);
 
         web = new WebView(this);
@@ -140,7 +148,11 @@ public class Kiosk extends Activity implements SensorEventListener {
             List<Sensor> l = sm.getSensorList(Sensor.TYPE_PROXIMITY);
             prox = l.isEmpty() ? sm.getDefaultSensor(Sensor.TYPE_PROXIMITY) : l.get(0);
             light = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
-            if (light != null && light.getMaximumRange() > 0 && light.getMaximumRange() < 100) lightMax = light.getMaximumRange();
+            if (light != null) {
+                float rg = light.getMaximumRange();
+                if (rg > 0 && rg < 100) lightMax = rg;   // Shelly: Stufen 0..16
+                else luxSensor = true;                    // Tablet: Lux -> logarithmisch auf Stufen 0..16 abgebildet
+            }
         }
         if (light == null) autoOn = false;
         load();
@@ -178,11 +190,12 @@ public class Kiosk extends Activity implements SensorEventListener {
 
     private void load() {
         String u = url();
-        if (u.isEmpty()) {
-            page("<body style='margin:0;background:#0d0f1a;color:#aaa;font:20px sans-serif;padding:40px'>" + MARKE
-                    + "<p>TbViewer: keine Panel-URL gesetzt.</p><p>adb shell am start -n de.loxpanel.launcher/.Main --es url http://&lt;LoxBerry&gt;:8098/</p></body>");
+        if (u.isEmpty()) {   // Erststart ohne adb: lokale Einrichtungsseite
+            trusted = false;
+            showSetup();
             return;
         }
+        hideSetup();
         loaded = false;
         trusted = sameOrigin(u);   // Panel-URL ist per Definition vertrauenswuerdig; kein Fenster bis onPageStarted
         web.loadUrl(urlWithToken(u));
@@ -316,7 +329,10 @@ public class Kiosk extends Activity implements SensorEventListener {
     // ---- Beruehrung: erster Tipp im Schoner weckt nur (loest nichts darunter aus) ----
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) countTap(ev.getEventTime());   // Tipp wird nicht verschluckt
+        if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            countTap(ev.getEventTime());   // Tipp wird nicht verschluckt
+            if (touchSound && !saverOn && web != null) web.playSoundEffect(android.view.SoundEffectConstants.CLICK);   // folgt der Systemeinstellung "Touch-Toene"
+        }
         if (saverOn) {
             if (ev.getActionMasked() == MotionEvent.ACTION_DOWN) userWake();
             return true;
@@ -336,7 +352,9 @@ public class Kiosk extends Activity implements SensorEventListener {
             if (near && saverOn && proxWake) { exitSaver(); rearmOff(); }
             js("prox", near ? "true" : "false");
         } else if (e.sensor.getType() == Sensor.TYPE_LIGHT) {
-            int lv = Math.round(e.values[0]);
+            float raw = e.values[0];
+            if (luxSensor) luxPresence(raw);
+            int lv = luxSensor ? Math.round(luxNorm(raw) * 16f) : Math.round(raw);
             long now = System.currentTimeMillis();
             if (lightLevel < 0 || Math.abs(lv - lightLevel) >= 3) { setLight(lv); return; }   // grosser Sprung sofort
             if (lv == lightLevel) { pendingLevel = -1; return; }
@@ -345,8 +363,22 @@ public class Kiosk extends Activity implements SensorEventListener {
         }
     }
 
+    /** Lux -> 0..1, logarithmisch (0 lx = 0, 1000 lx = 1). */
+    private static float luxNorm(float lux) {
+        return Math.max(0f, Math.min(1f, (float) (Math.log10(Math.max(0f, lux) + 1.0) / 3.0)));
+    }
+
+    /** Praesenz bei Lux-Sensoren: relative Aenderung >= 30 % und >= 5 lx gegen einen langsam nachgefuehrten Bezug. */
+    private void luxPresence(float lux) {
+        if (luxRef < 0f) { luxRef = lux; return; }
+        float d = Math.abs(lux - luxRef);
+        if (d >= 5f && d >= 0.3f * Math.max(luxRef, 1f)) { luxRef = lux; js("lux", String.valueOf(Math.round(lux))); }
+        else luxRef += 0.2f * (lux - luxRef);
+    }
+
     private void setLight(int lv) {
         lightLevel = lv;
+        lightNorm = luxSensor ? lv / 16f : Math.max(0f, Math.min(1f, lv / (lightMax * 0.85f)));
         pendingLevel = -1;
         applyBrightness();
         js("light", String.valueOf(lv));
@@ -358,7 +390,7 @@ public class Kiosk extends Activity implements SensorEventListener {
     /** Auto-Kurve: Stufe 0..max -> Anteil min..max (Wurzel: dunkle Raeume feiner abgestuft). */
     private float autoFraction() {
         float minF = minPct / 100f, maxF = Math.max(minF, maxPct / 100f);
-        float x = Math.max(0f, Math.min(1f, lightLevel / (lightMax * 0.85f)));
+        float x = Math.max(0f, Math.min(1f, lightNorm));
         return minF + (maxF - minF) * (float) Math.sqrt(x);
     }
 
@@ -375,10 +407,10 @@ public class Kiosk extends Activity implements SensorEventListener {
     private void applyBrightness() {
         float b;
         if (saverOn) b = 0f;   // praktisch dunkel
+        else if (nightPct < 100) b = Math.max(0.01f, nightPct / 100f);   // Nacht: Restleuchtkraft gilt direkt (nicht mal Auto)
         else {
-            Float base = (autoOn && lightLevel >= 0) ? Float.valueOf(autoFraction()) : (nightPct < 100 ? systemFraction() : null);
-            b = base == null ? WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
-                    : Math.max(0.01f, base * nightPct / 100f);
+            Float base = (autoOn && lightLevel >= 0) ? Float.valueOf(autoFraction()) : (fixPct > 0 ? Float.valueOf(fixPct / 100f) : null);
+            b = base == null ? WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE : Math.max(0.01f, base);
         }
         if (Math.abs(b - shown) < 0.005f) return;
         shown = b;
@@ -472,9 +504,16 @@ public class Kiosk extends Activity implements SensorEventListener {
         /** Nachtfaktor in % (100 = normal). true = App dunkelt echt ab, false = Panel soll per Overlay abdunkeln. */
         @JavascriptInterface public boolean setDisplayBrightness(String t, final int prozent) { if (!trusted || !ok(t)) return false;
             final int p = Math.max(1, Math.min(100, prozent));
-            boolean ok = p >= 100 || (autoOn && lightLevel >= 0) || systemFraction() != null;
-            if (ok) ui.post(new Runnable() { public void run() { nightPct = p; applyBrightness(); } });
-            return ok;
+            ui.post(new Runnable() { public void run() { nightPct = p; applyBrightness(); } });
+            return true;   // Fensterhelligkeit geht immer
+        }
+        /** Feste Helligkeit in % (ohne Auto); 0 = Systemhelligkeit. */
+        @JavascriptInterface public void setFixedBrightness(String t, final int prozent) { if (!trusted || !ok(t)) return;
+            ui.post(new Runnable() { public void run() { fixPct = Math.max(0, Math.min(100, prozent)); applyBrightness(); } });
+        }
+        /** Android-Klickton bei Tipp an/aus (wirkt nur, wenn "Touch-Toene" im System an sind). */
+        @JavascriptInterface public void setTouchSound(String t, final boolean on) { if (!trusted || !ok(t)) return;
+            ui.post(new Runnable() { public void run() { touchSound = on; } });
         }
         /** Auto-Helligkeit aus dem Lichtsensor an/aus, Bereich min..max in %. */
         @JavascriptInterface public void setAutoBrightness(String t, final boolean on, final int minProzent, final int maxProzent) { if (!trusted || !ok(t)) return;
@@ -497,10 +536,93 @@ public class Kiosk extends Activity implements SensorEventListener {
             return "{\"app\":\"TbViewer\",\"ver\":\"" + version() + "\",\"model\":\"" + Build.MODEL
                     + "\",\"android\":\"" + Build.VERSION.RELEASE + "\",\"sdk\":" + Build.VERSION.SDK_INT
                     + ",\"prox\":" + (prox != null) + ",\"light\":" + (light != null)
-                    + ",\"lightMax\":" + lightMax + ",\"auto\":" + autoOn + ",\"min\":" + minPct
-                    + ",\"max\":" + maxPct + ",\"proxWake\":" + proxWake + "}";
+                    + ",\"shelly\":" + StockHome.isShelly() + ",\"lux\":" + luxSensor + ",\"lightMax\":" + lightMax + ",\"auto\":" + autoOn + ",\"min\":" + minPct
+                    + ",\"max\":" + maxPct + ",\"fix\":" + fixPct + ",\"proxWake\":" + proxWake + "}";
         }
         @JavascriptInterface public void reload(String t) { if (!trusted || !ok(t)) return; ui.post(new Runnable() { public void run() { load(); } }); }
+    }
+
+    // ---- Erststart ohne Adresse: lokale Einrichtungsseite (assets/setup.html), Schnittstelle "TbSetup" nur hier ----
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+    private void showSetup() { showSetup(""); }
+
+    /** prefill nicht leer: bestehende Adresse aendern (Seite zeigt sie im Feld und bietet "Abbrechen"). */
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
+    private void showSetup(String prefill) {
+        if (setupWeb != null || rootView == null) return;
+        final WebView w = new WebView(this);
+        w.setBackgroundColor(0xff0d0f1a);
+        WebSettings ws = w.getSettings();
+        ws.setJavaScriptEnabled(true);
+        ws.setAllowFileAccess(false);        // android_asset bleibt erreichbar
+        ws.setAllowContentAccess(false);
+        w.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView v, String u) { return true; }
+            @Override public boolean shouldOverrideUrlLoading(WebView v, WebResourceRequest r) { return true; }
+        });
+        w.addJavascriptInterface(new SetupBridge(this, w), "TbSetup");
+        rootView.addView(w, new FrameLayout.LayoutParams(-1, -1));
+        setupWeb = w;
+        w.loadUrl("file:///android_asset/setup.html" + (prefill.isEmpty() ? "" : "#" + Uri.encode(prefill)));
+    }
+
+    void setupCancel(WebView w) { if (setupWeb == w && !url().isEmpty()) hideSetup(); }
+
+    private void hideSetup() {
+        if (setupWeb == null) return;
+        rootView.removeView(setupWeb);
+        setupWeb.destroy();
+        setupWeb = null;
+    }
+
+    /** Adresse pruefen (GET /api/version) und speichern - aus SetupBridge, im Hintergrund-Thread. */
+    void setupConnect(final String addr, final WebView out) {
+        new Thread(new Runnable() {
+            @Override public void run() {
+                String o = "";
+                String err = "";
+                String keep = "/";
+                try {
+                    String a = addr == null ? "" : addr.trim();
+                    if (!a.matches("(?i)^[a-z][a-z0-9+.-]*://.*")) a = "http://" + a;
+                    Uri u = Uri.parse(a);
+                    if (u.getHost() == null || u.getHost().isEmpty() || !(u.getScheme().equalsIgnoreCase("http") || u.getScheme().equalsIgnoreCase("https"))) throw new IllegalArgumentException("addr");
+                    o = origin(a);
+                    // Pfad + Query (?device=..&panel=..): getippte nehmen, sonst die bisherigen behalten
+                    String tp = u.getEncodedPath(), tq = u.getEncodedQuery();
+                    if ((tp != null && tp.length() > 1) || tq != null) {
+                        keep = (tp == null || tp.isEmpty() ? "/" : tp) + (tq != null ? "?" + tq : "");
+                    } else {
+                        String cur = url();
+                        if (!cur.isEmpty()) {
+                            Uri cu = Uri.parse(cur);
+                            String cp = cu.getEncodedPath(), cq = cu.getEncodedQuery();
+                            keep = (cp == null || cp.isEmpty() ? "/" : cp) + (cq != null ? "?" + cq : "");
+                        }
+                    }
+                    HttpURLConnection c = (HttpURLConnection) new java.net.URL(o + "/api/version").openConnection();
+                    c.setConnectTimeout(4000);
+                    c.setReadTimeout(4000);
+                    BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream(), "UTF-8"));
+                    StringBuilder sb = new StringBuilder();
+                    String ln;
+                    while ((ln = r.readLine()) != null && sb.length() < 4096) sb.append(ln);
+                    r.close();
+                    if (new org.json.JSONObject(sb.toString()).optString("version", "").isEmpty()) throw new Exception("noversion");
+                } catch (IllegalArgumentException e) { err = "addr";
+                } catch (Exception e) { err = "conn"; }
+                final String fo = o, fe = err, fk = keep;
+                runOnUiThread(new Runnable() { @Override public void run() {
+                    if (setupWeb != out) return;
+                    if (fe.isEmpty()) {
+                        Fully.saveUrl(Kiosk.this, fo + fk);
+                        load();
+                    } else {
+                        out.evaluateJavascript("window.tbResult&&window.tbResult(false," + org.json.JSONObject.quote(fe) + ")", null);
+                    }
+                } });
+            }
+        }).start();
     }
 
     /** Panel oeffnen: TbView, wenn gewaehlt, sonst Fully (Fallback). force = Seite neu laden. */
@@ -516,7 +638,10 @@ public class Kiosk extends Activity implements SensorEventListener {
     }
 
     static boolean enabled(Context c) {
-        return "tbview".equals(c.getSharedPreferences("cfg", MODE_PRIVATE).getString(KEY_MODE, "fully"));
+        String m = c.getSharedPreferences("cfg", MODE_PRIVATE).getString(KEY_MODE, null);
+        // nie gewaehlt (Tablet ohne adb): tilebert-Ansicht, solange Fully nicht installiert ist
+        if (m == null) return c.getPackageManager().getLaunchIntentForPackage(Fully.PKG) == null;
+        return "tbview".equals(m);
     }
 
     static void setMode(Context c, String mode) {
@@ -609,6 +734,7 @@ public class Kiosk extends Activity implements SensorEventListener {
             j.put("model", Build.MODEL); j.put("android", Build.VERSION.RELEASE);
             j.put("home", isDefaultHome());
             j.put("origin", origin(url()));
+            j.put("shelly", StockHome.isShelly());
             String il = infoLang; j.put("lang", il != null ? il : (de() ? "de" : "en"));
             return j.toString();
         } catch (Exception e) { return "{}"; }
@@ -617,6 +743,13 @@ public class Kiosk extends Activity implements SensorEventListener {
     void infoRestart() { if (info != null) info.dismiss(); recreate(); }
     void infoHome() { chooseHome(); }
     void infoClose() { if (info != null) info.dismiss(); }
+    /** Einstellungen am Geraet: Info schliessen, Panel zeigt sein Overlay (lpHost-Ereignis "settings"). */
+    void infoSettings() { if (info != null) info.dismiss(); js("settings", "true"); }
+    /** Adresse aendern (nur Tablets): Info schliessen, Einrichtungsseite mit der aktuellen Adresse. */
+    void infoAddr() {
+        if (info != null) info.dismiss();
+        if (!StockHome.isShelly()) showSetup(url());
+    }
 
     private static String origin(String base) {
         try {

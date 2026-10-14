@@ -68,7 +68,7 @@ Reihenfolge eines Releases: `pre` → Nutzer-„commit“ → Release durch den 
 | QC-B01 | Programmierer | Panel laedt ohne pageerror/Konsolenfehler (g3-3x1-f18, g2-2x2-f12, sens; 960x480) - Laufzeitbeleg gegen TDZ/"not defined" | Muss | auto |
 | QC-B02 | Programmierer | Config/Geraete/Settings ohne pageerror; alle Rubriken und Reiter durchgeblaettert; Assistent (#ad_go) vorhanden | Muss | auto |
 | QC-B03 | UX | Config schreibt beim Oeffnen/Navigieren nichts (alle Nicht-GET abgefangen = 0; de-DE und en-US) | Muss | auto |
-| QC-B04 | Kritiker | Sensor-Logik mit Sollwerten: setAutoBrightness nur Shelly, Annaeherung (open/wake), Nacht-Kamera (Sperre, Annaeherung, Beruehrung, Nachlauf, Option aus), prox=off, Config-Sensorfelder | Muss | auto |
+| QC-B04 | Kritiker | Sensor-Logik mit Sollwerten: setAutoBrightness nur mit Lichtsensor, Annaeherung (open/wake), Nacht-Kamera (Sperre, Annaeherung, Beruehrung, Nachlauf, Option aus), prox=off, Config-Sensorfelder | Muss | auto |
 | QC-B05 | Kritiker | Bruecke Panel<->App: Token (tbtok), Fremd-iframe gesperrt, Kompatibilitaet App 5.3/5.4 ohne Token, getDeviceId wirft, Fully/Browser-Erkennung | Muss | auto |
 | QC-B06 | UX | UX Panel 480x480/960x480/390x844/1280x800 (Dashboard, Schoner, Wetter-Sheet): Fehler, hscroll, Abschneiden, ausserhalb Viewport, Tap-Ziele < 44 px - nur NEU gegenueber Baseline | Muss | auto |
 | QC-B07 | UX | UX Config 1920/1280/390: alle Rubriken ohne JS-Fehler und ohne horizontales Scrollen (nur NEU gegenueber Baseline) | Muss | auto |

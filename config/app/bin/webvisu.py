@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.15"
+APP_VERSION = "0.20.16"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -117,7 +117,7 @@ def bg_url(pid: str) -> str:
 # dem Panel bestaetigte "USB-Debugging zulassen" Container-Updates ueberlebt.
 LAUNCHER_APK = Path(__file__).resolve().parent.parent / "android" / "LoxPanel-Launcher.apk"
 LAUNCHER_PKG = "de.loxpanel.launcher"
-LAUNCHER_VERSION_FILE = LAUNCHER_APK.with_suffix(".version")   # versionCode, schreibt build.sh
+LAUNCHER_VERSION_FILE = LAUNCHER_APK.with_suffix(".version")   # 1. Zeile versionCode, 2. versionName (schreibt build.sh)
 ADB_HOME = _CFGDIR / "adb"
 FULLY_DIR = ADB_HOME / "fully"   # geladene / hochgeladene Fully-Kiosk-APKs
 _SOUND_EXT_BY_MIME = {"audio/mpeg": "mp3", "audio/mp3": "mp3", "audio/ogg": "ogg",
@@ -192,48 +192,59 @@ DISPLAY_DRIVERS = {"fully": 2323, "wallpanel": 2971}
 # Geraetetypen (wie "Unterstuetzte Geraete" in der Config): Betriebssystem
 # bestimmt, was sich fernsteuern laesst - Android per adb (Fully neu starten,
 # Geraet neu starten), Shelly zusaetzlich per eigener Schnittstelle, Linux per Agent.
+# ---- Standardwerte je Geraetetyp (Quelle: audit/geraete-defaults.md) ----
+# nightDim = Abdunkel-Staerke in % (100 - Restleuchtkraft; 75 = nachts 25 % der vollen Helligkeit),
+# 0 = nicht abdunkeln. autoBright False = feste Helligkeit brightFix %. Hier zentral aendern;
+# fehlender Schluessel faellt auf PREF_BASE zurueck. Tablet: mit Sensor (getDeviceInfo prox/light)
+# gilt zusaetzlich *_sensor, im Browser (ohne TbViewer) *_browser.
+_SND_WALL = {"ring": True, "alarm": True, "wake": True, "notify": False, "touch": False}
+_SND_PERSONAL = {"ring": False, "alarm": True, "wake": False, "notify": False, "touch": False}
+_D_SHELLY = {"nightDim": 75, "prox": True, "autoBright": True, "brightMin": 20, "brightMax": 90, "sound": _SND_WALL}
+_D_WALL = {"nightDim": 65, "prox": False, "autoBright": False, "brightFix": 80, "sound": _SND_WALL}
 DEVICE_MODELS = {
     # scale: Vorgabe-Zoom (auto = 480er-Raster gleichmaessig auf den Schirm),
     # wake: Wach-Sperre der Seite (Browser ohne Kiosk-App), tips: Hinweise unter
     # Einrichtung (Konfigurator). Eigenheiten je Geraet stehen in den Tipps.
-    "shelly-x2": {"label": "Shelly Wall Display X2 / X2i", "os": "android", "shelly": True, "scale": "auto",
+    "shelly-x2": {"label": "Shelly Wall Display X2 / X2i", "os": "android", "defaults": _D_SHELLY, "shelly": True, "scale": "auto",
                   "panes": 2,
                   "tips": ["Querformat, zwei Hälften nebeneinander (Panel-Format „Breit (2 Hälften)“).",
                            "TbViewer: Gerät hinzufügen → Shelly oder Android-Tablet.",
                            "Dashboard und Abdunkeln übernimmt TbViewer, die Helligkeit regelt der Lichtsensor."]},
-    "shelly-x1": {"label": "Shelly Wall Display X1i", "os": "android", "shelly": True, "scale": "auto",
+    "shelly-x1": {"label": "Shelly Wall Display X1i", "os": "android", "defaults": _D_SHELLY, "shelly": True, "scale": "auto",
                   "panes": 1,
                   "tips": ["720 × 720: Zoom „Automatisch“ vergrößert das 480er-Raster auf den ganzen Schirm.",
                            "Panel-Format „Quadratisch“.",
                            "TbViewer per ADB (Gerät hinzufügen)."]},
-    "nspro86": {"label": "Sonoff NSPanel Pro 86", "os": "android", "scale": "off", "panes": 1,
+    "nspro86": {"label": "Sonoff NSPanel Pro 86", "os": "android", "defaults": _D_WALL, "scale": "off", "panes": 1,
                 "tips": ["480 × 480: passt 1:1, kein Zoom nötig. Panel-Format „Quadratisch“.",
                          "TbViewer mit Start-Adresse inkl. ?device=… einrichten."]},
-    "nspro120": {"label": "Sonoff NSPanel Pro 120", "os": "android", "scale": "auto", "panes": 1,
+    "nspro120": {"label": "Sonoff NSPanel Pro 120", "os": "android", "defaults": _D_WALL, "scale": "auto", "panes": 1,
                  "tips": ["Hochformat: Zoom „Automatisch“ füllt die Breite. Panel-Format „Quadratisch“.",
                           "TbViewer mit Start-Adresse inkl. ?device=… einrichten."]},
-    "sm41-android": {"label": "4″-Standardgerät YC-SM41 (Android)", "os": "android", "scale": "off", "panes": 1,
+    "sm41-android": {"label": "4″-Standardgerät YC-SM41 (Android)", "os": "android", "defaults": _D_WALL, "scale": "off", "panes": 1,
                      "tips": ["480 × 480: Referenzgröße, kein Zoom. Panel-Format „Quadratisch“."]},
-    "sm41-debian": {"label": "4″-Standardgerät YC-SM41 (Debian + Agent)", "os": "linux", "scale": "off", "panes": 1,
+    "sm41-debian": {"label": "4″-Standardgerät YC-SM41 (Debian + Agent)", "os": "linux", "defaults": _D_WALL, "scale": "off", "panes": 1,
                     "tips": ["480 × 480: Referenzgröße. Agent per SSH (Gerät hinzufügen → Linux-Gerät).",
                              "Display und Neustart übernimmt der Agent."]},
-    "sm55": {"label": "YC-SM55P", "os": "android", "scale": "auto", "panes": 2,
+    "sm55": {"label": "YC-SM55P", "os": "android", "defaults": _D_WALL, "scale": "auto", "panes": 2,
              "tips": ["720 × 1280 quer: Zoom „Automatisch“, Panel-Format „Breit (2 Hälften)“.",
                       "LAN/PoE: feste IP-Adresse im Router vergeben (für ADB)."]},
-    "tablet": {"label": "Android-Tablet (7–10″)", "os": "android", "scale": "auto", "wake": True, "panes": 2,
+    "tablet": {"label": "Android-Tablet (7–10″)", "os": "android", "defaults": _D_WALL, "defaults_sensor": {"nightDim": 70, "prox": True, "autoBright": True, "brightMin": 20, "brightMax": 100}, "defaults_browser": {"nightDim": 60, "sound": {**_SND_WALL, "notify": False}}, "scale": "auto", "wake": True, "panes": 2,
                "tips": ["Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm.",
-                        "Mit TbViewer funktionieren Autostart und Display-Steuerung; ohne die App hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.",
+                        "Mit TbViewer lassen sich Display und Helligkeit steuern; die App startet nach einem Neustart nicht von selbst. Ohne sie hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.",
                         "Hochkant zeigt das Tablet nur eine Hälfte; unter 600 px Breite greift der Handy-Modus."]},
-    "ipad": {"label": "iPad / iPad mini", "os": "browser", "scale": "auto", "wake": True, "panes": 2,
+    "ipad": {"label": "iPad / iPad mini", "os": "browser", "defaults": {"nightDim": 60, "sound": {**_SND_WALL, "notify": False}}, "scale": "auto", "wake": True, "panes": 2,
              "tips": ["Safari: Teilen → „Zum Home-Bildschirm“. Startet ohne Adressleiste als Vollbild-App (Start-Adresse mit ?device=…).",
                       "Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm (iPad mini ≈ 118 %).",
-                      "Die Seite hält den Schirm wach bis zur Leerlaufzeit (Display & Nacht); danach greift die iOS-Sperre.",
+                      "Die Seite hält den Schirm wach bis zur Leerlaufzeit (Panel → Aussehen); danach greift die iOS-Sperre.",
                       "Für Wandbetrieb: Einstellungen → Bedienungshilfen → Geführter Zugriff (App fixieren), Automatische Sperre nach Wunsch.",
                       "Ton (Klingel) erst nach einmaligem Antippen: iOS gibt Audio nur nach Berührung frei."]},
     "phone": {"label": "Smartphone", "os": "browser", "scale": "off", "panes": 1,
+              "defaults": {"nightDim": 0, "sound": _SND_PERSONAL},
               "tips": ["Als App installieren: iPhone Safari → Teilen → „Zum Home-Bildschirm“, Android Chrome → Menü → „App installieren“.",
                        "Panel-Format „Handy“ (Tabs unten, volle Höhe); hochkant greift der Handy-Modus auch automatisch."]},
     "other": {"label": "Anderes Gerät / PC-Browser", "os": "browser", "scale": "off",
+              "defaults": {"nightDim": 0, "sound": _SND_PERSONAL},
               "tips": ["Die Fenstergröße bestimmt das Format; Zoom bei Bedarf manuell setzen."]},
 }
 # Skalierung je Geraet: "off" | "auto" | Faktor. Die Panel-Seite rechnet mit festen
@@ -256,6 +267,99 @@ def _clean_scale(v):
     if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v:
         return None
     return round(min(SCALE_MAX, max(SCALE_MIN, float(v))), 2)
+
+
+# ---- Geraete-Einstellungen (devices[name].prefs) ----
+# Fehlender Schluessel = Standard. Aufloesung (App.effective_prefs): Geraet ->
+# Typ-Vorgabe (DEVICE_MODELS[..]["defaults"], nur wo definiert) -> PREF_BASE. Kein Panel mehr
+# (nur der Dashboard-Zeitraum dpmsOff bleibt am Panel). Ausnahme: Browser ohne Kennung
+# (kein Geraetename) nutzen weiter die Panel-Werte (Altverhalten).
+# STANDARDWERTE: hier PREF_BASE/BASE_SOUND, je Typ DEVICE_MODELS[..]["defaults"] aendern.
+PREF_SOUNDS = ("ring", "alarm", "wake", "notify", "touch")
+PREF_SOURCES = ("ring", "alarm", "wake")      # Geraete-Override der Quellen (prefs.sources), null = zentrale Regel
+_PERSONAL_MODELS = ("phone", "other")         # Handy/PC-Browser: Klingel nur auf ausdrueckliche Wahl
+BASE_SOUND = {"ring": True, "alarm": True, "wake": True, "notify": False, "touch": False}   # Hinweiston: nur per Geraet an
+PREF_BASE = {"nightDim": 0, "prox": True, "autoBright": True, "brightMin": 10, "brightMax": 100, "brightFix": 80}
+
+
+def _clean_prefs(raw, panel_ids=None) -> dict:
+    """Geraete-Einstellungen pruefen: nur bekannte Schluessel, Bereiche begrenzt.
+    nightDim/dpmsOff/panel: None = Panel-Standard = Schluessel fehlt."""
+    out: dict = {}
+    if not isinstance(raw, dict):
+        return out
+
+    def num(v, lo, hi):
+        if isinstance(v, bool) or not isinstance(v, (int, float)) or v != v:
+            return None
+        return max(lo, min(hi, int(v)))
+
+    snd = raw.get("sound")
+    if isinstance(snd, dict):
+        so = {k: snd[k] for k in PREF_SOUNDS if isinstance(snd.get(k), bool)}
+        if so:
+            out["sound"] = so
+    srcs = raw.get("sources")
+    if isinstance(srcs, dict):
+        so2 = {}
+        for k in PREF_SOURCES:
+            v = srcs.get(k)
+            if isinstance(v, list):                  # [] = bewusst keine Quelle; None/fehlt = zentrale Regel
+                so2[k] = sorted({x.strip()[:64] for x in v if isinstance(x, str) and x.strip()})[:100]
+        if so2:
+            out["sources"] = so2
+    for k, lo, hi in (("nightDim", 0, 90), ("brightMin", 1, 100), ("brightMax", 1, 100), ("brightFix", 1, 100)):
+        v = num(raw.get(k), lo, hi)
+        if v is not None:
+            out[k] = v
+    for k in ("prox", "autoBright"):
+        if isinstance(raw.get(k), bool):
+            out[k] = raw[k]
+    pn = raw.get("panel")
+    if isinstance(pn, str) and pn.strip() and (panel_ids is None or pn.strip() in panel_ids):
+        out["panel"] = pn.strip()[:40]
+        # Quelle der Wahl: 'device' = am Geraet (faellt beim naechsten Moduswechsel), sonst fest (Config)
+        out["panelSrc"] = "device" if raw.get("panelSrc") == "device" else "config"
+    return out
+
+
+def _merge_prefs(old: dict, patch: dict) -> dict:
+    """Teil-Aenderung einarbeiten: None = Override entfernen (zurueck auf Standard)."""
+    new = {k: (dict(v) if isinstance(v, dict) else v) for k, v in (old or {}).items()}
+    for k, v in (patch or {}).items():
+        if k == "sound":
+            if v is None:
+                new.pop("sound", None)
+            elif isinstance(v, dict):
+                so = dict(new.get("sound") or {})
+                for sk, sv in v.items():
+                    if sv is None:
+                        so.pop(sk, None)
+                    else:
+                        so[sk] = sv
+                if so:
+                    new["sound"] = so
+                else:
+                    new.pop("sound", None)
+        elif k == "sources":
+            if v is None:
+                new.pop("sources", None)
+            elif isinstance(v, dict):
+                so = dict(new.get("sources") or {})
+                for sk, sv in v.items():
+                    if sv is None:
+                        so.pop(sk, None)
+                    else:
+                        so[sk] = sv
+                if so:
+                    new["sources"] = so
+                else:
+                    new.pop("sources", None)
+        elif v is None:
+            new.pop(k, None)
+        else:
+            new[k] = v
+    return new
 
 
 # ---- Geraete-Erkennung ----
@@ -298,6 +402,9 @@ def _clean_devinfo(d) -> dict:
     if isinstance(t, dict):
         to = {k: str(t.get(k)).strip()[:60] for k in ("model", "android", "ver")
               if t.get(k) not in (None, "") and str(t.get(k)).strip()}
+        for k in ("prox", "light"):               # Sensoren des Geraets (Rueckkanal fuer prefs-Faehigkeiten)
+            if isinstance(t.get(k), bool):
+                to[k] = t[k]
         if to:
             out["tbview"] = to
     return out
@@ -941,7 +1048,7 @@ _COVER_MAX_BYTES = 5 * 1024 * 1024   # Obergrenze fuer /cover-Bilder
 
 THEME_UI_KEYS = ("iconSize", "nameSize", "subSize", "saverFcSize",
                  "tileShadow", "font", "fontNum", "textColor", "baseColor", "design", "bold", "lang",
-                 "alarmsEnabled", "motion", "contrast", "sceneLight", "dblTapOff", "iconAnim", "bigValues")
+                 "alarmsEnabled", "alarmOff", "motion", "contrast", "sceneLight", "dblTapOff", "iconAnim", "bigValues")
 
 
 # Komplettkatalog der Loxone-Standard-Icons (IconsFilled/*.svg). Der Miniserver
@@ -1864,6 +1971,7 @@ class App:
         fuenf Stellen einzeln und unterschiedlich vollstaendig gepflegt, der
         Sende-Cache (_last_sent) wurde beim normalen Trennen nie geleert."""
         dev = self.conn_dev.get(ws)
+        _DEV_UNLOCK.pop((self.conn_info.get(ws) or {}).get("tok", ""), None)
         if dev:                                   # Zeitpunkt der Trennung -> Config zeigt kurz "verbindet …"
             self._dev_gone[dev] = time.time()
         for d in (self.conn_route, self.conn_prof, self.conn_dev, self.conn_info,
@@ -2904,6 +3012,7 @@ class App:
             "split": ui.get("split") is not False,
             # Handy-Profil: Flaechen untereinander, Tabs unten, volle Hoehe
             "phone": ui.get("phone") is True,
+            "devBtn": ui.get("devBtn") is True,   # Zahnrad im Panelkopf (Einstellungen am Geraet)
             "bigValues": ui.get("bigValues") in (True, "on"),   # Werte gross: global (Darstellung) + Panel-Override wie sceneLight
             # Split-Pane pro Tab: Tab-Kennung -> "weather"|"calendar"|"player:<uuid>".
             # Nur wirksam, wenn split an ist. Das Panel rendert die passende Pane.
@@ -3090,11 +3199,104 @@ class App:
                 out[k] = cr
         return out
 
-    def sec_alarm_wanted(self, prof: dict | None, uuid: str) -> bool:
-        ov = ((prof or {}).get("alarmPop") or {}).get(uuid)
-        if isinstance(ov, bool):
-            return ov
-        return self._room_ok(uuid, prof) and self._shown(uuid, prof)
+    def sec_alarm_wanted(self, prof: dict | None, uuid: str, dev: str = "") -> bool:
+        """Soll dieses Geraet (mit diesem Panel) den Alarm-Vollbild bekommen? Siehe _wants."""
+        return self._wants("alarm", dev, prof, uuid)
+
+    # ---- Toene: Quelle (Baustein) -> Ziel (Geraet), zentral an einer Stelle ----
+    # kind: ring (Tuerklingel), wake (Wecker), alarm (Alarmanlage/Rauchmelder), notify (Hinweis).
+    # Reihenfolge: Geraete-Override prefs.sources[kind] (Liste von Baustein-UUIDs; None = zentrale Regel)
+    # -> zentrale Regel je Art. Ohne Geraetekennung (Browser ohne ?device=): Alarm und Klingel immer,
+    # Wecker wie bisher an alle.
+    def alarm_off(self) -> set:
+        return set(((self.theme or {}).get("ui") or {}).get("alarmOff") or [])
+
+    def _dev_source_override(self, dev: str, kind: str):
+        d = self.devices.get(dev) if dev else None
+        src = ((d or {}).get("prefs") or {}).get("sources") if isinstance(d, dict) else None
+        v = src.get(kind) if isinstance(src, dict) else None
+        return v if isinstance(v, list) else None
+
+    def is_wall_device(self, dev: str) -> bool:
+        """Wandgeraet/Tablet = alles ausser Handy und PC-Browser (Typ-Vorgabe 'persoenlich')."""
+        d = self.devices.get(dev) if dev else None
+        mk = (d or {}).get("model") if isinstance(d, dict) else ""
+        mk = mk or ((self.device_summary(dev) or {}).get("guess") if dev else "") or ""
+        return mk not in _PERSONAL_MODELS
+
+    def _ring_wants(self, dev: str, uuid: str) -> bool:
+        if not dev:
+            return True
+        rt = (self.intercom_cfg.get(uuid) or {}).get("ringTargets") if isinstance(self.intercom_cfg.get(uuid), dict) else None
+        if isinstance(rt, list):
+            return dev in rt
+        return self.is_wall_device(dev)
+
+    def _panel_cells(self, prof: dict | None, memo: dict | None = None) -> list:
+        """Alle Kacheln/Ordner aller Tabs eines Panels - dieselbe Quelle wie das Rendering (_tab_layout)."""
+        key = (prof or {}).get("id", "")
+        if memo is not None and key in memo:
+            return memo[key]
+        cells: list = []
+        for tab in (prof or {}).get("tabs") or []:
+            if _is_layout_tab(tab):
+                try:
+                    cells += self._tab_layout(tab, prof)
+                except Exception:
+                    log.exception("Kachelliste fuer Tab %s fehlgeschlagen", tab)
+        if memo is not None:
+            memo[key] = cells
+        return cells
+
+    def _panel_has_tile(self, prof: dict | None, uuid: str, memo: dict | None = None) -> bool:
+        """Kommt der Baustein im Panel vor? Direkte Kachel, oder ueber eine Raum-/Kategorie-Kachel
+        (deren Ansicht filtert wie _view_group). Einzeln ausgeblendete Kacheln zaehlen nicht."""
+        if not self._shown(uuid, prof):
+            return False
+        c = self.controls.get(uuid) or {}
+        for it in self._panel_cells(prof, memo):
+            t, u = it.get("type"), it.get("uuid")
+            if t == "tile" and u == uuid:
+                return True
+            if t == "room" and u == c.get("room") and self._cat_ok(uuid, prof):
+                return True
+            if t == "cat" and u == c.get("cat") and self._room_ok(uuid, prof):
+                return True
+        return False
+
+    def _wants(self, kind: str, dev: str, prof: dict | None, uuid: str, memo: dict | None = None) -> bool:
+        ov = self._dev_source_override(dev, kind) if kind in ("ring", "wake", "alarm") else None
+        if ov is not None:
+            return uuid in ov
+        if kind == "ring":
+            return self._ring_wants(dev, uuid)
+        if kind == "wake":
+            return True if not dev else self._panel_has_tile(prof, uuid, memo)
+        if kind == "alarm":
+            if uuid in self.alarm_off():
+                return False
+            return ((prof or {}).get("alarmPop") or {}).get(uuid) is not False
+        return True
+
+    def event_targets(self, kind: str, uuid: str = "") -> list:
+        """Verbundene Panels (ws), die dieses Ereignis bekommen."""
+        memo: dict = {}
+        return [ws for ws, prof in list(self.conn_prof.items())
+                if self._wants(kind, self.conn_dev.get(ws, ""), prof, uuid, memo)]
+
+    def device_reach(self, dev: str, prof: dict | None, memo: dict | None = None) -> dict:
+        """Trockenlauf fuer die Anzeige am Geraet: welche Bausteine erreichen es?
+        {ring: [Namen], wake: [Namen], alarm: Anzahl}. Nur Anzeige."""
+        memo = memo if memo is not None else {}
+        ctl = self.controls
+
+        def names(typ, kind):
+            return sorted(_clean(c.get("name")) for u, c in ctl.items()
+                          if c.get("type") == typ and self._wants(kind, dev, prof, u, memo))
+        n_al = sum(1 for u, c in ctl.items() if c.get("type") in SEC_ALARM_TYPES
+                   and self._wants("alarm", dev, prof, u, memo))
+        return {"ring": names("Intercom", "ring"), "wake": names("AlarmClock", "wake"), "alarm": n_al,
+                "intercoms": sum(1 for c in ctl.values() if c.get("type") == "Intercom")}
 
     def sec_alarm_msg(self, uuid: str, on: bool) -> dict:
         c = self.controls.get(uuid) or {}
@@ -3755,6 +3957,7 @@ class App:
         for name, t in list(self._dev_gone.items()):
             if name in devs and not devs[name]["online"]:
                 devs[name]["lastSeen"] = max(devs[name]["lastSeen"], t)
+        memo: dict = {}
         for e in devs.values():
             e["detected"] = self.device_summary(e["name"])
             cfg = self.devices.get(e["name"]) if isinstance(self.devices.get(e["name"]), dict) else {}
@@ -3764,6 +3967,9 @@ class App:
             # Fully-Neustart nur, wenn das Geraet wirklich mit Fully laeuft
             fully_run = e["kiosk"] == "fully" or (e["kiosk"] != "tbview" and e["kiosk_last"] == "fully")
             e["model"] = model
+            tbver = str(self._tb_info(e["name"]).get("ver") or "")
+            e["tbver"] = tbver                             # gemeldete TbViewer-Version (versionName)
+            e["tbold"] = bool(tbver) and _ver_tuple(tbver) < _ver_tuple(_launcher_bundled_name())
             tbv = e["kiosk"] == "tbview" or (not e["kiosk"] and e["kiosk_last"] == "tbview")   # offline: zuletzt TbViewer
             e["type"] = "agent" if e["agent"] else ("tbview" if tbv else ("fully" if fully else "browser"))
             # Aktionen je Geraetetyp: Android -> adb; Fully nur wenn angegeben
@@ -3774,6 +3980,12 @@ class App:
                                           ("reboot", os_ == "android")) if ok])
             if e["agent"] and not e["profile"]:
                 e["profile"] = e["agent"]["panel"]
+            pid = e["profile"] or cfg.get("prefs", {}).get("panel") if isinstance(cfg.get("prefs"), dict) else e["profile"]
+            try:
+                e["reach"] = self.device_reach(e["name"], self.resolve_profile(pid or None), memo)
+            except Exception:
+                log.exception("Reichweite fuer Geraet %s fehlgeschlagen", e["name"])
+                e["reach"] = {"ring": [], "wake": [], "alarm": 0}
         anonymous.sort(key=lambda a: a["ip"])
         return {"devices": sorted(devs.values(), key=lambda e: e["name"].lower()),
                 "anonymous": anonymous, "profiles": sorted(self.panels)}
@@ -4199,15 +4411,33 @@ class App:
         results: list = []
         if not mode:
             return results
+        changed = bool(self.last_mode) and mode != self.last_mode   # echter Wechsel (nicht Erstmeldung/Wiederholung)
         self.last_mode = mode   # merken -> frisch verbundene Geraete ziehen darauf nach
         now = time.time()
         by_name = {a["name"]: a for a in self.agents.values() if (now - a["ts"]) < 600}
-        for name, cfg in self.devices.items():
+        for name, cfg in list(self.devices.items()):
             if not cfg.get("auto", True):
                 continue
             profile = (cfg.get("modes") or {}).get(mode)
             if not profile:
                 continue
+            # Panel-Wahl aus der Config gilt fest (alte Moduszuordnung wirkt dann nicht).
+            # Wahl am Geraet gilt nur bis zum naechsten Moduswechsel: danach uebernimmt wieder
+            # die Zuordnung (Wahl wird verworfen); gleiche Meldung aendert nichts
+            pp = (cfg.get("prefs") or {})
+            if pp.get("panel"):
+                if pp.get("panelSrc") != "device" or not changed:
+                    continue
+                try:
+                    pr = {k: v for k, v in cfg["prefs"].items() if k not in ("panel", "panelSrc")}
+                    ent = {k: v for k, v in cfg.items() if k != "prefs"}
+                    if pr:
+                        ent["prefs"] = pr
+                    devs = dict(self.devices)
+                    devs[name] = ent
+                    self._write_devices(devs)
+                except Exception as err:
+                    log.warning("Panel-Wahl von %s nicht zurueckgesetzt: %s", name, err)
             ws_targets = [ws for ws, dev in self.conn_dev.items() if dev == name]
             if ws_targets:
                 sent = 0
@@ -4260,7 +4490,7 @@ class App:
                        "prox", "autoBright", "brightMin", "brightMax", "nightCam",
                        "cols", "rows", "fill", "baseColor", "design",
                        "textColor", "bold", "lang", "player", "panes", "split", "phone", "bigValues",
-                       "saverFcSize",
+                       "saverFcSize", "devBtn",
                        "motion", "contrast", "sceneLight", "iconAnim", "grid", "ambBg", "ambClock")}
         # Split-Pane je Tab: nur gueltige Tab-Kennung -> "weather"|"calendar".
         if isinstance(ui.get("panes"), dict):
@@ -4439,6 +4669,8 @@ class App:
                 cui["phone"] = True             # Handy: Flaechen untereinander, Tabs unten
             if ui.get("bigValues") in (True, "on", "off"):
                 cui["bigValues"] = "on" if ui["bigValues"] in (True, "on") else "off"   # Werte gross: Panel-Override
+            if ui.get("devBtn") is True:
+                cui["devBtn"] = True            # Zahnrad im Panelkopf (Einstellungen am Geraet), Standard aus
             if isinstance(ui.get("player"), str) and ui.get("player"):
                 cui["player"] = ui["player"]    # Split-Layout: AudioZone-UUID fuer den festen Player
             if isinstance(ui.get("panes"), dict):
@@ -4717,9 +4949,27 @@ class App:
         if n_info:
             self._save_devinfo()
         self.drop_kiosk_last(old, new)
+        self._ring_targets_rename(old, new)
         n = await _push(self, {"t": "setdevice", "name": new}, "", old)
         log.info("Geraet umbenannt: '%s' -> '%s' (%d verbunden)", old, new, n)
         return {"ok": old in devs or new in devs or n_info > 0 or n > 0, "online": n}
+
+    def _ring_targets_rename(self, old: str, new: str = "") -> None:
+        """Gerätename in intercom[*].ringTargets mitziehen (new) bzw. entfernen (leer)."""
+        try:
+            cfg = _load_cfg()
+            ic = cfg.get("intercom")
+            hit = False
+            for e in (ic.values() if isinstance(ic, dict) else []):
+                rt = e.get("ringTargets") if isinstance(e, dict) else None
+                if isinstance(rt, list) and old in rt:
+                    e["ringTargets"] = sorted({(new if n == old else n) for n in rt} - {""})
+                    hit = True
+            if hit:
+                _write_cfg(cfg)
+                self.intercom_cfg = _intercom_config()
+        except Exception:
+            log.exception("ringTargets fuer Geraet %s nicht nachgezogen", old)
 
     async def device_delete(self, name: str) -> dict:
         """Geraet vergessen: Einstellungen und Steckbriefe. Ist es gerade
@@ -4734,6 +4984,7 @@ class App:
         if uids:
             self._save_devinfo()
         self.drop_kiosk_last(name)
+        self._ring_targets_rename(name, "")
         n = await _push(self, {"t": "forget"}, "", name)
         log.info("Geraet geloescht: '%s' (%d Steckbrief(e), %d verbunden)", name, len(uids), n)
         return {"ok": had or bool(uids) or n > 0, "online": n}
@@ -4770,6 +5021,179 @@ class App:
         if sc is not None:
             return sc
         return (DEVICE_MODELS.get(d.get("model") or "") or {}).get("scale", "off")
+
+    def _tb_info(self, name: str) -> dict:
+        """Zuletzt gemeldete TbViewer-Angaben (getDeviceInfo) eines Geraets."""
+        best = None
+        for e in self.devinfo.values():
+            if isinstance(e, dict) and e.get("name") == name and (best is None or e.get("last", 0) > best.get("last", 0)):
+                best = e
+        return ((best or {}).get("info") or {}).get("tbview") or {}
+
+    def device_caps(self, name: str) -> dict:
+        """Zuletzt gemeldete Faehigkeiten eines Geraets (TbViewer getDeviceInfo):
+        {prox, light} als bool (unbekannt = Schluessel fehlt) und win = TbViewer kann die
+        Fensterhelligkeit setzen (auch ohne Lichtsensor)."""
+        tb = self._tb_info(name)
+        c = {k: tb[k] for k in ("prox", "light") if isinstance(tb.get(k), bool)}
+        if self.kiosk_last.get(name) == "tbview":
+            c["win"] = True
+        return c
+
+    def _type_defaults(self, dev: str, d: dict) -> dict:
+        """Typ-Vorgabe eines Geraets (DEVICE_MODELS[..]["defaults"]); ohne gewaehlten Typ der
+        erkannte (Steckbrief), Tablet je nach Sensor (caps) bzw. Browser statt TbViewer."""
+        mk = d.get("model") or ((self.device_summary(dev) or {}).get("guess") if dev else "") or ""
+        m = DEVICE_MODELS.get(mk) or {}
+        td = dict(m.get("defaults") or {})
+        cp = self.device_caps(dev)
+        if m.get("defaults_sensor") and (cp.get("prox") or cp.get("light")):
+            td.update(m["defaults_sensor"])
+        if m.get("defaults_browser") and self.kiosk_last.get(dev) != "tbview":
+            for k, v in m["defaults_browser"].items():
+                td[k] = ({**(td.get("sound") or {}), **v} if k == "sound" else v)
+            td.pop("autoBright", None); td.pop("brightFix", None)
+        if self.kiosk_last.get(dev) not in ("tbview", "fully"):
+            td.pop("autoBright", None); td.pop("brightFix", None)   # Browser: Helligkeit bleibt beim System
+        return td
+
+    def effective_prefs(self, dev: str, pid: str | None, ignore_dev: bool = False) -> dict:
+        """Wirksame Geraete-Einstellungen: {"v": {...}, "src": {schluessel: standard|geaendert}}.
+        Geraet -> Typ-Vorgabe (wo definiert) -> Panel -> Global -> fest."""
+        d = self.devices.get(dev) if dev else None
+        d = d if isinstance(d, dict) else {}
+        p = d.get("prefs") if isinstance(d.get("prefs"), dict) and not ignore_dev else {}
+        td = self._type_defaults(dev, d)
+        dp = self.panel_dpms(pid)
+        base = dict(PREF_BASE)
+        if not dev:                                    # Browser ohne Kennung: Panel-Werte wie bisher
+            night, sens = self.panel_night(pid), self.panel_sensors(pid)
+            base.update({"nightDim": night["dim"], "prox": sens["prox"] != "off", "autoBright": sens["auto"],
+                         "brightMin": sens["min"], "brightMax": sens["max"]})
+        v: dict = {"sound": {}}
+        src: dict = {}
+        for k in PREF_SOUNDS:
+            if k in (p.get("sound") or {}):
+                v["sound"][k], src["sound." + k] = p["sound"][k], "geändert"
+            else:
+                v["sound"][k] = (td.get("sound") or {}).get(k, BASE_SOUND[k])
+                src["sound." + k] = "standard"
+
+        def pick(key):
+            if key in p:
+                src[key] = "geändert"
+                return p[key]
+            src[key] = "standard"
+            return td[key] if key in td else base[key]
+
+        v["nightDim"] = pick("nightDim")
+        v["dpmsOff"] = dp if dp is not None else 0     # nur am Panel
+        src["dpmsOff"] = "standard"
+        v["prox"] = pick("prox")
+        v["autoBright"] = pick("autoBright")
+        v["brightMin"] = pick("brightMin")
+        v["brightMax"] = max(v["brightMin"], pick("brightMax"))
+        v["brightFix"] = pick("brightFix")
+        v["panel"] = p.get("panel", "")
+        src["panel"] = "geändert" if p.get("panel") else "standard"
+        return {"v": v, "src": src}
+
+    def migrate_panel_prefs(self, dev: str, pid: str | None) -> None:
+        """Einmalig je Geraet (Marke `pm`): Abdunkeln, Praesenz und Helligkeit, die bisher am
+        Panel standen, auf das Geraet uebertragen, das dieses Panel zeigt und dafuer keinen
+        eigenen Wert hat. Typ-Vorgaben (Handy/PC) gehen vor. Danach gelten sie nur noch am Geraet."""
+        if not dev or not pid:
+            return
+        cfg = self.devices.get(dev)
+        if isinstance(cfg, dict) and cfg.get("pm"):
+            return
+        cfg = cfg if isinstance(cfg, dict) else {}
+        ui = {**self.theme.get("ui", {}), **((self.panels.get(pid) or {}).get("ui") or {})}
+        mk = cfg.get("model") or ((self.device_summary(dev) or {}).get("guess")) or ""
+        td = (DEVICE_MODELS.get(mk) or {}).get("defaults") or {} if mk in ("phone", "other") else {}   # Handy/PC: Typ-Vorgabe geht vor
+        have = cfg.get("prefs") or {}
+        mig: dict = {}
+        # nightDim wird bewusst NICHT uebernommen: das alte Panel-Abdunkeln war eine Staerke auf
+        # die Auto-Helligkeit, jetzt ist es die Rest-Helligkeit nachts (andere Bedeutung) -> Typ-Standard
+        if ui.get("prox") == "off":
+            mig["prox"] = False
+        if ui.get("autoBright") is False:
+            mig["autoBright"] = False
+        for k in ("brightMin", "brightMax"):
+            if isinstance(ui.get(k), (int, float)):
+                mig[k] = ui[k]
+        mig = {k: v for k, v in mig.items() if k not in have and k not in td}
+        if not mig and not cfg:
+            return
+        ent = dict(cfg) if cfg else {"auto": True, "modes": {}}
+        ent["pm"] = True
+        pr = _clean_prefs({**have, **mig}, set(self.panels))
+        if pr:
+            ent["prefs"] = pr
+        try:
+            devs = dict(self.devices)
+            devs[dev] = ent
+            self._write_devices(devs)
+            log.info("Geraet %s: Panel-Werte uebernommen: %s", dev, ", ".join(mig) or "-")
+        except Exception as err:
+            log.warning("Panel-Werte von %s nicht uebernommen: %s", dev, err)
+
+    def migrate_ring_targets(self) -> None:
+        """Einmalig (Marke `ringMig` in der Config): Handy/PC, die Klingel ausdruecklich an
+        haben (prefs.sound.ring === true), in ringTargets aller Tuerstationen aufnehmen.
+        Aus "walls" (Eintrag fehlt) wird "Wandgeraete + dieses Geraet". Erst wenn die
+        Bausteine bekannt sind; danach nie wieder (Aenderungen macht der Nutzer in der Config)."""
+        if getattr(self, "_ring_mig", False) or not self.controls:
+            return
+        self._ring_mig = True
+        try:
+            cfg = _load_cfg()
+            if cfg.get("ringMig"):
+                return
+            pers = sorted(n for n, e in self.devices.items() if isinstance(e, dict)
+                          and ((e.get("prefs") or {}).get("sound") or {}).get("ring") is True
+                          and not self.is_wall_device(n))
+            cfg["ringMig"] = True
+            if pers:
+                known = set(self.devices) | {x.get("name") for x in self.devinfo.values() if isinstance(x, dict)}
+                walls = sorted(n for n in known if n and self.is_wall_device(n))
+                ic = dict(cfg.get("intercom") or {})
+                for u, c in self.controls.items():
+                    if c.get("type") != "Intercom":
+                        continue
+                    cur = ic.get(u)
+                    cur = dict(cur) if isinstance(cur, dict) else ({"url": cur} if isinstance(cur, str) else {})
+                    rt = cur.get("ringTargets")
+                    cur["ringTargets"] = sorted(set(rt if isinstance(rt, list) else walls) | set(pers))
+                    ic[u] = cur
+                cfg["intercom"] = ic
+                log.info("Klingel-Migration: %s in ringTargets aufgenommen", ", ".join(pers))
+            _write_cfg(cfg)
+            self.intercom_cfg = _intercom_config()
+        except Exception:
+            log.exception("Klingel-Migration fehlgeschlagen")
+
+    def prefs_msg(self, dev: str, pid: str | None) -> dict:
+        """Teil der theme-/prefs-Nachricht ans Panel: wirksame Werte."""
+        e = self.effective_prefs(dev, pid)
+        v = e["v"]
+        sens = self.panel_sensors(pid)
+        return {"prefs": {"sound": v["sound"], "chg": [k for k, s in e["src"].items() if s == "geändert"],
+                          "caps": self.device_caps(dev) if dev else {}},
+                "night": {**self.panel_night(pid), "dim": min(90, v["nightDim"])},
+                "sensors": {**sens, "prox": "wake" if v["prox"] else "off", "auto": bool(v["autoBright"]),
+                            "min": v["brightMin"], "max": v["brightMax"], "fix": v["brightFix"]},
+                "dpmsOff": v["dpmsOff"]}
+
+    async def prefs_push(self, dev: str) -> int:
+        """Geaenderte Einstellungen live an die Panels des Geraets (ohne Neuladen)."""
+        n = 0
+        for ws in [w for w in list(self.conn_prof) if self.conn_dev.get(w) == dev]:
+            pid = (self.conn_prof.get(ws) or {}).get("id")
+            m = self.prefs_msg(dev, pid)
+            n += await self._send_all([ws], {"t": "prefs", "prefs": m["prefs"], "night": m["night"],
+                                             "sensors": m["sensors"], "dpmsOff": m["dpmsOff"]})
+        return n
 
     def _write_devices(self, devices: dict) -> None:
         # Erst schreiben, dann uebernehmen: scheitert das Schreiben, laeuft der
@@ -4813,7 +5237,8 @@ class App:
             display = App._sanitize_display(cfg.get("display"))
             model = cfg.get("model") if cfg.get("model") in DEVICE_MODELS else ""
             scale = _clean_scale(cfg.get("scale"))
-            if not modes and not display and not model and scale is None:
+            prefs = _clean_prefs(cfg.get("prefs"), panel_ids)
+            if not modes and not display and not model and scale is None and not prefs:
                 continue
             entry = {"auto": bool(cfg.get("auto", True)), "modes": modes}
             if display:
@@ -4826,6 +5251,10 @@ class App:
                         entry["nrestart"] = bool(cfg.get("nrestart"))
             if scale is not None:
                 entry["scale"] = scale                 # Skalierung (sonst Vorgabe des Geraetetyps)
+            if cfg.get("pm"):
+                entry["pm"] = True                     # Panel-Werte schon auf das Geraet uebertragen (einmalig)
+            if prefs:
+                entry["prefs"] = prefs                 # Toene, Abdunkeln, Praesenz, Helligkeit ... (s. _clean_prefs)
             out[name.strip()[:60]] = entry
         return out
 
@@ -4878,6 +5307,11 @@ class App:
         # an; nur bei explizitem False gespeichert (kompaktes JSON, wie bold).
         if ui.get("alarmsEnabled") is False:
             out["alarmsEnabled"] = False
+        # Abgeschaltete Alarmbausteine (Alarm/Rauchmelder): nur Abgeschaltete speichern, neue sind automatisch aktiv
+        if isinstance(ui.get("alarmOff"), list):
+            ao = sorted({x.strip() for x in ui["alarmOff"] if isinstance(x, str) and re.fullmatch(r"[0-9A-Za-z_.-]{8,64}", x.strip())})[:200]
+            if ao:
+                out["alarmOff"] = ao
         # Animationen global an/aus (ein Schalter fuer alle --anim-*-Dauern im
         # Panel). Default an; nur bei explizitem "off" gespeichert.
         if ui.get("motion") in ("off", "mid"):
@@ -8492,19 +8926,25 @@ class App:
                      else (" (Standardton)" if ev.get("sound") else ""))
             if ev["on"]:
                 self._spawn(self.display_drivers(True))   # Kiosk-Apps ueber HTTP wecken
-            await self._send_all(self.conn_route, {"t": "ring", "id": ev["id"],
-                                                   "on": ev["on"], "sound": ev.get("sound", False),
-                                                   "soundUrl": ev.get("soundUrl")})
+            # Ziele zentral (Tuerstation: Wandgeraete/Auswahl); "aus" geht an alle, damit nichts haengen bleibt
+            tg = self.event_targets("ring", ev["id"]) if ev["on"] else list(self.conn_route)
+            await self._send_all(tg, {"t": "ring", "id": ev["id"],
+                                      "on": ev["on"], "sound": ev.get("sound", False),
+                                      "soundUrl": ev.get("soundUrl")})
         while self._pending_alarm:
             ev = self._pending_alarm.pop(0)
-            log.info("Wecker %s → %s", "an" if ev["on"] else "aus", ev["id"])
-            if ev["on"]:
+            tg = self.event_targets("wake", ev["id"]) if ev["on"] else list(self.conn_route)   # "aus" an alle
+            log.info("Wecker %s → %s (%d Geräte)", "an" if ev["on"] else "aus", ev["id"], len(tg))
+            if ev["on"] and not tg:
+                log.info("Wecker %s klingelt nirgends: keine Kachel in einem verbundenen Panel", ev["id"])
+            if ev["on"] and tg:
                 self._spawn(self.display_drivers(True))
-            await self._send_all(self.conn_route, {"t": "alarm", "id": ev["id"], "on": ev["on"]})
+            await self._send_all(tg, {"t": "alarm", "id": ev["id"], "on": ev["on"]})
         while self._pending_sec:
             ev = self._pending_sec.pop(0)
             msg = self.sec_alarm_msg(ev["id"], ev["on"])
-            targets = [ws for ws, p in list(self.conn_prof.items()) if self.sec_alarm_wanted(p, ev["id"])]
+            # "aus" geht an alle Verbundenen (wie Klingel/Wecker), damit nichts stehen bleibt
+            targets = self.event_targets("alarm", ev["id"]) if ev["on"] else list(self.conn_route)
             log.info("Sicherheits-Alarm %s → %s (%d Panels)", "an" if ev["on"] else "aus", ev["id"], len(targets))
             if ev["on"] and targets:
                 self._spawn(self.display_drivers(True))
@@ -9137,6 +9577,7 @@ async def api_settings(request: web.Request) -> web.Response:
                 # bestehende Installationen sollen nach dem Update nicht
                 # ploetzlich unaufgefordert piepen.
                 "sound": bool(e.get("sound")),
+                "ringTargets": e.get("ringTargets") if isinstance(e.get("ringTargets"), list) else "walls",
                 "reconnect": app._cam_reconnect_h(uuid),
                 "crop": _clean_crop(e.get("crop")),
                 # Eigener hochgeladener Klingelton (MP3/OGG/WAV/M4A/AAC) statt
@@ -9465,6 +9906,13 @@ async def api_settings_intercom(request: web.Request) -> web.Response:
         if e.get("pass"):
             cur["pass"] = str(e["pass"])
         cur["sound"] = bool(e.get("sound"))   # Ton bei Klingeln (generischer Wecker-Ton)
+        if "ringTargets" in e:                    # Klingelt an: "walls" (Standard, fehlt) | [Geraetenamen]
+            rt = e.get("ringTargets")
+            if isinstance(rt, list):
+                known = set(app.devices) | {x.get("name") for x in app.devinfo.values() if isinstance(x, dict)}
+                cur["ringTargets"] = sorted({str(n).strip()[:60] for n in rt if str(n).strip() in known})
+            else:
+                cur.pop("ringTargets", None)
         if "crop" in e:
             cr = _clean_crop(e.get("crop"))
             if cr:
@@ -9476,7 +9924,7 @@ async def api_settings_intercom(request: web.Request) -> web.Response:
         except (TypeError, ValueError):
             rc = 0
         cur["reconnect"] = rc if rc in CAM_RECONNECT_HOURS else 0   # Stream-Neuaufbau alle N h
-        if cur.get("url"):
+        if cur.get("url") or isinstance(cur.get("ringTargets"), list):
             ic[uuid] = cur
         else:
             ic.pop(uuid, None)
@@ -9825,7 +10273,14 @@ async def api_save_devices(request: web.Request) -> web.Response:
         d = await request.json()
     except (ValueError, aiohttp.ContentTypeError):
         return web.json_response({"ok": False, "error": "kein JSON"}, status=400)
-    devices = App._sanitize_devices(d.get("devices") or {}, set(app.panels))
+    raw = d.get("devices") if isinstance(d.get("devices"), dict) else {}
+    for n, e in raw.items():                       # Config ohne prefs-Feld (alte Oberflaeche) lassen sie unangetastet
+        old_p = (app.devices.get(n) or {}).get("prefs") if isinstance(app.devices.get(n), dict) else None
+        if isinstance(e, dict) and "prefs" not in e and old_p:
+            e["prefs"] = old_p
+        if isinstance(e, dict) and (app.devices.get(n) or {}).get("pm"):
+            e["pm"] = True
+    devices = App._sanitize_devices(raw, set(app.panels))
     # Leeres Display-Kennwort = unveraendert (/api/meta gibt es nicht heraus),
     # aber nur beim selben Ziel (Treiber und Host), sonst ginge das gespeicherte
     # an einen anderen Host. "verworfen": eines war da, das Ziel ist ein anderes.
@@ -9857,6 +10312,64 @@ async def api_devices_get(request: web.Request) -> web.Response:
     Ansicht und Typ; Browser ohne Kennung getrennt nach IP."""
     app: App = request.app["app"]
     return web.json_response(app.device_list())
+
+
+async def api_device_prefs(request: web.Request) -> web.Response:
+    """Geraete-Einstellungen. GET ?device=NAME -> gespeicherte `prefs`, wirksame Werte
+    `effective` {schluessel: {value, src: standard|geändert}}, `caps` (Sensoren), `model`.
+    POST {device, prefs: {teil-aenderung; null = zurueck auf Standard}, reset?: true}
+    Gleiche API fuer Config und (Etappe 4) Einstellungen am Geraet."""
+    app: App = request.app["app"]
+    d = await _json_or_empty(request)
+    name = str(d.get("device") or request.query.get("device") or "").strip()[:60]
+    ds = request.get("devauth")                     # Zugriff vom Geraet selbst (nicht Admin)
+    if ds:
+        if not ds["dev"]:
+            return web.json_response({"ok": False, "error": "Dieses Gerät hat noch keinen Namen"}, status=400)
+        if name and name != ds["dev"]:
+            return web.json_response({"ok": False, "error": "Nur das eigene Gerät"}, status=403)
+        if not _dev_unlocked(ds["tok"]):
+            return web.json_response({"ok": False, "error": "Passwort nötig", "login": True}, status=401)
+        name = ds["dev"]
+    if not name:
+        return web.json_response({"ok": False, "error": "device fehlt"}, status=400)
+    if request.method == "POST":
+        known = name in app.devices or any(isinstance(e, dict) and e.get("name") == name for e in app.devinfo.values())
+        if not known:
+            return web.json_response({"ok": False, "error": "unbekanntes Gerät"}, status=404)
+        cur = app.devices.get(name) if isinstance(app.devices.get(name), dict) else {"auto": True, "modes": {}}
+        patch = d.get("prefs") if isinstance(d.get("prefs"), dict) else {}
+        merged = {} if d.get("reset") is True else _merge_prefs(cur.get("prefs") or {}, patch)
+        if patch.get("panel"):
+            merged["panelSrc"] = "device" if ds else "config"       # Quelle der Wahl merken
+        new = _clean_prefs(merged, set(app.panels))
+        ent = {k: v for k, v in cur.items() if k != "prefs"}
+        if new:
+            ent["prefs"] = new
+        devs = dict(app.devices)
+        devs[name] = ent
+        try:
+            app._write_devices(devs)
+        except Exception as err:
+            return web.json_response({"ok": False, "error": str(err)}, status=500)
+        await app.prefs_push(name)
+        if (cur.get("prefs") or {}).get("panel") != new.get("panel"):
+            await _push(app, {"t": "switch", "panel": new.get("panel", "")}, "", name)   # Panel am Geraet gewechselt
+    cfg = app.devices.get(name) if isinstance(app.devices.get(name), dict) else {}
+    pid = next(((app.conn_prof.get(w) or {}).get("id") for w in app.conn_prof if app.conn_dev.get(w) == name), None)
+    pid = pid or (cfg.get("prefs") or {}).get("panel") or None
+    e = app.effective_prefs(name, pid)
+    flat = {"sound." + k: e["v"]["sound"][k] for k in PREF_SOUNDS}
+    flat.update({k: e["v"][k] for k in ("nightDim", "prox", "autoBright", "brightMin", "brightMax", "brightFix", "panel")})
+    es = app.effective_prefs(name, pid, True)["v"]          # Standard: ohne Geraete-Aenderungen
+    std = {"sound." + k: es["sound"][k] for k in PREF_SOUNDS}
+    std.update({k: es[k] for k in ("nightDim", "prox", "autoBright", "brightMin", "brightMax", "brightFix")})
+    extra = {"panels": [{"id": k, "title": str((v or {}).get("title") or k)[:40]} for k, v in app.panels.items()],
+             "current": pid or ""} if ds else {}
+    return web.json_response({"ok": True, "device": name, "model": cfg.get("model") or "", **extra,
+                              "prefs": cfg.get("prefs") or {}, "caps": app.device_caps(name), "std": std,
+                              "intercom": any(c.get("type") == "Intercom" for c in app.controls.values()),
+                              "effective": {k: {"value": flat[k], "src": e["src"][k]} for k in flat}})
 
 
 async def api_device_switch(request: web.Request) -> web.Response:
@@ -10252,9 +10765,12 @@ async def api_testtone(request: web.Request) -> web.Response:
     except (ValueError, aiohttp.ContentTypeError):
         d = {}
     target = str(d.get("panel") or "").strip()
+    dev = str(d.get("device") or "").strip()[:60]       # nur dieses Geraet (Geraetedetail)
     n = 0
     for ws, prof in list(app.conn_prof.items()):
         if target and (prof or {}).get("id") != target:
+            continue
+        if dev and app.conn_dev.get(ws) != dev:
             continue
         if await app._send_or_drop(ws, {"t": "testtone"}):
             n += 1
@@ -10292,6 +10808,8 @@ async def api_testring(request: web.Request) -> web.Response:
         n = 0
         for ws, prof in list(app.conn_prof.items()):
             if target and (prof or {}).get("id") != target:
+                continue
+            if not app._wants("ring", app.conn_dev.get(ws, ""), prof, uuid):   # Test respektiert "Klingelt an"
                 continue
             if await app._send_or_drop(ws, {"t": "ring", "id": uuid, "on": on,
                                             "sound": snd, "soundUrl": sound_url}):
@@ -10445,10 +10963,22 @@ async def _adb(*args: str, timeout: float = 30) -> tuple[int, str]:
     return proc.returncode or 0, out.decode("utf-8", "replace").strip()
 
 
+def _ver_tuple(v: str) -> tuple:
+    return tuple(int(x) for x in re.findall(r"\d+", v or "")[:4])
+
+
+def _launcher_bundled_name() -> str:
+    """versionName der mitgelieferten Launcher-APK ("" = unbekannt, dann nie "veraltet")."""
+    try:
+        return LAUNCHER_VERSION_FILE.read_text().split()[1]    # 2. Zeile: versionName (build.sh)
+    except (OSError, IndexError):
+        return ""
+
+
 def _launcher_bundled_ver() -> int:
     """versionCode der mitgelieferten Launcher-APK (0 = unbekannt)."""
     try:
-        return int(LAUNCHER_VERSION_FILE.read_text().strip())
+        return int(LAUNCHER_VERSION_FILE.read_text().split()[0])
     except (OSError, ValueError):
         return 0
 
@@ -10509,7 +11039,11 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "Die TbViewer-App (APK) fehlt auf dem Server"})
 
     target = f"{ip}:{port}"
+    app: App = request.app["app"]
     name = str(d.get("name") or "").strip()[:60]   # Geraetename -> erscheint unter Geraete
+    # Shelly erkennen, auch wenn die Oberflaeche "android" schickt: bekannter Typ (Shelly) des Geraets
+    # oder (unten) der Launcher ist am Geraet schon Startbildschirm. Nur Shelly bekommt den HOME-Alias.
+    shelly = device == "shelly" or bool((DEVICE_MODELS.get((app.devices.get(name) or {}).get("model") or "") or {}).get("shelly"))
     display = d.get("display") if d.get("display") in ("tbview", "fully") else ""   # Anzeige; leer = unveraendert
     q = ([f"panel={panel}"] if panel else []) + ([f"device={quote(name)}"] if name else [])
     url = f"http://{server}/" + ("?" + "&".join(q) if q else "")
@@ -10530,6 +11064,10 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
         if not step("Freigabe", code, out, ok=(out == "device")):
             return web.json_response({"ok": False, "steps": steps,
                                       "error": "adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“ mit „Immer erlauben“ und klicke noch einmal."})
+        if not shelly:                       # war der Launcher bisher Startbildschirm? Dann ist es ein Shelly-Aufbau
+            code, out = await _adb("-s", target, "shell", "cmd", "package", "resolve-activity", "--brief",
+                                   "-a", "android.intent.action.MAIN", "-c", "android.intent.category.HOME", timeout=15)
+            shelly = code == 0 and f"{LAUNCHER_PKG}/" in out
         # Schon gleiche/neuere Version drauf? Dann Installieren ueberspringen.
         apk_ver = _launcher_bundled_ver()   # 0 = unbekannt -> immer installieren
         code, out = await _adb("-s", target, "shell", "dumpsys", "package", LAUNCHER_PKG, timeout=15)
@@ -10552,12 +11090,17 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
             has_fully = "package:" in out
             step("Fully Kiosk", 0, "installiert" if has_fully
                  else "fehlt - bitte von fully-kiosk.com installieren", ok=has_fully)
-        if device == "shelly":
+        if shelly:
             # Startbildschirm: schlaegt auf alten Android-Versionen fehl - dann
             # waehlt man ihn beim ersten Druck auf Home ("Immer"). Kein Abbruch.
+            # HOME-Filter traegt .Home (auf Tablets schaltet die App sie selbst ab) ->
+            # einschalten und als Startbildschirm setzen.
+            await _adb("-s", target, "shell", "pm", "enable", f"{LAUNCHER_PKG}/.Home", timeout=15)
             code, out = await _adb("-s", target, "shell", "cmd", "package", "set-home-activity",
                                    f"{LAUNCHER_PKG}/.Home", timeout=15)
             step("Startbildschirm", code, out, ok=(code == 0 and "rror" not in out))
+            # App neu starten, damit sie als Startbildschirm laeuft
+            await _adb("-s", target, "shell", "am", "force-stop", LAUNCHER_PKG, timeout=15)
         # URL speichern (startet dabei Fully). adb shell setzt die Argumente zu
         # einer Kommandozeile zusammen -> URL fuer die Shell am Panel quoten.
         code, out = await _adb("-s", target, "shell",
@@ -10565,7 +11108,6 @@ async def api_panel_launcher(request: web.Request) -> web.Response:
         if not step("Start-Adresse eintragen", code, out, ok=(code == 0 and "rror" not in out)):
             return web.json_response({"ok": False, "steps": steps, "error": "Start-Adresse konnte nicht gesetzt werden"})
     if display == "tbview" and name:   # Fully-Altlast zuruecksetzen (kein Fully-Neustart/-Nachtneustart mehr)
-        app: App = request.app["app"]
         cfg = app.devices.get(name)
         if isinstance(cfg, dict) and cfg.get("fully"):
             try:
@@ -10916,13 +11458,16 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
     # Frisch verbundenes Geraet direkt auf den aktuell laufenden Betriebsmodus
     # setzen (statt der Start-Ansicht aus ?panel=), falls dafuer eine Zuordnung
     # existiert -> ohne Reload-Flackern gleich die richtige Panel-Seite.
-    if dev and app.last_mode:
-        cfg = app.devices.get(dev)
-        if cfg and cfg.get("auto", True):
-            mapped = (cfg.get("modes") or {}).get(app.last_mode)
-            if mapped:
-                pid = mapped
+    # Gewaehltes Panel (Config oder Geraet) geht vor; Moduszuordnung nur bei auto.
+    if dev:
+        cfg = app.devices.get(dev) or {}
+        if (cfg.get("prefs") or {}).get("panel") in app.panels:
+            pid = cfg["prefs"]["panel"]
+        elif app.last_mode and cfg.get("auto", True):
+            pid = (cfg.get("modes") or {}).get(app.last_mode) or pid
     prof = app.resolve_profile(pid)
+    app.migrate_panel_prefs(dev, prof.get("id"))
+    app.migrate_ring_targets()
     app.conn_prof[ws] = prof
     app.conn_dev[ws] = dev
     kiosk = request.query.get("kiosk", "")
@@ -10931,7 +11476,8 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
         kiosk = "fully"
     app.note_kiosk(dev, kiosk)
     app.conn_info[ws] = {"dev": dev, "kiosk": kiosk if kiosk in ("fully", "tbview") else "",
-                         "ip": request.remote or "", "ts": time.time()}
+                         "ip": request.remote or "", "ts": time.time(),
+                         "tok": os.urandom(16).hex()}      # Geraete-Token dieser Verbindung (Einstellungen am Geraet)
     first_tab = prof["tabs"][0] if prof["tabs"] else "favoriten"
     app.conn_route[ws] = {"view": "tab", "tab": first_tab}
     log.info("Panel verbunden: '%s' (Tabs %s, Räume %s, Kategorien %s)", prof["id"],
@@ -10943,22 +11489,26 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
     # Ab hier alles im try: bricht die Verbindung schon waehrend der ersten
     # Sendungen ab, raeumt finally die eben angelegten Eintraege trotzdem weg.
     try:
+        _pm = app.prefs_msg(dev, prof["id"])          # wirksame Geraete-Einstellungen (Geraet > Typ > Panel > Global)
         await app._send_or_drop(ws, {"t": "theme", "vars": prof["vars"], "tabs": prof["tabs"],
                             "tabMeta": app._tab_meta(prof["tabs"], prof), "title": prof["title"],
                             "lang": prof["lang"], "fill": prof["fill"], "split": prof["split"],
                             "phone": prof.get("phone", False),
+                            "devBtn": bool(prof.get("devBtn")),
+                            "devTok": app.conn_info[ws]["tok"],
                             "scale": app.effective_scale(dev),
                             "wake": bool((DEVICE_MODELS.get(((app.devices.get(dev) or {}) if dev else {}).get("model") or "") or {}).get("wake")),
                             # Schwache Panels (Shelly, 2 GB): Kamera als Einzelbilder, keine Glas-Unschaerfe
                             "lite": bool((DEVICE_MODELS.get(((app.devices.get(dev) or {}) if dev else {}).get("model") or "") or {}).get("shelly")),
                             "panes": prof.get("panes") or {},
-                            "dpmsOff": app.panel_dpms(prof["id"]),
+                            "dpmsOff": _pm["dpmsOff"],
+                            "prefs": _pm["prefs"],
                             "reloadHours": app.panel_reload(prof["id"]),
                             "reloadAt": NEULADEN_STUNDE,   # nachts neu laden, wenn reloadHours fehlt
-                            "night": {**app.panel_night(prof["id"]), "on": app._night_on},
+                            "night": {**_pm["night"], "on": app._night_on},
                             # Gerätetyp (leer = unbekannt): Handys regeln Helligkeit selbst, nachts kein Abdunkeln
                             "devModel": ((app.devices.get(dev) or {}) if dev else {}).get("model") or "",
-                            "sensors": app.panel_sensors(prof["id"]),
+                            "sensors": _pm["sensors"],
                             "screensaverCam": app._screensaver_cam(),
                             "camCrop": app.cam_crops(),
                             "motion": prof["motion"],
@@ -10992,7 +11542,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
         # Klingelns schlief, hat sonst das Ende verpasst und klingelt ewig weiter
         # (Panel raeumt beim Verbinden selbst auf, s. ws.onopen).
         for _bu, _cid in app.bell_map.items():
-            if app.states.get(_bu):
+            if app.states.get(_bu) and app._wants("ring", dev, prof, _cid):
                 _ent = app.intercom_cfg.get(_cid)
                 _snd = bool(_ent.get("sound")) if isinstance(_ent, dict) else False
                 _sf = _sound_file_for(_cid) if _snd else None
@@ -11000,7 +11550,7 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                                     "soundUrl": (f"/api/sound?id={_cid}" if _sf else None)})
         # Laeuft gerade ein Alarm, zeigt auch ein neu verbundenes Panel das Vollbild
         for _au in app.sec_alarms_active():
-            if app.sec_alarm_wanted(prof, _au):
+            if app.sec_alarm_wanted(prof, _au, dev):
                 await app._send_or_drop(ws, {**app.sec_alarm_msg(_au, True), "sound": bool(prof.get("alarmTone"))})
         cmd_q: asyncio.Queue = asyncio.Queue()
         cmd_task = None
@@ -11267,6 +11817,74 @@ const j=await r.json().catch(()=>({}));if(j.ok)location.reload();else document.g
 </body></html>"""
 
 
+# ---- Einstellungen am Geraet: Zugriff nur auf die EIGENEN prefs ----
+# Jede Panel-Verbindung bekommt beim Verbinden ein Token (conn_info[ws]["tok"], geht nur ueber
+# die eigene WebSocket-Verbindung ans Panel). Mit Kopf X-Device-Token duerfen /api/device/prefs
+# und /api/device/unlock ohne Admin-Anmeldung genutzt werden, aber nur fuer das Geraet dieser
+# Verbindung. Ist ein Config-Passwort gesetzt, muss das Panel es vorher an /api/device/unlock
+# geben (gleiche Pruefung wie die Admin-Anmeldung); die Freigabe gilt je Token, laeuft nach
+# DEV_UNLOCK_TTL ohne Nutzung ab und endet mit der Verbindung.
+DEV_SELF_PATHS = ("/api/device/prefs", "/api/device/unlock")
+DEV_UNLOCK_TTL = 300
+_DEV_UNLOCK: dict[str, float] = {}               # Token -> freigegeben bis
+_DEV_FAILS: dict[str, tuple[int, float]] = {}    # IP+Geraet -> (Fehlversuche, gesperrt bis)
+
+
+def _dev_self(app: "App", request: web.Request) -> dict | None:
+    """Geraet der Verbindung zum Kopf X-Device-Token: {"dev", "tok", "ip"} oder None."""
+    tok = request.headers.get("X-Device-Token", "")
+    if not tok or len(tok) > 64:
+        return None
+    for info in list(app.conn_info.values()):
+        if hmac.compare_digest(str(info.get("tok", "")), tok):
+            return {"dev": info.get("dev") or "", "tok": tok, "ip": request.remote or ""}
+    return None
+
+
+def _dev_unlocked(tok: str) -> bool:
+    if not _admin_hash():
+        return True
+    exp = _DEV_UNLOCK.get(tok, 0)
+    if exp > time.time():
+        _DEV_UNLOCK[tok] = time.time() + DEV_UNLOCK_TTL
+        return True
+    _DEV_UNLOCK.pop(tok, None)
+    return False
+
+
+async def api_device_unlock(request: web.Request) -> web.Response:
+    """Einstellungen am Geraet freischalten: {password} (ohne Config-Passwort immer ok);
+    {lock: true} nimmt die Freigabe zurueck. Nur mit gueltigem Geraete-Token (Middleware)."""
+    ds = request.get("devauth")
+    if not ds:
+        return web.json_response({"ok": False, "error": "Geräte-Kennung nötig"}, status=401)
+    d = await _json_or_empty(request)
+    if d.get("lock") is True:
+        _DEV_UNLOCK.pop(ds["tok"], None)
+        return web.json_response({"ok": True, "unlocked": False})
+    h = _admin_hash()
+    if not h:
+        return web.json_response({"ok": True, "unlocked": True, "protected": False})
+    key = ds["ip"] + "|" + ds["dev"]
+    now = time.time()
+    fails, until = _DEV_FAILS.get(key, (0, 0.0))
+    if until > now:
+        return web.json_response({"ok": False, "error": "Zu viele Versuche. Bitte warten.",
+                                  "retry": int(until - now) + 1}, status=429)
+    pw = str(d.get("password") or "")[:200]
+    if not await asyncio.to_thread(_pw_ok, pw, h):
+        fails += 1
+        _DEV_FAILS[key] = (fails, now + (60 * 2 ** min(fails - 5, 4) if fails >= 5 else 0))
+        if len(_DEV_FAILS) > 500:
+            for k in [k for k, v in _DEV_FAILS.items() if v[1] < now][:250]:
+                _DEV_FAILS.pop(k, None)
+        await asyncio.sleep(1.0)                  # Raten bremsen
+        return web.json_response({"ok": False, "error": "Passwort falsch"}, status=401)
+    _DEV_FAILS.pop(key, None)
+    _DEV_UNLOCK[ds["tok"]] = now + DEV_UNLOCK_TTL
+    return web.json_response({"ok": True, "unlocked": True, "protected": True})
+
+
 @web.middleware
 async def security_mw(request: web.Request, handler):
     path = request.path
@@ -11280,7 +11898,12 @@ async def security_mw(request: web.Request, handler):
             and path.startswith(("/api/display", "/api/notify", "/api/mode", "/api/reload",
                                  "/api/goto", "/api/testtone", "/api/testring"))):
         return web.json_response({"ok": False, "error": "fremde Herkunft abgelehnt"}, status=403)
-    if _needs_admin(path) and not _is_admin(request):
+    if path in DEV_SELF_PATHS and "X-Device-Token" in request.headers:
+        ds = _dev_self(request.app["app"], request)      # Geraet greift auf SEINE Einstellungen zu
+        if not ds:
+            return web.json_response({"ok": False, "error": "Geräte-Kennung ungültig"}, status=401)
+        request["devauth"] = ds
+    elif _needs_admin(path) and not _is_admin(request):
         if path in _ADMIN_PAGES:
             return web.Response(text=_LOGIN_HTML, content_type="text/html",
                                 headers={"Cache-Control": "no-store", "X-Frame-Options": "DENY"})
@@ -11419,6 +12042,9 @@ def main() -> None:
     a.router.add_post("/api/devices", api_save_devices)
     a.router.add_get("/api/devices", api_devices_get)
     a.router.add_post("/api/device/switch", api_device_switch)
+    a.router.add_get("/api/device/prefs", api_device_prefs)
+    a.router.add_post("/api/device/prefs", api_device_prefs)
+    a.router.add_post("/api/device/unlock", api_device_unlock)
     a.router.add_get("/api/device/adblog", api_device_adblog)
     a.router.add_post("/api/device/name", api_device_name)
     a.router.add_post("/api/device/delete", api_device_delete)

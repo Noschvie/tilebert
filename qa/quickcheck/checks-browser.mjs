@@ -68,7 +68,7 @@ def({ id: 'QC-B03', stage: 'pre', role: U, must: true, mode: 'auto', title: 'Con
 });
 
 // ---------- B04 Sensoren / Helligkeit / Nacht-Kamera ----------
-def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sensor-Logik mit Sollwerten: setAutoBrightness nur Shelly, Annaeherung (open=wake, Dashboard bleibt), Nacht-Kamera (Sperre, Annaeherung, Beruehrung, Nachlauf, Option aus), prox=off, Config-Sensorfelder' }, async () => {
+def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sensor-Logik mit Sollwerten: setAutoBrightness nur mit Lichtsensor, Annaeherung (open=wake, Dashboard bleibt), Nacht-Kamera (Sperre, Annaeherung, Beruehrung, Nachlauf, Option aus), prox=off, Config-Sensorfelder' }, async () => {
   const bad = [];
   // a) Helligkeit/Auto (frueher bright.mjs)
   let o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof applySensors === 'function', wait: 1500 });
@@ -76,14 +76,14 @@ def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sen
     const out = {}; lpHost.type = 'tbview'; let auto = null, calls = [];
     lpHost.api = { setDisplayBrightness: p => (calls.push(p), true), getDeviceInfo: () => window.__info, setProximityWake() {}, setAutoBrightness: (...x) => { auto = x; } };
     NIGHT.dim = 60;
-    window.__info = '{"prox":true,"light":true,"model":"Jenna"}'; applySensors({ prox: 'wake', auto: true, min: 10, max: 100 }); out.shelly = { auto, shelly: lpHost.shelly };
+    window.__info = '{"prox":true,"light":true,"model":"Jenna"}'; applySensors({ prox: 'wake', auto: true, min: 10, max: 100 }); out.shelly = { auto, shelly: true };
     applySensors({ prox: 'wake', auto: false }); out.autoAus = { auto };
-    window.__info = '{"prox":true,"light":true,"model":"SM-T510"}'; applySensors({ prox: 'wake', auto: true }); out.tablet = { auto, shelly: lpHost.shelly };
+    window.__info = '{"prox":true,"light":false,"model":"SM-T510"}'; auto = null; applySensors({ prox: 'wake', auto: true }); out.tablet = { auto, shelly: false };   // ab Etappe 1: Auto nur, wenn das Geraet einen Lichtsensor meldet
     return out;
   });
   if (!(a.shelly.shelly === true && a.shelly.auto && a.shelly.auto[0] === true && a.shelly.auto[1] === 10 && a.shelly.auto[2] === 100)) bad.push('Shelly+Auto: setAutoBrightness(true,10,100) erwartet, war ' + JSON.stringify(a.shelly));
   if (!(a.autoAus.auto && a.autoAus.auto[0] === false)) bad.push('Auto aus: setAutoBrightness(false) erwartet, war ' + JSON.stringify(a.autoAus));
-  if (!(a.tablet.shelly === false && a.tablet.auto && a.tablet.auto[0] === false)) bad.push('Tablet (SM-T510): Auto darf nicht aktiv werden, war ' + JSON.stringify(a.tablet));
+  if (!(a.tablet.shelly === false && a.tablet.auto && a.tablet.auto[0] === false)) bad.push('Tablet ohne Lichtsensor: Auto darf nicht aktiv werden, war ' + JSON.stringify(a.tablet));
   // b) Annaeherung "open" schliesst Schoner; "wake" weckt auch; "off" nicht (frueher senscheck.mjs)
   const s = await o.pg.evaluate(() => {
     lpHost.type = 'tbview'; const r = {};
@@ -105,7 +105,7 @@ def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sen
   const st = () => o.pg.evaluate(() => { const img = document.getElementById('tcam'); return { night: NIGHT.on, camnight: document.documentElement.classList.contains('camnight'), live: !!img.getAttribute('src'), still: !!img.parentElement.querySelector('canvas.camstill'), ov: !!img.parentElement.querySelector('.camnightov') }; });
   // Server-Nachrichten duerfen die simulierte Nacht nicht zuruecksetzen (tagsueber sendet lpdev night.on=false)
   await o.pg.evaluate(() => { window.__setNight = setNight; window.__nightLog = []; setNight = on => { window.__nightLog.push(on); }; });
-  await o.pg.evaluate(u => { lpHost.type = 'tbview'; lpHost.prox = true;
+  await o.pg.evaluate(u => { lpHost.type = 'tbview'; lpHost.prox = true; lpHost.shelly = true;
     const host = document.createElement('div'); host.className = 'sv-cam-frame'; host.style.cssText = 'position:fixed;left:20px;top:20px;width:320px;height:180px;z-index:99999;background:#222;overflow:hidden';
     const img = document.createElement('img'); img.id = 'tcam'; host.appendChild(img); document.body.appendChild(host); camStream(img, u + '#?id=test', 0); }, png);
   const step = async (name, act, exp) => { if (act) await o.pg.evaluate(act); await o.pg.waitForTimeout(350); const r = await st();
@@ -122,15 +122,14 @@ def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sen
   await step('prox=off', () => { SENS.prox = 'off'; __setNight(true); camNightUpdate(); lpHost._ev('prox', true); }, { camnight: true, live: false });
   const e2 = errList(o.st); if (e2.length) bad.push('Fehler Nachtkamera: ' + e2[0]);
   await o.close();
-  // d) Config: Sensorfelder im Profil, Aenderung landet in PANELS.sens.ui, kein Speichern
+  // d) Config: Hardware-Optionen (Praesenz, Helligkeit, Abdunkeln) gibt es nur noch am Geraet, nicht mehr im Panel; Nachtkamera bleibt am Panel
   o = await openPage(`${LPDEV}/config`, { w: 1280, h: 900, readyFn: CFG_READY, wait: 800 });
   const c = await o.pg.evaluate(async () => { cur = 'sens'; tbReset(); subPconf = 'appearance'; setRubric('pconf'); await new Promise(r => setTimeout(r, 500));
-    const sel = document.querySelector('select[data-uisel="prox"]'), ab = document.querySelector('select[data-uisel="autoBright"]');
-    if (!sel || !ab) return { missing: true }; ab.value = 'off'; ab.dispatchEvent(new Event('change')); return { ui: PANELS.sens.ui }; });
-  if (c.missing) bad.push('Config: Sensorfelder (prox/autoBright) nicht gefunden (Reiter Aussehen)'); else if (c.ui.autoBright !== false) bad.push('Config: autoBright=off landet nicht in PANELS.sens.ui: ' + JSON.stringify(c.ui));
+    return { old: !!document.querySelector('select[data-uisel="prox"],select[data-uisel="autoBright"],[data-ui="nightDim"],[data-ui="brightMin"]'), cam: !!document.querySelector('[data-uichk="nightCam"]'), dpms: !!document.querySelector('[data-ui="dpmsOff"]') }; });
+  if (c.old) bad.push('Config: Hardware-Optionen (prox/autoBright/nightDim/bright) noch im Panel'); if (!c.cam || !c.dpms) bad.push('Config: Nachtkamera/Dashboard-Zeit fehlen im Reiter Aussehen');
   if (o.st.writes.length) bad.push('Config schrieb: ' + o.st.writes.join(','));
   await o.close();
-  return bad.length ? FAIL(bad.join(' | ')) : PASS('Auto-Helligkeit nur Shelly, Annaeherung open/wake/off, Nachtkamera 9 Zustaende, Config-Felder');
+  return bad.length ? FAIL(bad.join(' | ')) : PASS('Auto-Helligkeit nur Shelly, Annaeherung open/wake/off, Nachtkamera 9 Zustaende, Hardware-Optionen nur am Geraet');
 });
 
 // ---------- B05 Bruecke ----------
@@ -303,7 +302,7 @@ def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbV
   const o = await openPage(`${LPDEV}/?panel=sens`, { readyFn: () => typeof SENS !== 'undefined' && typeof armDpms === 'function' && typeof presence === 'function', wait: 2500 });
   const r = await o.pg.evaluate(async () => {
     const calls = [], bri = []; window.__sn = setNight; setNight = () => {}; applyDisplayCfg = () => {};   // Server-Nachrichten ignorieren
-    lpHost.type = 'tbview'; lpHost.prox = true; lpHost.lightLevel = 1;
+    lpHost.type = 'tbview'; lpHost.prox = true; lpHost.shelly = true; lpHost.lightLevel = 1;
     lpHost.api = { turnScreenOff: () => calls.push('off'), turnScreenOn: () => calls.push('on'), isScreenOn: () => true, getDeviceInfo: () => '{"prox":true,"light":true,"model":"Jenna"}',
       setDisplayBrightness: p => (bri.push(p), true), setAutoBrightness() {}, setProximityWake() {}, getLightLevel: () => 1 };
     const w = ms => new Promise(r => setTimeout(r, ms)); const out = {};

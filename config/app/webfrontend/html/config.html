@@ -962,6 +962,20 @@
   .icsndbtns .minibtn{display:inline-flex;align-items:center;cursor:pointer;white-space:nowrap;}
   .icsnd .ic_soundtoast:not(.show){display:none;}
   .icsnd .hint{margin:6px 0 0;font-size:11px;}
+  .icring{margin-top:12px;padding-top:10px;border-top:1px solid var(--line);}
+  .icring .lbl{margin-bottom:6px;} .icring .chk{margin:0 0 6px;}
+  .icrdevs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin:8px 0 2px;}
+  .icrdevs[hidden]{display:none;}
+  .icrdevs .chk{margin:0;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--field);min-height:40px;}
+  .icrdevs small{color:var(--muted);font-size:11px;margin-left:4px;}
+  .icrwarn{margin:8px 0 0;font-size:12px;color:var(--crit);font-weight:600;} .icrwarn[hidden]{display:none;}
+  .icring .hint{margin:6px 0 0;font-size:11px;}
+  .alrow.off{border-color:var(--crit);background:color-mix(in srgb,var(--crit) 10%,var(--field));}
+  .alrow .altag{margin-left:auto;font-size:11px;font-weight:600;color:var(--crit);}
+  .alrow.off .altag{display:block;} .alrow:not(.off) .altag{display:none;}
+  .apex{margin-top:14px;border-top:1px solid var(--line);padding-top:8px;}
+  .apex>summary{font-weight:600;font-size:13px;padding:6px 0;cursor:pointer;} .apex>summary small{color:var(--muted);font-weight:400;margin-left:6px;}
+  .gdreach{display:block;font-size:11px;color:var(--muted);font-weight:400;line-height:1.35;max-width:100%;overflow-wrap:anywhere;}
   .camhn{font-weight:600;} .camhu{color:var(--muted);font-size:12px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 120px;}
   .camrow .field{max-width:none;margin:0;min-width:0;}
   .camrow .field input{width:100%;max-width:none;}
@@ -1273,17 +1287,60 @@
   .dev .devctl:empty,.dev .devmaint:empty,.dev .devwart:empty,.dev .devlive:empty{display:none;}
   .dev .dwart .ddelrow{margin-top:10px;padding-top:0;border-top:0;}
   .dev .dwart .devwart:not(:empty)+.ddelrow{margin-top:12px;}
-  /* Offline-Bereich: eingeklappt, grau (keine Alarmfarbe) */
-  .devoff{margin-top:14px;}
-  .devofft{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:0 14px;cursor:pointer;color:var(--muted);font-weight:600;border:1px dashed var(--line);border-radius:var(--r-m);}
-  .devofft:hover{background:var(--panel2);}
-  .devofft:focus-visible{outline:2px solid var(--sel);outline-offset:2px;}
-  .devofft[aria-expanded="true"] .chev{transform:rotate(90deg);}
-  .devoffb{margin-top:10px;} .devoffb[hidden]{display:none;}
-  #dev_list .devoffb .dev{background:var(--panel2);box-shadow:none;}
-  #dev_list .devoffb .dev .devtg b{color:var(--muted);}
-  .devprune{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 10px;}
-  .devprune .dhint{margin:0;}
+  /* Geraeteliste: eine Zeile je Geraet (Geraet, Typ, Panel, Status) */
+  .gdhd,.gdrow{display:grid;grid-template-columns:22px minmax(120px,2fr) minmax(90px,1.4fr) minmax(90px,1.2fr) minmax(110px,1.4fr) 36px;align-items:center;gap:0 12px;}
+  .gdhd{padding:0 18px 8px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;}
+  .gdrow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:22px minmax(120px,2fr) minmax(90px,1.4fr) minmax(90px,1.2fr) minmax(110px,1.4fr) 36px;align-items:center;gap:0 12px;width:100%;min-height:60px;padding:6px 18px;margin:0 0 8px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel);box-shadow:var(--shadow);cursor:pointer;color:var(--fg);}
+  .gdrow:hover{background:var(--panel2);} .gdrow:focus-visible{outline:2px solid var(--sel);outline-offset:2px;}
+  .gdrow .sdot{background:var(--muted);box-shadow:none;} .gdrow .sdot.on{background:var(--good);box-shadow:0 0 0 4px rgba(82,184,129,.18);} .gdrow .sdot.wait{background:var(--accent);}
+  .gdrow .gdn{font-size:15px;min-width:0;overflow:hidden;text-overflow:ellipsis;} .gdrow .gdt,.gdrow .gdp{min-width:0;overflow:hidden;text-overflow:ellipsis;}
+  .gdrow.off{opacity:.75;} .gdrow.off .gdn{color:var(--muted);}
+  .gdc{justify-self:end;color:var(--muted);font-size:20px;}
+  .gs.ok{color:var(--good);} .gs.warn{color:var(--accent);} .gs.bad{color:var(--crit);} .gs.off{color:var(--muted);}
+  /* Detailseite */
+  .gd .gdback{all:unset;cursor:pointer;color:var(--muted);font-size:14px;padding:4px 0;} .gd .gdback:hover{color:var(--fg);}
+  .gdhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 4px;} .gdhead h2{margin:0;font-size:26px;}
+  .gdlink{all:unset;cursor:pointer;color:var(--sel,var(--accent));font-size:13px;} .gdlink:hover{text-decoration:underline;}
+  .gdmeta{color:var(--muted);font-size:14px;margin:0 0 6px;} .gdnote{font-size:13px;color:var(--muted);margin:6px 0;}
+  .gdrn,.gdmodel{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:6px 0;} .gdrn[hidden],.gdmodel[hidden]{display:none;} .gdrn_in{flex:1 1 200px;max-width:320px;}
+  .gdgrid{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px 40px;margin-top:14px;align-items:start;}
+  .gds{margin:0 0 22px;} .gds h3{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:0 0 6px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+  .gr{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid var(--line);min-height:48px;}
+  .grl{display:flex;flex-direction:column;gap:2px;min-width:0;} .grl small{font-size:12px;color:var(--muted);line-height:1.35;}
+  .grc{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
+  .gchg{color:var(--sel,var(--accent));} .gdreset{all:unset;cursor:pointer;color:var(--sel,var(--accent));font-size:15px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
+  .gdtones{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:10px;}
+  .gdtone{border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:13px;}
+  .gdtone b{font-size:14px;} .gdtone .gchg{font-size:11px;}
+  .gdsw{position:relative;display:inline-block;width:52px;height:44px;flex:none;} .gdsw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1;}
+  .gdsw i{position:absolute;inset:9px 3px;border-radius:13px;background:var(--line);transition:background .15s;}
+  .gdsw i:after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s;}
+  .gdsw input:checked+i{background:var(--good);} .gdsw input:checked+i:after{transform:translateX(20px);}
+  .gdsw input:focus-visible+i{outline:2px solid var(--sel);outline-offset:2px;}
+  .gdseg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;}
+  .gdseg button{all:unset;cursor:pointer;display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;padding:0 16px;font-size:13px;color:var(--muted);} .gdseg button.on{background:var(--accent);color:#1a1a1a;font-weight:700;}
+  .gdadv{margin-top:6px;border-top:1px solid var(--line);padding-top:12px;} .gdadv>summary{cursor:pointer;color:var(--muted);font-size:14px;margin-bottom:8px;}
+  .gd select,.gd input[type=text],.gd input[type=password]{min-height:44px;box-sizing:border-box;}
+  .gd .gdback,.gd .gdlink{display:inline-flex;align-items:center;min-height:44px;}
+  .gd .btn{min-height:44px;}
+  .gdreach.bad{color:var(--crit);}
+  .gdacts{display:flex;flex-direction:column;gap:10px;} .gdacts .btn{width:100%;}
+  .gdside .ddel{width:100%;margin-top:6px;}
+  .gd .tbv .drow .btn{min-height:44px;} .gd .tbv_st{font-size:13px;font-weight:600;margin:2px 0 8px;} .gd .tbv_active{color:var(--good);} .gd .dhint{font-size:12px;color:var(--muted);margin-top:6px;}
+  .gd .tbv_msg:empty{display:none;} .gd .tbv_msg.bad{color:var(--crit);} .gd .drow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .gd .ddetbox{margin-top:10px;padding:10px 12px;border-radius:var(--r-s);background:var(--panel2);border:1px solid var(--line);font-size:12px;}
+  .gd .ddeth{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;} .gd .ddeth small{color:var(--muted);}
+  .gd .ddetchips{display:flex;flex-wrap:wrap;gap:4px;} .gd .ddetchips span{padding:2px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);white-space:nowrap;}
+  .gd .ddetid{margin-top:6px;color:var(--muted);word-break:break-all;}
+  .gd .dtip{margin-top:10px;font-size:12px;color:var(--muted);} .gd .dtip ul{margin:4px 0 0 16px;padding:0;} .gd .dwarn{color:var(--accent);}
+  .gd .ddrow input,.gd .ddrow select{max-width:100%;}
+  @media (max-width:760px){
+    .gdhd{display:none;}
+    .gdrow{grid-template-columns:22px 1fr auto 20px;grid-template-areas:"dot n st c" ". t t c";row-gap:2px;padding:10px 14px;}
+    .gdrow .sdot{grid-area:dot;} .gdrow .gdn{grid-area:n;} .gdrow .gst{grid-area:st;} .gdrow .gdc{grid-area:c;}
+    .gdrow .gdt{grid-area:t;font-size:12px;color:var(--muted);} .gdrow .gdp{display:none;}
+    .gdgrid{grid-template-columns:1fr;} .gdhead h2{font-size:22px;}
+  }
   .dlgtxt{white-space:pre-line;font-size:14px;line-height:1.45;overflow-wrap:anywhere;}
   .dlgask .wzft{justify-content:flex-end;}
   /* Gerät hinzufügen: ein Formular, Schritte nummeriert (nur sichtbare zählen) */
@@ -1637,6 +1694,13 @@
             <div class="note" id="am_servers" style="margin-top:8px"></div>
             <div class="actions"><button class="btn" id="am_save" data-i18n>Speichern</button><span class="toast" id="am_toast"></span></div>
           </div>
+          <!-- Alarmbausteine: Alarmanlagen und Rauchmelder; gespeichert werden nur die abgeschalteten (ui.alarmOff, Speicherleiste unten) -->
+          <div class="card" id="alCard" style="display:none">
+            <h3 data-i18n>Alarmbausteine</h3>
+            <p class="note keep" data-i18n>Neue werden automatisch aktiv.</p>
+            <div class="aplist" id="al_list"></div>
+            <p class="hint" data-i18n>Ein aktiver Baustein zeigt auf allen Geräten ein rotes Vollbild. Den Ton schaltest du je Gerät ein oder aus.</p>
+          </div>
         </section>
 
         <!-- System → Kalender & Kameras: Kalender, Feiertage, Anzeige (Speicherbereich cal), Tuerstationen, Kameras (Speicherbereich ic) -->
@@ -1686,7 +1750,7 @@
           <!-- Nachtmodus (serverweit) -->
           <div class="card" id="ntCard">
             <h3 data-i18n>Nachtmodus</h3>
-            <p class="note keep" data-i18n>Wann Nacht ist, gilt für alle Panels. Was nachts passiert, stellst du je Panel ein: Panel → Display &amp; Nacht.</p>
+            <p class="note keep" data-i18n>Wann Nacht ist, gilt für alle Panels. Das Abdunkeln stellst du je Gerät ein: Geräte → Alle Geräte.</p>
             <div class="row2">
               <div class="field" style="max-width:460px"><label class="lbl" data-i18n>Nacht erkennen über</label><select id="nt_src"></select></div>
             </div>
@@ -1743,20 +1807,24 @@
           </div>
         </section>
 
-        <!-- Geraete → Alle Geraete: Betriebsmodus (eingeklappt), Agenten, Geraeteliste -->
+        <!-- Geraete → Alle Geraete: Liste, Klick oeffnet die Detailseite (Betriebsmodus-Assistent bleibt im Code, ist aber ausgeblendet) -->
         <section class="spane" data-sub="list">
-          <p class="lead" data-i18n>Alle Geräte auf einen Blick: Status, Aktionen und Einstellungen je Gerät.</p>
-          <details class="card devhelp" id="modeCard">
-            <summary><h3 data-i18n>Betriebsmodus</h3></summary>
-            <div class="actions devtools" id="devTools"><button class="btn ghost" id="mzOpenBtn" type="button">Betriebsmodus-Assistent</button><span class="dhint" data-i18n>Legt für mehrere Geräte gleichzeitig fest, welches Panel zu welchem Betriebsmodus gehört.</span></div>
-            <p class="note keep" data-i18n>Lege in Loxone Config einen virtuellen HTTP-Ausgang an, der je Betriebsart den Modusnamen sendet. Je Gerät bestimmst du, welches Panel bei welchem Modus erscheint; ohne Eintrag bleibt das Panel unverändert.</p>
-            <pre class="cmdout" id="mode_hint">GET http://<span id="mode_host">…</span>/api/mode/&lt;modus&gt;</pre>
-          </details>
+          <div hidden>
+            <details class="card devhelp" id="modeCard">
+              <summary><h3 data-i18n>Betriebsmodus</h3></summary>
+              <div class="actions devtools" id="devTools"><button class="btn ghost" id="mzOpenBtn" type="button">Betriebsmodus-Assistent</button></div>
+              <pre class="cmdout" id="mode_hint">GET http://<span id="mode_host">…</span>/api/mode/&lt;modus&gt;</pre>
+            </details>
+          </div>
           <div class="devcards">
-            <div id="ag_list"></div>
             <div id="dev_list"><div class="muted" data-i18n>Geräte suchen …</div></div>
             <div class="actions"><button class="btn" id="dev_save" data-i18n>Speichern</button><span class="toast" id="dev_toast"></span><span class="toast" id="ag_toast"></span></div>
           </div>
+        </section>
+
+        <!-- Geraete → Agenten: Browser ohne Kennung (Reiter nur, wenn es welche gibt) -->
+        <section class="spane" data-sub="agents">
+          <div class="devcards"><div id="ag_list"></div></div>
         </section>
 
         <!-- Geraete → Geraet hinzufuegen: Welches Geraet?, Formular, Welche Geraete gehen? (eingeklappt) -->
@@ -1973,11 +2041,26 @@ const sameFont=(f,v)=>((f||'')===(v||''));
 const customFont=(f)=>!!f && !FONTS.some(x=>x.v===f);
 function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-// Alarm-Vollbild je Panel: Alarmanlagen und Rauchmelder. Standard = an, wenn der
-// Baustein auf diesem Panel sichtbar ist (Raumfilter, nicht ausgeblendet);
-// abweichende Wahl landet in p.alarmPop {uuid: true|false}.
-function apDefault(p,u){ const c=(META.controls||[]).find(x=>x.uuid===u)||{};
-  return !(p.rooms&&p.rooms.length&&p.rooms.indexOf(c.room)<0) && !((p.hide||[]).indexOf(u)>=0); }
+// Alarm-Vollbild je Panel: Alarmanlagen und Rauchmelder. Standard = an (kein Raumfilter mehr);
+// nur Ausnahmen landen in p.alarmPop {uuid: false}.
+function apDefault(p,u){ return true; }
+function alList(){ return (META.controls||[]).filter(c=>c.type==='Alarm'||c.type==='SmokeAlarm'); }
+function alOff(){ const g=PANELS.__global__; return ((g&&g.ui)||{}).alarmOff||[]; }
+// Karte "Alarmbausteine" (System -> Loxone): je Baustein ein Schalter; gespeichert werden nur die abgeschalteten
+function alRender(){
+  const card=$('#alCard'), box=$('#al_list'); if(!card||!box||!PANELS.__global__) return;
+  const cs=alList(); card.style.display=cs.length?'':'none';
+  const off=new Set(alOff());
+  box.innerHTML=cs.map(c=>'<label class="apit alrow'+(off.has(c.uuid)?' off':'')+'"><input type="checkbox" data-alop="'+esc(c.uuid)+'"'+(off.has(c.uuid)?'':' checked')+'>'+
+    '<span><b>'+esc(c.name)+'</b><small>'+esc((c.type==='SmokeAlarm'?T('Rauchmelder'):T('Alarmanlage'))+(c.roomName?' · '+c.roomName:''))+'</small></span>'+
+    '<em class="altag">'+T('Alarm aus')+'</em></label>').join('');
+  box.querySelectorAll('[data-alop]').forEach(b=>b.onchange=async()=>{
+    const u=b.dataset.alop, ui=PANELS.__global__.ui=PANELS.__global__.ui||{}, name=((cs.find(x=>x.uuid===u))||{}).name||u;
+    if(!b.checked && !(await dlgAsk(T('Alarm ausschalten?'),T('„{n}“ zeigt dann auf keinem Gerät ein Vollbild.').replace('{n}',name),T('Ausschalten'),true))){ b.checked=true; return; }
+    const set=new Set(ui.alarmOff||[]); if(b.checked) set.delete(u); else set.add(u);
+    if(set.size) ui.alarmOff=[...set].sort(); else delete ui.alarmOff;
+    b.closest('.apit').classList.toggle('off',!b.checked); markDirty(); });
+}
 // Seite neu laden: Auswahl statt Zahlenfeld (leer = nachts um 3 Uhr, 0 = nie, Zahl = alle n Stunden)
 function reloadOpts(v){
   const list=[3,6,12,24,72,168], cv=(typeof v==='number')?v:null;
@@ -1986,33 +2069,27 @@ function reloadOpts(v){
     list.map(n=>'<option value="'+n+'"'+(cv===n?' selected':'')+'>'+T('Alle {n} Stunden').replace('{n}',n)+'</option>').join('')+
     '<option value="0"'+(cv===0?' selected':'')+'>'+T('Nie')+'</option>';
 }
-// Sensor-Optionen wirken nur mit TbViewer: Karte einklappen und abblenden, wenn kein solches Gerät dieses Panel zeigt
-function applySensRel(){
-  const c=$('#sensCard'), n=$('#sensNote'); if(!c||!n||!cur||!LAST_DEVS) return;
-  const rel=(LAST_DEVS.devices||[]).some(d=>(d.profile||'default')===cur && (d.type==='tbview'||d.kiosk_last==='tbview'));
-  c.classList.toggle('dimmed',!rel); n.hidden=rel;
-  if(!c._sensInit){ c._sensInit=1; c.open=rel; }
-}
 // Kurzstatus in der Summary: "Aus" (kein Baustein gewaehlt) oder "3 Bausteine · Piepton an"
-function apStatus(p){ const ov=p.alarmPop||{};
-  const n=(META.controls||[]).filter(c=>(c.type==='Alarm'||c.type==='SmokeAlarm')&&((typeof ov[c.uuid]==='boolean')?ov[c.uuid]:apDefault(p,c.uuid))).length;
+function apStatus(p){ const ov=p.alarmPop||{}, off=new Set(alOff());
+  const n=alList().filter(c=>ov[c.uuid]!==false&&!off.has(c.uuid)).length;
   if(!n) return T('Aus');
   return (n===1?T('1 Baustein'):T('{n} Bausteine').replace('{n}',n))+' · '+(p.alarmTone?T('Piepton an'):T('Piepton aus')); }
-// Expertenkarte: immer eingeklappt (Sprung/Suche klappt auf), Erklaerung hinter dem ?-Knopf (Klasse qhd)
+// Karte "Alarm-Vollbild" im Panel: Piepton; die Auswahl der Bausteine steht unter System -> Loxone, hier nur Ausnahmen
 function apCardHTML(p){
-  const cs=(META.controls||[]).filter(c=>c.type==='Alarm'||c.type==='SmokeAlarm');
+  const cs=alList();
   if(!cs.length) return '';
-  const ov=p.alarmPop||{};
+  const ov=p.alarmPop||{}, nex=cs.filter(c=>ov[c.uuid]===false).length;
   return '<details class="card qhd" id="apCard"><summary><h3>'+T('Alarm-Vollbild')+'</h3><small class="apst">'+esc(apStatus(p))+'</small></summary>'+
-    '<p class="note">'+T('Löst ein gewählter Baustein aus, zeigt dieses Panel ein rotes Vollbild mit <b>Stumm</b> und <b>Quittieren</b> (Rauchmelder) bzw. <b>Quittieren</b> und <b>Unscharf</b> (Alarmanlage). Die Tasten schalten sofort, abgesicherte Bausteine fragen den PIN ab.')+'</p>'+
+    '<p class="note">'+T('Löst ein Alarmbaustein aus, zeigt jedes Gerät ein rotes Vollbild mit <b>Stumm</b> und <b>Quittieren</b> (Rauchmelder) bzw. <b>Quittieren</b> und <b>Unscharf</b> (Alarmanlage). Die Tasten schalten sofort, abgesicherte Bausteine fragen den PIN ab. Welche Bausteine das sind, stellst du unter System → Loxone ein.')+'</p>'+
     '<label class="chk" style="margin:0 0 10px"><input type="checkbox" id="apTone"'+(p.alarmTone?' checked':'')+'>'+
       '<span>'+T('Piepton, bis „Stumm“ oder „Quittieren“ gedrückt wird oder der Alarm endet')+'</span></label>'+
     '<p class="hint" style="margin:-4px 0 10px">'+T('Der Piepton kommt aus dem Browser und läuft auf Tablets, NSPanel und Shelly. Browser geben Ton erst nach einer Berührung frei: Tippe das Panel nach dem Laden einmal an, sonst zeigt das Vollbild „Ton gesperrt – Bildschirm antippen“. Testen kannst du das je Gerät unter System → Diagnose → Test-Ton.')+'</p>'+
-    '<p class="hint keep" style="margin:0 0 8px">'+T('Vorgewählt sind alle Alarm- und Rauchmelder-Bausteine aus den Räumen dieses Panels, außer ausgeblendeten.')+'</p>'+
-    '<div class="aplist">'+cs.map(c=>{ const on=(typeof ov[c.uuid]==='boolean')?ov[c.uuid]:apDefault(p,c.uuid);
+    '<details class="apex"'+(nex?' open':'')+'><summary>'+T('Ausnahmen für dieses Panel')+'<small>'+(nex?T('{n} abgewählt').replace('{n}',nex):T('keine'))+'</small></summary>'+
+    '<p class="hint keep" style="margin:6px 0 8px">'+T('Abgewählte Bausteine zeigen auf Geräten mit diesem Panel kein Vollbild.')+'</p>'+
+    '<div class="aplist">'+cs.map(c=>{ const on=ov[c.uuid]!==false;
       return '<label class="apit"><input type="checkbox" data-apop="'+esc(c.uuid)+'"'+(on?' checked':'')+'>'+
         '<span><b>'+esc(c.name)+'</b><small>'+esc((c.type==='SmokeAlarm'?T('Rauchmelder'):T('Alarmanlage'))+(c.roomName?' · '+c.roomName:''))+'</small></span></label>'; }).join('')+
-    '</div></details>';
+    '</div></details></details>';
 }
 // ---- Navigation: zentrale Tabelle (Rubrik -> Reiter -> Karten) ----
 // Speist Reiterleiste, Hash (Deep Links), Weiterleitung alter Sprungziele und spaeter die Suche.
@@ -2030,7 +2107,8 @@ const NAV={
       {k:'ms',label:'Miniserver',sel:'#msCard',kw:'Zugangsdaten Zertifikat'},
       {k:'cw',label:'Befehlskontrolle',sel:'#cwCard',kw:'Monitoring'},
       {k:'wx',label:'Wetter',sel:'#wxCard'},
-      {k:'audio',label:'Audioserver',sel:'#amCard',kw:'Audio'}]},
+      {k:'audio',label:'Audioserver',sel:'#amCard',kw:'Audio'},
+      {k:'alarms',label:'Alarmbausteine',sel:'#alCard',kw:'Alarm Rauchmelder Alarmanlage Vollbild',need:()=>alList().length>0}]},
     {k:'content',label:'Kalender & Kameras',at:'settings:content',cards:[
       {k:'cal',label:'Kalender',sel:'#calCard',kw:'iCal'},
       {k:'holidays',label:'Feiertage',sel:'#holCard'},
@@ -2051,21 +2129,20 @@ const NAV={
       {k:'tone',label:'Test-Ton',sel:'#toneCard'},
       {k:'types',label:'Bausteintypen',sel:'#typesCard'}]}],
   devices:[
-    {k:'list',label:'Alle Geräte',at:'devices:list',cards:[
-      {k:'mode',label:'Betriebsmodus',sel:'#modeCard',kw:'Betriebsmodus-Assistent',open:true},
-      {k:'agents',label:'Agenten',sel:'#ag_list',need:()=>!!(((LAST_DEVS||{}).anonymous)||[]).length},
-      {k:'devs',label:'Geräteliste',sel:'#dev_list'}]},
-    {k:'add',label:'Gerät hinzufügen',at:'devices:add',nosave:true,cards:[
+    {k:'list',label:'Alle Geräte',at:'devices:list'},
+    {k:'add',label:'Hinzufügen',at:'devices:add',nosave:true,cards:[
       {k:'kind',label:'Welches Gerät?',sel:'.nptiles'},
-      {k:'supported',label:'Welche Geräte gehen?',sel:'#supCard',kw:'Unterstützte Geräte',open:true}]}],
+      {k:'supported',label:'Welche Geräte gehen?',sel:'#supCard',kw:'Unterstützte Geräte',open:true}]},
+    // Reiter nur, wenn es Agenten gibt (Browser ohne Kennung); show wird in navBar/navNorm/Suche beachtet
+    {k:'agents',label:'Agenten',at:'devices:agents',nosave:true,show:()=>agentsExist()}],
   panel:[
     {k:'tabs',label:'Tabs & Dashboard',at:'pconf:tabs',cards:[
       {k:'grid',label:'Raster',sel:'#tbEdCard',kw:'Dashboard'},
       {k:'hidden',label:'Ausgeblendete Kacheln',sel:'#hidCard',need:id=>!!((PANELS[id]||{}).hide||[]).length}]},
-    {k:'appearance',label:'Aussehen',at:'pconf:appearance'},
-    {k:'display',label:'Display & Nacht',at:'pconf:display',cards:[
+    {k:'appearance',label:'Aussehen',at:'pconf:appearance',cards:[
       {k:'alarm',label:'Alarm-Vollbild',sel:'#apCard',kw:'Alarm Rauchmelder',open:true,
-       need:()=>(META.controls||[]).some(c=>c.type==='Alarm'||c.type==='SmokeAlarm')}]},
+       need:()=>(META.controls||[]).some(c=>c.type==='Alarm'||c.type==='SmokeAlarm')},
+      {k:'idle',label:'Display',sel:'#fReload',kw:'Dashboard Leerlauf Neuladen Nacht'}]},
     {k:'settings',label:'Einstellungen',at:'pconf:settings',cards:[
       {k:'general',label:'Allgemein',sel:'#fTitle'},
       {k:'screen',label:'Bildschirm',sel:'[data-psize]'}]}]};
@@ -2077,12 +2154,12 @@ const NAV_OLD={
   'settings:g:appearance':'system:panels', 'global':'system:panels', 'global:appearance':'system:panels',
   'global:catcolors':'system:panels:catcolors', 'settings:security':'system:password',
   'settings:diagnose':'system:diagnose', 'devices:panels':'devices:list', 'devices:newpanel':'devices:add',
-  'devices:supported':'devices:add:supported'};
-const NAV_PTAB_OLD={profile:'settings'};   // alter Panel-Reiter -> neuer
+  'devices:supported':'devices:add:supported', 'devices:devs':'devices:list', 'devices:mode':'devices:list'};
+const NAV_PTAB_OLD={profile:'settings', display:'appearance'};   // alter Panel-Reiter -> neuer
 // Reiterleiste einer internen Rubrik
 function navBar(r){
   const n=r==='devices'?'devices':r==='pconf'?'panel':'system';
-  return NAV[n].map(t=>({at:t.at,label:t.label}));
+  return NAV[n].filter(t=>!t.show||t.show()).map(t=>({at:t.at,label:t.label}));
 }
 const navSub=at=>at.slice(at.indexOf(':')+1);
 // Heutige Reiterlisten (auch fuer QC/Werkzeuge): k = interner Reiter, System-Reiter der Rubrik global mit 'g:'
@@ -2099,6 +2176,7 @@ async function load(){
                        catColors: JSON.parse(JSON.stringify((META.theme||{}).categories||{})), __global:true};
   // Frueher separate Textfarbe fuer Kachelnamen - jetzt Design-Farbe "Schrift"
   Object.values(PANELS).forEach(pp=>{ if(pp&&pp.ui) delete pp.ui.textColor; });
+  alRender();
   cur = PANELS.default ? 'default' : Object.keys(PANELS)[0];
   renderList(); setRubric('overview'); snapSaved();
   if(h0&&h0!=='#') navGo(navParse(h0));   // Direktlink, auch alte Formen wie #devices:newpanel (LoxBerry-Seite)
@@ -2355,7 +2433,7 @@ function palItems(){
   const L=[], rubName={system:T('System'),devices:T('Geräte')}, icon={system:'⚙',devices:'▣'};
   const kwOf=c=>{ const w=String(c.kw||'').split(/\s+/).filter(Boolean); return w.concat(w.map(x=>T(x))).join(' '); };
   L.push({t:T('Start'),s:T('Übersicht'),ic:'⌂',go:()=>goTo('start')});
-  ['system','devices'].forEach(r=>NAV[r].forEach(t=>{ const kd=r==='devices'?PAL_KW_DEV:'';
+  ['system','devices'].forEach(r=>NAV[r].filter(t=>!t.show||t.show()).forEach(t=>{ const kd=r==='devices'?PAL_KW_DEV:'';
     L.push({t:T(t.label),s:rubName[r],k:kd,ic:icon[r],go:()=>goTo(r,t.k)});
     (t.cards||[]).filter(c=>!c.need||c.need()).forEach(c=>{ if(c.label===t.label){ Object.assign(L[L.length-1],{k:(kd+' '+kwOf(c)).trim(),go:()=>goTo(r,t.k,c.k)}); return; }   // Karte = Reiter (Passwortschutz)
       L.push({t:T(c.label),s:rubName[r]+' → '+T(t.label),k:(kwOf(c)+' '+kd).trim(),ic:icon[r],go:()=>goTo(r,t.k,c.k)}); }); }));
@@ -2365,9 +2443,8 @@ function palItems(){
       (t.cards||[]).filter(c=>!c.need||c.need(id)).forEach(c=>L.push({t:nm+' · '+T(c.label),s:T('Panel')+' → '+T(t.label),k:(kwOf(c)+' '+PAL_KW_PANEL).trim(),ic:'▢',go:()=>goTo('panel',id,t.k,c.k)})); });
     L.push({t:nm+' · '+T('Dashboard'),s:T('Panel'),k:PAL_KW_PANEL,ic:'▦',go:()=>{ cur=id; tbReset(); subPconf='tabs'; tbTab=DK; setRubric('pconf'); }});
     (p.tabs||[]).forEach(k=>L.push({t:nm+' · '+tbLabel(p,k),s:T('Tab'),k:PAL_KW_PANEL,ic:'▤',go:()=>{ cur=id; tbReset(); subPconf='tabs'; tbTab=k; setRubric('pconf'); }})); });
-  Object.keys(DEV).forEach(n=>L.push({t:n,s:T('Gerät'),k:PAL_KW_DEV,ic:'▣',go:()=>{ goTo('devices','list'); setTimeout(()=>{ const e=[...document.querySelectorAll('#dev_list .dev')].find(d=>d.dataset.name===n); if(e){ { const ob=e.closest('.devoffb'); if(ob&&ob.hidden){ const t=ob.parentNode.querySelector('.devofft'); if(t) t.click(); } } e.scrollIntoView({block:'center'}); e.classList.add('flash'); setTimeout(()=>e.classList.remove('flash'),1200); } },80); }}));
+  Object.keys(DEV).forEach(n=>L.push({t:n,s:T('Gerät'),k:PAL_KW_DEV,ic:'▣',go:()=>goTo('devices','list',n)}));
   L.push({t:T('Speichern'),s:T('Aktion')+' · Strg/⌘ S',ic:'✓',go:()=>{ if(dirty||SECT_DIRTY.size) save(); }});
-  L.push({t:T('Betriebsmodus-Assistent'),s:T('Aktion'),ic:'🧭',go:()=>{ goTo('devices','list'); mzOpen(); }});
   L.push({t:T('Panel öffnen'),s:T('Aktion'),k:PAL_KW_PANEL,ic:'↗',go:()=>window.open(panelUrl(cur),'_blank')});
   L.push({t:T('Panel hinzufügen'),s:T('Aktion'),k:PAL_KW_PANEL,ic:'+',go:()=>$('#addBtn').click()});
   L.push({t:T('Menü ein-/ausklappen'),s:T('Aktion'),ic:'◧',go:()=>$('#sideTog').click()});
@@ -2479,13 +2556,14 @@ function navNorm(r, sub, x, y){
     if(!t&&tab){ t=NAV.panel.find(t=>(t.cards||[]).some(c=>c.k===tab)); if(t) card=tab; }
     if(t&&!card&&y&&(t.cards||[]).some(c=>c.k===y)) card=y;
     return {r:'panel',k:t?t.k:(tab?NAV.panel[0].k:''),card,id:pOwn(id)?id:''}; }
-  const tabs=NAV[n]; let t=tabs.find(t=>t.k===sub), card='';
+  const tabs=NAV[n].filter(t=>!t.show||t.show()); let t=tabs.find(t=>t.k===sub), card='';
   if(!t&&sub){ t=tabs.find(t=>(t.cards||[]).some(c=>c.k===sub)); if(t) card=sub; }
   if(!t) t=tabs[0];
   if(!card&&x&&(t.cards||[]).some(c=>c.k===x)) card=x;
   // Karte mit need (z. B. Agenten nur bei Agenten ohne Namen): ohne Inhalt nur den Reiter zeigen
   if(card){ const c=(t.cards||[]).find(c=>c.k===card); try{ if(c&&c.need&&!c.need()) card=''; }catch(e){ card=''; } }
-  return {r:n,k:t.k,card};
+  const dev=(n==='devices'&&t.k==='list'&&!card)?x:'';   // #devices:list:<geraet> = Detailseite
+  return {r:n,k:t.k,card,dev};
 }
 // Zum normalisierten Ziel springen (heutigen internen Ort aus NAV.at), Karte scrollen/aufklappen
 function navGo(n){
@@ -2498,6 +2576,7 @@ function navGo(n){
     return; }
   const t=NAV[n.r].find(t=>t.k===n.k)||NAV[n.r][0], c=n.card?(t.cards||[]).find(c=>c.k===n.card):null;
   navAt(t.at);
+  if(n.r==='devices'&&t.k==='list'){ if(n.dev) gdOpen(n.dev); else if(DEV_CUR) gdClose(); }
   if(c) navCard(c);
 }
 // Interner Ort 'rubrik:reiter' (wie NAV.at)
@@ -2517,6 +2596,7 @@ function navHere(){
   const at=rubric+':'+getSub();
   if(rubric==='pconf'){ const t=NAV.panel.find(t=>t.at===at)||NAV.panel[0]; return 'panel:'+encodeURIComponent(cur||'default')+':'+t.k; }
   const n=rubric==='devices'?'devices':'system';
+  if(n==='devices'&&at==='devices:list'&&DEV_CUR) return 'devices:list:'+encodeURIComponent(DEV_CUR);
   for(const t of NAV[n]) if(t.at===at) return n+':'+t.k;
   return n;
 }
@@ -2613,6 +2693,7 @@ function renderSubtabs(){
     const at=b.dataset.sub;
     if(at.split(':')[0]!==rubric){ navAt(at); return; }        // System <-> Alle Panels (Rubrik global)
     setSub(navSub(at));
+    if(rubric==='devices'&&navSub(at)==='list'&&DEV_CUR) gdClose();
     bar.querySelectorAll('.stab').forEach(x=>x.classList.toggle('active',x===b));
     showSub(navSub(at));
   });
@@ -2867,7 +2948,7 @@ function renderEditor(){
   $('#pconfHost').innerHTML =
    // 1 · Tabs: Leiste + Raster
    // Einstellungen (Reiter 'settings', frueher 'profile'): Groesse des Panels
-   // Einstellungen: Allgemein -> Bildschirm (Groesse, Raster, Fuellen, Versatz) -> Display & Nacht -> Alarm
+   // Einstellungen: Allgemein -> Bildschirm (Groesse, Raster, Fuellen, Versatz) -> Aussehen -> Alarm
    '<section class="spane" data-sub="settings">'+
      '<div class="card"><h3>'+T('Allgemein')+'</h3><div class="sizes">'+
        '<div class="field" style="max-width:320px"><label class="lbl">Name</label>'+
@@ -2901,50 +2982,6 @@ function renderEditor(){
      '</div><p class="hint">'+T('Bildschirm füllen: Auf größeren Displays wird hochgezoomt, statt im 480er-Raster zu bleiben. Den Versatz nur ändern, wenn das Bild am Rand abgeschnitten ist.')+'</p></div>'+
      '</section>'+
 
-   // Display & Nacht: alles, was Display, Nacht und Sensoren dieses Panels betrifft
-   '<section class="spane" data-sub="display">'+
-     '<div class="card"><h3>'+T('Display')+'</h3>'+
-       '<p class="note">'+T('TbViewer schaltet das Display nie aus. Berührung, Annäherung, Klingel, Wecker und Nachrichten stellen die normale Helligkeit wieder her.')+'</p>'+
-       '<div class="sizes">'+
-       '<div class="field" style="max-width:220px"><label class="lbl">'+T('Dashboard nach Leerlauf (s)')+'</label>'+
-         '<input type="number" min="0" max="3600" step="30" data-ui="dpmsOff" value="'+
-         (((p.ui||{}).dpmsOff==null)?'':(p.ui||{}).dpmsOff)+'" placeholder="'+T('0 = nie')+'">'+
-         '<div class="hint">'+T('Nach dieser Zeit ohne Berührung zeigt das Panel das Dashboard.')+'</div></div>'+
-       '<div class="field" style="max-width:260px"><label class="lbl">'+T('Seite neu laden')+'</label>'+
-         '<select id="fReload">'+reloadOpts((p.ui||{}).reloadHours)+'</select>'+
-         '<div class="hint">'+T('Gegen Einfrieren. Nur, wenn das Dashboard steht.')+'</div></div>'+
-       '</div>'+
-       '<p class="hint">'+T('Helligkeit und Tipp-Töne direkt am Gerät: Geräte → Alle Geräte.')+'</p></div>'+
-     '<div class="card"><h3>'+T('Nacht')+'</h3>'+
-       '<p class="hint keep">'+T('Wann Nacht ist, legst du unter System → Alle Panels → Nachtmodus fest.')+'</p>'+
-       '<div class="sizes">'+
-       '<div class="field" style="max-width:220px"><label class="lbl">'+T('Abdunkeln nachts (%)')+'</label>'+
-         '<input type="number" min="0" max="90" step="5" data-ui="nightDim" value="'+
-         (((p.ui||{}).nightDim==null)?'':(p.ui||{}).nightDim)+'" placeholder="'+T('0 = aus')+'"></div>'+
-       '<div class="field" style="max-width:220px" id="nightWakeField"><label class="lbl">'+T('Hell nach Antippen (s)')+'</label>'+
-         '<input type="number" min="0" max="300" step="5" data-ui="nightWake" value="'+
-         (((p.ui||{}).nightWake==null)?'':(p.ui||{}).nightWake)+'" placeholder="20"></div>'+
-     '</div></div>'+
-     '<details class="card" id="sensCard" open><summary><h3>'+T('Sensoren')+'</h3></summary>'+
-       '<p class="note" id="sensNote" hidden>'+T('Kein Gerät mit TbViewer zeigt dieses Panel. Diese Optionen wirken erst dann.')+'</p>'+
-       '<div class="sizes">'+
-       '<div class="field" style="max-width:320px"><label class="lbl">'+T('Präsenzerkennung')+'</label>'+
-         '<select data-uisel="prox">'+[['','An'],['off','Aus']].map(([v,l])=>
-           '<option value="'+v+'"'+(((p.ui||{}).prox==='off'?'off':'')===v?' selected':'')+'>'+T(l)+'</option>').join('')+'</select></div>'+
-       '<div class="field" style="max-width:260px"><label class="lbl">'+T('Helligkeit')+'</label>'+
-         '<select data-uisel="autoBright">'+[['','Automatisch (Lichtsensor)'],['off','Systemeinstellung']].map(([v,l])=>
-           '<option value="'+v+'"'+((((p.ui||{}).autoBright===false)?'off':'')===v?' selected':'')+'>'+T(l)+'</option>').join('')+'</select></div>'+
-       '<div class="field" style="max-width:160px"><label class="lbl">'+T('Helligkeit min. (%)')+'</label>'+
-         '<input type="number" min="1" max="100" step="5" data-ui="brightMin" value="'+
-         (((p.ui||{}).brightMin==null)?'':(p.ui||{}).brightMin)+'" placeholder="10"></div>'+
-       '<div class="field" style="max-width:160px"><label class="lbl">'+T('Helligkeit max. (%)')+'</label>'+
-         '<input type="number" min="1" max="100" step="5" data-ui="brightMax" value="'+
-         (((p.ui||{}).brightMax==null)?'':(p.ui||{}).brightMax)+'" placeholder="100"></div>'+
-     '</div><div class="sizes" style="margin-top:8px">'+
-       '<label class="chk"><input type="checkbox" data-uichk="nightCam" data-def="1"'+(((p.ui||{}).nightCam===false)?'':' checked')+'> <span>'+T('Nachts Kamerabild nur bei Präsenz zeigen')+'</span></label>'+
-     '</div><p class="hint">'+T('Präsenz = Annäherung oder Änderung des Lichtwerts: weckt nachts kurz auf und zeigt die Kamera live. Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.')+' '+T('Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Die automatische Helligkeit gilt tagsüber, nachts gilt „Abdunkeln nachts“.')+'</p></details>'+
-     apCardHTML(p)+'</section>'+
-
    '<section class="spane" data-sub="tabs"><div class="card"><h3>Tabs</h3>'+
      '<p class="note">'+T('Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> (Startseite) ganz rechts. Zum Umsortieren Tabs ziehen.')+'</p>'+
      '<p class="note">'+T('Bis zu <b>4 Tabs</b>, der erste ist die Startseite (★). Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).')+'</p>'+
@@ -2976,7 +3013,34 @@ function renderEditor(){
      '<div class="card"><h3>'+T('Kacheln')+'</h3><div class="sizes">'+
        '<div class="field" style="max-width:260px"><label class="lbl">'+T('Werte groß auf Kacheln')+'</label>'+
          '<select id="fBigVals">'+bigValOpts((p.ui||{}).bigValues===true?'on':((p.ui||{}).bigValues||''),true)+'</select></div></div>'+
-     '<p class="hint">'+T('Reine Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol als blasses Wasserzeichen, Zahl und Einheit kommen unverändert aus Loxone. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert; pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.')+'</p></div></section>';
+     '<p class="hint">'+T('Reine Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol als blasses Wasserzeichen, Zahl und Einheit kommen unverändert aus Loxone. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert; pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.')+'</p></div>'+
+     '<div class="card"><h3>'+T('Am Gerät')+'</h3>'+
+       '<label class="chk"><input type="checkbox" id="fDevBtn"'+((p.ui||{}).devBtn===true?' checked':'')+'><span>'+T('Zahnrad für die Einstellungen am Gerät zeigen')+'</span></label>'+
+       '<p class="hint">'+T('Die Einstellungen öffnen auch mit fünf schnellen Tipps. Nicht am Handy.')+'</p></div>'+
+     '<div class="card"><h3>'+T('Display')+'</h3>'+
+       '<p class="note">'+T('TbViewer schaltet das Display nie aus. Berührung, Annäherung, Klingel, Wecker und Nachrichten stellen die normale Helligkeit wieder her.')+'</p>'+
+       '<div class="sizes">'+
+       '<div class="field" style="max-width:220px"><label class="lbl">'+T('Dashboard nach Leerlauf (s)')+'</label>'+
+         '<input type="number" min="0" max="3600" step="30" data-ui="dpmsOff" value="'+
+         (((p.ui||{}).dpmsOff==null)?'':(p.ui||{}).dpmsOff)+'" placeholder="'+T('0 = nie')+'">'+
+         '<div class="hint">'+T('Nach dieser Zeit ohne Berührung zeigt das Panel das Dashboard.')+'</div></div>'+
+       '<div class="field" style="max-width:260px"><label class="lbl">'+T('Seite neu laden')+'</label>'+
+         '<select id="fReload">'+reloadOpts((p.ui||{}).reloadHours)+'</select>'+
+         '<div class="hint">'+T('Gegen Einfrieren. Nur, wenn das Dashboard steht.')+'</div></div>'+
+       '</div>'+
+       '<p class="hint">'+T('Abdunkeln, Präsenzerkennung, Helligkeit und Töne stellst du je Gerät ein: Geräte → Alle Geräte.')+'</p></div>'+
+     '<div class="card"><h3>'+T('Nacht')+'</h3>'+
+       '<p class="hint keep">'+T('Wann Nacht ist, legst du unter System → Alle Panels → Nachtmodus fest.')+'</p>'+
+       '<div class="sizes">'+
+       '<div class="field" style="max-width:220px" id="nightWakeField"><label class="lbl">'+T('Hell nach Antippen (s)')+'</label>'+
+         '<input type="number" min="0" max="300" step="5" data-ui="nightWake" value="'+
+         (((p.ui||{}).nightWake==null)?'':(p.ui||{}).nightWake)+'" placeholder="20"></div>'+
+     '</div></div>'+
+     '<div class="card"><h3>'+T('Nacht-Kamera')+'</h3><div class="sizes">'+
+       '<label class="chk"><input type="checkbox" data-uichk="nightCam" data-def="1"'+(((p.ui||{}).nightCam===false)?'':' checked')+'> <span>'+T('Nachts Kamerabild nur bei Präsenz zeigen')+'</span></label>'+
+     '</div><p class="hint">'+T('Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.')+'</p></div>'+
+     apCardHTML(p)+
+     '</section>';
 
 
   $('#delSlot').innerHTML='';   // Loeschen jetzt per ✕ am Panel in der linken Liste
@@ -3003,8 +3067,10 @@ function renderEditor(){
   const apSt=()=>{ const e=document.querySelector('#apCard .apst'); if(e) e.textContent=apStatus(p); };
   const apT=$('#apTone'); if(apT) apT.onchange=()=>{ if(apT.checked) p.alarmTone=true; else delete p.alarmTone; apSt(); markDirty(); };
   document.querySelectorAll('[data-apop]').forEach(b=>b.onchange=()=>{ const u=b.dataset.apop;
-    p.alarmPop=p.alarmPop||{}; if(b.checked===apDefault(p,u)) delete p.alarmPop[u]; else p.alarmPop[u]=b.checked;
-    if(!Object.keys(p.alarmPop).length) delete p.alarmPop; apSt(); markDirty(); });
+    p.alarmPop=p.alarmPop||{}; if(b.checked) delete p.alarmPop[u]; else p.alarmPop[u]=false;
+    if(!Object.keys(p.alarmPop).length) delete p.alarmPop;
+    { const sm=document.querySelector('#apCard .apex>summary small'); if(sm){ const n=Object.values(p.alarmPop||{}).filter(v=>v===false).length; sm.textContent=n?T('{n} abgewählt').replace('{n}',n):T('keine'); } }
+    apSt(); markDirty(); });
   document.querySelectorAll('[data-psize]').forEach(b=>b.onclick=()=>{ p.ui=p.ui||{};
     // Handy = zwei Flaechen (wie 2 Panels), am Handy untereinander gezeigt
     if(b.dataset.psize==='1'){ p.ui.split=false; delete p.ui.phone; }
@@ -3019,19 +3085,13 @@ function renderEditor(){
       if(e.target.value) p.ui.sceneLight=e.target.value; else delete p.ui.sceneLight; markDirty(); }; }
   { const fb=$('#fBigVals'); if(fb) fb.onchange=e=>{ p.ui=p.ui||{};
       if(e.target.value) p.ui.bigValues=e.target.value; else delete p.ui.bigValues; markDirty(); }; }
+  { const fd=$('#fDevBtn'); if(fd) fd.onchange=e=>{ p.ui=p.ui||{}; if(e.target.checked) p.ui.devBtn=true; else delete p.ui.devBtn; markDirty(); }; }
   { const fa=$('#fIconAnim'); if(fa) fa.onchange=e=>{ p.ui=p.ui||{};
       if(e.target.value) p.ui.iconAnim=e.target.value; else delete p.ui.iconAnim; markDirty(); }; }
   { const fc=$('#fContrast'); if(fc) fc.onchange=e=>{ p.ui=p.ui||{};
       if(e.target.value) p.ui.contrast=e.target.value; else delete p.ui.contrast; markDirty(); }; }
   { const fr=$('#fReload'); if(fr) fr.onchange=()=>{ p.ui=p.ui||{};
       if(fr.value==='') delete p.ui.reloadHours; else p.ui.reloadHours=Number(fr.value); markDirty(); }; }
-  if(LAST_DEVS) applySensRel(); else fetch('/api/devices').then(r=>r.json()).then(j=>{ LAST_DEVS=j; applySensRel(); }).catch(()=>{});
-  // Progressive Disclosure: "Aufhellen bei Beruehrung" nur zeigen, wenn ueberhaupt
-  // nachts abgedunkelt wird (sonst wirkungslos).
-  { const nd=$('[data-ui="nightDim"]'), nw=$('#nightWakeField');
-    const upd=()=>{ if(nw) nw.style.display=(nd&&Number(nd.value)>0)?'':'none'; };
-    if(nd) nd.addEventListener('input', upd); upd(); }
-
   renderTabList(p);
   $('#saveBtn').onclick=save;
 
@@ -3921,9 +3981,9 @@ function markDirty(){ dirty=true; dirtyN++; const t=$('#toast'); if(t){ t.classN
 let SAVED_SNAP=null;
 function snapSaved(){ try{ SAVED_SNAP=JSON.parse(JSON.stringify(PANELS)); }catch(e){ SAVED_SNAP=null; } }
 function stable(v){ return JSON.stringify(v,(k,x)=>(x&&typeof x==='object'&&!Array.isArray(x))?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x); }
-const CHG_UI={grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Präsenzerkennung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Präsenz zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
+const CHG_UI={devBtn:'Zahnrad am Gerät',grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Präsenzerkennung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Präsenz zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
   nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',motion:'Animation',iconAnim:'Animierte Symbole',contrast:'Kontrast',sceneLight:'Lichtszenen',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
-  nudgeX:'Versatz horizontal (px)',iconSize:'Symbol',nameSize:'Kachelname',subSize:'Statuszeile',bold:'Kachelnamen',dblTapOff:'Doppeltipp',alarmsEnabled:'Wecker',
+  nudgeX:'Versatz horizontal (px)',iconSize:'Symbol',nameSize:'Kachelname',subSize:'Statuszeile',bold:'Kachelnamen',dblTapOff:'Doppeltipp',alarmsEnabled:'Wecker',alarmOff:'Alarmbausteine',
   lang:'Sprache',saverFcSize:'Wettervorschau',tileShadow:'Kachel-Schatten'};
 function changeList(){ return panelChanges().concat([...SECT_DIRTY].map(k=>T((SECTS.find(x=>x.k===k)||{}).label||k))); }
 function panelChanges(){
@@ -3951,11 +4011,11 @@ function saveInfo(){ const i=$('#saveInfo'), sb=$('#savebar'), d=$('#discardBtn'
   i.textContent = any ? (n===1?T('1 Änderung'):n+' '+T('Änderungen')) : T('Alles gespeichert');
   if(sb) sb.classList.toggle('dirty',any); if(d) d.hidden=!any; saveBarVis(); }
 // Rückfrage als eigener Dialog (statt confirm()): liefert true bei Bestätigung. Escape und Abbrechen = false.
-function dlgAsk(title, text, okLabel, danger){
+function dlgAsk(title, text, okLabel, danger, noLabel){
   return new Promise(res=>{
     const ov=document.createElement('div'); ov.className='wzov';
     ov.innerHTML='<div class="wzbox dlgask" role="alertdialog" aria-modal="true" aria-label="'+esc(title)+'"><div class="wzhd"><b>'+esc(title)+'</b></div>'+
-      '<div class="wzbody dlgtxt">'+esc(text)+'</div><div class="wzft"><button type="button" class="btn ghost dlg_no">'+T('Abbrechen')+'</button>'+
+      '<div class="wzbody dlgtxt">'+esc(text)+'</div><div class="wzft"><button type="button" class="btn ghost dlg_no">'+(noLabel||T('Abbrechen'))+'</button>'+
       '<button type="button" class="btn'+(danger?' del':'')+' dlg_ok">'+esc(okLabel||'OK')+'</button></div></div>';
     document.body.appendChild(ov);
     const prev=document.activeElement;
@@ -4486,7 +4546,7 @@ checkUpdate();
       box.innerHTML=SET.intercoms.map(ic=>{ const op=IC_OPEN.has(ic.uuid);
         return '<div class="ic icbox xfold'+(op?' open':'')+'" data-uuid="'+esc(ic.uuid)+'">'+
         '<div class="xhd"><button type="button" class="xtg" aria-expanded="'+(op?'true':'false')+'"><i class="sdot'+(ic.url?' on':'')+'"></i><b class="icname">'+esc(ic.name)+'</b>'+
-          '<small class="icsum"><span class="ichost">'+esc(ic.url?camHost(ic.url):T('kein Video'))+'</span>'+[ic.sound?T('Ton an'):'', ic.hasCustomSound?T('eigener Klingelton'):''].filter(Boolean).map(x=>' · '+x).join('')+'</small><span class="chev" aria-hidden="true">›</span></button></div>'+
+          '<small class="icsum"><span class="ichost">'+esc(ic.url?camHost(ic.url):T('kein Video'))+'</span>'+[ic.sound?T('Ton an'):'', ic.hasCustomSound?T('eigener Klingelton'):'', icRingSum(ic)].filter(Boolean).map(x=>' · '+x).join('')+'</small><span class="chev" aria-hidden="true">›</span></button></div>'+
         '<div class="xbd"><div><div class="icb">'+
         '<div class="field"><label class="lbl">'+T('Video-Adresse (MJPEG)')+'</label><input type="text" class="ic_url" value="'+esc(ic.url)+'" placeholder="http://192.168.1.201/cgi-bin/faststream.jpg?stream=full&fps=8"><div class="hint camhint">'+T('Passwörter werden als •••••• angezeigt. Zum Ändern überschreiben.')+'</div></div>'+
         '<div class="row2"><div class="field"><label class="lbl">'+T('Benutzer')+'</label><input type="text" class="ic_user" value="'+esc(ic.user)+'" autocomplete="off"></div>'+
@@ -4494,6 +4554,7 @@ checkUpdate();
         '<div class="field" style="margin-top:8px"><label class="lbl">'+T('Kameraverbindung automatisch erneuern')+'</label>'+
           '<select class="ic_reconnect">'+[[0,T('aus')],[6,T('alle 6 Stunden')],[12,T('alle 12 Stunden')],[24,T('alle 24 Stunden')]]
             .map(o=>'<option value="'+o[0]+'"'+((ic.reconnect||0)===o[0]?' selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>'+
+        icRingHTML(ic)+
         '<div class="icsnd">'+
           '<div class="lbl">'+T('Klingelton')+'</div>'+
           '<label class="chk"><input type="checkbox" class="ic_sound"'+(ic.sound?' checked':'')+'>'+
@@ -4516,6 +4577,7 @@ checkUpdate();
       box.querySelectorAll('.ic').forEach(row=>{
         const uuid=row.dataset.uuid;
         xfoldBind(row, IC_OPEN, uuid);
+        icRingBind(row);
         { const ur=row.querySelector('.ic_url'), hu=row.querySelector('.ichost');   // Kopf zeigt nur den Host (ohne Zugangsdaten)
           ur.addEventListener('input',()=>{ hu.textContent=camHost(ur.value)||T('kein Video'); }); }
         crpBind(row, SET.intercoms.find(x=>x.uuid===uuid));
@@ -4764,11 +4826,42 @@ function renderCams(){
 }
 $('#cam_add').onclick=()=>{ readCams(); CAMS.push({name:'',url:'',user:''}); renderCams();
   const r=[...document.querySelectorAll('#cam_list .camrow')].pop(); if(r) r.querySelector('.cam_name').focus(); };
+// "Klingelt an": Alle Wandgeraete (Standard) oder Auswahl. Geraeteliste = konfigurierte + bekannte Geraete.
+function icRingDevs(sel){
+  const m={}; Object.keys((META&&META.devices)||{}).forEach(n=>{ m[n]={name:n,model:((META.devices[n]||{}).model)||''}; });
+  (((LAST_DEVS||{}).devices)||[]).forEach(d=>{ m[d.name]={name:d.name,model:d.model||((d.detected||{}).guess)||''}; });
+  (sel||[]).forEach(n=>{ if(!m[n]) m[n]={name:n,model:''}; });
+  return Object.values(m).sort((a,b)=>a.name.localeCompare(b.name,'de'));
+}
+const icWalls=ic=>!Array.isArray(ic.ringTargets);
+function icRingSum(ic){ return icWalls(ic)?'':T('Klingelt an: Auswahl'); }
+function icRingDevsHTML(sel){ return icRingDevs(sel).map(d=>'<label class="chk"><input type="checkbox" class="ic_rdev" value="'+esc(d.name)+'"'+(sel.indexOf(d.name)>=0?' checked':'')+'>'+
+  '<span>'+esc(d.name)+((d.model==='phone'||d.model==='other')?'<small>'+T('Handy / PC')+'</small>':'')+'</span></label>').join('')
+  || '<span class="hint">'+T('Noch keine Geräte')+'</span>'; }
+function icRingHTML(ic){ const walls=icWalls(ic), sel=walls?[]:ic.ringTargets, nm='icrm_'+esc(ic.uuid);
+  return '<div class="icring"><div class="lbl">'+T('Klingelt an')+'</div>'+
+    '<label class="chk"><input type="radio" class="ic_rmode" name="'+nm+'" value="walls"'+(walls?' checked':'')+'><span>'+T('Alle Wandgeräte')+'</span></label>'+
+    '<label class="chk"><input type="radio" class="ic_rmode" name="'+nm+'" value="pick"'+(walls?'':' checked')+'><span>'+T('Auswahl')+'</span></label>'+
+    '<div class="icrdevs"'+(walls?' hidden':'')+'>'+icRingDevsHTML(sel)+'</div>'+
+    '<p class="icrwarn" role="status" hidden>'+T('Klingelt nirgends')+'</p>'+
+    '<p class="hint">'+T('Wandgeräte sind alle Geräte außer Handy und PC-Browser. Den Ton schaltest du je Gerät ein oder aus.')+'</p></div>'; }
+function icRingRead(n){ const m=n.querySelector('.ic_rmode:checked');
+  return (m&&m.value==='pick')?[...n.querySelectorAll('.ic_rdev:checked')].map(x=>x.value):'walls'; }
+function icRingBind(row){
+  const sync=()=>{ const pick=icRingRead(row)!=='walls', dv=row.querySelector('.icrdevs'), w=row.querySelector('.icrwarn');
+    if(dv) dv.hidden=!pick; if(w) w.hidden=!(pick&&!row.querySelector('.ic_rdev:checked')); };
+  const box=row.querySelector('.icring'); if(box&&!box._bound){ box._bound=true; box.addEventListener('change',sync); }
+  sync(); }
+// Geraeteliste kam nach dem Aufbau: Auswahlfelder nachziehen, gesetzte Haken bleiben
+function icRingRefresh(){ document.querySelectorAll('#ic_list .ic[data-uuid]').forEach(row=>{ const dv=row.querySelector('.icrdevs'); if(!dv) return;
+  const sel=[...row.querySelectorAll('.ic_rdev:checked')].map(x=>x.value), cnt=row.querySelectorAll('.ic_rdev').length;
+  if(icRingDevs(sel).length===cnt) return; dv.innerHTML=icRingDevsHTML(sel); icRingBind(row); }); }
 $('#ic_save').onclick=async()=>{
   const intercoms={};
   document.querySelectorAll('.ic[data-uuid]').forEach(n=>{
     const e={url:n.querySelector('.ic_url').value.trim(),user:n.querySelector('.ic_user').value.trim(),
              sound:n.querySelector('.ic_sound').checked,
+             ringTargets:icRingRead(n),
              reconnect:+(n.querySelector('.ic_reconnect')||{}).value||0};
     if(n._crop) e.crop=n._crop;
     const p=n.querySelector('.ic_pass').value; if(p)e.pass=p;
@@ -4993,15 +5086,11 @@ async function loadPanelIds(){
     DEV={};
     Object.entries(m.devices||{}).forEach(([name,d])=>{
       DEV[name]={auto:d.auto!==false, modes:Object.entries(d.modes||{}), display:d.display||null,
-                 model:d.model||'', fully:!!d.fully, nrestart:d.nrestart, scale:(d.scale===undefined?'':d.scale)};
+                 model:d.model||'', fully:!!d.fully, nrestart:d.nrestart, scale:(d.scale===undefined?'':d.scale), prefs:d.prefs||{}};
     });
   }catch(e){ PANEL_IDS=[]; }
 }
 const TYPE_LABEL={agent:'Agent', tbview:'TbViewer', browser:'Browser'};
-function profSelect(cls, cur){
-  return '<select class="'+cls+'"><option value="">'+T('(Standard)')+'</option>'+
-    PANEL_IDS.map(id=>'<option value="'+esc(id)+'"'+(cur===id?' selected':'')+'>'+esc(id)+'</option>').join('')+'</select>';
-}
 // Abschnittskopf einer Geraetekachel mit kleinem Symbol
 const DSI={
   zoom:'<path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="m21 3-7 7"/><path d="m3 21 7-7"/>',
@@ -5012,57 +5101,11 @@ const DSI={
   edit:'<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/>'
 };
 const dsh=(ic,t)=>'<div class="dsh"><span class="dsi">'+svg(DSI[ic])+'</span>'+t+'</div>';
-// Live-Teil einer Geraetekachel, in Abschnitten: Anzeige (welche Ansicht), Steuerung
-// (Display, Neustarts, Helligkeit). Einstellungen folgen darunter (devRow).
 // Kurz getrennt (Server-Neustart, Seite laedt neu - schwache Panels brauchen 30-40 s):
 // innerhalb von 2 min "verbindet …" statt sofort "offline".
 function devReconnecting(d){ if(!d||d.online) return false;
   const last=Math.max(d.lastSeen||0, (d.detected&&d.detected.last)||0);
   return last>0 && (Date.now()/1000-last)<120; }
-function deviceRow(d, sel){
-  const cur=(sel!==undefined)?sel:(d.profile||'');
-  const caps=d.caps||[], has=c=>caps.indexOf(c)>=0, disp=!!(DEV[d.name]||{}).display;
-  const off=!d.online, rc=devReconnecting(d);   // offline: Live-Steuerung ausgegraut
-  const btn=(act,label,tip,primary,live)=>'<button class="btn sm'+(primary?'':' ghost')+'" data-act="'+act+'"'+(tip?' title="'+esc(tip)+'"':'')+(live&&off?' disabled':'')+'>'+label+'</button>';
-  const wrap=inner=>'<div class="ag dlive" data-name="'+esc(d.name)+'" data-ip="'+esc(d.agent?d.agent.ip:'')+'" data-devip="'+esc(d.ip||'')+'">'+inner+'</div>';
-  // 1. Panel wechseln
-  const view=wrap('<div class="dsec">'+dsh('view',T('Panel'))+
-      '<div class="drow">'+profSelect('agsel',cur)+(d.connections?btn('switch',T('Panel wechseln'),'',true)+btn('wsreload',T('Panel neu laden')):'')+'</div>'+
-      '<div class="dhint">'+(d.connections?T('Panel wählen, dann „Panel wechseln“. Wirkt sofort am Gerät.'):T('Wechseln geht erst, wenn das Panel am Gerät geöffnet ist.'))+'</div></div>');
-  // 2. Display live (nur, was das Gerät kann): Agent-Browser, Display ein/aus, Helligkeit, Tipp-Töne
-  let ctl='';
-  if(d.agent) ctl+=btn('start',T('Browser starten'),'',!d.connections,1)+btn('reload',T('Browser neu laden'),'',0,1)+btn('stop',T('Browser beenden'),'',0,1);
-  if(disp) ctl+=btn('dispoff',T('Display ausschalten'),'',0,1)+btn('dispon',T('Display einschalten'),'',0,1);
-  const extra=devExtraHTML(d,caps,off);
-  const canCtl=!!(d.agent||disp||extra);   // Browser-Geräte ohne Steuerung: Abschnitt entfällt
-  const ctlH=canCtl?wrap('<div class="dsec dctl'+(off?' off':'')+'">'+dsh('ctl',T('Display live'))+
-      (off?'<div class="doff">'+(rc?T('Gerät verbindet sich. Die Steuerung ist gleich verfügbar.'):T('Gerät offline. Die Steuerung ist nicht verfügbar.'))+'</div>'
-          :((ctl?'<div class="drow">'+ctl+'</div>':'')+extra+
-            (has('brightness')?'<div class="dhint">'+T('Voraussetzung: ADB über WLAN ist am Gerät eingeschaltet und für diesen Server freigegeben.')+'</div>':'')))+'</div>'):'';
-  // 3. TbViewer-Status (nur Android-Geräte, Capability fullyinstall); Zustand/Aktion siehe tbvHTML
-  const mt=has('fullyinstall')?tbvHTML(d.name, d.type==='tbview'||d.kiosk_last==='tbview'):'';
-  const maint=mt?wrap('<div class="dsec">'+dsh('setup',T('TbViewer'))+mt+'</div>'):'';
-  // 5. Wartung (nur mit ADB): Neustart, Protokoll
-  const wart=has('reboot')?wrap('<div class="drow">'+btn('devreboot',T('Gerät neu starten'),T('Ganzes Gerät neu starten, wenn das Display hängt'),0,1)+
-      btn('adblog',T('Protokoll holen'),T('Geräteprotokoll per ADB als Datei laden'),0,1)+'</div>'):'';
-  return {view:view, ctl:ctlH, maint:maint, wart:wart};
-}
-// Android: Display-Helligkeit per adb
-function devExtraHTML(d,caps,off){
-  const dis=off?' disabled':'';
-  const bri=caps.indexOf('brightness')>=0;
-  if(!bri) return '';
-  return '<div class="devx drow" data-name="'+esc(d.name)+'" data-devip="'+esc(d.ip||'')+'">'+
-    (bri?(()=>{ const st=DEV_BRI[d.name]||{}, au=st.auto!==false;   // Standard: Automatik (bis der Wert gelesen ist)
-      return '<div class="dbri'+(au?' auto':'')+'"><span>'+T('Helligkeit')+'</span>'+
-        '<label class="chk dbri_a" title="'+T('Das Gerät regelt die Helligkeit selbst nach dem Umgebungslicht')+'"><input type="checkbox" class="dbri_auto"'+(au?' checked':'')+dis+'> '+T('Automatisch')+'</label>'+
-        '<input type="range" min="1" max="100" step="1" value="'+(st.pct||70)+'" class="dbri_r"'+(au||off?' disabled':'')+'>'+
-        '<b class="dbri_v">'+(au?(st.read?T('auto'):'–'):(st.pct?st.pct+' %':'–'))+'</b>'+
-        '<button type="button" class="btn sm ghost dbri_get"'+dis+' title="'+T('Aktuellen Zustand vom Gerät lesen')+'" aria-label="'+T('Aktuellen Zustand vom Gerät lesen')+'">↻ '+T('Neu lesen')+'</button></div>'+
-        '<div class="hint">'+T('Gilt sofort. Dauerhaft: Panel → Display &amp; Nacht.')+'</div>'+
-        '<label class="chk dsnd" title="'+T('Android spielt bei jedem Antippen eines Bedienelements einen Klick ab')+'"><input type="checkbox" class="dsnd_on"'+(DEV_SND[d.name]?' checked':'')+dis+'> '+T('Tipp-Töne')+'</label>'; })():'')+
-  '</div>';
-}
 const DEV_LV={};   // je Geraet: {installed, bundled} - Launcher-Version (per adb gelesen)
 // TbViewer-Block der Geraetekarte: eine Statuszeile + eine Hauptaktion (+ kleine Nebenaktion)
 const TBV_ST={};   // je Geraet: {busy, msg, ok} - Fortschritt/Ergebnis der letzten Aktion
@@ -5087,12 +5130,10 @@ function tbvHTML(name,tbOn){
     (side?'<div class="drow"><button class="btn sm ghost tbv_side" data-act="launcher" data-tbmode="again"'+dis+'>'+side+'</button></div>':'')+
     hint+'<div class="dhint tbv_msg'+(x.ok===false?' bad':'')+'" role="status">'+esc(x.msg||'')+'</div></div>'; }
 function tbvRefresh(name){
-  document.querySelectorAll('.dev').forEach(dv=>{ if(dv.dataset.name!==name) return;
-    const el=dv.querySelector('.tbv'); if(!el) return;
-    const tmp=document.createElement('div'); tmp.innerHTML=tbvHTML(name, el.dataset.tbon==='1');
-    el.replaceWith(tmp.firstChild);
-    const nb=dv.querySelector('.tbv'), row=dv.querySelector('.ag[data-name]');
-    nb.querySelectorAll('button[data-act]').forEach(b=>{ b.onclick=()=>deviceAction(b.dataset.act, row.dataset.name, row.dataset.ip, (dv.querySelector('.agsel')||{}).value||'', row.dataset.devip, b.dataset.tbmode); }); });
+  const g=[...document.querySelectorAll('#dev_list .gd')].find(x=>x.dataset.name===name); if(!g) return;
+  const el=g.querySelector('.tbv'); if(!el) return;
+  const tmp=document.createElement('div'); tmp.innerHTML=tbvHTML(name, el.dataset.tbon==='1');
+  el.replaceWith(tmp.firstChild);
 }
 async function devLauncherVer(row){
   const name=row.dataset.name;
@@ -5102,32 +5143,6 @@ async function devLauncherVer(row){
   }catch(e){ delete DEV_LV[name]; }
   tbvRefresh(name);
 }
-// Zustand vom Geraet lesen: Helligkeit, Tipp-Toene, Launcher-Version
-function devAutoRead(bx){ devBrightness(bx,'read'); devTouchSound(bx,null); devLauncherVer(bx); }
-const DEV_BRI={};   // je Geraet: {pct, auto, read} - zuletzt gelesen/gesetzt
-const DEV_BRI_TRY=new Set();
-const DEV_SND={};   // je Geraet: Tipp-Toene an (zuletzt gelesen/gesetzt)
-async function devTouchSound(row, on){
-  const name=row.dataset.name, ip=row.dataset.devip, cb=row.querySelector('.dsnd_on');
-  try{ const j=await postJson('/api/kiosk/touchsound', on==null?{device:name,ip}:{device:name,ip,on});
-    if(j.ok){ DEV_SND[name]=!!j.on; if(cb) cb.checked=!!j.on; }
-    else { if(cb&&on!=null) cb.checked=!on; flashErr($('#ag_toast'),T('Tipp-Töne ändern fehlgeschlagen.'),j); }
-  }catch(e){ flashErr($('#ag_toast'),T('Tipp-Töne ändern fehlgeschlagen.'),e); }
-}   // Zustand je Geraet nur einmal je Sitzung automatisch lesen (↻ liest jederzeit)
-// Helligkeit: mode 'read' (nur lesen), 'auto' (Geraet regelt) oder Prozentwert (fest, Automatik aus)
-async function devBrightness(row, mode){
-  const name=row.dataset.name, ip=row.dataset.devip, box=row.querySelector('.dbri'), v=row.querySelector('.dbri_v');
-  if(v) v.textContent='…';
-  const body=mode==='read'?{device:name,ip}:(mode==='auto'?{device:name,ip,auto:true}:{device:name,ip,value:Math.round(mode*2.55)});
-  try{ const j=await postJson('/api/kiosk/brightness', body);
-    if(j.ok&&j.value!=null){
-      const st=DEV_BRI[name]={pct:Math.max(1,Math.round(j.value/2.55)), auto:!!j.auto, read:true};
-      const r=row.querySelector('.dbri_r'), a=row.querySelector('.dbri_auto');
-      if(r){ r.value=st.pct; r.disabled=st.auto; } if(a) a.checked=st.auto; if(box) box.classList.toggle('auto',st.auto);
-      if(v) v.textContent=st.auto?T('auto'):st.pct+' %'; }
-    else { if(v) v.textContent='–'; flashErr($('#ag_toast'),T('Helligkeit ändern fehlgeschlagen.'),j); }
-  }catch(e){ if(v) v.textContent='–'; flashErr($('#ag_toast'),T('Helligkeit ändern fehlgeschlagen.'),e); }
-}
 function anonRow(a, typed){
   const info=[a.ip, a.kiosk==='tbview'?'TbViewer':T('Browser'), a.profile?(T('Panel')+' '+a.profile):''].filter(Boolean).join(' · ');
   return '<div class="ag" data-anon="'+esc(a.ip)+'">'+
@@ -5135,57 +5150,6 @@ function anonRow(a, typed){
     '<span class="agip">'+esc(info)+'</span><span class="sp"></span>'+
     '<input type="text" class="anname" placeholder="'+T('Gerätename')+'" value="'+esc(typed||'')+'" style="max-width:180px">'+
     '<button class="btn sm" data-act="name">'+T('Namen vergeben')+'</button></div>';
-}
-function renderDeviceList(j){
-  { const devs=(j&&j.devices)||[], any=devs.length>0||Object.keys(DEV).length>0;
-    const act=$('#dev_save')&&$('#dev_save').closest('.actions'); if(act) act.style.display=any?'':'none';   // nichts zu speichern ohne Geraete
-    const dtl=$('#devTools'); if(dtl) dtl.style.display=any?'':'none';
-  }
-  const box=$('#ag_list'), list=$('#dev_list'); if(!box||!list) return;
-  list.querySelectorAll('.dev').forEach(dv=>{ const tp=dv.querySelector('.dtips'), ms=dv.querySelector('.dev_model'); if(!tp||!ms) return;
-    const h=devTipsHTML(dv.dataset.name,((META||{}).deviceModels||[]).find(x=>x.key===ms.value)); if(tp.innerHTML!==h) tp.innerHTML=h;
-    const dd=dv.querySelector('.ddet'), h2=dd?devDetHTML(dv.dataset.name,ms.value):''; if(dd&&dd.innerHTML!==h2) dd.innerHTML=h2; });
-  // Waehrend jemand in einer Live-Zeile tippt oder auswaehlt, nicht neu zeichnen.
-  const ae=document.activeElement;
-  if(ae && ae.tagName!=='BUTTON' && ae.closest && ae.closest('.devlive, .devctl, .devmaint, #ag_list')) return;
-  const prevSel={}, prevName={};
-  list.querySelectorAll('.ag[data-name]').forEach(n=>{ const s=n.querySelector('.agsel'); if(s) prevSel[n.dataset.name]=s.value; });
-  box.querySelectorAll('.ag[data-anon]').forEach(n=>{ const i=n.querySelector('.anname'); if(i) prevName[n.dataset.anon]=i.value; });
-  const devs=j.devices||[], anon=j.anonymous||[], live={};
-  devs.forEach(d=>live[d.name]=d);
-  // Wechselt ein Gerät zwischen online und offline, ändert sich die Gruppierung: neu aufbauen (nicht beim Tippen)
-  if(DEV_SIG!==null && devSig()!==DEV_SIG && !(ae && ae.closest && ae.closest('#dev_list') && /^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName))){ readDevFromDom(); renderDevices(); return; }
-  list.querySelectorAll('.dev').forEach(n=>{ const d=live[n.dataset.name], slot=n.querySelector('.devlive');
-    const parts=d?deviceRow(d,prevSel[d.name]):{view:'',ctl:'',maint:'',wart:''};
-    slot.innerHTML=parts.view; n.querySelector('.devctl').innerHTML=parts.ctl; n.querySelector('.devmaint').innerHTML=parts.maint; n.querySelector('.devwart').innerHTML=parts.wart;
-    n.classList.toggle('online',!!d); n.classList.toggle('off',!(d&&d.online));
-    const dot=n.querySelector('.devtg .sdot'), st=n.querySelector('.devtg .devst'), pn=n.querySelector('.devtg .devpan'), tp=n.querySelector('.devtg .devtp');
-    const up=!!(d&&d.online), rc=devReconnecting(d);
-    if(dot){ dot.classList.toggle('on',up); dot.classList.toggle('wait',rc); }
-    const dy=devOfflineDays(n.dataset.name);
-    if(st) st.textContent=up?T('online'):rc?T('verbindet …'):(dy>=1?T('offline')+' · '+(dy===1?T('zuletzt gesehen vor 1 Tag'):T('zuletzt gesehen vor {n} Tagen').replace('{n}',dy)):T('offline'));
-    if(pn) pn.textContent=(d&&d.profile)?T('zeigt Panel')+' '+d.profile:'';
-    if(tp){ const ty=d&&d.type; tp.textContent=ty?T(TYPE_LABEL[ty]||'Browser'):''; tp.hidden=!ty; } });
-  box.innerHTML=anon.length?'<div class="devanon"><b>'+T('Ohne Kennung')+'</b><div class="note">'+T('An der IP-Adresse erkannt. Mit einem Namen bleibt das Gerät dauerhaft in der Liste und lässt sich per Betriebsmodus umschalten.')+'</div>'+
-    anon.map(a=>anonRow(a,prevName[a.ip])).join('')+'</div>':'';
-  list.querySelectorAll('.devx').forEach(x=>{
-    const r=x.querySelector('.dbri_r'), v=x.querySelector('.dbri_v'), a=x.querySelector('.dbri_auto');
-    if(r){ r.oninput=()=>{ if(v) v.textContent=r.value+' %'; }; r.onchange=()=>{ devBrightness(x,+r.value); r.blur(); }; }
-    // Automatik an: Geraet regelt; aus: der Regler legt den festen Wert fest
-    if(a) a.onchange=()=>{ if(r) r.disabled=a.checked; x.querySelector('.dbri').classList.toggle('auto',a.checked);
-      devBrightness(x, a.checked?'auto':+(r?r.value:70)); a.blur(); };
-    const g=x.querySelector('.dbri_get'); if(g) g.onclick=()=>{ devAutoRead(x); };
-    const sn=x.querySelector('.dsnd_on'); if(sn) sn.onchange=()=>{ devTouchSound(x, sn.checked); sn.blur(); };
-    // beim ersten Anzeigen den echten Zustand vom Geraet holen (einmal je Sitzung)
-    const nm=x.dataset.name; if(!DEV_BRI_TRY.has(nm) && x.closest('.dev.open') && !x.closest('.dev.off')){ DEV_BRI_TRY.add(nm); devAutoRead(x); } });
-  list.querySelectorAll('.ag[data-name] button[data-act]').forEach(b=>{
-    const row=b.closest('.ag');
-    b.onclick=()=>deviceAction(b.dataset.act, row.dataset.name, row.dataset.ip, (row.closest('.dev').querySelector('.agsel')||{}).value||'', row.dataset.devip, b.dataset.tbmode);
-  });
-  box.querySelectorAll('.ag[data-anon] button[data-act="name"]').forEach(b=>{
-    const row=b.closest('.ag');
-    b.onclick=()=>nameDevice(row.dataset.anon, row.querySelector('.anname').value.trim());
-  });
 }
 let LAST_DEVS=null;
 async function postJson(url, body){
@@ -5197,12 +5161,12 @@ async function deviceAction(act, name, ip, panel, devip, tbmode){
     let j;
     if(act==='start'||act==='reload'||act==='stop') j=await postJson('/api/agent/command',{ip,action:act,panel});
     else if(act==='switch') j=await postJson('/api/device/switch',{device:name,panel});
+    else if(act==='testtone') j=await postJson('/api/testtone',{device:name});
     else if(act==='wsreload') j=await postJson('/api/reload',{device:name});
     else if(act==='dispoff') j=await postJson('/api/display',{device:name,on:false});
     else if(act==='dispon') j=await postJson('/api/display',{device:name,on:true});
     else if(act==='launcher'){
       const shelly=/^shelly/.test((DEV[name]||{}).model||'');
-      const dv=[...document.querySelectorAll('.dev')].find(e=>e.dataset.name===name);
       const mode=tbmode||'none';
       const setOnly=mode==='inactive';
       if(!setOnly && !(await dlgAsk(T('TbViewer einrichten'),
@@ -5219,7 +5183,7 @@ async function deviceAction(act, name, ip, panel, devip, tbmode){
       TBV_ST[name]={busy:false, ok:!!j.ok, msg: j.ok ? T('TbViewer eingerichtet. Das Gerät startet neu.')
         : fehlerText(T('Einrichten fehlgeschlagen.'),j)+((j.steps||[]).length?' ('+j.steps.filter(x=>!x.ok).map(x=>x.step).join(', ')+')':'')};
       tbvRefresh(name);
-      if(dv){ const r=dv.querySelector('.devx')||dv.querySelector('.ag[data-name]'); if(r) devLauncherVer(r); }   // Zustand neu abfragen
+      devLauncherVer({dataset:{name,devip:devip||''}});   // Zustand neu abfragen
       return; }
     else if(act==='adblog'){ await devLogDownload(name, devip||'', $('#ag_toast')); return; }
     else if(act==='devreboot'){
@@ -5334,7 +5298,7 @@ function mzGeraeteNeu(){
   mzRender();
 }
 function mzApply(){
-  readDevFromDom();      // offene Aenderungen in "Meine Geraete" nicht verlieren
+  gdReadDom();           // offene Aenderungen im Geraetedetail nicht verlieren
   MZ.devices.forEach(name=>{ const d=DEV[name]||(DEV[name]={auto:true,modes:[]});
     const map=new Map((d.modes||[]).filter(([m])=>m));
     MZ.modes.forEach(m=>{ if(m.profile) map.set(m.key,m.profile); else map.delete(m.key); });
@@ -5342,86 +5306,30 @@ function mzApply(){
   mzClose(); renderDevices(); $('#dev_save').click();   // speichert ueber /api/devices wie "Meine Geraete"
 }
 async function nameDevice(ip,name){
-  if(!name){ flash($('#ag_toast'),T('Name fehlt. Gib einen Namen ein.'),false); return; }
+  if(!name){ snack(T('Name fehlt. Gib einen Namen ein.')); return; }
   try{
     const j=await postJson('/api/device/name',{ip,name});
-    if(j.ok) flash($('#ag_toast'),name,true); else flashErr($('#ag_toast'),T('Namen vergeben fehlgeschlagen.'),j);
+    if(j.ok) snack(name); else snack(fehlerText(T('Namen vergeben fehlgeschlagen.'),j));
     if(document.activeElement) document.activeElement.blur();
     setTimeout(pollDevices,2500);   // Geraet verbindet sich mit Kennung neu
-  }catch(e){ flashErr($('#ag_toast'),T('Namen vergeben fehlgeschlagen.'),e); }
+  }catch(e){ snack(fehlerText(T('Namen vergeben fehlgeschlagen.'),e)); }
 }
 async function pollDevices(){
   try{
     const r=await fetch('/api/devices'); const j=await r.json();
-    LAST_DEVS=j; if(rubric==='overview') renderOverview(); renderDiagDevices(); applySensRel();
+    LAST_DEVS=j; if(rubric==='overview') renderOverview(); renderDiagDevices(); icRingRefresh();
     const names=(j.devices||[]).map(d=>d.name).filter(Boolean);
     (j.devices||[]).forEach(d=>{ if(d.ip) DEVICE_IPS[d.name]=d.ip; });
     const fresh=names.filter(n=>KNOWN_NAMES.indexOf(n)<0), isNew=fresh.length>0;
     if(DEV_POLLED) fresh.forEach(n=>{ DEV_NEW.add(n); DEV_OPEN.add(n); });
     DEV_POLLED=true;
     KNOWN_NAMES=Array.from(new Set(KNOWN_NAMES.concat(names)));
-    if(isNew){ readDevFromDom(); renderDevices(); }   // neues Panel -> Block ergaenzen (Eingaben behalten)
-    if(typeof mzGeraeteNeu==='function') mzGeraeteNeu();   // offener Betriebsmodus-Assistent
-    else renderDeviceList(j);
+    if(isNew){ gdReadDom(); renderDevices(); }   // neues Panel -> Block ergaenzen (Eingaben behalten)
+    renderDeviceList(j);
+    if(typeof mzGeraeteNeu==='function') mzGeraeteNeu();   // Betriebsmodus-Assistent (ausgeblendet, Code bleibt)
   }catch(e){}
 }
 
-// ---- Betriebsmodus-Automatik ----
-function profOpts(sel){
-  return '<option value="">'+T('— Panel wählen —')+'</option>'+
-    PANEL_IDS.map(id=>'<option'+(sel===id?' selected':'')+'>'+esc(id)+'</option>').join('');
-}
-// Zoom nur anbieten, wenn das Gerät ihn braucht (Modell unbekannt, Automatik, zwei Hälften oder schon gesetzt)
-function devZoomShown(scale, mo){ const sc=(scale===undefined||scale===null)?'':String(scale); return !mo || mo.scale==='auto' || mo.panes===2 || sc!==''; }
-function devRow(name){
-  const d=DEV[name]||{auto:true,modes:[]};
-  const pairs=d.modes&&d.modes.length?d.modes:[['','']];
-  const rows=pairs.map(([m,p])=>
-    '<div class="dmrow" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:4px 0">'+
-      '<input type="text" class="dm_mode" placeholder="'+T('Modus, z. B. gaeste')+'" value="'+esc(m)+'" style="flex:1;min-width:120px">'+
-      '<span style="opacity:.6">→</span>'+
-      '<select class="dm_prof" style="flex:1;min-width:120px">'+profOpts(p)+'</select>'+
-      '<button class="btn sm del dm_del" type="button" title="'+T('Zeile entfernen')+'" aria-label="'+T('Zeile entfernen')+'">'+T('Entfernen')+'</button>'+
-    '</div>').join('');
-  const models=(META||{}).deviceModels||[], mo=models.find(m=>m.key===d.model);
-  const isNew=DEV_NEW.has(name), open=DEV_OPEN.has(name);
-  // Reihenfolge in der Karte: Panel wechseln · Display live · TbViewer (je nach Gerät, live befüllt) ·
-  // Einstellungen (gelten nach „Speichern“) · Wartung. Kein Akkordeon in der Karte.
-  const settings=
-    '<div class="dsec dset">'+dsh('auto',T('Einstellungen'))+
-      '<div class="lblq"><label class="lbl">'+T('Gerätetyp')+'</label>'+qField(T('Der Gerätetyp bestimmt, ob die Knöpfe „TbViewer installieren“ und „Gerät neu starten“ erscheinen (Android per adb, Shelly zuerst über die eigene Schnittstelle).'))+'</div>'+
-      '<select class="dev_model" title="'+T('Welches Gerät ist das?')+'"><option value="">'+T('– Gerätetyp wählen –')+'</option>'+
-        models.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===d.model?' selected':'')+'>'+esc(T(m.label))+'</option>').join('')+'</select>'+
-      '<div class="dhint">'+(d.model?T('Bestimmt, welche Steuerung angeboten wird.'):T('Wähle zuerst den Gerätetyp. Dann erscheinen die passenden Funktionen.'))+'</div>'+
-      '<div class="ddet">'+devDetHTML(name,d.model)+'</div>'+
-      '<div class="dtips">'+devTipsHTML(name,mo)+'</div>'+
-      '<div class="dzoom"'+(devZoomShown(d.scale,mo)?'':' hidden')+'><label class="lbl">'+T('Zoom')+'</label>'+
-        '<select class="dev_scale">'+devScaleOpts(d.scale,mo)+'</select>'+
-        '<div class="dhint">'+T('Für größere Schirme (7–8″-Tablet, iPad mini): Beide Hälften werden gleichmäßig auf die volle Größe gezoomt statt mit Rand gezeigt. Geräte mit 480 × 480 bleiben unverändert.')+'</div></div>'+
-      '<label class="lbl">'+T('Betriebsmodus')+'</label>'+
-      '<label class="chk"><input type="checkbox" class="dev_auto"'+(d.auto?' checked':'')+'> '+T('Panel automatisch nach Betriebsmodus wechseln')+'</label>'+
-      '<div class="dmwrap"'+(d.auto?'':' hidden')+'><div class="dmrows">'+rows+'</div>'+
-      '<button class="btn sm ghost dm_add" type="button" style="margin-top:4px">'+T('Modus hinzufügen')+'</button>'+
-      '<div class="dhint">'+T('Welches Panel bei welchem Modus erscheint. Loxone sendet den Modus per HTTP (siehe Karte „Betriebsmodus“ oben).')+'</div></div>'+
-      // Display-Treiber nur zeigen, wenn einer gesetzt ist
-      '<div class="ddhost"'+((d.display&&d.display.driver)?'':' hidden')+'>'+displayRow(d.display, name)+'</div>'+
-      '<div class="dhint dsave">'+T('Änderungen hier gelten nach „Speichern“.')+'</div></div>';
-  const wartung=
-    '<div class="dsec dwart">'+dsh('setup',T('Wartung'))+
-      '<div class="devwart"></div>'+
-      // Gefährliches ganz unten, abgesetzt (Rückfrage in devDelete)
-      '<div class="ddelrow"><button type="button" class="btn del sm ddel" data-live="1">'+T('Gerät entfernen')+'</button>'+
-        '<span class="dhint">'+T('Entfernt Einstellungen und Erkennung des Geräts. Ist es verbunden, meldet es sich neu an.')+'</span></div></div>';
-  return '<div class="dev'+(open?' open':'')+(isNew?' isnew':'')+'" data-name="'+esc(name)+'">'+
-    '<div class="devhd"><button type="button" class="devtg" aria-expanded="'+(open?'true':'false')+'"><i class="sdot"></i><b>'+esc(name)+'</b><small class="devst">'+T('offline')+'</small>'+
-      '<span class="devpan"></span><span class="devtp" hidden></span>'+
-      (isNew?'<span class="newb">'+T('neu')+'</span>':'')+'<span class="chev" aria-hidden="true">›</span></button>'+
-      '<button type="button" class="devren" title="'+T('Umbenennen')+'" aria-label="'+T('Umbenennen')+'">'+svg(DSI.edit)+'</button></div>'+
-    '<div class="devrn" hidden><input type="text" class="dren_in" data-live="1" maxlength="60" value="'+esc(name)+'" aria-label="'+T('Gerätename')+'">'+
-      '<button type="button" class="btn sm dren_go" data-live="1">'+T('Umbenennen')+'</button>'+
-      '<button type="button" class="btn ghost sm dren_x">'+T('Abbrechen')+'</button></div>'+
-    '<div class="devbody"><div class="devlive"></div><div class="devctl"></div><div class="devmaint"></div>'+settings+wartung+'</div></div>';
-}
 async function devRename(old, nw){
   nw=(nw||'').trim(); if(!nw||nw===old) return;
   try{ const r=await fetch('/api/device/rename',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({old,new:nw})}); const j=await r.json();
@@ -5430,6 +5338,8 @@ async function devRename(old, nw){
   KNOWN_NAMES=KNOWN_NAMES.map(n=>n===old?nw:n);
   if(DEV_OPEN.delete(old)) DEV_OPEN.add(nw); DEV_NEW.delete(old);
   if(LAST_DEVS) (LAST_DEVS.devices||[]).forEach(d=>{ if(d.name===old) d.name=nw; });
+  if(DEVP[old]){ DEVP[nw]=DEVP[old]; delete DEVP[old]; } if(DEVD[old]){ DEVD[nw]=DEVD[old]; delete DEVD[old]; }
+  if(DEV_CUR===old){ DEV_CUR=nw; navHashWrite(); }
   renderDevices(); snack(T('Umbenannt in „')+nw+'“'); setTimeout(()=>pollDevices&&pollDevices(),1500);
 }
 // Gerät auf dem Server löschen: {ok} oder {ok:false, err} (err für fehlerText)
@@ -5443,54 +5353,23 @@ function devDropLocal(name){
   if(LAST_DEVS) LAST_DEVS.devices=(LAST_DEVS.devices||[]).filter(d=>d.name!==name);
 }
 async function devDelete(name){
-  if(!(await dlgAsk(T('Gerät entfernen'),T('„{n}“ entfernen? Typ, Betriebsmodus und Zoom dieses Geräts gehen verloren.').replace('{n}',name),T('Entfernen'),true))) return;
+  if(!(await dlgAsk(T('Gerät entfernen'),T('„{n}“ entfernen? Typ, Einstellungen und Zoom dieses Geräts gehen verloren.').replace('{n}',name),T('Entfernen'),true))) return;
   const r=await devDeleteNow(name);
   if(!r.ok){ snack(fehlerText(T('Entfernen fehlgeschlagen.'),r.err)); return; }
-  devDropLocal(name);
-  renderDevices(); snack(T('Gerät „{n}“ entfernt').replace('{n}',name)); setTimeout(()=>pollDevices&&pollDevices(),1500);
+  devDropLocal(name); delete DEVP[name]; delete DEVD[name];
+  if(DEV_CUR===name) gdClose(); else renderDevices();
+  snack(T('Gerät „{n}“ entfernt').replace('{n}',name)); setTimeout(()=>pollDevices&&pollDevices(),1500);
 }
 // ---- Offline-Geräte: Gruppierung und Aufräumen ----
 const DEV_PEND=new Set();   // zum Entfernen vorgemerkt (10 s Rückgängig), noch nicht gelöscht
-let DEV_SIG=null, DEV_OFF_OPEN=null;   // Gruppierung der letzten Darstellung / Offline-Bereich offen (null = automatisch)
-const DEV_STALE_DAYS=7;
+let DEV_SIG=null;   // Gruppierung der letzten Darstellung / Offline-Bereich offen (null = automatisch)
 function devLive(n){ return ((LAST_DEVS||{}).devices||[]).find(d=>d.name===n); }
 function devOnline(n){ const d=devLive(n); return !!d&&(!!d.online||devReconnecting(d)); }
 function devNames(){ return Array.from(new Set(KNOWN_NAMES.concat(Object.keys(DEV)))).filter(n=>!DEV_PEND.has(n)); }
-function devSig(){ return devNames().sort().map(n=>n+(devOnline(n)?'1':'0')).join('|'); }
 // zuletzt gesehen (Sekunden) oder 0, wenn unbekannt
 function devLastSeen(n){ const d=devLive(n); return d?Math.max(d.lastSeen||0,(d.detected&&d.detected.last)||0):0; }
 // ganze Tage seit dem letzten Mal, nur für Geräte, die nicht online sind und deren Zeitpunkt bekannt ist; sonst -1
 function devOfflineDays(n){ const d=devLive(n); if(!d||d.online) return -1; const l=devLastSeen(n); return l?Math.floor((Date.now()/1000-l)/86400):-1; }
-function devStaleList(){ return devNames().filter(n=>!devOnline(n)&&devLastSeen(n)>0&&(Date.now()/1000-devLastSeen(n))>DEV_STALE_DAYS*86400).sort((a,b)=>a.localeCompare(b)); }
-// eigene Rückgängig-Leiste (von snack() unabhängig, damit andere Meldungen sie nicht wegnehmen)
-function pruneBar(msg, undo, ms){
-  let el=$('#pruneBar'); if(el) el.remove();
-  el=document.createElement('div'); el.id='pruneBar'; el.className='snack show'; el.style.bottom='82px'; el.setAttribute('role','status');
-  el.innerHTML='<span>'+esc(msg)+'</span><button type="button">'+T('Rückgängig')+'</button>';
-  document.body.appendChild(el);
-  const t=setTimeout(()=>el.remove(), ms);
-  el.querySelector('button').onclick=()=>{ clearTimeout(t); el.remove(); undo(); };
-}
-async function devPrune(){
-  const list=devStaleList(); if(!list.length) return;
-  if(!(await dlgAsk(T('Alte Geräte entfernen'),
-    T('Diese Geräte waren seit mehr als 7 Tagen nicht online. Sie werden entfernt:')+'\n\n'+list.join(', ')+'\n\n'+T('Geräte, die nie gesehen wurden, bleiben stehen.')+' '+T('Du kannst es danach 10 Sekunden lang rückgängig machen.'),
-    list.length===1?T('1 Gerät entfernen'):T('{n} Geräte entfernen').replace('{n}',list.length),true))) return;
-  list.forEach(n=>DEV_PEND.add(n)); renderDevices();
-  // erst nach Ablauf wirklich löschen; „Rückgängig“ stellt die Einträge wieder her
-  const timer=setTimeout(async()=>{
-    const bad=[]; let lastErr=null;
-    for(const n of list){
-      if(!DEV_PEND.has(n)) continue;
-      if(devOnline(n)){ DEV_PEND.delete(n); continue; }   // hat sich inzwischen gemeldet: behalten
-      const r=await devDeleteNow(n);
-      if(r.ok) devDropLocal(n); else { DEV_PEND.delete(n); bad.push(n); lastErr=r.err; }
-    }
-    renderDevices(); setTimeout(()=>pollDevices&&pollDevices(),1500);
-    if(bad.length) snack(fehlerText(T('Entfernen fehlgeschlagen:')+' '+bad.join(', ')+'.',lastErr));
-  },10000);
-  pruneBar(list.length===1?T('1 Gerät entfernt'):T('{n} Geräte entfernt').replace('{n}',list.length), ()=>{ clearTimeout(timer); list.forEach(n=>DEV_PEND.delete(n)); renderDevices(); }, 10000);
-}
 // Auto-Erkennung: Steckbrief, den das Geraet beim Verbinden gemeldet hat
 function devDetHTML(name,model){
   const live=((LAST_DEVS||{}).devices||[]).find(x=>x.name===name), d=live&&live.detected;
@@ -5551,113 +5430,294 @@ function displayRow(disp, name){
     '<input class="dd_pw" type="password" placeholder="'+pwHinweis(name, x.driver, x.host)+'" value="'+esc(x.password||'')+'" style="width:140px" autocomplete="new-password">'+
   '</div><p class="hint" style="margin:4px 0 0">'+T('Ohne Treiber „keine“ lassen. Dann schaltet das Panel das Display selbst.')+'</p></details>';
 }
-function readDevFromDom(){
-  const box=$('#dev_list'); if(!box) return;
-  box.querySelectorAll('.dev').forEach(n=>{
-    const modes=[];
-    n.querySelectorAll('.dmrow').forEach(r=>{
-      modes.push([r.querySelector('.dm_mode').value, r.querySelector('.dm_prof').value]);
-    });
-    const drv=n.querySelector('.dd_drv').value;
-    const display=drv?{driver:drv, host:n.querySelector('.dd_host').value.trim(),
-      port:parseInt(n.querySelector('.dd_port').value)||DRIVER_PORT[drv]||0,
-      password:n.querySelector('.dd_pw').value}:null;
-    const model=n.querySelector('.dev_model').value;
-    // fully/nrestart: nicht mehr in der Oberflaeche, bestehende Werte unveraendert durchreichen
-    const old=DEV[n.dataset.name]||{}, fully=!!old.fully, nrestart=old.nrestart;
-    const sv=n.querySelector('.dev_scale').value, scale=(sv===''||sv==='off'||sv==='auto')?sv:parseFloat(sv);
-    DEV[n.dataset.name]={auto:n.querySelector('.dev_auto').checked, modes, display, model, fully, nrestart, scale};
-  });
+// ---- Geraete: Liste und Detailseite ----
+// Liste: Geraet · Typ · Panel · Status, Klick oeffnet die Detailseite (#devices:list:<name>).
+// Detail: Panel, Toene, Nachts, Display, Erweitert. Einstellungen laufen ueber /api/device/prefs
+// (Teil-Aenderung, null = Standard), der Rest (Typ, Zoom, Display-Treiber) ueber /api/devices.
+let DEV_CUR='';            // Detailseite: Geraetename, '' = Liste
+const DEVP={};             // je Geraet: Antwort von GET /api/device/prefs {prefs,caps,std,effective}
+const DEVD={};             // je Geraet: ungespeicherte Aenderungen {schluessel: wert | null (= Standard)}
+let GD_ADV=false, GD_SIG='', AG_SHOWN=false;
+const GD_TRY=new Set();    // TbViewer-Version einmal je Sitzung per adb lesen
+const GD_SOUNDS=[['ring','Klingel'],['alarm','Alarm'],['wake','Wecker'],['notify','Hinweis'],['touch','Tipp']];
+function gdLive(n){ return devLive(n)||{}; }
+function gdModelKey(n){ const l=gdLive(n); return (DEV[n]||{}).model||(l.detected&&l.detected.guess)||''; }
+function gdModelObj(k){ return ((META||{}).deviceModels||[]).find(m=>m.key===k); }
+function gdTypeLabel(n){ const m=gdModelObj(gdModelKey(n)); if(m) return T(m.label).split(' / ')[0].split(' (')[0];
+  const l=gdLive(n); return l.type?T(TYPE_LABEL[l.type]||'Browser'):'–'; }
+function gdIsTb(n){ const l=gdLive(n); return l.type==='tbview'||l.kiosk_last==='tbview'; }
+function gdAgo(n){ const t=devLastSeen(n); if(!t) return '';
+  const s=Date.now()/1000-t, m=Math.round(s/60);
+  if(m<2) return T('gerade eben'); if(m<60) return T('{n} Min.').replace('{n}',m);
+  const h=Math.round(m/60); if(h<48) return T('{n} Std.').replace('{n}',h);
+  const d=Math.floor(s/86400); return d===1?T('1 Tag'):T('{n} Tagen').replace('{n}',d); }
+function gdAlarmOff(n){ const p=(DEV[n]||{}).prefs||{}, a=(p.sources||{}).alarm;
+  return (p.sound||{}).alarm===false||(Array.isArray(a)&&!a.length); }
+// Status in der Liste: nur online, offline seit …, gelb Update, rot Alarm aus
+function gdStatus(n){
+  const d=gdLive(n), up=!!d.online, rc=devReconnecting(d), p=[];
+  if(gdAlarmOff(n)) p.push('<span class="gs bad">'+T('Alarm aus')+'</span>');
+  if(up&&d.tbold) p.push('<span class="gs warn">'+T('Update')+'</span>');
+  if(!p.length){ const ago=gdAgo(n);
+    p.push(up?'<span class="gs ok">'+T('online')+'</span>':rc?'<span class="gs off">'+T('verbindet …')+'</span>'
+      :'<span class="gs off">'+(ago?T('offline seit')+' '+esc(ago):T('offline'))+'</span>'); }
+  return p.join(' ');
+}
+function gdListHTML(names){
+  const on=names.filter(devOnline).sort((a,b)=>a.localeCompare(b)), off=names.filter(n=>!devOnline(n)).sort((a,b)=>a.localeCompare(b));
+  return '<div class="gdhd" aria-hidden="true"><span></span><span>'+T('Gerät')+'</span><span>'+T('Typ')+'</span><span>'+T('Panel')+'</span><span>'+T('Status')+'</span><span></span></div>'+
+    on.concat(off).map(n=>{ const d=gdLive(n), up=!!d.online, rc=devReconnecting(d), pn=gdPanelTitle(d.profile||(((DEV[n]||{}).prefs||{}).panel)||'');
+      return '<button type="button" class="gdrow'+(devOnline(n)?'':' off')+'" data-name="'+esc(n)+'"><i class="sdot'+(up?' on':rc?' wait':'')+'"></i>'+
+        '<b class="gdn">'+esc(n)+'</b><span class="gdt">'+esc(gdTypeLabel(n))+'</span><span class="gdp">'+(pn?esc(pn):'–')+'</span>'+
+        '<span class="gst">'+gdStatus(n)+'</span><span class="gdc" aria-hidden="true">›</span></button>'; }).join('');
+}
+function gdSig(){ return devNames().sort().map(n=>[n,devOnline(n)?1:0,gdTypeLabel(n),gdLive(n).profile||'',gdStatus(n)].join('~')).join('|'); }
+// Werte: ungespeicherte Aenderung > gespeicherter Stand; Standard = Wert ohne Geraete-Aenderung
+function gdVal(n,k){ const d=DEVD[n]||{}, P=DEVP[n]||{};
+  if(k in d) return d[k]===null?(k==='panel'?'':(P.std||{})[k]):d[k];
+  const e=(P.effective||{})[k]; return e?e.value:undefined; }
+function gdChg(n,k){ const d=DEVD[n]||{}; if(k in d) return d[k]!==null; const e=((DEVP[n]||{}).effective||{})[k]; return !!e&&e.src==='geändert'; }
+function gdStd(n,k){ return ((DEVP[n]||{}).std||{})[k]; }
+function gdOpts(vals,cur,fmt){ const a=vals.slice(); if(cur!=null&&a.indexOf(cur)<0) a.push(cur);
+  a.sort((x,y)=>(x||1e9)-(y||1e9));
+  return a.map(v=>'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+esc(fmt(v))+'</option>').join(''); }
+const gdPanelTitle=id=>id?(((PANELS||{})[id]||{}).title||id):'';
+const gdPct=v=>v+' %', gdRestPct=v=>T('auf {n} %').replace('{n}',v), gdSec=v=>v===0?T('nie'):v+' s';
+function gdHTML(n){
+  const l=gdLive(n), P=DEVP[n], d=DEV[n]||{auto:true,modes:[]}, up=!!l.online, rc=devReconnecting(l);
+  const mk=gdModelKey(n), mo=gdModelObj(mk), models=(META||{}).deviceModels||[];
+  const phone=mk==='phone', tb=gdIsTb(n), caps=(P&&P.caps)||{}, has=c=>(l.caps||[]).indexOf(c)>=0;
+  const pres=!!(caps.prox||caps.light), lite=!!caps.light, bri=lite||!!caps.win;   // TbViewer setzt die Fensterhelligkeit auch ohne Sensor
+  const lv=DEV_LV[n], tbver=l.tbver||(lv&&lv.installedName)||'', tbold=!!l.tbold||(lv&&lv.bundled>lv.installed&&lv.installed>0);
+  const stat=up?'<span class="gs ok">'+T('online')+'</span>':rc?'<span class="gs off">'+T('verbindet …')+'</span>':'<span class="gs off">'+(devLastSeen(n)?T('offline seit')+' '+esc(gdAgo(n)):T('offline'))+'</span>';
+  const meta=[esc(gdTypeLabel(n))].concat(tb?['TbViewer'+(tbver?' '+esc(tbver):'')]:[]).concat(tbold?['<span class="gs warn">'+T('Update')+'</span>']:[]);
+  let h='<button type="button" class="gdback">‹ '+T('Geräte')+'</button>'+
+    '<div class="gdhead"><h2>'+esc(n)+'</h2><i class="sdot'+(up?' on':rc?' wait':'')+'"></i>'+stat+
+      '<button type="button" class="gdlink gdrnb">'+T('Umbenennen')+'</button></div>'+
+    '<div class="gdrn" hidden><input type="text" class="gdrn_in" data-live="1" maxlength="60" value="'+esc(n)+'" aria-label="'+T('Gerätename')+'">'+
+      '<button type="button" class="btn sm gdrn_go" data-live="1">'+T('Umbenennen')+'</button><button type="button" class="btn ghost sm gdrn_x">'+T('Abbrechen')+'</button></div>'+
+    '<div class="gdmeta">'+meta.join(' · ')+' · <button type="button" class="gdlink gdtypb">'+T('Typ ändern')+'</button></div>'+
+    '<div class="gdmodel" hidden><select class="dev_model" title="'+T('Welches Gerät ist das?')+'" aria-label="'+T('Gerätetyp')+'"><option value="">'+T('– Gerätetyp wählen –')+'</option>'+
+      models.map(m=>'<option value="'+esc(m.key)+'"'+(m.key===d.model?' selected':'')+'>'+esc(T(m.label))+'</option>').join('')+'</select></div>'+
+    (up||rc?'':'<p class="gdnote">'+T('Gerät offline. Änderungen gelten beim nächsten Verbinden.')+'</p>');
+  if(!P) return '<div class="gd" data-name="'+esc(n)+'">'+h+'<div class="muted">'+T('Lade …')+'</div></div>';
+  if(P.ok===false) return '<div class="gd" data-name="'+esc(n)+'">'+h+'<div class="muted">'+T('Einstellungen nicht verfügbar.')+'</div></div>';
+  const gr=(lbl,sub,ctl)=>'<div class="gr"><div class="grl"><span>'+lbl+'</span>'+(sub?'<small>'+sub+'</small>':'')+'</div><div class="grc">'+ctl+'</div></div>';
+  const sw=(k,on,t,lb)=>'<label class="gdsw"><input type="checkbox" data-gk="'+k+'" data-gt="'+(t||'bool')+'"'+(on?' checked':'')+' aria-label="'+esc(lb||k)+'"><i></i></label>';
+  const rst=k=>'<button type="button" class="gdreset" data-gr="'+k+'" title="'+T('Auf Standard zurück')+'" aria-label="'+T('Auf Standard zurück')+'">↺</button>';
+  const stdSub=k=>gdChg(n,k)?'<span class="gchg">'+T('geändert')+'</span> '+rst(k):T('Standard');
+  const sel=(k,opts)=>'<select data-gk="'+k+'" data-gt="num">'+opts+'</select>';
+  // Panel
+  const pcur=(DEVD[n]&&'panel' in DEVD[n])?(DEVD[n].panel||''):(l.profile||(((P.prefs||{}).panel))||'');
+  const ids=PANEL_IDS.slice(); if(pcur&&ids.indexOf(pcur)<0) ids.push(pcur);
+  h+='<div class="gdgrid"><div class="gdmain"><div class="gds"><h3>'+T('Panel')+'</h3>'+
+    gr(T('Panel'),'','<select data-gk="panel" data-gt="str">'+(pcur?'':'<option value="" selected>'+T('(Standard)')+'</option>')+
+      ids.map(id=>'<option value="'+esc(id)+'"'+(id===pcur?' selected':'')+'>'+esc(gdPanelTitle(id))+'</option>').join('')+'</select>')+'</div>';
+  // Toene
+  h+='<div class="gds"><h3>'+T('Töne')+'</h3><div class="gdtones">'+GD_SOUNDS.filter(s=>(s[0]!=='touch'||tb)&&(s[0]!=='ring'||!l.reach||l.reach.intercoms!==0||gdChg(n,'sound.ring'))).map(([k,lb])=>{ const key='sound.'+k;
+    return '<div class="gdtone"><b>'+T(lb)+'</b>'+sw(key,gdVal(n,key)!==false,'bool',T(lb))+(gdChg(n,key)?'<span class="gchg">'+T('geändert')+' '+rst(key)+'</span>':'')+gdReach(l,k,n)+'</div>'; }).join('')+'</div></div>';
+  // Nachts
+  const nd=gdVal(n,'nightDim')||0;
+  if(!phone||pres){ h+='<div class="gds"><h3>'+T('Nachts')+'</h3>';
+    if(!phone) h+=gr(T('Abdunkeln'),stdSub('nightDim'),
+      (nd>0?'<select data-gk="nightDim" data-gt="rest" aria-label="'+T('Helligkeit nachts')+'">'+gdOpts([10,20,25,30,35,40,50,60,70,80,90],100-nd,gdRestPct)+'</select>':'')+sw('nightDim',nd>0,'dimsw',T('Abdunkeln')));
+    if(pres) h+=gr(T('Präsenzerkennung'),stdSub('prox')+(mo&&mo.shelly?' · '+T('Nachts startet das Video erst, wenn jemand kommt.'):''),sw('prox',gdVal(n,'prox')!==false,'bool',T('Präsenzerkennung')));
+    h+='</div>'; }
+  // Display
+  if(bri){ const ab=gdVal(n,'autoBright')!==false;
+    h+='<div class="gds"><h3>'+T('Display')+'</h3>'+gr(T('Helligkeit'),stdSub('autoBright'),
+      '<div class="gdseg" role="group" aria-label="'+T('Helligkeit')+'"><button type="button" data-gk="autoBright" data-gv="1" class="'+(ab?'on':'')+'" aria-pressed="'+ab+'">'+T(lite?'Auto':'System')+'</button>'+
+      '<button type="button" data-gk="autoBright" data-gv="0" class="'+(ab?'':'on')+'" aria-pressed="'+!ab+'">'+T('Fest')+'</button></div>');
+    if(ab&&lite) h+=gr(T('Helligkeit min. / max.'),(gdChg(n,'brightMin')||gdChg(n,'brightMax'))?'<span class="gchg">'+T('geändert')+'</span> '+rst('brightMin')+rst('brightMax'):T('Standard'),
+      sel('brightMin',gdOpts([5,10,20,30,40,50],gdVal(n,'brightMin'),gdPct))+' '+sel('brightMax',gdOpts([50,60,70,80,90,100],gdVal(n,'brightMax'),gdPct)));
+    else if(!ab) h+=gr(T('Helligkeit fest'),gdChg(n,'brightFix')?'<span class="gchg">'+T('geändert')+'</span> '+rst('brightFix'):T('Standard'),sel('brightFix',gdOpts([20,40,60,70,80,90,100],gdVal(n,'brightFix'),gdPct)));
+    h+='</div>'; }
+  // Erweitert
+  if(!phone){ const dd=d.display||null;
+    h+='<details class="gdadv"'+(GD_ADV?' open':'')+'><summary>'+T('Erweitert: Zoom, Display-Treiber')+'</summary>'+
+      gr(T('Zoom'),'','<select class="dev_scale">'+devScaleOpts(d.scale,mo)+'</select>')+
+      '<div class="ddhost">'+displayRow(dd,n)+'</div>'+devDetHTML(n,d.model)+devTipsHTML(n,mo)+'</details>'; }
+  h+='</div>';
+  // rechts: Aktionen
+  const agIp=l.agent?l.agent.ip:'', b=(act,lb,ex)=>'<button type="button" class="btn ghost" data-act="'+act+'"'+(ex||'')+'>'+lb+'</button>';
+  let ac=b('testtone',T('Test-Ton'),up?'':' disabled');
+  if(has('reboot')) ac+=b('devreboot',T('Neustart'),up?'':' disabled');
+  if(up&&l.connections) ac+=b('wsreload',T('Panel neu laden'));
+  if(has('reboot')) ac+=b('adblog',T('Protokoll holen'),up?'':' disabled');
+  if(l.agent) ac+=b('start',T('Browser starten'))+b('reload',T('Browser neu laden'))+b('stop',T('Browser beenden'));
+  if(d.display) ac+=b('dispoff',T('Display ausschalten'))+b('dispon',T('Display einschalten'));
+  h+='<aside class="gdside"><div class="gds"><h3>'+T('Aktionen')+'</h3><div class="gdacts" data-ip="'+esc(agIp)+'" data-devip="'+esc(l.ip||'')+'">'+ac+'</div></div>'+
+    (has('fullyinstall')?'<div class="gds"><h3>TbViewer</h3>'+tbvHTML(n,tb)+'</div>':'')+
+    '<div class="gdtoast"></div>'+
+    '<div class="gds"><button type="button" class="btn del ddel">'+T('Gerät entfernen')+'</button></div></aside></div>';
+  return '<div class="gd" data-name="'+esc(n)+'">'+h+'</div>';
+}
+function gdToastHome(){ const t=$('#ag_toast'), a=document.querySelector('.devcards>.actions'); if(t&&a&&t.parentNode!==a) a.appendChild(t); }
+function gdRender(){
+  const box=$('#dev_list'); if(!box||!DEV_CUR) return;
+  gdToastHome();
+  const n=DEV_CUR, known=devNames().indexOf(n)>=0;
+  if(!known){ box.innerHTML='<div class="gd"><button type="button" class="gdback">‹ '+T('Geräte')+'</button><div class="muted">'+(LAST_DEVS?T('Gerät nicht gefunden.'):T('Lade …'))+'</div></div>'; GD_SIG=''; return; }
+  const y=($('#scroll')||{}).scrollTop;
+  box.innerHTML=gdHTML(n); GD_SIG=gdDetSig(n);
+  const sl=box.querySelector('.gdtoast'), t=$('#ag_toast'); if(sl&&t) sl.appendChild(t);
+  const g=box.querySelector('.gd'); if(g&&g.querySelector('.dd_pw')) pwHinweisZeigen(g);
+  if($('#scroll')&&y) $('#scroll').scrollTop=y;
+  if(has_fi(n)&&!GD_TRY.has(n)&&(gdLive(n).online)){ GD_TRY.add(n); devLauncherVer({dataset:{name:n,devip:gdLive(n).ip||''}}); }
+}
+function has_fi(n){ return (gdLive(n).caps||[]).indexOf('fullyinstall')>=0; }
+function gdDetSig(n){ const l=gdLive(n), P=DEVP[n]||{}; return JSON.stringify([!!l.online,l.profile,!!l.tbold,l.tbver,l.connections,l.caps,l.ip,P.caps,!!P.ok,!!DEV_LV[n],l.reach]); }
+// Graue Zeile unter dem Ton-Schalter: welche Bausteine dieses Geraet erreichen (nur Anzeige, der Server rechnet)
+function gdReach(l,k,n){ const r=(l||{}).reach; if(!r) return '';
+  let t='';
+  if(k==='ring') t=(r.ring||[]).length?r.ring.join(', '):r.intercoms?T('Nicht ausgewählt'):T('Keine Türstation');
+  else if(k==='wake') t=(r.wake||[]).length?r.wake.join(', '):T('Kein Wecker');
+  else if(k==='alarm'){ if(n&&gdAlarmOff(n)) return '<small class="gdreach bad">'+esc(T('Kein Melder erreicht'))+'</small>';
+    t=r.alarm===1?T('1 Melder'):T('{n} Melder').replace('{n}',r.alarm); }
+  else if(k==='notify') t=T('Alle Hinweise');
+  return t?'<small class="gdreach">'+esc(t)+'</small>':''; }
+async function gdFetch(n){ try{ const j=await (await fetch('/api/device/prefs?device='+encodeURIComponent(n))).json(); DEVP[n]=j.ok?j:{ok:false}; }catch(e){ DEVP[n]={ok:false}; } }
+function gdOpen(n){
+  gdReadDom(); DEV_CUR=n; GD_TRY.delete(n);
+  gdRender(); navHashWrite();
+  gdFetch(n).then(()=>{ if(DEV_CUR===n) gdRender(); });
+  const sc=$('#scroll'); if(sc) sc.scrollTop=0;
+}
+function gdClose(){
+  gdReadDom(); DEV_CUR=''; renderDevices(); navHashWrite();
+  const sc=$('#scroll'); if(sc) sc.scrollTop=0;
+}
+// Eingaben aus Erweitert (Typ, Zoom, Display-Treiber) in die Arbeitskopie DEV uebernehmen
+function gdReadDom(){
+  const g=document.querySelector('#dev_list .gd[data-name]'); if(!g) return;
+  const n=g.dataset.name, o=DEV[n]=DEV[n]||{auto:true,modes:[]};
+  const ms=g.querySelector('.dev_model'); if(ms) o.model=ms.value;
+  const zs=g.querySelector('.dev_scale'); if(zs){ const sv=zs.value; o.scale=(sv===''||sv==='off'||sv==='auto')?sv:parseFloat(sv); }
+  const dr=g.querySelector('.dd_drv');
+  if(dr){ const drv=dr.value;
+    o.display=drv?{driver:drv, host:g.querySelector('.dd_host').value.trim(), port:parseInt(g.querySelector('.dd_port').value)||DRIVER_PORT[drv]||0, password:g.querySelector('.dd_pw').value}:null; }
+  const ad=g.querySelector('.gdadv'); if(ad) GD_ADV=ad.open;
+}
+function gdSet(n,k,v){ gdReadDom(); (DEVD[n]=DEVD[n]||{})[k]=v; sectDirty('dev'); gdRender(); }
+function gdPatch(d){ const p={}; Object.entries(d).forEach(([k,v])=>{ if(k.indexOf('sound.')===0) (p.sound=p.sound||{})[k.slice(6)]=v; else p[k]=v; }); return p; }
+// Agenten-Reiter nur, wenn es welche gibt (Browser ohne Kennung)
+function agentsExist(){ try{ return !!(((LAST_DEVS||{}).anonymous)||[]).length; }catch(e){ return false; } }   // try: vor der Initialisierung von LAST_DEVS
+function devTabsSync(){
+  const s=agentsExist(); if(s===AG_SHOWN) return; AG_SHOWN=s;
+  if(rubric==='devices'){ if(!s&&getSub()==='agents'){ setSub('list'); renderSubtabs(); showSub('list'); } else renderSubtabs(); }
 }
 function renderDevices(){
   const box=$('#dev_list'); if(!box) return;
-  // online zuerst (neu erkannte ganz oben), dann nach Name; offline eingeklappt im Bereich „Offline (n)“
-  const nw=n=>DEV_NEW.has(n)?0:1, srt=(a,b)=>nw(a)-nw(b)||a.localeCompare(b);
-  const names=devNames(), onl=names.filter(devOnline).sort(srt), offl=names.filter(n=>!devOnline(n)).sort(srt);
-  { const act=$('#dev_save')&&$('#dev_save').closest('.actions'); if(act) act.style.display=names.length?'':'none';
-    const dtl=$('#devTools'); if(dtl) dtl.style.display=names.length?'':'none'; }
-  if(!names.length){ DEV_SIG=devSig(); box.innerHTML='<div class="muted">'+T('Noch kein Gerät bekannt. Es erscheint hier, sobald es das Panel mit Kennung öffnet oder ein Agent läuft.')+'</div>'; return; }
-  const stale=devStaleList().filter(n=>offl.indexOf(n)>=0), offOpen=DEV_OFF_OPEN===null?!onl.length:DEV_OFF_OPEN;
-  const offBlock=offl.length?'<div class="devoff"><button type="button" class="devofft" aria-expanded="'+(offOpen?'true':'false')+'"><span>'+T('Offline')+' ('+offl.length+')</span><span class="chev" aria-hidden="true">›</span></button>'+
-    '<div class="devoffb"'+(offOpen?'':' hidden')+'>'+
-    (stale.length?'<div class="devprune"><button type="button" class="btn ghost sm devprune_go">'+T('Seit mehr als 7 Tagen offline entfernen')+' ('+stale.length+')</button>'+
-      '<span class="dhint">'+T('Nichts wird automatisch gelöscht. Vor dem Entfernen siehst du die Namen, danach kannst du es rückgängig machen.')+'</span></div>':'')+
-    offl.map(devRow).join('')+'</div></div>':'';
-  DEV_SIG=devSig();
-  box.innerHTML=onl.map(devRow).join('')+offBlock;
-  if(LAST_DEVS) renderDeviceList(LAST_DEVS);
-  if(!box._doff) box._doff=1, box.addEventListener('click',e=>{
-    const t=e.target.closest('.devofft'); if(t){ const b=t.parentNode.querySelector('.devoffb'); b.hidden=!b.hidden; DEV_OFF_OPEN=!b.hidden; t.setAttribute('aria-expanded',DEV_OFF_OPEN?'true':'false'); return; }
-    if(e.target.closest('.devprune_go')){ devPrune(); return; }
-    const rn=e.target.closest('.devren'); if(rn){ const dv=rn.closest('.dev'), row=dv.querySelector('.devrn'), inp=row.querySelector('.dren_in');
-      row.hidden=!row.hidden; if(!row.hidden){ inp.value=dv.dataset.name; inp.focus(); inp.select(); } return; }
-    const x=e.target.closest('.dren_x'); if(x){ x.closest('.devrn').hidden=true; return; } });
-  box.querySelectorAll('.devtg').forEach(b=>b.onclick=()=>{ const dv=b.closest('.dev'), n=dv.dataset.name;
-    const op=dv.classList.toggle('open'); b.setAttribute('aria-expanded',op?'true':'false'); if(op) DEV_OPEN.add(n); else DEV_OPEN.delete(n);
-    const bx=op&&!dv.classList.contains('off')&&dv.querySelector('.devx'); if(bx && !DEV_BRI_TRY.has(n) && bx.querySelector('.dbri')){ DEV_BRI_TRY.add(n); devAutoRead(bx); }
-    if(DEV_NEW.delete(n)){ dv.classList.remove('isnew'); const nb=b.querySelector('.newb'); if(nb) nb.remove(); } });
-  box.querySelectorAll('.dm_add').forEach(b=>b.onclick=()=>{
-    readDevFromDom(); const name=b.closest('.dev').dataset.name;
-    (DEV[name]=DEV[name]||{auto:true,modes:[]}).modes.push(['','']); renderDevices();
+  const names=devNames();
+  { const act=$('#dev_save')&&$('#dev_save').closest('.actions'); if(act) act.style.display=(names.length||DEV_CUR)?'':'none'; }
+  if(DEV_CUR){ gdRender(); return; }
+  gdToastHome();
+  DEV_SIG=gdSig();
+  box.innerHTML=names.length?gdListHTML(names):'<div class="muted">'+T('Noch kein Gerät bekannt. Es erscheint hier, sobald es das Panel mit Kennung öffnet oder ein Agent läuft.')+'</div>';
+  if(LAST_DEVS) renderAnon(LAST_DEVS);
+  if(box._gd) return; box._gd=1;
+  box.addEventListener('click',async e=>{
+    const t=e.target, g=t.closest('.gd'), n=g?g.dataset.name:'';
+    const row=t.closest('.gdrow'); if(row){ gdOpen(row.dataset.name); return; }
+    if(t.closest('.gdback')){ gdClose(); return; }
+    if(!g) return;
+    if(t.closest('.gdrnb')){ const r=g.querySelector('.gdrn'), i=g.querySelector('.gdrn_in'); r.hidden=!r.hidden; if(!r.hidden){ i.focus(); i.select(); } return; }
+    if(t.closest('.gdrn_x')){ g.querySelector('.gdrn').hidden=true; return; }
+    if(t.closest('.gdrn_go')){ devRename(n,g.querySelector('.gdrn_in').value); return; }
+    if(t.closest('.gdtypb')){ const m=g.querySelector('.gdmodel'); m.hidden=!m.hidden; return; }
+    const rs=t.closest('.gdreset'); if(rs){ const k=rs.dataset.gr; gdSet(n,k,null); if(k==='brightMin') gdSet(n,'brightMax',null); return; }
+    const gv=t.closest('[data-gv]'); if(gv){ gdSet(n,gv.dataset.gk,gv.dataset.gv==='1'); return; }
+    if(t.closest('.ddel')){ devDelete(n); return; }
+    const us=t.closest('.ddetuse'); if(us){ gdReadDom(); (DEV[n]=DEV[n]||{auto:true,modes:[]}).model=us.dataset.guess; sectDirty('dev'); gdRender(); return; }
+    const ab=t.closest('button[data-act]'); if(ab&&!ab.disabled){ const l=gdLive(n), ac=g.querySelector('.gdacts');
+      deviceAction(ab.dataset.act, n, ac?ac.dataset.ip:'', gdVal(n,'panel')||l.profile||'', l.ip||'', ab.dataset.tbmode); } });
+  box.addEventListener('change',async e=>{
+    const el=e.target, g=el.closest('.gd'); if(!g) return; const n=g.dataset.name;
+    if(el.classList.contains('dev_model')||el.classList.contains('dev_scale')){ gdReadDom(); gdRender(); return; }
+    if(el.classList.contains('dd_drv')){ const drv=el.value, host=g.querySelector('.dd_host'), port=g.querySelector('.dd_port');
+      if(drv){ if(!host.value&&DEVICE_IPS[n]) host.value=DEVICE_IPS[n]; if(!port.value) port.value=DRIVER_PORT[drv]||''; }
+      pwHinweisZeigen(g); gdReadDom(); return; }
+    if(!el.dataset.gk) return;
+    const k=el.dataset.gk, t=el.dataset.gt; let v;
+    if(t==='bool') v=el.checked; else if(t==='num') v=Number(el.value);
+    else if(t==='dimsw'){ const s=gdStd(n,'nightDim'); v=el.checked?(s>0?s:65):0; }
+    else if(t==='rest') v=100-Number(el.value);
+    else { v=el.value; if(k==='panel'&&v==='') v=null; }
+    if(k==='sound.alarm'&&v===false){
+      if(!(await dlgAsk(T('Alarm ausschalten?'),T('Ton aus – das Vollbild bleibt.'),T('Ausschalten'),true,T('Alarm bleibt an')))){ gdRender(); return; } }
+    if(k==='brightMin'&&v>gdVal(n,'brightMax')) gdSet(n,'brightMax',v);
+    if(k==='brightMax'&&v<gdVal(n,'brightMin')) gdSet(n,'brightMin',v);
+    gdSet(n,k,v); });
+  box.addEventListener('input',e=>{ if(e.target.classList.contains('dd_host')){ const g=e.target.closest('.gd'); if(g) pwHinweisZeigen(g); } });
+  box.addEventListener('keydown',e=>{ if(!e.target.classList.contains('gdrn_in')) return; const g=e.target.closest('.gd');
+    if(e.key==='Enter') devRename(g.dataset.name,e.target.value); else if(e.key==='Escape') g.querySelector('.gdrn').hidden=true; });
+}
+// Poll-Ergebnis anzeigen: Agenten-Liste (Browser ohne Kennung), Reiter, Liste bzw. Detail
+function renderAnon(j){
+  const box=$('#ag_list'); if(!box) return;
+  const ae=document.activeElement; if(ae && ae.tagName!=='BUTTON' && ae.closest && ae.closest('#ag_list')) return;
+  const prevName={}; box.querySelectorAll('.ag[data-anon]').forEach(n=>{ const i=n.querySelector('.anname'); if(i) prevName[n.dataset.anon]=i.value; });
+  const anon=j.anonymous||[];
+  box.innerHTML=anon.length?'<div class="devanon"><b>'+T('Ohne Kennung')+'</b><div class="note">'+T('An der IP-Adresse erkannt. Mit einem Namen bleibt das Gerät dauerhaft in der Liste.')+'</div>'+
+    anon.map(a=>anonRow(a,prevName[a.ip])).join('')+'</div>':'';
+  box.querySelectorAll('.ag[data-anon] button[data-act="name"]').forEach(b=>{
+    const row=b.closest('.ag');
+    b.onclick=()=>nameDevice(row.dataset.anon, row.querySelector('.anname').value.trim());
   });
-  // Betriebsmodus-Automatik: Modus-Zeilen nur bei gesetztem Haken
-  box.querySelectorAll('.dev_auto').forEach(cb=>cb.onchange=()=>{ const w=cb.closest('.dev').querySelector('.dmwrap'); if(w) w.hidden=!cb.checked; });
-  if(!box._ddel) box._ddel=1, box.addEventListener('click',e=>{ const b=e.target.closest('.ddel'); if(b) devDelete(b.closest('.dev').dataset.name);
-    const rn=e.target.closest('.dren_go'); if(rn){ const dv=rn.closest('.dev'); devRename(dv.dataset.name, dv.querySelector('.dren_in').value); } });
-  if(!box._dren) box._dren=1, box.addEventListener('keydown',e=>{ if(!e.target.classList.contains('dren_in')) return;
-    const dv=e.target.closest('.dev'); if(e.key==='Enter'){ devRename(dv.dataset.name, e.target.value); } else if(e.key==='Escape'){ dv.querySelector('.devrn').hidden=true; } });
-  // Erkannten Typ uebernehmen = Auswahl setzen wie von Hand (Aenderung -> Speicherleiste)
-  if(!box._ddet) box._ddet=1, box.addEventListener('click',e=>{ const b=e.target.closest('.ddetuse'); if(!b) return; const dv=b.closest('.dev'), sel=dv&&dv.querySelector('.dev_model');
-    if(!sel) return; sel.value=b.dataset.guess; sel.dispatchEvent(new Event('change',{bubbles:true})); b.remove(); });
-  box.querySelectorAll('.dev_model').forEach(sel=>sel.onchange=()=>{
-    const m=((META||{}).deviceModels||[]).find(x=>x.key===sel.value), dv=sel.closest('.dev'), dh=dv.querySelector('.ddhost');
-    const zs=dv.querySelector('.dev_scale'); if(zs){ zs.innerHTML=devScaleOpts(zs.value,m); const zw=dv.querySelector('.dzoom'); if(zw) zw.hidden=!devZoomShown(zs.value,m); }
-    const tp=dv.querySelector('.dtips'); if(tp) tp.innerHTML=devTipsHTML(dv.dataset.name,m);
-    if(dh) dh.hidden=!dv.querySelector('.dd_drv').value; });
-  box.querySelectorAll('.dd_drv').forEach(sel=>sel.onchange=()=>{
-    const row=sel.closest('.dev'), name=row.dataset.name, drv=sel.value;
-    const host=row.querySelector('.dd_host'), port=row.querySelector('.dd_port');
-    if(drv){ if(!host.value && DEVICE_IPS[name]) host.value=DEVICE_IPS[name]; if(!port.value) port.value=DRIVER_PORT[drv]||''; }
-    pwHinweisZeigen(row);
-  });
-  box.querySelectorAll('.dd_host').forEach(inp=>inp.oninput=()=>pwHinweisZeigen(inp.closest('.dev')));
-  box.querySelectorAll('.dm_del').forEach(b=>b.onclick=()=>{
-    const dev=b.closest('.dev'), name=dev.dataset.name;
-    const idx=Array.from(dev.querySelectorAll('.dmrow')).indexOf(b.closest('.dmrow'));
-    readDevFromDom(); const gone=DEV[name].modes.splice(idx,1)[0]; renderDevices();
-    snack(T('Zeile entfernt. Wirksam nach dem Speichern.'), ()=>{ readDevFromDom(); DEV[name].modes.splice(idx,0,gone); renderDevices(); sectDirty('dev'); });
-  });
+}
+function renderDeviceList(j){
+  { const devs=(j&&j.devices)||[], any=devs.length>0||Object.keys(DEV).length>0;
+    const act=$('#dev_save')&&$('#dev_save').closest('.actions'); if(act) act.style.display=any?'':'none'; }
+  const box=$('#dev_list'); if(!box) return;
+  devTabsSync(); renderAnon(j);
+  const ae=document.activeElement, typing=!!(ae&&ae.closest&&ae.closest('#dev_list')&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName));
+  if(typing) return;
+  if(DEV_CUR){ if(gdDetSig(DEV_CUR)!==GD_SIG){ gdReadDom(); gdRender(); } }
+  else if(gdSig()!==DEV_SIG) renderDevices();
 }
 // Nach dem Speichern: welche Kennwoerter der Server jetzt hat (auch in den
 // Platzhaltern, "Speichern" zeichnet nicht neu); eines, das er wegen eines
 // anderen Ziels verworfen hat, nennen (bleibt stehen).
 function devGespeichert(j, text){
   passZielLesen(j.devices);
-  document.querySelectorAll('#dev_list .dev').forEach(pwHinweisZeigen);
+  document.querySelectorAll('#dev_list .gd').forEach(pwHinweisZeigen);
   const weg=j.kennwortVerworfen||[], t=$('#dev_toast');
   if(!weg.length){ flash(t,text,true); return; }
   t.className='toast show warn';
   t.textContent=text+' · '+T('Display-Passwort nicht gespeichert, weil Adresse oder Treiber geändert wurden:')+' '+weg.join(', ');
 }
 $('#dev_save').onclick=async()=>{
-  readDevFromDom();
+  gdReadDom();
   const devices={};
   Object.entries(DEV).forEach(([name,d])=>{
     const modes={};
     (d.modes||[]).forEach(([m,p])=>{ m=(m||'').trim(); if(m&&p) modes[m]=p; });
     const display=(d.display&&d.display.driver&&d.display.host)?d.display:null;
-    const sc=(d.scale===undefined||d.scale===null)?'':d.scale;
-    if(Object.keys(modes).length || display || d.model || sc!==''){ devices[name]={auto:d.auto!==false, modes}; if(display) devices[name].display=display;
+    const sc=(d.scale===undefined||d.scale===null)?'':d.scale, pf=(d.prefs&&Object.keys(d.prefs).length)?d.prefs:null;
+    if(Object.keys(modes).length || display || d.model || sc!=='' || pf){ devices[name]={auto:d.auto!==false, modes}; if(display) devices[name].display=display;
       if(d.model){ devices[name].model=d.model; if(d.fully){ devices[name].fully=true; if(typeof d.nrestart==='boolean') devices[name].nrestart=d.nrestart; } }
-      if(sc!=='') devices[name].scale=sc; }
+      if(sc!=='') devices[name].scale=sc;
+    }
   });
   $('#dev_save').disabled=true;
+  let ok=false;
   try{
     const r=await fetch('/api/devices',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({devices})});
     const j=await r.json();
-    if(j.ok){ devGespeichert(j,T('Gespeichert')); if(typeof pollDevices==='function') pollDevices(); } else flashErr($('#dev_toast'),T('Speichern fehlgeschlagen.'),j);
+    if(!j.ok) flashErr($('#dev_toast'),T('Speichern fehlgeschlagen.'),j);
+    else {
+      // Geraete-Einstellungen: nur die Teil-Aenderungen (null = zurueck auf Standard)
+      ok=true;
+      for(const name of Object.keys(DEVD)){
+        const pr=await postJson('/api/device/prefs',{device:name,prefs:gdPatch(DEVD[name])});
+        if(!pr.ok){ ok=false; flashErr($('#dev_toast'),T('Speichern fehlgeschlagen.'),pr); break; }
+        DEVP[name]=pr; (DEV[name]=DEV[name]||{auto:true,modes:[]}).prefs=pr.prefs||{}; delete DEVD[name];
+      }
+      if(ok){ devGespeichert(j,T('Gespeichert')); if(typeof pollDevices==='function') pollDevices(); renderDevices(); }
+    }
   }catch(e){ flashErr($('#dev_toast'),T('Speichern fehlgeschlagen.'),e); }
   $('#dev_save').disabled=false;
+  return ok;
 };
 
 // ---- Audio: Test-Ton ----

@@ -31,7 +31,6 @@
       'Als App installieren: iPhone Safari → Teilen → „Zum Home-Bildschirm“, Android Chrome → Menü → „App installieren“.': 'Install as an app: iPhone Safari → Share → “Add to Home Screen”, Android Chrome → Menu → “Install app”.',
       'Nacht ab und Nacht bis sind gleich. Dann ist nie Nacht.': '“Night from” and “Night until” are the same. Then it is never night.',
       'Trotzdem speichern?': 'Save anyway?',
-      'Geräte, die nie gesehen wurden, bleiben stehen.': 'Devices that have never been seen are kept.',
       'Der Name darf nur Buchstaben, Ziffern, Leerzeichen sowie - _ . enthalten.': 'The name may only contain letters, digits, spaces and - _ .',
       'Ungültiger SSH-Benutzer.': 'Invalid SSH user.',
       'Ungültige IP-Adresse.': 'Invalid IP address.',
@@ -124,7 +123,6 @@
       // ---- Betriebsmodus-Automatik (/settings) ----
       'Betriebsmodus-Automatik': 'Operating-mode automation',
       'Automatik aktiv': 'Automation active',
-      'Zeile entfernen': 'Remove row',
 
       // ---- /config (Panel-Editor) ----
       'Titel': 'Title',
@@ -169,7 +167,6 @@
       'Systemeinstellung': 'System setting',
       'Sensoren': 'Sensors',
       'Präsenzerkennung': 'Presence detection',
-      'Präsenz = Annäherung oder Änderung des Lichtwerts: weckt nachts kurz auf und zeigt die Kamera live. Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.': 'Presence = proximity or a change of the light value: briefly wakes the display at night and shows the camera live. The dashboard always stays the starting point; only swiping or tapping leads to the tabs.',
       'Helligkeit': 'Brightness',
       'TbViewer installieren': 'Install TbViewer',
       'TbViewer ist nicht installiert': 'TbViewer is not installed',
@@ -183,7 +180,6 @@
       'Installiere TbViewer …': 'Installing TbViewer …',
       'TbViewer auf „': 'Install TbViewer on “',
       'Erweitert: Display-Steuerung (externer Treiber)': 'Advanced: display control (external driver)',
-      'Das Gerät regelt die Helligkeit selbst nach dem Umgebungslicht': 'The device adjusts brightness itself according to ambient light',
       '“ installieren?': '”?',
       'Gerät offline': 'Device offline',
       'Kalender „': 'Calendar “',
@@ -207,7 +203,6 @@
       'Adressen kopiert': 'Addresses copied',
       'Aktion': 'Action',
       'Aktuell': 'Current',
-      'Aktuellen Zustand vom Gerät lesen': 'Read current state from the device',
       'Aktuelles Passwort': 'Current password',
       'Alarm-Vollbild': 'Alarm full screen',
       'Alarmanlage': 'Alarm system',
@@ -218,7 +213,6 @@
       'Allgemein': 'General',
       'Als': 'As',
       'An (hochzoomen)': 'On (zoom in)',
-      'Android spielt bei jedem Antippen eines Bedienelements einen Klick ab': 'Android plays a click for every tap on a control',
       'Animation': 'Animation',
       'Animierte Symbole': 'Animated icons',
       'Anlegen': 'Create',
@@ -276,7 +270,6 @@
       'Freier Tab': 'Free tab',
       'Für welche Geräte?': 'For which devices?',
       'Ganzes Bild zeigen (nicht beschneiden)': 'Show entire image (do not crop)',
-      'Ganzes Gerät neu starten, wenn das Display hängt': 'Restart entire device if the display freezes',
       'Gelöscht': 'Deleted',
       'Gerät neu starten': 'Restart device',
       'Gerät startet neu': 'Device restarting',
@@ -378,7 +371,6 @@
       'Tab „': 'Tab “',
       'Tab-Einstellungen': 'Tab settings',
       'Tage': 'Days',
-      'Tipp-Töne': 'Tap tones',
       'Tipps für': 'Tips for',
       'Ton an': 'Sound on',
       'Touch': 'Touch',
@@ -553,18 +545,10 @@
       'Überwachungskameras mit MJPEG-Stream, z. B. http://192.168.1.60/mjpg/video.mjpg. Der Server holt das Bild einmal ab und gibt es an alle Panels weiter.':
         'Surveillance cameras with an MJPEG stream, e.g. http://192.168.1.60/mjpg/video.mjpg. The server fetches the image once and passes it on to all panels.',
       'Kamera hinzufügen': 'Add camera',
-      'Alle Geräte auf einen Blick: Status, Aktionen und Einstellungen je Gerät.':
-        'All devices at a glance: status, actions and settings for each device.',
-      'Legt für mehrere Geräte gleichzeitig fest, welches Panel zu welchem Betriebsmodus gehört.':
-        'Sets which panel belongs to which operating mode for several devices at once.',
       'Geräte suchen …': 'Searching for devices …',
       'Ohne Namen erscheint es unter „Alle Geräte“ → „Ohne Kennung“ und bekommt dort einen Namen.':
         'Without a name it appears under "All devices" → "Without ID" and gets a name there.',
-      'Der Gerätetyp bestimmt, ob die Knöpfe „TbViewer installieren“ und „Gerät neu starten“ erscheinen (Android per adb, Shelly zuerst über die eigene Schnittstelle).':
-        'The device type decides whether the buttons "Install TbViewer" and "Restart device" appear (Android via adb, Shelly first via its own interface).',
       'Aus Loxone, nicht löschbar': 'From Loxone, cannot be removed',
-      'Lege in Loxone Config einen virtuellen HTTP-Ausgang an, der je Betriebsart den Modusnamen sendet. Je Gerät bestimmst du, welches Panel bei welchem Modus erscheint; ohne Eintrag bleibt das Panel unverändert.':
-        'In Loxone Config, create a virtual HTTP output that sends the mode name for each operating mode. For each device you choose which panel appears for which mode; without an entry the panel stays unchanged.',
       'Zeigt Cover, Titel und Favoriten vom Loxone-Audioserver. Den Test-Ton für die Lautsprecher findest du unter System → Diagnose.':
         'Shows cover, title and favourites from the Loxone Audioserver. You find the test tone for the speakers under System → Diagnostics.',
       'Audioserver': 'Audioserver',
@@ -586,8 +570,6 @@
         'Off: all appointments in one colour, with the calendar name next to them. On: each calendar gets its own colour dot, also in the month grid.',
       '„Termine im Dashboard“ ist eine Obergrenze: Was neben Wetter und Uhr nicht mehr passt, bleibt weg (auf 480 × 480 etwa drei). Die vollständige Liste steht im Kalender-Widget.':
         '"Appointments in the dashboard" is an upper limit: whatever no longer fits next to weather and clock is left out (about three on 480 × 480). The full list is in the calendar widget.',
-      'Wann Nacht ist, gilt für alle Panels. Was nachts passiert, stellst du je Panel ein: Panel → Display & Nacht.':
-        'Night applies to all panels. What happens at night is set per panel: Panel → Display & night.',
       'Nacht erkennen über':
         'Detect night by',
       'Loxone-Betriebsmodus (oder Baustein)':
@@ -616,6 +598,101 @@
         'Please enter a start and end time.',
       'Display & Nacht':
         'Display & night',
+      'Abdunkeln, Präsenzerkennung, Helligkeit und Töne stellst du je Gerät ein: Geräte → Alle Geräte.':
+        'Dimming, presence detection, brightness and sounds are set per device: Devices → All devices.',
+      'Nacht-Kamera':
+        'Night camera',
+      'Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.':
+        'The dashboard is always the starting point; only swiping or tapping leads to the tabs.',
+      '„{n}“ entfernen? Typ, Einstellungen und Zoom dieses Geräts gehen verloren.':
+        'Remove “{n}”? Type, settings and zoom of this device are lost.',
+      '{n} Min.':
+        '{n} min',
+      '{n} Std.':
+        '{n} h',
+      '1 Tag':
+        '1 day',
+      '{n} Tagen':
+        '{n} days',
+      'Alarm aus':
+        'Alarm off',
+      'offline seit':
+        'offline since',
+      'nie':
+        'never',
+      'Typ ändern':
+        'Change type',
+      'Gerät offline. Änderungen gelten beim nächsten Verbinden.':
+        'Device offline. Changes apply the next time it connects.',
+      'Lade …':
+        'Loading …',
+      'Einstellungen nicht verfügbar.':
+        'Settings not available.',
+      'Am Gerät':
+        'On the device',
+      'Zahnrad für die Einstellungen am Gerät zeigen':
+        'Show a gear for the on-device settings',
+      'Die Einstellungen öffnen auch mit fünf schnellen Tipps. Nicht am Handy.':
+        'The settings also open with five quick taps. Not on phones.',
+      'Zahnrad am Gerät':
+        'Gear on device',
+      'Auf Standard zurück':
+        'Back to default',
+      'geändert':
+        'changed',
+      'Töne':
+        'Sounds',
+      'Nachts':
+        'At night',
+      'Abdunkeln':
+        'Dimming',
+      'Helligkeit nachts':
+        'Night brightness',
+      'Nachts startet das Video erst, wenn jemand kommt.':
+        'At night the video only starts when someone comes.',
+      'Auto':
+        'Auto',
+      'Fest':
+        'Fixed',
+      'Helligkeit min. / max.':
+        'Brightness min. / max.',
+      'Helligkeit fest':
+        'Fixed brightness',
+      'Erweitert: Zoom, Display-Treiber':
+        'Advanced: zoom, display driver',
+      'Neustart':
+        'Restart',
+      'Aktionen':
+        'Actions',
+      'Gerät nicht gefunden.':
+        'Device not found.',
+      'Alarm ausschalten?':
+        'Turn alarm off?',
+      'Ton aus – das Vollbild bleibt.':
+        'Sound off – the full screen stays.',
+      'auf {n} %': 'to {n} %',
+      'Nicht ausgewählt': 'Not selected',
+      'Kein Melder erreicht': 'No detector reached',
+      'Ausschalten':
+        'Turn off',
+      'Alarm bleibt an':
+        'Keep alarm on',
+      'An der IP-Adresse erkannt. Mit einem Namen bleibt das Gerät dauerhaft in der Liste.':
+        'Recognized by IP address. With a name the device stays in the list.',
+      'Wann Nacht ist, gilt für alle Panels. Das Abdunkeln stellst du je Gerät ein: Geräte → Alle Geräte.':
+        'When it is night applies to all panels. Dimming is set per device: Devices → All devices.',
+      'Hinzufügen':
+        'Add',
+      'Hinweis':
+        'Notice',
+      'Klingel':
+        'Doorbell',
+      'Alarm':
+        'Alarm',
+      'Tipp':
+        'Tap',
+      'Erweitert':
+        'Advanced',
       'Tabs & Dashboard': 'Tabs & dashboard',
       'Kalender & Kameras': 'Calendar & cameras',
       'Alles, was tilebert vom Miniserver übernimmt: Zugang, Befehle, Wetter und Audio.':
@@ -634,24 +711,14 @@
         'Reload page',
       'Gegen Einfrieren. Nur, wenn das Dashboard steht.':
         'Prevents freezing. Only while the dashboard is shown.',
-      'Helligkeit und Tipp-Töne direkt am Gerät: Geräte → Alle Geräte.':
-        'Brightness and tap sounds directly on the device: Devices → All devices.',
       'Wann Nacht ist, legst du unter System → Alle Panels → Nachtmodus fest.':
         'You set when it is night under System → All panels → Night mode.',
-      'Kein Gerät mit TbViewer zeigt dieses Panel. Diese Optionen wirken erst dann.':
-        'No device with TbViewer shows this panel. These options only take effect then.',
-      'Nur mit TbViewer auf Geräten mit Sensoren (z. B. Shelly Wall Display). Die automatische Helligkeit gilt tagsüber, nachts gilt „Abdunkeln nachts“.':
-        'Only with TbViewer on devices with sensors (e.g. Shelly Wall Display). Automatic brightness applies by day, at night "Dim at night" applies.',
       'Nachts um 3 Uhr':
         'At 3 am',
       'Alle {n} Stunden':
         'Every {n} hours',
       'Nie':
         'Never',
-      'Gilt sofort. Dauerhaft: Panel → Display & Nacht.':
-        'Applies immediately. Permanent: Panel → Display & night.',
-      'Gilt sofort. Dauerhaft: Panel → Display &amp; Nacht.':
-        'Applies immediately. Permanent: Panel → Display &amp; night.',
       'Alles zur Fehlersuche: Server-Protokoll, Geräteprotokolle und Test-Ton.':
         'Everything for troubleshooting: server log, device logs and test tone.',
       'Server-Protokoll': 'Server log',
@@ -900,19 +967,11 @@
         'No device with adb found. Android devices appear here once their device type is set (Devices → All devices) and adb over WLAN is switched on.',
       'Server-Protokoll löschen? Das lässt sich nicht rückgängig machen.': 'Delete the server log? This cannot be undone.',
       'Panel': 'Panel',
-      'Panel wechseln': 'Switch panel',
-      'Panel wählen, dann „Panel wechseln“. Wirkt sofort am Gerät.':
-        'Choose a panel, then "Switch panel". Takes effect immediately on the device.',
-      'Wechseln geht erst, wenn das Panel am Gerät geöffnet ist.':
-        'Switching only works once the panel is open on the device.',
       'Browser starten': 'Start browser',
       'Browser beenden': 'Stop browser',
       'Browser neu laden': 'Reload browser',
       'Display ausschalten': 'Switch display off',
       'Display einschalten': 'Switch display on',
-      'Gerät offline. Die Steuerung ist nicht verfügbar.': 'Device offline. Control is not available.',
-      'Gerät verbindet sich. Die Steuerung ist gleich verfügbar.':
-        'Device is connecting. Control will be available shortly.',
       'Voraussetzung: ADB über WLAN ist am Gerät eingeschaltet und für diesen Server freigegeben.':
         'Requirement: ADB over WLAN is switched on at the device and approved for this server.',
       'installiert. Update verfügbar.': 'installed. Update available.',
@@ -920,8 +979,6 @@
       'installiert, aber nicht als Panel-Anzeige aktiv': 'installed, but not active as panel display',
       'TbViewer: Status unbekannt. Das Gerät ist per adb nicht erreichbar.':
         'TbViewer: status unknown. The device cannot be reached via adb.',
-      'An der IP-Adresse erkannt. Mit einem Namen bleibt das Gerät dauerhaft in der Liste und lässt sich per Betriebsmodus umschalten.':
-        'Recognised by its IP address. With a name the device stays in the list permanently and can be switched by operating mode.',
       'Das Gerät startet dabei kurz neu.': 'The device restarts briefly in the process.',
       'Voraussetzung: ADB über WLAN (Port 5555) ist eingeschaltet. Beim ersten Mal fragt das Gerät „USB-Debugging zulassen?“. Bestätige mit „Immer erlauben“ und starte die Aktion noch einmal.':
         'Requirement: ADB over WLAN (port 5555) is switched on. The first time, the device asks "Allow USB debugging?". Confirm with "Always allow" and start the action again.',
@@ -946,23 +1003,12 @@
         'In Loxone Config, create a virtual HTTP output with this address for each operating mode. The mode name goes at the end:',
       'Übernehmen': 'Apply',
       'Name fehlt. Gib einen Namen ein.': 'Name missing. Enter a name.',
-      '— Panel wählen —': '— choose panel —',
-      'Modus, z. B. gaeste': 'Mode, e.g. gaeste',
-      'Wähle zuerst den Gerätetyp. Dann erscheinen die passenden Funktionen.':
-        'Choose the device type first. Then the matching functions appear.',
-      'Für größere Schirme (7–8″-Tablet, iPad mini): Beide Hälften werden gleichmäßig auf die volle Größe gezoomt statt mit Rand gezeigt. Geräte mit 480 × 480 bleiben unverändert.':
-        'For larger screens (7–8″ tablet, iPad mini): both halves are zoomed evenly to full size instead of being shown with a border. Devices with 480 × 480 stay unchanged.',
-      'Panel automatisch nach Betriebsmodus wechseln': 'Switch panel automatically by operating mode',
-      'Modus hinzufügen': 'Add mode',
-      'Welches Panel bei welchem Modus erscheint. Loxone sendet den Modus per HTTP (siehe Karte „Betriebsmodus“ oben).':
-        'Which panel appears for which mode. Loxone sends the mode via HTTP (see card "Operating mode" above).',
       'Feste Geräte-ID. Bleibt gleich, auch wenn sich die IP-Adresse ändert.':
         'Fixed device ID. Stays the same even if the IP address changes.',
       'Ohne Treiber „keine“ lassen. Dann schaltet das Panel das Display selbst.':
         'Without a driver leave "none". Then the panel switches the display itself.',
       'Noch kein Gerät bekannt. Es erscheint hier, sobald es das Panel mit Kennung öffnet oder ein Agent läuft.':
         'No device known yet. It appears here as soon as it opens the panel with an ID or an agent is running.',
-      'Zeile entfernt. Wirksam nach dem Speichern.': 'Row removed. Takes effect after saving.',
       '“ gelöscht. Wirksam nach dem Speichern.': '" deleted. Takes effect after saving.',
       '“ entfernt. Wirksam nach dem Speichern.': '" removed. Takes effect after saving.',
       'Display-Passwort nicht gespeichert, weil Adresse oder Treiber geändert wurden:':
@@ -1032,8 +1078,6 @@
       'Versuche es noch einmal oder prüfe System → Diagnose.': 'Try again or check System → Diagnostics.',
       'Unbekannte Ursache.': 'Unknown cause.',
       'Verbunden. {n} Bausteine gefunden.': 'Connected. {n} blocks found.',
-      'Tipp-Töne ändern fehlgeschlagen.': 'Changing tap sounds failed.',
-      'Helligkeit ändern fehlgeschlagen.': 'Changing brightness failed.',
       'Einrichten fehlgeschlagen.': 'Setup failed.',
       'Neustart fehlgeschlagen.': 'Restart failed.',
       'Erledigt.': 'Done.',
@@ -1125,8 +1169,8 @@
         'LAN/PoE: assign a fixed IP address in the router (for ADB).',
       'Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm.':
         'Landscape, panel format "Wide (2 halves)"; zoom "Automatic" fills the screen.',
-      'Mit TbViewer funktionieren Autostart und Display-Steuerung; ohne die App hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.':
-        'With TbViewer, autostart and display control work; without the app the page keeps the screen awake until the idle time runs out.',
+      'Mit TbViewer lassen sich Display und Helligkeit steuern; die App startet nach einem Neustart nicht von selbst. Ohne sie hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.':
+        'With TbViewer you can control display and brightness; the app does not start by itself after a reboot. Without it the page keeps the screen awake until the idle time runs out.',
       'Hochkant zeigt das Tablet nur eine Hälfte; unter 600 px Breite greift der Handy-Modus.':
         'In portrait the tablet shows only one half; below 600 px width the phone mode applies.',
       'Safari: Teilen → „Zum Home-Bildschirm“. Startet ohne Adressleiste als Vollbild-App (Start-Adresse mit ?device=…).':
@@ -1177,33 +1221,14 @@
       'Öffne diese Adresse im Browser des Geräts (Safari, Chrome …). Mit „Zum Home-Bildschirm“ startet sie wie eine App. Mit Namen erscheint das Gerät unter „Alle Geräte“.': 'Open this address in the device\'s browser (Safari, Chrome …). With "Add to Home Screen" it starts like an app. With a name the device appears under "All devices".',
       'Der Befehl überträgt Agent und Konfiguration aufs Gerät und richtet den Autostart ein. Führe ihn einmal im Terminal aus; er fragt nach dem SSH- und sudo-Passwort des Geräts.': 'The command copies the agent and configuration to the device and sets up autostart. Run it once in a terminal; it asks for the device\'s SSH and sudo password.',
       'Display live': 'Display live',
-      'Neu lesen': 'Read again',
-      'Bestimmt, welche Steuerung angeboten wird.': 'Determines which controls are offered.',
-      'Änderungen hier gelten nach „Speichern“.': 'Changes here apply after "Save".',
       'Gerät entfernen': 'Remove device',
-      'Entfernt Einstellungen und Erkennung des Geräts. Ist es verbunden, meldet es sich neu an.': 'Removes the device\'s settings and detection. If it is connected, it registers again.',
       'Entfernen fehlgeschlagen.': 'Removing failed.',
-      'Entfernen fehlgeschlagen:': 'Removing failed:',
       'Gerät „{n}“ entfernt': 'Device "{n}" removed',
-      '„{n}“ entfernen? Typ, Betriebsmodus und Zoom dieses Geräts gehen verloren.': 'Remove "{n}"? Type, operating mode and zoom of this device are lost.',
       '„{n}“ komplett neu starten? Das dauert etwa eine Minute.': 'Restart "{n}" completely? This takes about a minute.',
       'Neu starten': 'Restart',
       'TbViewer einrichten': 'Set up TbViewer',
       'Installieren': 'Install',
-      'Geräteprotokoll per ADB als Datei laden': 'Download the device log as a file via ADB',
-      'zeigt Panel': 'shows panel',
-      'zuletzt gesehen vor 1 Tag': 'last seen 1 day ago',
-      'zuletzt gesehen vor {n} Tagen': 'last seen {n} days ago',
       'Offline': 'Offline',
-      'Seit mehr als 7 Tagen offline entfernen': 'Remove devices offline for more than 7 days',
-      'Nichts wird automatisch gelöscht. Vor dem Entfernen siehst du die Namen, danach kannst du es rückgängig machen.': 'Nothing is deleted automatically. You see the names before removing and can undo afterwards.',
-      'Alte Geräte entfernen': 'Remove old devices',
-      'Diese Geräte waren seit mehr als 7 Tagen nicht online. Sie werden entfernt:': 'These devices have not been online for more than 7 days. They will be removed:',
-      'Du kannst es danach 10 Sekunden lang rückgängig machen.': 'You can undo this for 10 seconds afterwards.',
-      '1 Gerät entfernen': 'Remove 1 device',
-      '{n} Geräte entfernen': 'Remove {n} devices',
-      '1 Gerät entfernt': '1 device removed',
-      '{n} Geräte entfernt': '{n} devices removed',
       // Kritik 0.20.7: Speicherleiste, Nachtmodus, Aenderungsliste, Kategorie-Farben
       'Verwerfen': 'Discard',
       'Nicht gespeichert.': 'Not saved.',
@@ -1226,6 +1251,28 @@
       'Kursiv': 'Italic',
       'OK': 'OK',
       'z. B. Pacifico, cursive': 'e.g. Pacifico, cursive',
+      'Alarmbausteine': 'Alarm blocks',
+      'Neue werden automatisch aktiv.': 'New ones are switched on automatically.',
+      'Ein aktiver Baustein zeigt auf allen Geräten ein rotes Vollbild. Den Ton schaltest du je Gerät ein oder aus.': 'An active block shows a red full screen on all devices. You switch the sound on or off per device.',
+      '„{n}“ zeigt dann auf keinem Gerät ein Vollbild.': '“{n}” will then show no full screen on any device.',
+      'Ausnahmen für dieses Panel': 'Exceptions for this panel',
+      '{n} abgewählt': '{n} deselected',
+      'keine': 'none',
+      'Abgewählte Bausteine zeigen auf Geräten mit diesem Panel kein Vollbild.': 'Deselected blocks show no full screen on devices with this panel.',
+      'Löst ein Alarmbaustein aus, zeigt jedes Gerät ein rotes Vollbild mit <b>Stumm</b> und <b>Quittieren</b> (Rauchmelder) bzw. <b>Quittieren</b> und <b>Unscharf</b> (Alarmanlage). Die Tasten schalten sofort, abgesicherte Bausteine fragen den PIN ab. Welche Bausteine das sind, stellst du unter System → Loxone ein.': 'When an alarm block triggers, every device shows a red full screen with <b>Mute</b> and <b>Acknowledge</b> (smoke detector) or <b>Acknowledge</b> and <b>Disarm</b> (alarm system). The buttons act immediately; secured blocks ask for the PIN. You choose the blocks under System → Loxone.',
+      'Klingelt an': 'Rings on',
+      'Klingelt an: Auswahl': 'Rings on: selection',
+      'Alle Wandgeräte': 'All wall devices',
+      'Auswahl': 'Selection',
+      'Handy / PC': 'Phone / PC',
+      'Noch keine Geräte': 'No devices yet',
+      'Klingelt nirgends': 'Rings nowhere',
+      'Wandgeräte sind alle Geräte außer Handy und PC-Browser. Den Ton schaltest du je Gerät ein oder aus.': 'Wall devices are all devices except phones and PC browsers. You switch the sound on or off per device.',
+      'Keine Türstation': 'No door station',
+      'Kein Wecker': 'No alarm clock',
+      '1 Melder': '1 detector',
+      '{n} Melder': '{n} detectors',
+      'Alle Hinweise': 'All notices',
     }
   };
 

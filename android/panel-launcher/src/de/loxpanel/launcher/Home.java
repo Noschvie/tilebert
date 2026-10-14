@@ -1,6 +1,7 @@
 package de.loxpanel.launcher;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
@@ -45,6 +46,13 @@ public class Home extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        StockHome.ensureHome(this);
+        // App-Symbol auf einem Tablet: direkt tilebert (die zwei Symbole gibt es nur als Shelly-Startbildschirm)
+        if (!StockHome.isShelly() && !getIntent().hasCategory(Intent.CATEGORY_HOME)) {
+            Kiosk.openPanel(this, false);
+            finish();
+            return;
+        }
         LinearLayout row = new LinearLayout(this);
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER);
@@ -78,6 +86,7 @@ public class Home extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (countdown == null) return;   // onCreate hat auf das Panel weitergeleitet
         // Bei jedem Erscheinen neu zaehlen (Boot, Absturz/Verlassen von Fully).
         if (!Kiosk.enabled(this) && getPackageManager().getLaunchIntentForPackage(Fully.PKG) == null) {
             countdown.setText("");   // ohne TbView-Modus und ohne Fully kein Autostart

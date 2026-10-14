@@ -19,10 +19,11 @@ Namen wie Fully/LoxKiosk, damit das Panel alle gleich behandelt:
 | `turnScreenOn()` / `turnScreenOff()` / `isScreenOn()` | Schoner weg/an (schwarzes Overlay + Helligkeit 0) |
 | `setDisplayOff(sek)` | Backlight aus n s nach Start des Panel-Schoners, 0 = nie |
 | `setSaver(on)` | Panel meldet eigenen Schoner (Uhr); App dunkelt danach selbst |
-| `setDisplayBrightness(prozent)` | Fensterhelligkeit in % der Systemhelligkeit; `false` bei Auto-Helligkeit -> Panel dunkelt per Overlay |
+| `setDisplayBrightness(prozent)` | Nachtwert: Fensterhelligkeit in % der vollen Helligkeit, gilt **direkt** (nicht mal Auto); 100 = Tagwert (Auto bzw. Fest). Ab 5.7 immer `true` |
 | neu: `getDeviceId()`, `getDeviceInfo()` | stabile ID/Steckbrief (Ersatz für Fully-Steckbrief) |
 | neu: `getProximity()`, `getLightLevel()` | Näherung (bool), Lichtstufe 0–16 (-1 = noch kein Wert) |
-| neu: `setAutoBrightness(an,min,max)`, `setProximityWake(an)`, `reload()` | Auto-Helligkeit (nur Shelly), Wecken per Näherung, Seite neu laden |
+| neu: `setAutoBrightness(an,min,max)`, `setProximityWake(an)`, `reload()` | Auto-Helligkeit (Lichtsensor), Wecken per Näherung, Seite neu laden |
+| neu (5.7): `setFixedBrightness(prozent)`, `setTouchSound(an)` | feste Helligkeit in % (0 = System; gilt ohne Auto), Android-Klickton bei Tipp (nur wenn „Touch-Töne“ im System an sind) |
 | neu: Ereignis Näherung | App ruft `window.lpHost.onProximity(nah)` |
 
 ## Näherungssensor (übernehmen)
@@ -120,7 +121,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
   sind alle Kamerabilder (Dashboard, Schoner, Widget, Türstation; alle über `camStream`) angehalten.
   Sichtbar: abgedunkeltes, unscharfes Standbild + Mond + „Live-Bild bei Annäherung“ (`html.camnight`).
   Live bei Annäherung, Berührung oder Klingel (`wake()`), 30 s Nachlauf nach „fern“.
-- **Präsenzerkennung** (`presence(src)` im Panel): Annäherung „nah“ **oder** Änderung der Lichtstufe (0–16, ≥ 1 Stufe gegenüber dem letzten Wert, max. 1 Ereignis je 2 s, nach eigener Helligkeitsänderung 2,5 s stumm) = Präsenz. Präsenz hellt nachts kurz auf (wie Berührung, `nightWake`) und schaltet die Nacht-Kamera live (30 s Nachlauf). Das Dashboard bleibt dabei sichtbar. Lichtänderung zählt nur nachts. Bei `prox=off` keine Reaktion. Es gibt keine Lux-Schwelle mehr (Licht an hält nicht mehr dauerhaft wach).
+- **Präsenzerkennung** (`presence(src)` im Panel): Annäherung „nah“ **oder** Änderung der Lichtstufe (0–16, ≥ 1 Stufe; Lux-Sensoren: ≥ 30 % und ≥ 5 lx gegenüber dem letzten Wert, max. 1 Ereignis je 2 s, nach eigener Helligkeitsänderung 2,5 s stumm) = Präsenz. Präsenz hellt nachts kurz auf (wie Berührung, `nightWake`) und schaltet die Nacht-Kamera live (30 s Nachlauf). Das Dashboard bleibt dabei sichtbar. Lichtänderung zählt nur nachts. Bei `prox=off` keine Reaktion. Es gibt keine Lux-Schwelle mehr (Licht an hält nicht mehr dauerhaft wach).
 - Tag/Nacht kommt **nur** aus dem Betriebsmodus der Config (Nutzervorgabe), nicht vom Lichtsensor.
 - **Dynamische Helligkeit** (`ui.autoBright`, min/max): nur Shelly mit TbView + Lichtsensor regelt nach dem Sensor (ohne „Abdunkeln um“); alle anderen Geräte und Option aus: Abdunkeln nach Betriebsmodus.
 - Ereignisse App -> Panel: `window.lpHost._ev(name, wert)`; Fix 5.1: `lpHost` ist `const`, daher
@@ -166,3 +167,20 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - „Launcher wählen“ öffnet `Settings.ACTION_HOME_SETTINGS`, Fallback Home-Chooser. Sprache folgt tilebert (Panel `html lang`), sonst Systemsprache.
 - Test: `audit/scripts/tbinfo.mjs` (Chromium, Stub-`TbInfo`), Screenshots `audit/shots/tbinfo/`.
 - Nachtlogik/Helligkeit/Schoner und Brücke/Token/sameOrigin bleiben unverändert.
+
+## TbViewer 5.7 (Geräte-Werte, Tablet ohne adb)
+
+- **Startbildschirm nur auf dem Shelly (ab 5.10):** Nur `.Home` trägt den `HOME`-Filter (wie bis 5.6, damit eine gespeicherte Startbildschirm-Wahl jedes Update übersteht). Auf Nicht-Shelly schaltet die App `.Home` beim ersten Start, nach Update und Boot ab (reine App, Symbol über `.App`). Der Alias aus 5.9 ist entfernt. Am Shelly getestet: Update und Neustart behalten TbViewer als Startbildschirm.
+- **App-Symbol auf Tablets:** `.Home` leitet ohne Shelly und ohne HOME-Intent direkt an die Kiosk-Ansicht weiter. Ohne gewählten Modus ist die Anzeige TbView, solange Fully nicht installiert ist.
+- **Erststart ohne Adresse:** lokale Seite `assets/setup.html` (DE/EN nach Systemsprache): Feld „tilebert-Adresse“ + „Verbinden“. Geprüft wird `GET <Origin>/api/version`; bei Erfolg wird die Adresse gespeichert (Einstellung `url`) und das Panel geladen. Die Schnittstelle `TbSetup` (`connect(adresse)`) hängt nur an dieser lokalen WebView (wie `TbInfo`), nie an der Panel-WebView, daher kein Token.
+- **Lichtsensor generisch:** Shelly meldet Stufen (Bereich < 100, 0–16). Tablets melden Lux (Bereich groß): die App bildet logarithmisch ab (`log10(lux+1)/3`, 1000 lx = 1) und liefert dem Panel Stufen 0–16 (`light`-Ereignis, `getLightLevel`) und die Auto-Helligkeit. Präsenz bei Lux-Sensoren: relative Änderung ≥ 30 % und ≥ 5 lx (App-Ereignis `lux`, Panel: gleiche Entprellung/Stummzeit wie bisher); `getDeviceInfo` meldet dafür `lux:true`.
+- **Helligkeit:** Nachts gilt der Nachtwert direkt (z. B. 35 %), bei Präsenz-Wecken wieder Tagwert: Auto (Lichtsensor, min–max) oder Fest (`sensors.fix`, z. B. 80 %).
+- **Tipp-Ton** (`sound.touch`): `setTouchSound` spielt `SoundEffectConstants.CLICK`; die App kann „Touch-Töne“ im System nicht einschalten (kein Recht) – ist die Systemeinstellung aus, bleibt es stumm.
+
+## TbViewer 5.8 (Einstellungen am Gerät)
+
+- **Infoseite** (`assets/info.html`, 5×Tippen wie bisher) bekommt den Knopf „Einstellungen“: `TbInfo.settings()` schließt die Infoseite und ruft im Panel `lpHost._ev('settings', true)`. Das Panel zeigt sein Einstellungs-Overlay (Panel, Töne, Nachts abdunkeln, Präsenzerkennung, Helligkeit). Im Panel öffnet 5×Tippen das Overlay im TbViewer nicht selbst – hier bleibt die native Infoseite zuständig. Keine neue Methode an der Panel-Brücke `TbView` (QC-S11 unverändert), nur ein Ereignis wie `prox`/`light`/`screen`.
+- **Adresse ändern** (nur Tablets, `StockHome.isShelly()` = false): `TbInfo.changeAddr()` öffnet `assets/setup.html` mit der aktuellen Adresse im Fragment (`#<Adresse>`), vorbelegt, mit „Abbrechen“ (`TbSetup.cancel()`, die alte Adresse bleibt). „Verbinden“ prüft `GET <Origin>/api/version`, speichert und lädt das Panel neu. Auf dem Shelly fehlt der Knopf (Adresse per Config/adb).
+- `InfoBridge` (`TbInfo`): neu `settings()`, `changeAddr()`; `data()` liefert zusätzlich `shelly`. `SetupBridge` (`TbSetup`): neu `cancel()`. Beide hängen nur an lokalen Asset-WebViews, nie an der Panel-WebView.
+- Version 5.8 (versionCode 13). Signatur unverändert (SHA-256 `80ee7b07…`). Test: `audit/scripts/tbinfo.mjs`, `tbsetup.mjs` (Stub-Bridges).
+- Version 5.10 (versionCode 15): HOME-Filter wieder auch auf `.Home`, beide HOME-Komponenten standardmäßig aktiv, neues LAUNCHER-Symbol `.App`, Abschalten auf Nicht-Shelly. Signatur unverändert (SHA-256 `80ee7b07…`).

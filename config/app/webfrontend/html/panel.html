@@ -1166,6 +1166,62 @@
   .pinkey:active{transform:scale(.96);}
   .pinkey.ok{background:var(--ink);color:var(--screen);font-size:18px;}
   .pinov.short .pinkey{height:44px;}
+  /* ==== Einstellungen am Geraet (Overlay): ruhig, eine Seite, Farben aus dem Theme ==== */
+  .dsov{position:absolute;inset:0;z-index:85;background:rgba(0,0,0,.55);display:grid;place-items:center;padding:10px;}
+  .dsbox{width:100%;max-width:980px;max-height:100%;display:grid;grid-template-columns:minmax(150px,30%) 1fr;
+    background:var(--screen);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-xl);overflow:hidden;}
+  .dsl{padding:24px 22px;display:flex;flex-direction:column;gap:16px;min-width:0;border-right:1px solid var(--line);}
+  .dsl>div:first-child{margin-bottom:auto;}
+  .dsl h2{margin:0;font:700 26px/1.1 var(--font-num,"Sora",sans-serif);letter-spacing:-.01em;overflow-wrap:anywhere;}
+  .dsdev{margin:6px 0 0;color:var(--muted);font-size:15px;overflow-wrap:anywhere;}
+  .dsback{all:unset;box-sizing:border-box;min-height:var(--pill-l);display:grid;place-items:center;padding:0 18px;cursor:pointer;
+    border:2px solid rgba(var(--wash,255,255,255),.32);border-radius:var(--r-pill);font-weight:700;font-size:17px;color:var(--ink);}
+  .dsback:active{transform:scale(.97);}
+  .dsr{padding:18px 24px;overflow-y:auto;min-width:0;display:flex;flex-direction:column;min-height:min(300px,60vh);}
+  .dsh{margin:12px 0 8px;font-size:12px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);}
+  .dsh:first-child{margin-top:0;}
+  .dsrow{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:58px;padding:6px 0;border-top:1px solid var(--line);}
+  .dsh+.dsrow,.dstones+.dsrow,.dsr>.dsrow:first-child{border-top:0;}
+  .dsrow>.dslb{min-width:0;display:flex;flex-wrap:wrap;align-items:center;column-gap:12px;row-gap:0;}
+  .dslb b{font-size:17px;font-weight:700;}
+  .dsrest{flex-basis:100%;font-size:13px;}
+  .dstones{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));gap:10px;margin-bottom:6px;}
+  .dstone{border:1px solid var(--line);background:var(--tile);border-radius:var(--r-m);padding:10px 12px 8px;display:flex;flex-direction:column;justify-content:space-between;gap:6px;align-items:flex-start;min-width:0;}
+  .dstr{display:flex;align-items:center;flex-wrap:wrap;column-gap:10px;}
+  .dstone b{font-size:15px;font-weight:700;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dsstat{display:flex;align-items:center;gap:2px;font-size:12px;min-height:44px;}
+  .dsstd{color:var(--muted);} .dschg{color:var(--accent);font-weight:700;}
+  .dsrst{all:unset;box-sizing:border-box;cursor:pointer;min-width:44px;min-height:44px;display:grid;place-items:center;color:var(--accent);font-size:18px;border-radius:50%;}
+  .dssw{all:unset;box-sizing:border-box;cursor:pointer;position:relative;flex:none;width:64px;height:44px;border-radius:13px;background:rgba(var(--wash,255,255,255),.18);transition:background var(--anim-fast);}
+  .dssw i{position:absolute;top:7px;left:4px;width:30px;height:30px;border-radius:10px;background:#fff;transition:transform var(--anim-fast);}
+  .dssw[aria-checked="true"]{background:var(--good);} .dssw[aria-checked="true"] i{transform:translateX(26px);}
+  .dsseg{display:inline-flex;border:2px solid rgba(var(--wash,255,255,255),.32);border-radius:var(--r-pill);overflow:hidden;flex:none;}
+  .dsseg button{all:unset;box-sizing:border-box;cursor:pointer;min-height:44px;padding:0 20px;display:grid;place-items:center;font-weight:700;font-size:15px;color:var(--muted);}
+  .dsseg button[aria-pressed="true"]{background:var(--accent);color:#1a1a1a;}
+  .dssel{box-sizing:border-box;min-height:44px;max-width:100%;padding:0 12px;border-radius:var(--r-s);border:2px solid rgba(var(--wash,255,255,255),.32);background:var(--tile);color:var(--ink);font:700 15px var(--font,inherit);}
+  .dsfoot{color:var(--muted);font-size:14px;}
+  .dsmsg{color:var(--crit-txt);font-size:14px;min-height:20px;margin-top:6px;}
+  .dspw{display:flex;flex-direction:column;gap:12px;max-width:420px;margin:auto 0;}
+  .dspw p{margin:0;color:var(--muted);font-size:16px;}
+  .dspw input{box-sizing:border-box;width:100%;min-height:56px;padding:0 16px;border-radius:var(--r-m);border:2px solid rgba(var(--wash,255,255,255),.32);background:var(--tile);color:var(--ink);font:600 20px var(--font,inherit);}
+  .dsbtn{all:unset;box-sizing:border-box;cursor:pointer;min-height:var(--pill-l);display:grid;place-items:center;padding:0 22px;border-radius:var(--r-pill);font-weight:700;font-size:17px;text-align:center;
+    background:var(--accent);color:#1a1a1a;border:2px solid transparent;}
+  .dsbtn.warn{background:transparent;color:var(--crit-txt);border-color:var(--crit);}
+  .dsdlg{position:absolute;inset:0;z-index:2;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px;}
+  .dsdlg>div{width:min(560px,100%);background:var(--screen);border:1px solid var(--line);border-radius:var(--r-xl);padding:26px;display:flex;flex-direction:column;gap:12px;}
+  .dsdlg h3{margin:0;font:700 26px/1.15 var(--font-num,"Sora",sans-serif);}
+  .dsdlg p{margin:0;color:var(--muted);font-size:17px;line-height:1.4;}
+  .dsdlg .dsbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px;}
+  .dsov :focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
+  @media (max-width:560px){
+    .dsbox{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);}
+    .dsl{flex-direction:row;align-items:center;justify-content:space-between;padding:14px 16px;border-right:0;border-bottom:1px solid var(--line);}
+    .dsl h2{font-size:21px;} .dsdev{margin-top:2px;font-size:13px;}
+    .dsback{min-height:var(--pill-m);} .dsfoot{display:none;}
+    .dsl>div:first-child{margin-bottom:0;}
+    .dsr{padding:14px 16px;}
+  }
+  @media (max-height:360px){ .dsl{padding:14px 16px;} .dsl h2{font-size:21px;} .dsr{padding:12px 18px;} .dsrow{min-height:50px;} }
   .pinkey.del{font-size:22px;}
   /* ==== Layout-Redesign (UI-Mockup 09/2026): Tab-Leiste oben auf dem Rahmen,
      darunter EINE abgerundete Karte je Tab in dessen Farbe, weisse Kacheln.
@@ -2444,7 +2500,7 @@ function crumbJump(i){
 const _secAl={};
 function secAlarm(m){
   // Ton (falls fuer dieses Panel an): bis Stumm/Quittieren/Ausblenden oder Alarm-Ende
-  if(m.on){ _secAl[m.id]=m; wake(); if(m.sound) toneOn('sec:'+m.id); } else { delete _secAl[m.id]; toneOff('sec:'+m.id); }
+  if(m.on){ _secAl[m.id]=m; wake(); if(m.sound && sndOn('alarm')) toneOn('sec:'+m.id); } else { delete _secAl[m.id]; toneOff('sec:'+m.id); }
   secRender();
 }
 function secRender(){
@@ -2530,6 +2586,203 @@ function askPin(cb,msg){
   ov.querySelector('.pinx').onclick=closeAnim;
   ov.onclick=e=>{ if(e.target===ov) closeAnim(); };   // neben die Karte tippen = abbrechen
 }
+// ---- Einstellungen am Geraet (Overlay) ----
+// Oeffnen: 5x Tippen (Browser, nicht Handy), Zahnrad im Panelkopf (je Panel schaltbar) oder
+// lpHost-Ereignis 'settings' (TbViewer: Knopf auf der Infoseite). Daten: /api/device/prefs mit dem
+// Geraete-Token dieser Verbindung (devTok aus dem theme, nur eigenes Geraet). Ist ein Config-Passwort
+// gesetzt, fragt die Seite zuerst danach (/api/device/unlock). Die Seite baut sich aus caps/std/effective
+// zusammen; spaeter ergaenzbar (Einrichtungs-Assistent, Quellenwahl prefs.sources) ueber weitere Abschnitte in dsMain().
+let DEV_TOK='', DEV_BTN=false;
+const DS={el:null, d:null, view:'', panelSel:null, idle:0, q:Promise.resolve(), err:''};
+const DS_IDLE_MS=60000;
+const DS_EN={'Einstellungen':'Settings','‹ Zurück':'‹ Back','Panel':'Panel','Töne':'Sounds','Klingel':'Doorbell','Alarm':'Alarm','Wecker':'Alarm clock',
+  'Hinweis':'Notice','Tipp':'Tap','Nachts abdunkeln':'Dim at night','Präsenzerkennung':'Presence detection','Helligkeit':'Brightness','Auto':'Auto','Fest':'Fixed',
+  'Standard':'Default','Helligkeit fest':'Fixed brightness','geändert':'changed','Auf Standard zurück':'Back to default','Alarm ausschalten?':'Turn alarm off?',
+  'Ton aus – das Vollbild bleibt.':'Sound off – the full screen stays.','Abdunkeln auf {n} %':'Dim to {n} %','System':'System',
+  'Alarm bleibt an':'Keep alarm on','Ausschalten':'Turn off','Mehr in der Config':'More in the config','Lade …':'Loading …',
+  'Geschützt. Bitte Passwort eingeben.':'Protected. Please enter the password.','Passwort':'Password','Weiter':'Continue',
+  'Passwort falsch':'Wrong password','Zu viele Versuche. Bitte warten.':'Too many attempts. Please wait.',
+  'Nicht gespeichert. Verbindung prüfen.':'Not saved. Check the connection.','Einstellungen nicht verfügbar.':'Settings not available.',
+  'Dieses Gerät hat noch keinen Namen. Vergib ihn in der Config unter Geräte.':'This device has no name yet. Name it in the config under Devices.',
+  };
+function dsT(s){ return /^en/i.test(LANG||'')?(DS_EN[s]||s):s; }
+async function dsApi(path,method,body){
+  try{
+    const r=await fetch(path,{method,cache:'no-store',headers:Object.assign({'X-Device-Token':DEV_TOK},body?{'Content-Type':'application/json'}:{}),body:body?JSON.stringify(body):undefined});
+    const j=await r.json().catch(()=>({})); j.status=r.status; if(j.ok===undefined) j.ok=r.ok; return j;
+  }catch(e){ return {ok:false,status:0,error:'net'}; }
+}
+function dsPoke(){ clearTimeout(DS.idle); DS.idle=setTimeout(()=>dsClose(),window.__dsIdleMs||DS_IDLE_MS); }
+function dsOpen(){
+  if(DS.el||phoneDev()) return;
+  try{ if(typeof wake==='function') wake(); }catch(e){}
+  const s=document.querySelector('.screen')||document.body, o=document.createElement('div');
+  o.className='dsov'; o.setAttribute('role','dialog'); o.setAttribute('aria-modal','true'); o.setAttribute('aria-label',dsT('Einstellungen'));
+  o.innerHTML='<div class="dsbox"><div class="dsl"><div><h2>'+esc(dsT('Einstellungen'))+'</h2><p class="dsdev">'+esc(DEVICE_ID||'')+'</p></div>'+
+    '<div class="dsfoot">'+esc(dsT('Mehr in der Config'))+'</div><button type="button" class="dsback">'+esc(dsT('‹ Zurück'))+'</button></div><div class="dsr" id="dsr"></div></div>';
+  s.appendChild(o); DS.el=o; DS.d=null; DS.panelSel=null; DS.err=''; DS.view='load';
+  ['pointerdown','keydown','input','scroll'].forEach(ev=>o.addEventListener(ev,dsPoke,true));
+  o.addEventListener('click',dsClick);
+  o.addEventListener('change',dsChange);
+  o.addEventListener('submit',e=>{ e.preventDefault(); dsUnlock(); });
+  o.addEventListener('keydown',e=>{ if(e.key==='Escape'&&!o.querySelector('.dsdlg')){ e.preventDefault(); dsClose(); } });
+  dsPoke(); dsRender(); dsLoad();
+}
+async function dsClose(abbruch){
+  const o=DS.el; if(!o) return;
+  if(abbruch) DS.panelSel=null;   // durch Ereignis (Klingel/Alarm) geschlossen: Panelwahl verwerfen, kein Neuladen
+  clearTimeout(DS.idle); DS.el=null;
+  const ps=DS.panelSel, cur=DS.d&&DS.d.current, had=DS.view==='main';
+  o.remove();
+  if(had&&ps&&ps!==cur) await dsApi('/api/device/prefs','POST',{prefs:{panel:ps}});   // Panel wechseln erst beim Schliessen (Server laedt das Panel neu)
+  if(had||DS.view==='pw') dsApi('/api/device/unlock','POST',{lock:true});
+  DS.d=null; DS.panelSel=null;
+}
+async function dsLoad(){
+  const j=await dsApi('/api/device/prefs','GET');
+  if(!DS.el) return;
+  if(j.ok){ DS.d=j; DS.view='main'; }
+  else if(j.status===401&&j.login) DS.view='pw';
+  else if(j.status===400&&/Name/.test(j.error||'')) DS.view='noname';
+  else if(j.status===401){ DS.view='gone'; }
+  else DS.view='fail';
+  dsRender();
+}
+async function dsUnlock(){
+  const o=DS.el, i=o&&o.querySelector('#dspw'); if(!i||!i.value) return;
+  const m=o.querySelector('.dsmsg'), b=o.querySelector('.dsbtn'); if(b) b.disabled=true;
+  const j=await dsApi('/api/device/unlock','POST',{password:i.value});
+  if(!DS.el) return;
+  if(j.ok){ DS.view='load'; dsRender(); dsLoad(); return; }
+  if(b) b.disabled=false;
+  if(m) m.textContent=dsT(j.status===429?'Zu viele Versuche. Bitte warten.':'Passwort falsch');
+  i.value=''; i.focus();
+}
+function dsRender(){
+  const r=DS.el&&DS.el.querySelector('#dsr'); if(!r) return;
+  const y=r.scrollTop, v=DS.view;
+  if(v==='load') r.innerHTML='<p class="dsstd">'+esc(dsT('Lade …'))+'</p>';
+  else if(v==='pw') r.innerHTML='<form class="dspw"><p>'+esc(dsT('Geschützt. Bitte Passwort eingeben.'))+'</p><input type="password" id="dspw" autocomplete="off" aria-label="'+esc(dsT('Passwort'))+'">'+
+    '<button class="dsbtn" type="submit">'+esc(dsT('Weiter'))+'</button><div class="dsmsg" role="alert"></div></form>';
+  else if(v==='noname') r.innerHTML='<p class="dsstd">'+esc(dsT('Dieses Gerät hat noch keinen Namen. Vergib ihn in der Config unter Geräte.'))+'</p>';
+  else if(v==='main') r.innerHTML=dsMain();
+  else r.innerHTML='<p class="dsstd">'+esc(dsT('Einstellungen nicht verfügbar.'))+'</p>';
+  r.scrollTop=y;
+  if(v==='pw'){ const i=r.querySelector('#dspw'); if(i) i.focus(); }
+}
+function dsMain(){
+  const d=DS.d, E=d.effective||{}, caps=d.caps||{}, tb=lpHost.type==='tbview';
+  const val=k=>E[k]?E[k].value:undefined, chg=k=>!!E[k]&&E[k].src==='geändert';
+  const pres=!!(caps.prox||caps.light), lite=!!caps.light, bri=lite||(tb&&!!caps.win);   // TbViewer setzt die Fensterhelligkeit auch ohne Sensor
+  const rst=k=>'<button type="button" class="dsrst" data-rst="'+k+'" aria-label="'+esc(dsT('Auf Standard zurück'))+'" title="'+esc(dsT('Auf Standard zurück'))+'">↺</button>';
+  const stat=k=>'<span class="dsstat">'+(chg(k)?'<span class="dschg">'+esc(dsT('geändert'))+'</span>'+rst(k):'<span class="dsstd">'+esc(dsT('Standard'))+'</span>')+'</span>';
+  const sw=(k,on,lb)=>'<button type="button" class="dssw" role="switch" aria-checked="'+(!!on)+'" data-k="'+k+'" aria-label="'+esc(lb)+'"><i></i></button>';
+  let h='';
+  // Panel (nur wenn es etwas zu waehlen gibt)
+  const pl=(d.panels||[]).slice(), cur=DS.panelSel!==null?DS.panelSel:(d.current||val('panel')||'');
+  if(pl.length>1){
+    if(cur&&!pl.some(p=>p.id===cur)) pl.push({id:cur,title:cur});   // unbekannte Wahl nicht verlieren
+    h+='<div class="dsrow"><div class="dslb"><b>'+esc(dsT('Panel'))+'</b></div>'+
+      '<select class="dssel" data-panel aria-label="'+esc(dsT('Panel'))+'">'+pl.map(p=>'<option value="'+esc(p.id)+'"'+(p.id===cur?' selected':'')+'>'+esc(p.title||p.id)+'</option>').join('')+'</select></div>';
+  }
+  // Toene
+  const snd=[['ring','Klingel'],['alarm','Alarm'],['wake','Wecker'],['notify','Hinweis']].concat(tb?[['touch','Tipp']]:[])
+    .filter(x=>x[0]!=='ring'||d.intercom!==false||chg('sound.ring'));   // Klingel ohne Tuerstation ausblenden
+  h+='<div class="dsh">'+esc(dsT('Töne'))+'</div><div class="dstones">'+snd.map(([k,lb])=>{ const key='sound.'+k;
+    return '<div class="dstone"><b>'+esc(dsT(lb))+'</b><div class="dstr">'+sw(key,val(key)!==false,dsT(lb))+stat(key)+'</div></div>'; }).join('')+'</div>';
+  // Nachts, Praesenz, Helligkeit (nur mit passender Faehigkeit)
+  const nd=val('nightDim')||0;
+  h+='<div class="dsrow"><div class="dslb"><b>'+esc(dsT('Nachts abdunkeln'))+'</b>'+stat('nightDim')+(nd>0?'<small class="dsstd dsrest">'+esc(dsT('Abdunkeln auf {n} %').replace('{n}',100-nd))+'</small>':'')+'</div>'+sw('nightDim',nd>0,dsT('Nachts abdunkeln'))+'</div>';
+  if(pres) h+='<div class="dsrow"><div class="dslb"><b>'+esc(dsT('Präsenzerkennung'))+'</b>'+stat('prox')+'</div>'+sw('prox',val('prox')!==false,dsT('Präsenzerkennung'))+'</div>';
+  if(bri){ const ab=val('autoBright')!==false;
+    h+='<div class="dsrow"><div class="dslb"><b>'+esc(dsT('Helligkeit'))+'</b>'+stat('autoBright')+'</div><div class="dsseg" role="group" aria-label="'+esc(dsT('Helligkeit'))+'">'+
+      '<button type="button" data-seg="1" aria-pressed="'+ab+'">'+esc(dsT(lite?'Auto':'System'))+'</button><button type="button" data-seg="0" aria-pressed="'+!ab+'">'+esc(dsT('Fest'))+'</button></div></div>';
+    if(!ab){ const fx=val('brightFix')||80, vs=[20,40,60,70,80,90,100]; if(vs.indexOf(fx)<0) vs.push(fx); vs.sort((a,b)=>a-b);
+      h+='<div class="dsrow"><div class="dslb"><b>'+esc(dsT('Helligkeit fest'))+'</b>'+stat('brightFix')+'</div><select class="dssel" data-fix aria-label="'+esc(dsT('Helligkeit fest'))+'">'+
+        vs.map(v=>'<option value="'+v+'"'+(v===fx?' selected':'')+'>'+v+' %</option>').join('')+'</select></div>'; } }
+  h+='<div class="dsmsg" role="alert">'+esc(DS.err?dsT(DS.err):'')+'</div>';
+  return h;
+}
+function dsClick(e){
+  const t=e.target, o=DS.el; if(!o) return;
+  if(t.closest('.dsback')){ dsClose(); return; }
+  if(o.querySelector('.dsdlg')) return;
+  const rb=t.closest('[data-rst]'); if(rb){ dsSet(rb.dataset.rst,null); return; }
+  const sb=t.closest('.dssw'); if(sb){ dsToggle(sb.dataset.k,sb.getAttribute('aria-checked')!=='true'); return; }
+  const sg=t.closest('[data-seg]'); if(sg){ dsSet('autoBright',sg.dataset.seg==='1'); return; }
+  if(t===o) dsClose();
+}
+function dsChange(e){ const f=e.target.closest&&e.target.closest('[data-fix]'); if(f){ dsSet('brightFix',+f.value); return; }
+  const s=e.target.closest&&e.target.closest('[data-panel]'); if(s){ DS.panelSel=s.value; } }
+function dsConfirmAlarm(){
+  return new Promise(res=>{
+    const o=DS.el; if(!o) return res(false);
+    const c=document.createElement('div'); c.className='dsdlg';
+    c.innerHTML='<div role="alertdialog" aria-modal="true" aria-label="'+esc(dsT('Alarm ausschalten?'))+'"><h3>'+esc(dsT('Alarm ausschalten?'))+'</h3><p>'+
+      esc(dsT('Ton aus – das Vollbild bleibt.'))+'</p><div class="dsbtns"><button type="button" class="dsbtn" data-no>'+
+      esc(dsT('Alarm bleibt an'))+'</button><button type="button" class="dsbtn warn" data-yes>'+esc(dsT('Ausschalten'))+'</button></div></div>';
+    const done=v=>{ c.remove(); res(v); };
+    c.addEventListener('click',ev=>{ if(ev.target.closest('[data-yes]')) done(true); else if(ev.target.closest('[data-no]')||ev.target===c) done(false); });
+    c.addEventListener('keydown',ev=>{ if(ev.key==='Escape'){ ev.preventDefault(); ev.stopPropagation(); done(false); } });
+    o.appendChild(c); c.querySelector('[data-no]').focus();
+  });
+}
+async function dsToggle(k,on){
+  if(k==='sound.alarm'&&!on&&!(await dsConfirmAlarm())) return;   // Alarm aus: erst nachfragen
+  let v=on;
+  if(k==='nightDim'){ const s=(DS.d.std||{}).nightDim; v=on?(s>0?s:65):0; }
+  dsSet(k,v);
+}
+// Wert setzen (null = zurueck auf Standard); entspricht er dem Standard, wird er nicht als "geaendert" gespeichert
+function dsSet(k,v){
+  const d=DS.d; if(!d) return Promise.resolve();
+  const s=(d.std||{})[k]; if(v!==null&&s!==undefined&&v===s) v=null;
+  d.effective[k]={value:v===null?s:v,src:v===null?'standard':'geändert'};   // sofort anzeigen
+  DS.err=''; dsRender();
+  const patch=k.indexOf('sound.')===0?{sound:{[k.slice(6)]:v}}:{[k]:v};
+  DS.q=DS.q.then(async()=>{
+    const j=await dsApi('/api/device/prefs','POST',{prefs:patch});
+    if(!DS.el) return;
+    if(j.ok) DS.d=j; else { DS.err='Nicht gespeichert. Verbindung prüfen.'; const g=await dsApi('/api/device/prefs','GET'); if(g.ok&&DS.el) DS.d=g; }
+    dsRender();
+  });
+  return DS.q;
+}
+// 5 schnelle Tipps (Abstand < 500 ms, alle innerhalb 40 px) auf einer NICHT bedienbaren Flaeche
+// (Dashboard-Hintergrund/Uhr, Leerflaeche der Tab-Leiste) oeffnen die Einstellungen - nicht am Handy;
+// im TbViewer laeuft das nativ (Infoseite, dort der Knopf "Einstellungen"). Gesperrt, solange
+// ein Dialog/Overlay (PIN, Alarm, Menue, Einstellungen) offen ist.
+(function(){
+  let n=0,last=0,px=0,py=0,swC=false,swT=0;
+  const BEDIENBAR='button,a,input,select,textarea,label,summary,[role=button],[role=switch],[role=tab],[data-uuid],.tile,.tab';
+  const OFFEN='.pinov,.dsov,.secal,.menuov,.stsheet:not([hidden]),[role=dialog],[role=alertdialog]';
+  function frei(t){
+    if(!t||!t.closest) return false;
+    if(t.closest(OFFEN)||document.querySelector(OFFEN)) return false;
+    if(t.id==='tabs') return true;                                   // Leerflaeche zwischen den Tabs
+    if(t.closest(BEDIENBAR)) return false;
+    // Dashboard: eigener Hintergrund (Fenster, Raster zwischen den Widgets, Kopfleiste) und Uhr/Datum - nie die Widgets selbst
+    // (der erste Tipp schliesst das Dashboard: die folgenden landen auf leerem Raster/Hintergrund darunter)
+    return t.id==='saver'||t.id==='svGrid'||t.id==='svBar'||!!t.closest('.sv-clock,.sv-hint')||
+      t.id==='grid'||t.classList.contains('empty')||t.classList.contains('screen');
+  }
+  document.addEventListener('pointerdown',e=>{
+    if(lpHost.type==='tbview'||DS.el||phoneDev()) return;
+    const t=Date.now(), near=Math.hypot(e.clientX-px,e.clientY-py)<=40;
+    if(n>0&&t-last<500&&near&&!document.querySelector(OFFEN)){
+      // Durchtippsperre: Folgetipp einer laufenden Serie zaehlt und erreicht nichts darunter
+      // (egal, was dort liegt) - Muster wie _svSwallow beim Verlassen des Dashboards
+      e.stopImmediatePropagation(); e.preventDefault(); swC=true; clearTimeout(swT); swT=setTimeout(()=>{swC=false;},600);
+      n++; last=t; px=e.clientX; py=e.clientY;
+      if(n>=5){ n=0; dsOpen(); }
+      return;
+    }
+    if(!frei(e.target)){ n=0; return; }
+    n=1; last=t; px=e.clientX; py=e.clientY;
+  },true);
+  // den auf einen verschluckten Tipp folgenden click ebenfalls verschlucken
+  document.addEventListener('click',e=>{ if(swC){ swC=false; clearTimeout(swT); e.stopImmediatePropagation(); e.preventDefault(); } },true);
+})();
 function doSecure(uuid,cmd,msg){
   askPin(pin=>{ if(pin==null){pendingSecure=null;return;} pendingSecure={uuid,cmd}; send({t:'cmd',uuid,cmd,pin}); }, msg);
 }
@@ -3398,7 +3651,8 @@ function renderTabs(){
   const backHtml = stack.length>1
     ? '<div class="tabback on" id="tabback" title="Zurück">'+svg('<path d="m15 6-6 6 6 6"/>')+'</div>'
     : '<div class="tabback dash" id="tabback" title="Dashboard">'+svg(dashIconInner())+'</div>';
-  const bar = t => [backHtml,'<div class="tabspacer crumbs">'+crumbsHtml(Math.min(4,t.length))+'</div>'].concat(t.slice(0,4).reverse());
+  const gear = (DEV_BTN && !phoneDev()) ? ['<div class="tab dsgear" id="dsgear" title="'+esc(dsT('Einstellungen'))+'">'+svg('<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>')+'</div>'] : [];
+  const bar = t => [backHtml,'<div class="tabspacer crumbs">'+crumbsHtml(Math.min(4,t.length))+'</div>'].concat(gear, t.slice(0,4).reverse());
   let items;
   if(ct){
     const tabsHtml = ct.map(c => {
@@ -3449,6 +3703,7 @@ function renderTabs(){
     if(ct) tabsEl.querySelectorAll('.tab[data-cat]').forEach(n => n.onclick=()=>{ if(!justLeftSaver()) scrollToCat(n.dataset.cat); });
     else   tabsEl.querySelectorAll('.tab').forEach(n => n.onclick=()=>{ if(!justLeftSaver()) goTab(n.dataset.tab); });
     const tb = tabsEl.querySelector('#tabback'); if(tb) tb.onclick = ()=>{ if(!justLeftSaver()) back(); };
+    const dg = tabsEl.querySelector('#dsgear'); if(dg) dg.onclick = ()=>{ if(!justLeftSaver()) dsOpen(); };
     tabsEl.querySelectorAll('.crumb[data-lvl]').forEach(n=>n.onclick=()=>{ if(!justLeftSaver()) crumbJump(+n.dataset.lvl); });
   }
   applyFace();
@@ -4159,7 +4414,7 @@ function tbWrap(t){
     const m=/TbView\/(\d+)\.(\d+)/.exec(navigator.userAgent||'');
     return (m && (+m[1]>5 || (+m[1]===5 && +m[2]>=4))) ? null : t; }
   const names=['turnScreenOn','turnScreenOff','isScreenOn','getDeviceId','setDisplayOff','setSaver','setDisplayBrightness',
-    'setAutoBrightness','setProximityWake','getProximity','getLightLevel','getDeviceInfo','reload'];
+    'setAutoBrightness','setFixedBrightness','setTouchSound','setProximityWake','getProximity','getLightLevel','getDeviceInfo','reload'];
   const w={};
   names.forEach(n=>{ w[n]=function(){ return t[n].apply(t,[TB_TOK].concat([].slice.call(arguments))); }; });
   return w;
@@ -4185,6 +4440,7 @@ const lpHost=(()=>{
     _ev(ev,v){ (on[ev]||[]).forEach(fn=>{ try{ fn(v); }catch(e){} }); } };
 })();
 window.lpHost=lpHost;   // die App ruft window.lpHost._ev (const haengt nicht an window)
+lpHost.on('settings',()=>dsOpen());   // TbViewer: Knopf "Einstellungen" auf der Infoseite
 const PANEL_ID = new URLSearchParams(location.search).get('panel') || '';
 // Geraete-Kennung (physisches Panel). Darueber adressiert der Server dieses
 // Geraet (Betriebsmodus, Display, Ansicht wechseln) und listet es unter
@@ -4413,24 +4669,26 @@ function connect(){
       if(msg.lang){ LANG=msg.lang; document.documentElement.lang=LANG.split('-')[0]; tickClock(); }   // lang: Silbentrennung   // Panel-Sprache -> Datum/Uhr sofort aktualisieren
       if(msg.title) document.title=msg.title;
       if(msg.tabMeta) tabMeta=msg.tabMeta;
-      DEV_MODEL=msg.devModel||'';
+      DEV_TOK=msg.devTok||''; DEV_BTN=!!msg.devBtn;   // Einstellungen am Geraet: Token dieser Verbindung, Zahnrad im Panelkopf
+      DEV_MODEL=msg.devModel||''; applyPrefs(msg.prefs);
       if(msg.night){ NIGHT.dim=+msg.night.dim||0; NIGHT.wake=+msg.night.wake||0; setNight(msg.night.on); }
       if(msg.sensors) applySensors(msg.sensors);
       if(Array.isArray(msg.tabs)&&msg.tabs.length) tabsCfg=msg.tabs;
       applyDisplayCfg(msg);   // Display aus / Auto-Neustart ohne Agent (Kiosk-App)
       renderTabs(); return; }
     if(msg.t==='ring'){
+      if(msg.on) dsClose(true);   // Einstellungen weg, wenn es klingelt
       if(msg.on){
         // Nur der Beginn weckt und oeffnet die Tuerstation - das Ende nicht
         // (sonst sprang das Panel beim Aufhoeren erneut zur Intercom)
         if(msg.id && !(view&&view.route&&view.route.view==='control'&&view.route.id===msg.id)){ wake(); nav({view:'control',id:msg.id}); }
         else wake();
-        if(msg.sound){ if(msg.soundUrl) playRingAudio(msg.soundUrl); else toneOn('ring:'+msg.id); }
+        if(msg.sound && sndOn('ring')){ if(msg.soundUrl) playRingAudio(msg.soundUrl); else toneOn('ring:'+msg.id); }
       } else { stopRingAudio(); toneOff('ring:'+msg.id); }   // Ende: Ton immer aus, egal ob mit Ton angekuendigt
       return;
     }   // Klingel: Display an, Uhr weg, optional (je Intercom) eigener Ton oder Wecker-Ton solange der bell-Impuls ansteht
-    if(msg.t==='alarm'){ if(msg.on){ wake(); toneOn('alarm'); if(msg.id) nav({view:'control',id:msg.id}); } else { toneOff('alarm'); } return; }
-    if(msg.t==='secalarm'){ secAlarm(msg); return; }   // Alarmanlage/Rauchmelder ausgeloest -> Vollbild
+    if(msg.t==='alarm'){ if(msg.on){ wake(); if(sndOn('wake')) toneOn('alarm'); if(msg.id) nav({view:'control',id:msg.id}); } else { toneOff('alarm'); } return; }
+    if(msg.t==='secalarm'){ dsClose(true); secAlarm(msg); return; }   // Alarmanlage/Rauchmelder ausgeloest -> Vollbild
     if(msg.t==='testtone'){ playTestTone(); return; }
     if(msg.t==='front'){ frontData=(msg.part==='weather'&&frontData) ? Object.assign({}, frontData, {weather:msg.weather}) : msg;   /* Nur-Wetter-Nachricht: Rest bleibt */ ambientApply(); renderFront(); if(view&&view.layout==='cells'&&el('grid').classList.contains('cells')) render(); if(FRONT_TEST) renderFrontRich(el('frontPage')); applyPane(); return; }   // Kalender/Wetter fuer die Uhr-Seite
     if(msg.t==='player'){ renderPlayer(msg.blocks); return; }   // fester Player im Split-Layout
@@ -4443,6 +4701,11 @@ function connect(){
         if(msg.panel) u.searchParams.set('panel',msg.panel); else u.searchParams.delete('panel');
         location.replace(u.toString()); } return; }   // Betriebsmodus -> Profil live wechseln
     if(msg.t==='reload'){ location.reload(); return; }                       // Server -> Panel neu laden
+    if(msg.t==='prefs'){ applyPrefs(msg.prefs);   // Geraete-Einstellungen live geaendert
+      if(msg.night){ NIGHT.dim=+msg.night.dim||0; applyNight(false); }
+      if(msg.sensors) applySensors(msg.sensors);
+      if(typeof msg.dpmsOff==='number'){ DISP.dpmsOff=msg.dpmsOff>0?msg.dpmsOff:0; armDpms(); }
+      return; }
     if(msg.t==='night'){ setNight(msg.on); return; }                         // Tag/Nacht gewechselt
     if(msg.t==='goto'){ if(msg.route){ wake(); nav(msg.route); } return; }  // auf Seite springen
     if(msg.t==='pong'){ setServerClock(msg.now, msg.at, msg.tz, msg.utcoff); return; }
@@ -4455,7 +4718,7 @@ function connect(){
     if(msg.t==='diag'){ DIAG=!!msg.on; if(DIAG){ clog('Diagnose an · '+innerWidth+'x'+innerHeight+' · '+navigator.userAgent.slice(0,120)); clogFlush(); } return; }
     if(msg.t==='cmdwatch'){ cmdWatch=!!msg.on; if(!cmdWatch){ cmdPend.forEach(e=>clearTimeout(e.t)); cmdPend.clear(); } return; }
     if(msg.t==='ms'){ msOk=!!msg.ok; msSince=msg.since||0; linkBanner(); return; }
-    if(msg.t==='notify'){ wake(); showNotify(msg.text, msg.level, msg.secs); return; }  // Nachricht einblenden
+    if(msg.t==='notify'){ wake(); showNotify(msg.text, msg.level, msg.secs); if(sndOn('notify')) notifyBeep(); return; }  // Nachricht einblenden
     if(msg.t==='display'){ if(msg.on) wake(); else screenOff(); return; }   // Server schaltet Display (Kiosk-App)
     if(msg.t==='forget'){ try{ localStorage.removeItem('lp_device'); }catch(e){}   // in der Config geloescht -> neu anmelden
       DEVICE_ID=''; ws.close(); return; }
@@ -5409,7 +5672,7 @@ function camStills(clear){
 const CAM_NIGHT_HOLD_MS=30000;
 let _camNightNear=false, _camNightT=null;
 function camNightGate(){   // ob die Regel gerade greift
-  return lpHost.type==='tbview' && SENS.nightCam!==false && NIGHT.on && (lpHost.prox||lpHost.light);
+  return lpHost.type==='tbview' && SENS.nightCam!==false && NIGHT.on && lpHost.shelly && (lpHost.prox||lpHost.light);   // nur Shelly (Speicher/Performance); Tablets zeigen die Kamera nachts weiter live
 }
 function camNightUpdate(){
   const pause=camNightGate() && !_camNightNear && !_camNightT;   // Praesenz (Annaeherung/Lichtaenderung) oeffnet ueber camNightOpen
@@ -5910,6 +6173,21 @@ const NIGHT = { on:false, dim:0, wake:20 };
 // Handy (Typ "phone" aus der Geraeteliste; unbekanntes Geraet: Handy-UA, nie TbViewer): regelt Helligkeit selbst ->
 // nachts kein Abdunkeln, kein Leerlauf-Aus, Nacht-Kamera laeuft normal (Browser hat keinen Annaeherungssensor).
 let DEV_MODEL='';
+// Geraete-Einstellungen vom Server (wirksam: Geraet > Typ > Panel > Global). chg = Schluessel, die am Geraet geaendert sind.
+// Unbekanntes Geraet mit Handy-UA: Handy-Vorgaben (Klingel/Wecker/Hinweis aus, Alarm an), solange nicht geaendert.
+const PREFS={ sound:{ring:true,alarm:true,wake:true,notify:false,touch:false}, chg:[], caps:{} };
+function applyPrefs(p){ if(p && typeof p==='object'){ Object.assign(PREFS.sound,p.sound||{}); PREFS.chg=p.chg||[]; PREFS.caps=p.caps||{};
+  if(lpHost.type==='tbview'){ try{ lpHost.api.setTouchSound(PREFS.sound.touch===true); }catch(e){} } } }   // Tipp-Ton: Android-Klickton der App
+function sndOn(k){
+  if(!DEV_MODEL && !PREFS.chg.includes('sound.'+k) && phoneDev()) return k==='alarm';
+  return PREFS.sound[k]!==false;
+}
+function notifyBeep(){   // kurzer Hinweiston (nur wenn Audio schon freigeschaltet ist)
+  try{ const a=_actxGet(); if(!a||a.state!=='running') return;
+    const t=a.currentTime,o=a.createOscillator(),g=a.createGain(); o.type='sine'; o.frequency.value=660;
+    g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(0.25,t+0.02); g.gain.exponentialRampToValueAtTime(0.0001,t+0.3);
+    o.connect(g); g.connect(a.destination); o.start(t); o.stop(t+0.35); }catch(e){}
+}
 function phoneDev(){ return DEV_MODEL ? DEV_MODEL==='phone'
   : (lpHost.type!=='tbview' && /iPhone|iPod|Android.+Mobile/i.test(navigator.userAgent)); }
 const PRES = { last:-1, t:0, mute:0 }, PRES_MIN_STEP=1, PRES_GAP_MS=2000, PRES_MUTE_MS=2500;   // Praesenzerkennung: Lichtaenderung (Stufen 0..16), Entprellung
@@ -5959,13 +6237,14 @@ function kiosk(){ return lpHost.api; }
 const SENS={ prox:'wake', nightCam:true, auto:true };
 function applySensors(s){
   SENS.prox=(s.prox==='off')?'off':'wake'; SENS.nightCam=s.nightCam!==false; SENS.auto=s.auto!==false;   // prox 'open' (alt) = 'wake'
-  if(lpHost.type==='tbview'){ try{ const i=JSON.parse(lpHost.api.getDeviceInfo()); lpHost.prox=!!i.prox; lpHost.light=!!i.light;
-    lpHost.shelly=/^(jenna|blake|maverick|cally|dayna|stargate)$/i.test(i.model||'')||/shelly|sawd/i.test(i.model||''); }catch(e){} }
+  if(lpHost.type==='tbview'){ try{ const i=JSON.parse(lpHost.api.getDeviceInfo()); lpHost.prox=!!i.prox; lpHost.light=!!i.light; lpHost.lux=!!i.lux; lpHost.shelly=i.shelly===true||/\b(jenna|blake|maverick|cally|dayna|stargate)\b|shelly|sawd/i.test(String(i.model||''));
+    }catch(e){} }
   applyNight(false);   // Helligkeit: Sensor ersetzt ggf. das naechtliche Abdunkeln
   if(typeof camNightUpdate==='function') camNightUpdate();
   if(lpHost.type!=='tbview') return;
   try{ lpHost.api.setProximityWake(SENS.prox!=='off'); }catch(e){}
-  try{ lpHost.api.setAutoBrightness(s.auto!==false && !!lpHost.shelly, +s.min||10, +s.max||100); }catch(e){}
+  try{ lpHost.api.setAutoBrightness(s.auto!==false && !!lpHost.light, +s.min||10, +s.max||100); }catch(e){}
+  try{ lpHost.api.setFixedBrightness((s.auto===false && +s.fix>0) ? Math.min(100,+s.fix) : 0); }catch(e){}   // Fest: feste Helligkeit (%), nachts gilt der Nachtwert direkt
 }
 // Praesenzerkennung: Annaeherung "nah" ODER Lichtaenderung (>= PRES_MIN_STEP Stufen, max. 1 Ereignis je PRES_GAP_MS)
 // = Praesenz. Weckt wie eine Beruehrung (nachts hell + Kamera live, dann Nachlauf). Aus bei SENS.prox==='off'.
@@ -5980,9 +6259,13 @@ lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
   if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
 lpHost.on('light', v=>{ const lv=(+v>=0)?+v:-1, prev=PRES.last; lpHost.lightLevel=lv; lpHost.light=lv>=0||lpHost.light; PRES.last=lv;
   const now=Date.now();
+  if(lpHost.lux) return;   // Lux-Sensor (Tablet): Praesenz kommt als Ereignis 'lux' (relative Aenderung >= 30 %, >= 5 lx, in der App)
   if(!NIGHT.on || lpHost.type!=='tbview' || lv<0 || prev<0 || Math.abs(lv-prev)<PRES_MIN_STEP) return;
   if(now<PRES.mute || now-PRES.t<PRES_GAP_MS) return;
   PRES.t=now; clog('Lichtaenderung '+prev+' -> '+lv+' – Praesenz'); presence('light'); });
+lpHost.on('lux', ()=>{ const now=Date.now();
+  if(!NIGHT.on || lpHost.type!=='tbview' || now<PRES.mute || now-PRES.t<PRES_GAP_MS) return;
+  PRES.t=now; clog('Lichtaenderung (Lux) – Praesenz'); presence('light'); });
 // Annaeherung/App-Wecken: Leerlauf neu starten, naechster Tipp wird nicht verschluckt
 lpHost.on('screen', on=>{ camsDark(!on); if(on){ _screenWasOff=false; resetIdle(); } });
 // Tipp bei sichtbarem Display: Nacht-Kamera live (wie Beruehrung)
