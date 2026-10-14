@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.loxpanel.launcher"
-    android:versionCode="15"
-    android:versionName="5.10">
+    android:versionCode="16"
+    android:versionName="5.11">
 
     <!-- target >= 24: Android 15 verweigert aeltere Apps bei der Installation -->
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="24" />

@@ -76,7 +76,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.19"
+APP_VERSION = "0.20.20"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -4935,9 +4935,9 @@ class App:
         """Geraet umbenennen: Einstellungen und Steckbriefe ziehen mit; verbundene
         Visu bekommt den neuen Namen (merkt ihn sich, verbindet neu)."""
         if not new or new == old:
-            return {"ok": False, "error": "Neuer Name fehlt"}
+            return {"ok": False, "error": "Der neue Name fehlt."}
         if new in self.devices or any(isinstance(e, dict) and e.get("name") == new for e in self.devinfo.values()):
-            return {"ok": False, "error": "Name schon vergeben"}
+            return {"ok": False, "error": "Dieser Name ist schon vergeben."}
         devs = {(new if k == old else k): v for k, v in self.devices.items()}
         n_info = 0
         for e in self.devinfo.values():
@@ -9697,7 +9697,7 @@ async def api_settings_ms(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
     host = str(data.get("host", "")).strip()
     if not host:
-        return web.json_response({"ok": False, "error": "Host fehlt"}, status=400)
+        return web.json_response({"ok": False, "error": "Adresse fehlt."}, status=400)
     cfg = _load_cfg()
     ms = dict(cfg.get("miniserver", {}))
     user = str(data.get("user", "")).strip()
@@ -9716,7 +9716,7 @@ async def api_settings_ms(request: web.Request) -> web.Response:
     if data.get("pass"):                       # leer = altes Passwort behalten
         ms["pass"] = str(data["pass"])
     if not ms.get("pass"):
-        return web.json_response({"ok": False, "error": "Passwort fehlt (bei geändertem Host/Benutzer bitte neu eingeben)"},
+        return web.json_response({"ok": False, "error": "Passwort fehlt. Gib es bei geänderter Adresse oder geändertem Benutzer neu ein."},
                                  status=400)
     cfg["miniserver"] = ms
     try:
@@ -9989,7 +9989,7 @@ async def api_settings_intercom_sound(request: web.Request) -> web.Response:
     if not uuid or uuid not in app.controls or app.controls[uuid].get("type") != "Intercom":
         return web.json_response({"ok": False, "error": "unbekannte Intercom"}, status=400)
     if field is None:
-        return web.json_response({"ok": False, "error": "keine Datei übertragen"}, status=400)
+        return web.json_response({"ok": False, "error": "Keine Datei erhalten."}, status=400)
     ctype = (field.headers.get("Content-Type") or "").split(";")[0].strip().lower()
     ext = _SOUND_EXT_BY_MIME.get(ctype)
     if not ext:
@@ -9999,7 +9999,7 @@ async def api_settings_intercom_sound(request: web.Request) -> web.Response:
         ext = next((e for e in _SOUND_MIME_BY_EXT if fname.endswith("." + e)), None)
     if not ext:
         return web.json_response(
-            {"ok": False, "error": "nicht unterstütztes Format (mp3, ogg, wav, m4a, aac)"}, status=400)
+            {"ok": False, "error": "Dateiformat nicht unterstützt. Erlaubt: MP3, OGG, WAV, M4A, AAC."}, status=400)
     try:
         SOUNDS_DIR.mkdir(parents=True, exist_ok=True)
         for old in SOUNDS_DIR.glob(f"{uuid}.*"):   # vorherigen Upload dieser Intercom ersetzen
@@ -10016,7 +10016,7 @@ async def api_settings_intercom_sound(request: web.Request) -> web.Response:
                     f.close()
                     dest.unlink(missing_ok=True)
                     return web.json_response(
-                        {"ok": False, "error": "Datei zu groß (höchstens 5 MB)"}, status=400)
+                        {"ok": False, "error": "Datei zu groß. Höchstens 5 MB."}, status=400)
                 f.write(chunk)
     except OSError as err:
         return web.json_response({"ok": False, "error": str(err)}, status=500)
@@ -10409,7 +10409,7 @@ async def api_device_name(request: web.Request) -> web.Response:
     ip = str(d.get("ip") or "").strip()
     name = str(d.get("name") or "").strip()[:60]
     if not ip or not name:
-        return web.json_response({"ok": False, "error": "ip und name noetig"}, status=400)
+        return web.json_response({"ok": False, "error": "IP-Adresse und Name nötig."}, status=400)
     n = 0
     for ws, info in list(app.conn_info.items()):
         if info.get("ip") != ip or info.get("dev"):
@@ -10417,7 +10417,7 @@ async def api_device_name(request: web.Request) -> web.Response:
         if await app._send_or_drop(ws, {"t": "setdevice", "name": name}):
             n += 1
     return web.json_response({"ok": n > 0, "sent": n,
-                              **({} if n else {"error": "kein Geraet ohne Kennung unter dieser IP"})})
+                              **({} if n else {"error": "Kein Gerät ohne Namen unter dieser IP gefunden."})})
 
 
 async def api_msio(request: web.Request) -> web.Response:
@@ -10449,7 +10449,7 @@ async def api_device_rename(request: web.Request) -> web.Response:
     old = str(d.get("old") or "").strip()[:60]
     new = str(d.get("new") or "").strip()[:60]
     if not old or not new:
-        return web.json_response({"ok": False, "error": "alter und neuer Name noetig"}, status=400)
+        return web.json_response({"ok": False, "error": "Alter und neuer Name nötig."}, status=400)
     return web.json_response(await app.device_rename(old, new))
 
 
@@ -10479,11 +10479,11 @@ async def api_panel_bg(request: web.Request) -> web.Response:
     except Exception:
         return web.json_response({"ok": False, "error": "Upload fehlgeschlagen"}, status=400)
     if len(data) > _BG_MAX_BYTES:
-        return web.json_response({"ok": False, "error": "Bild zu groß (höchstens 12 MB)"}, status=400)
+        return web.json_response({"ok": False, "error": "Bild zu groß. Höchstens 12 MB."}, status=400)
     ext = ("jpg" if data[:3] == b"\xff\xd8\xff" else "png" if data[:8] == b"\x89PNG\r\n\x1a\n"
            else "webp" if data[:4] == b"RIFF" and data[8:12] == b"WEBP" else "")
     if not ext:
-        return web.json_response({"ok": False, "error": "nur JPG, PNG oder WebP"}, status=400)
+        return web.json_response({"ok": False, "error": "Nur JPG, PNG oder WebP erlaubt."}, status=400)
     BG_DIR.mkdir(parents=True, exist_ok=True)
     for e in _BG_TYPES:
         (BG_DIR / f"{pid}.{e}").unlink(missing_ok=True)
@@ -10623,7 +10623,7 @@ async def api_kiosk_fully_upload(request: web.Request) -> web.Response:
             field = part
             break
     if field is None:
-        return web.json_response({"ok": False, "error": "keine Datei übertragen"}, status=400)
+        return web.json_response({"ok": False, "error": "Keine Datei erhalten."}, status=400)
     FULLY_DIR.mkdir(parents=True, exist_ok=True)
     tmp = FULLY_DIR / (FULLY_UPLOAD + ".tmp")
     size, head = 0, b""

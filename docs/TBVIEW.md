@@ -184,3 +184,4 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - `InfoBridge` (`TbInfo`): neu `settings()`, `changeAddr()`; `data()` liefert zusätzlich `shelly`. `SetupBridge` (`TbSetup`): neu `cancel()`. Beide hängen nur an lokalen Asset-WebViews, nie an der Panel-WebView.
 - Version 5.8 (versionCode 13). Signatur unverändert (SHA-256 `80ee7b07…`). Test: `audit/scripts/tbinfo.mjs`, `tbsetup.mjs` (Stub-Bridges).
 - Version 5.10 (versionCode 15): HOME-Filter wieder auch auf `.Home`, beide HOME-Komponenten standardmäßig aktiv, neues LAUNCHER-Symbol `.App`, Abschalten auf Nicht-Shelly. Signatur unverändert (SHA-256 `80ee7b07…`).
+- Version 5.11 (versionCode 16): nur Texte der Info- und Einrichtungsseite überarbeitet (Linguisten-Prüfung). Signatur unverändert.

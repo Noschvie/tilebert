@@ -2610,13 +2610,13 @@ const DS={el:null, d:null, view:'', panelSel:null, idle:0, q:Promise.resolve(), 
 const DS_IDLE_MS=60000;
 const DS_EN={'Einstellungen':'Settings','‹ Zurück':'‹ Back','Panel':'Panel','Töne':'Sounds','Klingel':'Doorbell','Alarm':'Alarm','Wecker':'Alarm clock',
   'Hinweis':'Notice','Tipp':'Tap','Nachts abdunkeln':'Dim at night','Präsenzerkennung':'Presence detection','Helligkeit':'Brightness','Auto':'Auto','Fest':'Fixed',
-  'Standard':'Default','Helligkeit fest':'Fixed brightness','geändert':'changed','Auf Standard zurück':'Back to default','Alarm ausschalten?':'Turn alarm off?',
+  'Standard':'Default','Helligkeit fest':'Fixed brightness','geändert':'changed','Auf Standard zurücksetzen':'Reset to default','Alarm ausschalten?':'Turn alarm off?',
   'Ton aus – das Vollbild bleibt.':'Sound off – the full screen stays.','Abdunkeln auf {n} %':'Dim to {n} %','System':'System',
   'Alarm bleibt an':'Keep alarm on','Ausschalten':'Turn off','Lade …':'Loading …',
-  'Geschützt. Bitte Passwort eingeben.':'Protected. Please enter the password.','Passwort':'Password','Weiter':'Continue',
+  'Geschützt. Bitte Passwort eingeben.':'Protected. Please enter the password.','Passwort':'Password','Entsperren':'Unlock',
   'Passwort falsch':'Wrong password','Zu viele Versuche. Bitte warten.':'Too many attempts. Please wait.',
-  'Nicht gespeichert. Verbindung prüfen.':'Not saved. Check the connection.','Einstellungen nicht verfügbar.':'Settings not available.','Anzeige':'Display','Standard-Panel':'Default panel',
-  'Dieses Gerät hat noch keinen Namen. Vergib ihn in der Config unter Geräte.':'This device has no name yet. Name it in the config under Devices.',
+  'Nicht gespeichert. Verbindung prüfen.':'Not saved. Check the connection.','Einstellungen gerade nicht verfügbar. Versuche es später noch einmal.':'Settings currently not available. Try again later.','Anzeige':'Display','Standard-Panel':'Default panel',
+  'Dieses Gerät hat noch keinen Namen. Vergib ihn in der Konfiguration unter Geräte.':'This device has no name yet. Assign one in the configuration under Devices.',
   };
 function dsT(s){ return /^en/i.test(LANG||'')?(DS_EN[s]||s):s; }
 async function dsApi(path,method,body){
@@ -2677,10 +2677,10 @@ function dsRender(){
   const y=r.scrollTop, v=DS.view;
   if(v==='load') r.innerHTML='<p class="dsstd">'+esc(dsT('Lade …'))+'</p>';
   else if(v==='pw') r.innerHTML='<form class="dspw dstile"><p>'+esc(dsT('Geschützt. Bitte Passwort eingeben.'))+'</p><input type="password" id="dspw" autocomplete="off" aria-label="'+esc(dsT('Passwort'))+'">'+
-    '<button class="dsbtn" type="submit">'+esc(dsT('Weiter'))+'</button><div class="dsmsg" role="alert"></div></form>';
-  else if(v==='noname') r.innerHTML='<p class="dsstd">'+esc(dsT('Dieses Gerät hat noch keinen Namen. Vergib ihn in der Config unter Geräte.'))+'</p>';
+    '<button class="dsbtn" type="submit">'+esc(dsT('Entsperren'))+'</button><div class="dsmsg" role="alert"></div></form>';
+  else if(v==='noname') r.innerHTML='<p class="dsstd">'+esc(dsT('Dieses Gerät hat noch keinen Namen. Vergib ihn in der Konfiguration unter Geräte.'))+'</p>';
   else if(v==='main') r.innerHTML=dsMain();
-  else r.innerHTML='<p class="dsstd">'+esc(dsT('Einstellungen nicht verfügbar.'))+'</p>';
+  else r.innerHTML='<p class="dsstd">'+esc(dsT('Einstellungen gerade nicht verfügbar. Versuche es später noch einmal.'))+'</p>';
   r.scrollTop=y;
   if(v==='pw'){ const i=r.querySelector('#dspw'); if(i) i.focus(); }
 }
@@ -2688,7 +2688,7 @@ function dsMain(){
   const d=DS.d, E=d.effective||{}, caps=d.caps||{}, tb=lpHost.type==='tbview';
   const val=k=>E[k]?E[k].value:undefined, chg=k=>!!E[k]&&E[k].src==='geändert';
   const pres=!!(caps.prox||caps.light), lite=!!caps.light, bri=lite||(tb&&!!caps.win);   // TbViewer setzt die Fensterhelligkeit auch ohne Sensor
-  const rst=k=>chg(k)?'<button type="button" class="dsrst" data-rst="'+k+'" aria-label="'+esc(dsT('Auf Standard zurück'))+'" title="'+esc(dsT('Auf Standard zurück'))+'">↺</button>':'';
+  const rst=k=>chg(k)?'<button type="button" class="dsrst" data-rst="'+k+'" aria-label="'+esc(dsT('Auf Standard zurücksetzen'))+'" title="'+esc(dsT('Auf Standard zurücksetzen'))+'">↺</button>':'';
   // Zeile: Name (+ Zusatzzeile, "geändert") links, Bedienelement (+ Zuruecksetzen) rechts - wie die Eintraege der Detailseiten
   const row=(lb,k,ctl,sub)=>'<div class="dsrow"><div class="dslb"><b>'+esc(dsT(lb))+'</b>'+(chg(k)?'<small class="dschg">'+esc(dsT('geändert'))+'</small>':'')+(sub?'<small class="dsrest">'+esc(sub)+'</small>':'')+'</div>'+
     '<div class="dsctl">'+rst(k)+ctl+'</div></div>';
@@ -4690,7 +4690,7 @@ function connect(){
       document.documentElement.dataset.contrast = msg.contrast ? '1' : '0';   // Mehr Kontrast: Schatten an Kacheln/Knoepfen
       SCENE_LIGHT = !!msg.sceneLight;   // Lichtszenen: Piktogramm zeigt Lichtfarbe + Helligkeit
       if(saverOn()) applySaverSplit();      // Split-Erlaubnis kann sich geaendert haben -> Screensaver-Spaltigkeit nachziehen
-      if(msg.missing) lpToast('noprof', 'Profil „'+msg.missing+'“ nicht gefunden – Standard wird angezeigt', 'warn', 15);   // ?panel=<unbekannt>
+      if(msg.missing) lpToast('noprof', 'Panel „'+msg.missing+'“ nicht gefunden. Das Standard-Panel wird angezeigt.', 'warn', 15);   // ?panel=<unbekannt>
       if(msg.lang){ LANG=msg.lang; document.documentElement.lang=LANG.split('-')[0]; tickClock(); }   // lang: Silbentrennung   // Panel-Sprache -> Datum/Uhr sofort aktualisieren
       if(msg.title) document.title=msg.title;
       if(msg.tabMeta) tabMeta=msg.tabMeta;

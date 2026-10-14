@@ -129,6 +129,9 @@
       'Räume': 'Rooms',
       'Kategorien': 'Categories',
       'Panel löschen': 'Delete panel',
+      'Wirklich löschen?': 'Really delete?',
+      'Das Panel wird aus der Liste entfernt. Wirksam nach dem Speichern, bis dahin mit „Rückgängig“ zurückholbar.': 'The panel is removed from the list. Takes effect on save; until then you can bring it back with "Undo".',
+      'Türstationen werden vom Miniserver gemeldet. Hier legst du Video, Ton und Klingelziele je Türstation fest.': 'Door stations are reported by the Miniserver. Set video, sound and ring targets for each door station here.',
       'Kein Panel gewählt.': 'No panel selected.',
       // Labels
       'Schriftart': 'Font',
@@ -337,7 +340,7 @@
       'Noch keine weiteren Kameras.': 'No further cameras.',
       'Normal': 'Normal',
       'Nächster Versuch in': 'Next attempt in',
-      'Ohne Kennung': 'Without ID',
+      'Ohne Namen': 'Unnamed',
       'Ohne Raum': 'Without room',
       'Panel „': 'Panel “',
       'Panels': 'Panels',
@@ -533,12 +536,12 @@
         'Verify certificate (turn off for a Miniserver Gen 2 with a self-signed certificate)',
       'Zeigt, welche Typen vorkommen und welche tilebert noch nicht unterstützt.':
         'Shows which types occur and which ones tilebert does not support yet.',
-      'Standard ist das Wetter des Loxone-Wetterdienstes. Ohne Wetterdienst im Miniserver abwählen, dann kommt es von Open-Meteo (kostenlos, ohne Konto).':
-        'The default is the weather from the Loxone weather service. Without a weather service in the Miniserver, untick this and the weather comes from Open-Meteo (free, no account).',
+      'Standard ist das Wetter des Loxone-Wetterdienstes. Gibt es im Miniserver keinen, nimm den Haken weg: Dann kommt es von Open-Meteo (kostenlos, ohne Konto).':
+        'The default is the weather from the Loxone weather service. If the Miniserver has none, untick this: the weather then comes from Open-Meteo (free, no account).',
       'Leer: Standort des Miniservers.': 'Empty: location of the Miniserver.',
       'Befehlskontrolle': 'Command check',
-      'Das Panel prüft nach jedem Tastendruck im Hintergrund, ob der Miniserver den Befehl angenommen hat. Kommt nach 12 s keine Antwort (z. B. bei WLAN-Aussetzern), meldet es „Keine Antwort – Befehl evtl. nicht ausgeführt“; abgelehnte Befehle meldet es immer.':
-        'After every tap the panel checks in the background whether the Miniserver accepted the command. If no answer arrives within 12 s (e.g. WLAN dropouts), it shows "Keine Antwort – Befehl evtl. nicht ausgeführt"; rejected commands are always reported.',
+      'Nach jedem Tastendruck prüft das Panel, ob der Miniserver den Befehl angenommen hat. Bleibt die Antwort nach 12 s aus (z. B. bei WLAN-Aussetzern) oder wird der Befehl abgelehnt, erscheint eine Meldung.':
+        'After every tap the panel checks whether the Miniserver accepted the command. If there is no answer after 12 s (e.g. WLAN dropouts) or the command is rejected, a message appears.',
       'Video-Streams (MJPEG) von Loxone-Türstationen und eigenen Überwachungskameras. Alle erscheinen im Widget „Kamera“.':
         'Video streams (MJPEG) from Loxone door stations and your own surveillance cameras. All of them appear in the "Camera" widget.',
       'Türstationen aus Loxone': 'Door stations from Loxone',
@@ -546,19 +549,19 @@
         'Surveillance cameras with an MJPEG stream, e.g. http://192.168.1.60/mjpg/video.mjpg. The server fetches the image once and passes it on to all panels.',
       'Kamera hinzufügen': 'Add camera',
       'Geräte suchen …': 'Searching for devices …',
-      'Ohne Namen erscheint es unter „Alle Geräte“ → „Ohne Kennung“ und bekommt dort einen Namen.':
-        'Without a name it appears under "All devices" → "Without ID" and gets a name there.',
+      'Bis es einen Namen hat, steht es unter „Alle Geräte“ → „Ohne Namen“. Dort vergibst du ihn.':
+        'Until it has a name, it is listed under "All devices" → "Unnamed". You assign the name there.',
       'Aus Loxone, nicht löschbar': 'From Loxone, cannot be removed',
       'Zeigt Cover, Titel und Favoriten vom Loxone-Audioserver. Den Test-Ton für die Lautsprecher findest du unter System → Diagnose.':
         'Shows cover, title and favourites from the Loxone Audioserver. You find the test tone for the speakers under System → Diagnostics.',
       'Audioserver': 'Audioserver',
-      'Loxone-Audioserver (Gen 2) senden Cover, Titel, Interpret und Favoriten über einen Live-Kanal (Port 7091). tilebert hört ihn ab, erkennt die Adresse automatisch aus der Loxone-Struktur und zeigt die Infos bei der passenden Zone, auch bei Nachbauten wie Audioserver4Home.':
-        'Loxone Audioservers (Gen 2) send cover, title, artist and favourites over a live channel (port 7091). tilebert listens to it, detects the address automatically from the Loxone structure and shows the info at the matching zone, also for clones such as Audioserver4Home.',
+      'tilebert liest Cover, Titel, Interpret und Favoriten live vom Audioserver (Gen 2, Port 7091). Die Adresse erkennt es selbst aus der Loxone-Struktur. Die Infos erscheinen bei der passenden Zone, auch bei Nachbauten wie Audioserver4Home.':
+        'tilebert reads cover, title, artist and favorites live from the audio server (Gen 2, port 7091). It detects the address itself from the Loxone structure. The info appears at the matching zone, also for clones such as Audioserver4Home.',
       'Live-Daten vom Audioserver nutzen': 'Use live data from the Audioserver',
       'Zeigt Termine aus iCal-Abos im Dashboard und in den Kalender-Widgets aller Panels.':
         'Shows appointments from iCal subscriptions in the dashboard and in the calendar widgets of all panels.',
-      'Abo-Link aus iCloud (Kalender → Teilen → Öffentlicher Kalender), Google oder einem anderen Dienst, beginnend mit webcal:// oder https://. tilebert liest nur und braucht keinen Login; mehrere Kalender erscheinen gemeinsam in einer Liste.':
-        'Subscription link from iCloud (Calendar → Share → Public calendar), Google or another service, starting with webcal:// or https://. tilebert only reads and needs no login; several calendars appear together in one list.',
+      'Abo-Link (webcal:// oder https://) aus iCloud (Kalender → Teilen → Öffentlicher Kalender), Google oder einem anderen Dienst. tilebert liest nur und braucht keinen Login. Mehrere Kalender erscheinen gemeinsam in einer Liste.':
+        'Subscription link (webcal:// or https://) from iCloud (Calendar → Share → Public calendar), Google or another service. tilebert only reads and needs no login. Several calendars appear together in one list.',
       'Kalender hinzufügen': 'Add calendar',
       'Feiertagskalender (optional)': 'Holiday calendar (optional)',
       'z. B. Feiertage aus Google Kalender (basic.ics)': 'e.g. holidays from Google Calendar (basic.ics)',
@@ -701,16 +704,16 @@
       'Feiertage': 'Holidays',
       'Kalender-Anzeige': 'Calendar display',
       'Bausteintypen': 'Block types',
-      'Gilt für alle Panels. Ein einzelnes Panel (links wählen) kann unter „Aussehen“ abweichen. Datum und Uhrzeit nutzen die Sprache der Konfiguration (Seitenleiste, „Sprache“).':
-        'Applies to all panels. A single panel (choose on the left) can differ under "Appearance". Date and time use the language of the configuration (sidebar, "Language").',
+      'Gilt für alle Panels. Einzelne Panels können unter „Aussehen“ abweichen. Datum und Uhrzeit folgen der Sprache der Konfiguration (Seitenleiste).':
+        'Applies to all panels. Individual panels can differ under "Appearance". Date and time follow the language of the configuration (sidebar).',
       'TbViewer schaltet das Display nie aus. Berührung, Annäherung, Klingel, Wecker und Nachrichten stellen die normale Helligkeit wieder her.':
         'TbViewer never turns the display off. Touch, proximity, doorbell, alarm clock and messages restore normal brightness.',
       'Nach dieser Zeit ohne Berührung zeigt das Panel das Dashboard.':
         'After this time without touch the panel shows the dashboard.',
       'Seite neu laden':
         'Reload page',
-      'Gegen Einfrieren. Nur, wenn das Dashboard steht.':
-        'Prevents freezing. Only while the dashboard is shown.',
+      'Gegen Einfrieren. Lädt nur neu, wenn das Dashboard offen ist.':
+        'Prevents freezing. Only reloads while the dashboard is open.',
       'Wann Nacht ist, legst du unter System → Alle Panels → Nachtmodus fest.':
         'You set when it is night under System → All panels → Night mode.',
       'Nachts um 3 Uhr':
@@ -726,8 +729,8 @@
       'Der Server protokolliert ausführlich: Miniserver-Verbindung, empfangene Werte pro Minute, verbundene Geräte, Verbindungsabbrüche und Fehler der Geräte. Nur bei Bedarf einschalten; die Größe ist begrenzt und ältere Einträge werden überschrieben.':
         'The server logs in detail: Miniserver connection, values received per minute, connected devices, connection drops and device errors. Only switch it on when needed; the size is limited and older entries are overwritten.',
       'Geräteprotokolle': 'Device logs',
-      'Für Android-Geräte (z. B. Shelly Wall Display), die per adb über WLAN erreichbar sind. Die Textdatei enthält Sensoren, Systemprotokoll, Hänger, Speicher und CPU und verändert nichts am Gerät; am besten direkt nach einem Hänger holen, denn das Android-Protokoll reicht nur einige Stunden zurück.':
-        'For Android devices (e.g. Shelly Wall Display) reachable via adb over WLAN. The text file contains sensors, system log, hangs, memory and CPU and changes nothing on the device; best fetched right after a hang, because the Android log only goes back a few hours.',
+      'Für Android-Geräte (z. B. Shelly Wall Display), die per adb über WLAN erreichbar sind. Die Textdatei enthält Sensoren, Systemprotokoll, Speicher und CPU und verändert nichts am Gerät. Hol sie direkt nach einem Hänger: Das Android-Protokoll reicht nur einige Stunden zurück.':
+        'The text file contains sensors, system log, memory and CPU and changes nothing on the device. Fetch it right after a hang: the Android log only goes back a few hours.',
       'Spielt drei kurze Pieptöne auf allen Geräten, die das gewählte Panel zeigen. So prüfst du, ob Wecker und Klingel zu hören sind.':
         'Plays three short beeps on all devices that show the chosen panel. This shows whether alarm clock and doorbell are audible.',
       'Gerät': 'Device',
@@ -755,8 +758,8 @@
       'Piepton aus': 'Beep off',
       'Piepton, bis „Stumm“ oder „Quittieren“ gedrückt wird oder der Alarm endet':
         'Beep until "Mute" or "Acknowledge" is pressed or the alarm ends',
-      'Der Piepton kommt aus dem Browser und läuft auf Tablets, NSPanel und Shelly. Browser geben Ton erst nach einer Berührung frei: Tippe das Panel nach dem Laden einmal an, sonst zeigt das Vollbild „Ton gesperrt – Bildschirm antippen“. Testen kannst du das je Gerät unter System → Diagnose → Test-Ton.':
-        'The beep is generated in the browser and works on tablets, NSPanel and Shelly. Browsers only allow sound after a touch: tap the panel once after loading, otherwise the full screen shows "Ton gesperrt – Bildschirm antippen". You can test this per device under System → Diagnostics → Test tone.',
+      'Der Ton kommt aus dem Browser. Browser geben Ton erst nach einer Berührung frei: Tippe das Panel nach dem Laden einmal an, sonst zeigt das Vollbild „Ton gesperrt – Bildschirm antippen“. Testen kannst du ihn unter System → Diagnose → Test-Ton.':
+        'The sound comes from the browser. Browsers only allow sound after a touch: tap the panel once after loading, otherwise the full screen shows "Ton gesperrt – Bildschirm antippen". You can test it under System → Diagnostics → Test tone.',
       'Wirkt sofort, ohne Speichern': 'Takes effect immediately, without saving',
       'Gerätetyp festlegen': 'Set device type',
       'Panel gestalten': 'Design panel',
@@ -829,18 +832,18 @@
       'Helligkeit min. (%)': 'Brightness min. (%)',
       'Helligkeit max. (%)': 'Brightness max. (%)',
       'Nachts Kamerabild nur bei Präsenz zeigen': 'At night show camera image only on presence',
-      'Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> (Startseite) ganz rechts. Zum Umsortieren Tabs ziehen.':
-        'The order matches the panel: <b>dashboard</b> on the left, tabs right-aligned, <b>tab 1</b> (start page) at the far right. Drag tabs to reorder them.',
-      'Bis zu <b>4 Tabs</b>, der erste ist die Startseite (★). Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).':
-        'Up to <b>4 tabs</b>, the first is the start page (★). Tap a tab to edit it. Types: <b>Free</b> (you fill it yourself), <b>Room</b>, <b>Category</b> and <b>Central</b> (prefilled from Loxone, adjustable afterwards, new blocks are added at the end) and <b>Overviews</b> (all rooms or categories like in the Loxone app).',
+      'Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> ganz rechts. Zum Umsortieren Tabs ziehen.':
+        'The order matches the panel: <b>dashboard</b> on the left, tabs right-aligned, <b>tab 1</b> at the far right. Drag tabs to reorder them.',
+      'Bis zu <b>4 Tabs</b>. Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).':
+        'Up to <b>4 tabs</b>. Tap a tab to edit it. Types: <b>Free</b> (you fill it yourself), <b>Room</b>, <b>Category</b> and <b>Central</b> (prefilled from Loxone, adjustable afterwards, new blocks are added at the end) and <b>Overviews</b> (all rooms or categories like in the Loxone app).',
       'Auf diesem Panel überall ausgeblendet (Tabs, Räume, Kategorien). Antippen blendet sie wieder ein.':
         'Hidden everywhere on this panel (tabs, rooms, categories). Tap to show them again.',
       'Gilt nur für dieses Panel. „Wie Standard“ übernimmt System → Alle Panels.':
         'Applies to this panel only. "Like default" takes over System → All panels.',
       'Auf schwachen Geräten helfen Animation „Mittel“ oder „Keine“ und Kontrast „Aus“.':
         'On weak devices, animation "Medium" or "None" and contrast "Off" help.',
-      'Reine Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol als blasses Wasserzeichen, Zahl und Einheit kommen unverändert aus Loxone. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert; pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.':
-        'Pure measurement tiles (temperature, humidity, CO₂, power, meters) show the value large and the icon as a faint watermark, number and unit come unchanged from Loxone. Text tiles and tiles with quick control stay unchanged; changeable per tile under Grid editor → Tile → Appearance.',
+      'Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol blass im Hintergrund. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert. Pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.':
+        'Measurement tiles (temperature, humidity, CO₂, power, meters) show the value large and the icon faintly in the background. Text tiles and tiles with quick control stay unchanged. Changeable per tile under Grid editor → Tile → Appearance.',
       'Die Farben kommen aus dem Miniserver: Fenster offen gelb, Alarm oder Rauch ausgelöst rot, Alarm scharf blau. Statusbausteine zeigen ihre Farbe aus Loxone Config.':
         'The colours come from the Miniserver: window open yellow, alarm or smoke triggered red, alarm armed blue. Status blocks show their colour from Loxone Config.',
       'Mehrere Haken sind möglich. Ohne Haken schließt nur ein Tipp auf eine freie Stelle das Dashboard.':
@@ -886,10 +889,10 @@
       'Status (max. 4)': 'Status (max. 4)',
       '„Passend zum Design“ übernimmt die Farben des Tabs oder Dashboards, die Ampel erscheint als Akzentfarbe. „Farbig“ färbt die ganze Kachel.':
         '"Match design" takes over the colours of the tab or dashboard, the traffic light appears as an accent colour. "Colourful" colours the whole tile.',
-      'Haken: anzeigen. Ziehen: Reihenfolge. Die erste Kamera startet, die Zahlen stehen als Schaltflächen am Panel.':
-        'Tick: show. Drag: order. The first camera starts, the numbers appear as buttons on the panel.',
-      'Ohne Bedienung springt das Widget wieder auf Kamera 1. 0: aus.':
-        'Without interaction the widget jumps back to camera 1. 0: off.',
+      'Haken zeigt die Kamera an, Ziehen ändert die Reihenfolge. Die erste Kamera startet zuerst; am Panel wechselst du per Zahlenknopf.':
+        'A tick shows the camera, dragging changes the order. The first camera starts first; on the panel you switch with the number buttons.',
+      'Ohne Bedienung wechselt das Widget zurück zu Kamera 1. 0 = aus.':
+        'Without interaction the widget switches back to camera 1. 0 = off.',
       'Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kalender & Kameras ein.':
         'No camera with a video address yet. Enter one under System → Calendar & cameras.',
       'Abgewählte Bausteine zeigt dieses Panel nirgends an, auch nicht in anderen Räumen oder Kategorien.':
@@ -914,7 +917,7 @@
         'portrait, tabs at the bottom, as an app on the home screen',
       'Raster': 'Grid',
       '4 große Kacheln, leicht zu treffen': '4 large tiles, easy to hit',
-      'Welche Tabs? (höchstens 4, der erste ist die Startseite)': 'Which tabs? (at most 4, the first is the start page)',
+      'Welche Tabs? (höchstens 4)': 'Which tabs? (at most 4)',
       'Die Tabs stehen in der Reihenfolge deiner Auswahl. Später lässt sie sich per Ziehen ändern.':
         'The tabs follow the order of your selection. You can change it later by dragging.',
       'Was zeigt das Dashboard?': 'What does the dashboard show?',
@@ -932,8 +935,8 @@
       'Video-Adresse (MJPEG)': 'Video address (MJPEG)',
       'Kameraverbindung automatisch erneuern': 'Renew the camera connection automatically',
       'Ton beim Klingeln (das Panel piept, solange es klingelt)': 'Sound on ring (the panel beeps while it rings)',
-      'MP3, OGG, WAV, M4A oder AAC, höchstens 5 MB. Wird sofort hochgeladen. „Klingeln testen“ löst ein echtes Klingeln auf den Geräten aus, die das unter System → Diagnose → Test-Ton gewählte Panel zeigen.':
-        'MP3, OGG, WAV, M4A or AAC, 5 MB at most. Uploaded immediately. "Test ring" triggers a real ring on the devices that show the panel chosen under System → Diagnostics → Test tone.',
+      'MP3, OGG, WAV, M4A oder AAC, höchstens 5 MB. Wird sofort hochgeladen. „Klingeln testen“ klingelt auf allen Geräten, die das unter System → Diagnose → Test-Ton gewählte Panel zeigen.':
+        'MP3, OGG, WAV, M4A or AAC, 5 MB at most. Uploaded immediately. "Test ring" rings on all devices that show the panel chosen under System → Diagnostics → Test tone.',
       'Lädt hoch …': 'Uploading …',
       'Eigene Datei hochgeladen': 'Own file uploaded',
       'Ohne Haken holt tilebert keine Live-Daten von diesem Audioserver, z. B. wenn es ihn nicht mehr gibt. Die Zonen lassen sich weiter über den Miniserver bedienen.':
@@ -942,8 +945,8 @@
       'Den Grund nennt der jeweilige Kalender.': 'Each calendar states its reason.',
       'Wetter vom Loxone-Wetterdienst': 'Weather from the Loxone weather service',
       'Kein Standort eingetragen.': 'No location entered.',
-      'Tippe oder ziehe ins Bild, um den wichtigen Bereich festzulegen; die Rahmen zeigen, was Popup und Widget davon zeigen. Ohne Zoom lässt sich nur verschieben, was das breitere Format ohnehin abschneidet.':
-        'Tap or drag in the image to set the important area; the frames show what popup and widget display of it. Without zoom you can only shift what the wider format cuts off anyway.',
+      'Tippe oder ziehe ins Bild, um den wichtigen Bereich zu wählen. Die Rahmen zeigen, was Popup und Widget davon anzeigen. Ohne Zoom lässt sich nur der Teil verschieben, den das breitere Format sonst abschneidet.':
+        'Tap or drag in the image to choose the important area. The frames show what popup and widget display of it. Without zoom you can only shift the part that the wider format would otherwise cut off.',
       'Einfarbig, passend zum Tab. Belastet das Gerät nicht.':
         'Single colour, matching the tab. Puts no load on the device.',
       'Das Bild läuft unscharf in die Ränder aus und passt immer zum Motiv.':
@@ -963,8 +966,8 @@
         'Reading the device log via adb (up to 1 minute). In the next 10 s hold your hand to the device and take it away again (proximity sensor test).',
       'Protokoll von': 'Log of',
       'Protokoll holen': 'Fetch log',
-      'Kein Gerät mit adb gefunden. Android-Geräte erscheinen hier, wenn ihr Gerätetyp gesetzt (Geräte → Alle Geräte) und adb über WLAN eingeschaltet ist.':
-        'No device with adb found. Android devices appear here once their device type is set (Devices → All devices) and adb over WLAN is switched on.',
+      'Kein Gerät mit adb gefunden. Android-Geräte erscheinen hier, sobald der Gerätetyp gesetzt ist (Geräte → Alle Geräte) und adb über WLAN läuft.':
+        'No device with adb found. Android devices appear here once the device type is set (Devices → All devices) and adb over WLAN is running.',
       'Server-Protokoll löschen? Das lässt sich nicht rückgängig machen.': 'Delete the server log? This cannot be undone.',
       'Panel': 'Panel',
       'Browser starten': 'Start browser',
@@ -999,16 +1002,16 @@
         'With "change nothing" this mode does not switch the devices.',
       'Keine Zuordnung gewählt. Es würde nichts umgeschaltet.': 'No assignment chosen. Nothing would be switched.',
       'Fertig. Jetzt in Loxone einrichten': 'Done. Now set it up in Loxone',
-      'Lege in Loxone Config je Betriebsart einen virtuellen HTTP-Ausgang mit dieser Adresse an. Am Ende steht der Modusname:':
+      'Lege in Loxone Config je Betriebsmodus einen virtuellen HTTP-Ausgang mit dieser Adresse an. Am Ende steht der Modusname:':
         'In Loxone Config, create a virtual HTTP output with this address for each operating mode. The mode name goes at the end:',
       'Übernehmen': 'Apply',
       'Name fehlt. Gib einen Namen ein.': 'Name missing. Enter a name.',
       'Feste Geräte-ID. Bleibt gleich, auch wenn sich die IP-Adresse ändert.':
         'Fixed device ID. Stays the same even if the IP address changes.',
-      'Ohne Treiber „keine“ lassen. Dann schaltet das Panel das Display selbst.':
-        'Without a driver leave "none". Then the panel switches the display itself.',
-      'Noch kein Gerät bekannt. Es erscheint hier, sobald es das Panel mit Kennung öffnet oder ein Agent läuft.':
-        'No device known yet. It appears here as soon as it opens the panel with an ID or an agent is running.',
+      'Ohne Treiber „keine“ wählen. Dann schaltet das Panel das Display selbst.':
+        'Without a driver, choose "none". Then the panel switches the display itself.',
+      'Noch kein Gerät bekannt. Es erscheint hier, sobald es das Panel mit Namen öffnet oder ein Agent läuft.':
+        'No device known yet. It appears here as soon as it opens the panel with a name or an agent is running.',
       '“ gelöscht. Wirksam nach dem Speichern.': '" deleted. Takes effect after saving.',
       '“ entfernt. Wirksam nach dem Speichern.': '" removed. Takes effect after saving.',
       'Display-Passwort nicht gespeichert, weil Adresse oder Treiber geändert wurden:':
@@ -1185,7 +1188,7 @@
         'The window size determines the format; set the zoom manually if needed.',
       'Statusleiste: Anzeige je Baustein': 'Status bar: display per block',
       'Aus (feste Größe)': 'Off (fixed size)',
-      'Automatisch (Schirm ausfüllen)': 'Automatic (fill screen)',
+      'Automatisch (Bildschirm füllen)': 'Automatic (fill screen)',
       'Verlauf (ab 2 × 2)': 'History (from 2 × 2)',
       'Popup breit': 'Popup wide',
       'Popup quadratisch': 'Popup square',
@@ -1196,11 +1199,10 @@
       'Datei entfernen': 'Remove file',
       // Geräte: Hinzufügen-Formular, Karte, Offline-Bereich
       'Abbrechen': 'Cancel',
-      'Wähle den Gerätetyp. Danach brauchst du nur ein Formular.': 'Choose the device type. Then you only need one form.',
+      'Wähle zuerst den Gerätetyp.': 'First choose the device type.',
       'Shelly oder Android-Tablet': 'Shelly or Android tablet',
       'Wanddisplay, Tablet oder Handy mit der App TbViewer': 'Wall display, tablet or phone with the TbViewer app',
       'Safari, Chrome … Nur die Adresse nötig': 'Safari, Chrome … Only the address is needed',
-      'Welche Geräte gehen?': 'Which devices work?',
       'ADB über WLAN am Gerät einschalten': 'Turn on ADB over Wi-Fi on the device',
       'Am Gerät: Einstellungen, Entwickleroptionen, „ADB über WLAN“ einschalten (Port 5555). Beim ersten Mal fragt das Gerät „USB-Debugging zulassen?“. Bestätige mit „Immer erlauben“ und drücke danach noch einmal „TbViewer installieren“.': 'On the device: Settings, Developer options, turn on "ADB over Wi-Fi" (port 5555). The first time, the device asks "Allow USB debugging?". Confirm with "Always allow", then press "Install TbViewer" again.',
       'Name und Panel': 'Name and panel',
@@ -1273,6 +1275,18 @@
       '1 Melder': '1 detector',
       '{n} Melder': '{n} detectors',
       'Alle Hinweise': 'All notices',
+      'Passwort fehlt. Gib es bei geänderter Adresse oder geändertem Benutzer neu ein.': 'Password missing. Enter it again if the address or user was changed.',
+      'Adresse fehlt.': 'Address missing.',
+      'Nur JPG, PNG oder WebP erlaubt.': 'Only JPG, PNG or WebP allowed.',
+      'Bild zu groß. Höchstens 12 MB.': 'Image too large. 12 MB at most.',
+      'Datei zu groß. Höchstens 5 MB.': 'File too large. 5 MB at most.',
+      'Dateiformat nicht unterstützt. Erlaubt: MP3, OGG, WAV, M4A, AAC.': 'File format not supported. Allowed: MP3, OGG, WAV, M4A, AAC.',
+      'Keine Datei erhalten.': 'No file received.',
+      'Alter und neuer Name nötig.': 'Old and new name required.',
+      'IP-Adresse und Name nötig.': 'IP address and name required.',
+      'Kein Gerät ohne Namen unter dieser IP gefunden.': 'No unnamed device found at this IP address.',
+      'Dieser Name ist schon vergeben.': 'This name is already taken.',
+      'Der neue Name fehlt.': 'The new name is missing.',
     }
   };
 

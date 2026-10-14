@@ -38,8 +38,8 @@ button:focus-visible{outline:3px solid var(--b);outline-offset:2px}
 <script>
 (function(){
 var T={
- de:{sub:"Viewer für tilebert",intro:"Adresse des tilebert-Servers eingeben.",la:"tilebert-Adresse",go:"Verbinden",busy:"Verbinde …",addr:"Adresse ungültig.",conn:"Nicht erreichbar.",cx:"Abbrechen",chg:"Adresse des tilebert-Servers ändern."},
- en:{sub:"Viewer for tilebert",intro:"Enter the address of the tilebert server.",la:"tilebert address",go:"Connect",busy:"Connecting …",addr:"Invalid address.",conn:"Not reachable.",cx:"Cancel",chg:"Change the address of the tilebert server."}};
+ de:{sub:"Viewer für tilebert",intro:"Gib die Adresse des tilebert-Servers ein.",la:"tilebert-Adresse",go:"Verbinden",busy:"Verbinde …",addr:"Adresse ungültig. Beispiel: http://192.168.1.10:8098",conn:"Server nicht erreichbar. Prüfe Adresse und WLAN.",cx:"Abbrechen",chg:"Ändere die Adresse des tilebert-Servers."},
+ en:{sub:"Viewer for tilebert",intro:"Enter the address of the tilebert server.",la:"tilebert address",go:"Connect",busy:"Connecting …",addr:"Invalid address. Example: http://192.168.1.10:8098",conn:"Server not reachable. Check the address and WLAN.",cx:"Cancel",chg:"Change the address of the tilebert server."}};
 var A=window.TbSetup||{};
 var t=T[/^de/i.test(navigator.language||"")?"de":"en"];
 function $(i){return document.getElementById(i)}
