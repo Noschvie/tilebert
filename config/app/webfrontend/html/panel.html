@@ -1171,13 +1171,21 @@
   .dsov{position:absolute;inset:0;z-index:85;background:var(--bezel,var(--bg));color:var(--ink);display:flex;flex-direction:column;}
   .dsbox{flex:1;min-height:0;display:flex;flex-direction:column;}
   .dsl{flex:none;height:52px;margin:8px 12px 0;padding-left:4px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .dsl{border-bottom:1px solid var(--line);margin-bottom:0;padding-bottom:6px;height:58px;}   /* Kopf dezent abgesetzt */
   .dsl>div:first-child{min-width:0;}
+  .dshd{display:flex;align-items:center;gap:12px;min-width:0;}   /* Marke + Titel; Abstand ~ eine Kachelkante der Marke (logo-spec clear_space) */
+  .dsmk{flex:none;width:28px;height:28px;display:block;}
+  .dshd>div{min-width:0;}
   .dsl h2{margin:0;font:600 20px/1.1 var(--font-num,"Sora",sans-serif);letter-spacing:-.01em;color:var(--bezel-ink,var(--ink));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dsdev{margin:3px 0 0;font-size:13px;color:var(--tab-idle,var(--muted));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dsback{all:unset;box-sizing:border-box;flex:none;height:var(--pill-m);padding:0 18px;display:grid;place-items:center;cursor:pointer;border-radius:var(--r-m);
     background:var(--tab-active,rgba(255,255,255,.08));color:var(--tab-active-ink,var(--ink));font-size:15px;font-weight:600;}
   .dsback:active{transform:scale(.97);}
-  .dsr{flex:1;min-height:0;margin:10px 12px 12px;padding:14px;border-radius:var(--r-xl);background:var(--face-1,var(--screen));color:var(--ink);overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;}
+  .dsrw{flex:1;min-height:0;position:relative;margin:10px 12px 12px;border-radius:var(--r-xl);background:var(--face-1,var(--screen));overflow:hidden;display:flex;flex-direction:column;}
+  /* Zahnrad-Wasserzeichen wie .tile.tbig .head (8 %, ink), unten rechts angeschnitten, unter den Karten */
+  .dswm{position:absolute;right:-110px;bottom:-110px;width:300px;height:300px;opacity:.08;color:var(--ink);pointer-events:none;z-index:0;}
+  .dswm svg{width:100%;height:100%;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;}
+  .dsr{position:relative;z-index:1;flex:1;min-height:0;padding:14px;color:var(--ink);overflow-y:auto;scrollbar-width:none;display:flex;flex-direction:column;}
   .dsr::-webkit-scrollbar{display:none;}
   .dsmain{flex:none;padding-bottom:0;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;align-content:start;}
   .dsmain>.dstile{align-self:start;}
@@ -2619,13 +2627,15 @@ async function dsApi(path,method,body){
   }catch(e){ return {ok:false,status:0,error:'net'}; }
 }
 function dsPoke(){ clearTimeout(DS.idle); DS.idle=setTimeout(()=>dsClose(),window.__dsIdleMs||DS_IDLE_MS); }
+const DS_MARK='<svg class="dsmk" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="4" y="4" width="19.137" height="19.137" rx="7.31" fill="#ffc145"/><rect x="24.863" y="4" width="19.137" height="19.137" rx="7.31" fill="#7db7ff"/><rect x="4" y="24.863" width="19.137" height="19.137" rx="7.31" fill="#ff9e7a"/><rect x="24.863" y="24.863" width="19.137" height="19.137" rx="7.31" fill="#5cd6a4"/><circle cx="13.569" cy="13.569" r="2.259" fill="#1f2440"/><rect x="28.518" y="10.612" width="11.827" height="5.914" rx="2.957" fill="#1f2440"/><circle cx="37.388" cy="13.569" r="1.921" fill="#7db7ff"/><path d="M19.276 31.475H28.724A1.07 1.07 0 0 1 29.768 32.781A5.914 5.914 0 0 1 18.232 32.781A1.07 1.07 0 0 1 19.276 31.475Z" fill="#1f2440"/></svg>';   // Marke wie #boot (kein Request)
+const DS_GEAR='<svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>';   // Zahnrad wie Tab-Zahnrad (#dsgear)
 function dsOpen(){
   if(DS.el||phoneDev()) return;
   try{ if(typeof wake==='function') wake(); }catch(e){}
   const s=document.querySelector('.screen')||document.body, o=document.createElement('div');
   o.className='dsov'; o.setAttribute('role','dialog'); o.setAttribute('aria-modal','true'); o.setAttribute('aria-label',dsT('Einstellungen'));
-  o.innerHTML='<div class="dsbox"><div class="dsl"><div><h2>'+esc(dsT('Einstellungen'))+'</h2><p class="dsdev">'+esc(DEVICE_ID||'')+'</p></div>'+
-    '<button type="button" class="dsback">'+esc(dsT('‹ Zurück'))+'</button></div><div class="dsr" id="dsr"></div></div>';
+  o.innerHTML='<div class="dsbox"><div class="dsl"><div class="dshd">'+DS_MARK+'<div><h2>'+esc(dsT('Einstellungen'))+'</h2><p class="dsdev">'+esc(DEVICE_ID||'')+'</p></div></div>'+
+    '<button type="button" class="dsback">'+esc(dsT('‹ Zurück'))+'</button></div><div class="dsrw"><div class="dswm" aria-hidden="true">'+DS_GEAR+'</div><div class="dsr" id="dsr"></div></div></div>';
   s.appendChild(o); DS.el=o; DS.d=null; DS.panelSel=null; DS.err=''; DS.view='load';
   ['pointerdown','keydown','input','scroll'].forEach(ev=>o.addEventListener(ev,dsPoke,true));
   o.addEventListener('click',dsClick);
