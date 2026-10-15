@@ -117,6 +117,7 @@
     border:1px solid var(--line);background:var(--panel2);color:var(--fg);font:inherit;cursor:pointer;}
   .sizepick button.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;}
   .sizepick small{color:var(--muted);}
+  .sizepick .pwic{width:64px;height:48px;color:var(--muted);flex:none;} .sizepick button.on .pwic{color:var(--sel);}
   .sizepick .spv{display:flex;gap:3px;height:36px;} .sizepick .spv i{display:block;width:36px;height:36px;border-radius:var(--r-s);border:1.5px solid currentColor;opacity:.7;}
   .sizepick .spv.g3 i{background:linear-gradient(currentColor,currentColor) 33.3% 0/1px 100% no-repeat,linear-gradient(currentColor,currentColor) 66.6% 0/1px 100% no-repeat,
     linear-gradient(currentColor,currentColor) 0 33.3%/100% 1px no-repeat,linear-gradient(currentColor,currentColor) 0 66.6%/100% 1px no-repeat;}
@@ -387,16 +388,12 @@
   .topbar{background:var(--bezel);border-bottom:0;padding:10px 28px 12px;}
   .rubrics{gap:6px;}
   /* wie die Panel-Tabs: Kachelradius, aktive Flaeche + Punkt in Akzentfarbe darunter */
-  .rub{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:8px 18px 6px;
-    border:0;border-radius:var(--r-m);color:var(--bezel-muted);font-size:14px;}
-  .rub::after{content:"";width:5px;height:5px;border-radius:var(--r-round);background:transparent;}
-  .rub:hover{color:var(--bezel-strong);background:var(--bezel-tint);}
-  .rub.active{color:var(--tab-active-ink);background:var(--tab-active);border:0;font-weight:600;}
-  .rub.active::after{background:var(--dot);}
-  #phead{padding:12px 4px 2px;color:var(--bezel-strong);}
-  #phead h2{color:var(--bezel-strong);} #phead .kurl{color:var(--bezel-muted);} #phead .kurl code{color:var(--bezel-ink);}
-  #phead .badge{background:var(--bezel-tint);border-color:transparent;color:var(--bezel-muted);border-radius:var(--pill);}
-  #phead .phcur{color:var(--dot);background:color-mix(in srgb,var(--dot) 12%,transparent);}
+  /* Hauptmenue = dieselben Pillen wie die Panel-Liste links: Flaeche, Radius, Schrift; aktiv gefuellt, Hover heller */
+  .rub{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 18px;
+    border:1px solid transparent;border-radius:var(--r-m);background:var(--bezel-tint);color:var(--bezel-ink);font-size:14px;font-weight:600;cursor:pointer;transition:background-color .15s,color .15s;}
+  .rub:hover{background:var(--bezel-hover);color:var(--bezel-strong);}
+  .rub.active,.rub.active:hover{color:var(--tab-active-ink);background:var(--tab-active);border-color:transparent;}
+  :root[data-theme="hell"] .rub.active{box-shadow:0 1px 3px rgba(13,18,14,.12);}
   /* Reiter der Seite: Pillen auf der hellen Flaeche */
   .subtabs{background:var(--bg);border-bottom:0;padding:14px 28px 4px;gap:6px;}
   .stab{padding:8px 13px;border:0;border-radius:var(--pill);color:var(--muted);font-weight:600;background:transparent;}
@@ -749,7 +746,7 @@
   /* Schmale Fenster: Kopf bleibt eine Zeile (Rubriken + Suche) */
   @media (max-width:760px){
     .topbar{padding:8px 14px;} .scroll{padding:14px;} .subtabs{padding:12px 14px 4px;overflow-x:auto;flex-wrap:nowrap;}
-    .rub{padding:8px 12px;font-size:13px;}
+    .rub{padding:0 12px;}
     .wrap.slim{grid-template-columns:1fr;} .wrap.slim aside.side{flex-direction:row;flex-wrap:wrap;align-items:center;}
     .wrap.slim .plist{flex-direction:row;flex-wrap:wrap;}
     .wrap.slim .brandrow{flex-direction:row;}
@@ -1049,7 +1046,29 @@
   .pwsum{margin:0;padding:4px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);}
   .pwsr{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;}
   .pwsr:first-child{border-top:0;} .pwsr dt{color:var(--muted);} .pwsr dd{margin:0;overflow-wrap:anywhere;}
-  @media (max-width:560px){ .pwov{padding:12px;} .pwsr{grid-template-columns:84px minmax(0,1fr);} }
+  /* Assistent: Start-Adresse unter dem Namen, Karten mit Linien-Piktogramm */
+  .pwurl{display:flex;flex-direction:column;gap:4px;margin-top:10px;align-items:flex-start;max-width:100%;}
+  .pwurll{color:var(--muted);font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;}
+  .pwurl code{background:var(--panel2);border-radius:var(--r-s);padding:6px 10px;font-size:13px;color:var(--fg);overflow-wrap:anywhere;max-width:100%;}
+  .pwo{display:grid;grid-template-columns:44px minmax(0,1fr);column-gap:14px;align-items:center;}
+  .pwo .pwico{display:grid;place-items:center;min-width:0;}
+  .pwo .pwic{width:44px;height:44px;color:var(--muted);flex:none;}
+  .pwo.on .pwic{color:var(--sel);}
+  .pwo .pwtx{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .pwo .pwtx>span{font-size:12px;color:var(--muted);line-height:1.4;}
+  .pwo .pwtx>.pwpx{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums;}
+  .pwopts .pwv{grid-template-columns:minmax(0,1fr);row-gap:10px;align-content:start;justify-items:start;padding:12px 14px;}
+  .pwv .pwico{height:48px;justify-items:start;} .pwv .pwic{width:64px;height:48px;}
+  .pwdevs{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .pwopts2 .pwv .pwic{width:48px;} .pwopts4{grid-template-columns:repeat(auto-fit,minmax(112px,1fr));}
+  .pwbox .mzopt b{font-size:13px;font-weight:600;line-height:1.3;}
+  .pwopts+.pwhint,.pwsub+.pwhint{margin-top:12px;} .pwopts>.pwhint{margin-top:0;}
+  .pwgrp{display:grid;gap:8px;} .pwgrp>[role=radiogroup]{display:contents;}
+  .pwurl code.dim{color:var(--muted);} .pwurl .pwlan{font-size:12px;color:var(--muted);line-height:1.4;}
+  @media (max-width:560px){ .pwov{padding:12px;} .pwsr{grid-template-columns:84px minmax(0,1fr);}
+    .pwdevs{grid-template-columns:minmax(0,1fr);}
+    .pwdevs .pwv{grid-template-columns:64px minmax(0,1fr);column-gap:14px;row-gap:0;align-items:center;justify-items:stretch;}
+    .pwdevs .pwv .pwico{justify-items:center;} }
   /* Aenderungsliste an der Speicherleiste */
   #saveInfo{cursor:help;}
   .chgpop{position:fixed;z-index:2200;background:var(--panel);border-radius:var(--r-m);box-shadow:0 14px 36px rgba(0,0,0,.25);padding:12px 14px;max-width:min(420px,90vw);font-size:13px;animation:qin .15s ease-out;}
@@ -1489,19 +1508,20 @@
      unten in der Seitenleiste; Panel-Kopfzeile (#phead) eine Zeile, nur im Panel */
   .topbar{padding:8px 28px;}
   .rubrics{flex-wrap:nowrap;min-width:0;}
-  .rub{padding:6px 18px 5px;flex:none;}
+  .rub{flex:none;}
   .palbtn{margin-left:auto;flex:0 1 220px;min-width:0;min-height:36px;justify-content:flex-start;padding:0 8px 0 12px;}
   .palbtn span{flex:1;text-align:left;}
-  #phead{display:flex;flex-wrap:nowrap;align-items:center;gap:10px;min-width:0;padding:2px 4px 2px;overflow:hidden;}
-  #phead h2{font-size:18px;flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #phead .badge{flex:none;}
-  #phead .kurl{display:flex;align-items:center;gap:6px;flex:0 1 auto;min-width:0;white-space:nowrap;overflow:hidden;}
-  #phead .kurl code{overflow:hidden;text-overflow:ellipsis;}
-  #phead .phbtn{flex:none;display:inline-flex;align-items:center;gap:5px;min-height:28px;padding:0 10px;border:0;border-radius:var(--pill);
-    background:var(--bezel-tint);color:var(--bezel-ink);font:inherit;font-size:12px;font-weight:600;text-decoration:none;cursor:pointer;}
-  #phead .phbtn:hover{background:var(--bezel-hover,var(--bezel-tint));color:var(--bezel-strong);}
+  /* Seitentitel des Panels: oben im Inhalt, ueber den Reitern (nicht im Hauptmenue) */
+  #phead{display:flex;flex-wrap:nowrap;align-items:flex-end;gap:12px;min-width:0;padding:18px 28px 0;background:var(--bg);color:var(--fg);}
+  #phead .phtxt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto;}
+  #phead .pheyebrow{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  #phead h2{margin:0;font-size:22px;font-weight:600;color:var(--fg);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #phead .phbtn{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border:1px solid var(--line);border-radius:var(--pill);
+    background:var(--field);color:var(--fg);font:inherit;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;}
+  #phead .phbtn:hover{background:var(--panel2);text-decoration:none;}
+  .pstart{max-width:none;grid-column:1/-1;} .pstartrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;}
+  .pstartrow code{background:var(--panel2);border-radius:var(--r-s);padding:6px 10px;font-size:13px;overflow-wrap:anywhere;min-width:0;}
   #phead .phbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-  #phead .phopen{margin-left:auto;}
   /* Seitenleiste: Panel-Liste scrollt, die Fusszeile bleibt unten sichtbar.
      Reicht die Hoehe auch mit der kleinsten Liste nicht (Handy quer), scrollt die ganze Leiste. */
   @media (min-width:761px){
@@ -1537,8 +1557,7 @@
   .wrap.slim .donate{width:48px;height:40px;padding:0;justify-content:center;}
   @media (max-width:760px){
     .palbtn{flex:0 1 auto;padding:0 12px;} .palbtn kbd{display:none;}
-    #phead .kurl .kurlt{display:none;}
-    #phead .phbtn .phbl{display:none;}
+    #phead{padding:14px 14px 0;}
     /* Fusszeile als eigene Zeile unter der Panel-Leiste */
     .wrap .sidefoot{display:flex;flex:1 1 100%;flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;margin:0;padding-top:8px;}
     .wrap .sidefoot .sflbl{display:none;}
@@ -1556,7 +1575,7 @@
     .wrap.slim .sidefoot .themesw button span{display:inline;} .wrap.slim .sidefoot .themesw button svg{display:none;}
   }
   @media (pointer:coarse){ .rub{min-height:44px;} .palbtn{min-height:44px;}
-    #phead{padding-top:0;padding-bottom:0;} #phead .phbtn{min-height:44px;min-width:44px;justify-content:center;}   /* Kopfzeile bleibt 44 hoch */
+    #phead .phbtn{min-height:44px;min-width:44px;justify-content:center;}
     .wrap .donate,.wrap.slim .donate{min-width:44px;min-height:44px;}
     .sidefoot .themesw button,.wrap .sidefoot .themesw button{min-width:44px;min-height:44px;}
   }
@@ -1710,7 +1729,6 @@
   @media (min-width:1240px){
     .topbar{display:flex;align-items:center;gap:6px;}
     .rubrics{display:contents;}
-    #phead{order:1;flex:1 1 0;margin-left:14px;padding:0 4px;}
     .palbtn{order:2;margin-left:auto;flex:0 0 150px;}
   }
   /* 7) Handy: Seitenleiste nur zwei schmale Zeilen (Marke + Panels, darunter Sprache/Schema); eingeklappt nur die Panel-Zeile */
@@ -1823,14 +1841,14 @@
 
   <main class="main">
     <div class="topbar">
-      <div class="rubrics">
-        <button class="rub active" data-rub="overview">Start</button>
+      <div class="rubrics" role="navigation" aria-label="Hauptmenü">
+        <button class="rub active" aria-current="page" data-rub="overview">Start</button>
         <button class="rub" data-rub="settings">System</button>
         <button class="rub" data-rub="devices">Geräte</button>
         <button type="button" class="palbtn" id="palBtn" title="Suchen (Strg/⌘ + K)" data-i18n-title="Suchen (Strg/⌘ + K)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span data-i18n>Suchen</span><kbd>⌘K</kbd></button>
       </div>
-      <div id="phead"></div>
     </div>
+    <div id="phead"></div>
     <div class="subtabs" id="subtabs"></div>
     <div class="scroll" id="scroll">
       <!-- Übersicht / Beschreibung -->
@@ -2378,9 +2396,8 @@ async function load(){
   renderList(); setRubric('overview'); snapSaved();
   window.AG_DEEP=/^#devices:agents/.test(h0||'');
   if(h0&&h0!=='#') navGo(navParse(h0));   // Direktlink, auch alte Formen wie #devices:newpanel (LoxBerry-Seite)
-  // Nur eine ausdruecklich gewaehlte Sprache (Umschalter -> lp_ui_lang) uebernehmen, nicht die
-  // Browsersprache beim blossen Oeffnen (sonst aendert jeder Besucher theme.json).
-  if(window.I18N){ let chosen=null; try{ chosen=localStorage.getItem('lp_ui_lang'); }catch(e){} if(chosen) syncPanelLang(chosen); }
+  // Beim Laden wird nichts geschrieben: Die Sprache von Datum/Uhr am Panel gleicht syncPanelLang()
+  // nur beim ausdruecklichen Umschalten der Sprache ab (i18n.js, Umschalter), nie beim blossen Oeffnen.
 }
 
 // In die Zwischenablage; ohne sicheren Kontext (http im LAN) ueber ein unsichtbares Textfeld
@@ -2391,6 +2408,40 @@ function copyText(t){
     let r=false; try{ r=document.execCommand('copy'); }catch(e){} a.remove(); r?ok():bad(); });
 }
 function panelUrl(id){ return (id==='default'||id==='__global__') ? '/' : '/?panel='+encodeURIComponent(id); }
+// Piktogramme: Linien, Strich 1,7, runde Enden, Farbe ueber currentColor (CSS .pwic)
+function PIC(vb,inner){ return '<svg class="pwic" viewBox="'+vb+'" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+inner+'</svg>'; }
+// Formen des Panels (Assistent und Reiter Einstellungen nutzen dieselben Woerter)
+const PF_FORMS=[
+  {k:'one',t:'Eine Hälfte',px:'480 × 480',ex:'z. B. Shelly Wall Display X1i und andere 4″-Displays'},
+  {k:'two',t:'Zwei Hälften',px:'960 × 480',ex:'z. B. Shelly Wall Display X2i, Tablets im Querformat und vergleichbare Geräte'},
+  {k:'phone',t:'Hochkant',px:'z. B. 390 × 844',ex:'Optimiert für Handys'}];
+function pfIcon(k){ const vb='0 0 64 48';
+  return k==='two'?PIC(vb,'<rect x="4" y="10" width="56" height="28" rx="5"/><path d="M32 10v28"/>')
+    :k==='phone'?PIC(vb,'<rect x="21" y="2" width="22" height="44" rx="5"/><path d="M28 7h8"/>')
+    :PIC(vb,'<rect x="14" y="6" width="36" height="36" rx="6"/>'); }
+function pgIcon(g){ let r='';
+  if(g===2){ [8,26].forEach(y=>[8,26].forEach(x=>{ r+='<rect x="'+x+'" y="'+y+'" width="14" height="14" rx="3"/>'; })); }
+  else { [6,19,32].forEach(y=>[6,19,32].forEach(x=>{ r+='<rect x="'+x+'" y="'+y+'" width="10" height="10" rx="2.5"/>'; })); }
+  return PIC('0 0 48 48',r); }
+function pcIcon(k){ const vb='0 0 48 48';
+  return k==='panel'?PIC(vb,'<rect x="7" y="15" width="25" height="26" rx="5"/><path d="M16 15v-3a5 5 0 0 1 5-5h14a5 5 0 0 1 5 5v17a5 5 0 0 1-5 5h-3"/>')
+    :k==='room'?PIC(vb,'<path d="M7 22 24 8l17 14"/><path d="M11 19v21h26V19"/><path d="M20 40V29h8v11"/>')
+    :k==='empty'?PIC(vb,'<rect x="8" y="8" width="32" height="32" rx="6" stroke-dasharray="3 4"/>')
+    :PIC(vb,'<rect x="6" y="6" width="36" height="36" rx="6"/><rect x="11" y="11" width="26" height="10" rx="3"/><rect x="11" y="25" width="11" height="12" rx="3"/><rect x="26" y="25" width="11" height="12" rx="3"/>'); }
+// Dashboard-Skizze: Uhr / Wetter / Kalender / Kamera in quadratischem oder breitem Rahmen
+function pdIcon(k,wide){ const vb='0 0 64 48';
+  if(k==='leer') return PIC(vb,wide?'<rect x="4" y="10" width="56" height="28" rx="5" stroke-dasharray="3 4"/>':'<rect x="14" y="6" width="36" height="36" rx="6" stroke-dasharray="3 4"/>');
+  const cam=(cx,cy,r)=>'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"/>';
+  if(wide){
+    const left='<rect x="4" y="10" width="56" height="28" rx="5"/><rect x="9" y="15" width="21" height="7" rx="2.5"/><path d="M13 18.5h8"/><rect x="9" y="25" width="21" height="8" rx="2.5"/>'+cam(14.5,29,2);
+    const right=k==='kamera'?'<rect x="34" y="15" width="21" height="18" rx="2.5"/>'+cam(44.5,24,4)
+      :'<rect x="34" y="15" width="21" height="18" rx="2.5"/><path d="M34 21h21M41 21v12M48 21v12"/>';
+    return PIC(vb,left+right); }
+  const frame='<rect x="14" y="6" width="36" height="36" rx="6"/><rect x="19" y="11" width="26" height="9" rx="3"/><path d="M26 15.5h12"/><rect x="19" y="24" width="26" height="13" rx="3"/>';
+  const low=k==='kamera'?cam(32,30.5,3.2):(k==='termine'?'<path d="M19 29h26M29 29v8M38 29v8"/>':cam(26.5,30.5,2.5)+'<path d="M33 30.5h7"/>');
+  return PIC(vb,frame+low); }
+// Volle Start-Adresse fuer Geraete: Server-Adresse wie unter Geraete (bei localhost die eingetragene), sonst die geoeffnete
+function startUrl(id){ let h=location.host; try{ h=npServerAddr()||location.host; }catch(e){} return 'http://'+h+panelUrl(id); }
 function renderList(){
   const box=$('#plist'); box.innerHTML='';
   if(!pOwn(cur)) cur=PANELS.default?'default':Object.keys(PANELS).find(k=>k!=='__global__');
@@ -2583,7 +2634,8 @@ pollMsStatus();
 let ADMIN={enabled:false};
 // Status fuer die Startseite (Einrichtung): Passwortschutz an/aus
 // Datum/Uhr am Panel = Sprache der Konfiguration: bei Abweichung still in die
-// globale Darstellung (theme.json, ui.lang) uebernehmen.
+// globale Darstellung (theme.json, ui.lang) uebernehmen. Nur aus dem Sprach-Umschalter
+// aufgerufen (nie beim Laden); schreibt nur, wenn sich die Sprache wirklich aendert.
 async function syncPanelLang(lang){
   const g=PANELS.__global__; if(!g||!lang) return;
   g.ui=g.ui||{}; if((g.ui.lang||'de')===lang) return;
@@ -2683,7 +2735,7 @@ function setRubric(r){
   ntPark();
   rubric=r;
   if(typeof checkUpdate==='function') checkUpdate();   // Update-Hinweis bei jedem Seitenwechsel auffrischen
-  document.querySelectorAll('.rub').forEach(b=>b.classList.toggle('active',b.dataset.rub===(r==='global'?'settings':r)));   // Alle Panels (Rubrik global) liegt unter System
+  document.querySelectorAll('.rub').forEach(b=>{ const on=b.dataset.rub===(r==='global'?'settings':r); b.classList.toggle('active',on); if(on) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });   // Alle Panels (Rubrik global) liegt unter System
   const ov=r==='overview', pc=r==='pconf'||r==='global';   // global = System → Alle Panels
   const oh=$('#overviewHost'); if(oh) oh.style.display = ov?'':'none';
   $('#pconfHost').style.display = pc?'':'none';
@@ -2898,7 +2950,8 @@ function renderSubtabs(){
     bar.querySelectorAll('.stab').forEach(x=>x.classList.toggle('active',x===b));
     showSub(navSub(at));
   });
-  if(window.I18N) I18N.autoChrome('.stab');
+  { const nv=document.querySelector('.rubrics'); if(nv) nv.setAttribute('aria-label',T('Hauptmenü')); }
+if(window.I18N) I18N.autoChrome('.stab');
 }
 function showSub(k){
   const host = (rubric==='pconf'||rubric==='global')?$('#pconfHost'):$('#setHost');
@@ -3134,17 +3187,11 @@ function renderEditor(){
   if(p.__global){ renderGlobalEditor(p); return; }
   const ok=PCONF_TABS.map(t=>t.k);
   if(!ok.includes(subPconf)) subPconf='tabs';
-  // Panel-Kopfzeile, eine Zeile: Name · Kennung · Start-Adresse mit Kopieren · Panel oeffnen
-  const urlTxt = cur==='default' ? T('/ (Standard-Panel)') : '/?panel='+cur;
+  // Seitentitel des Panels (ueber den Reitern): Label "Panel", Name, rechts "Panel oeffnen". Adresse + Kopieren: Reiter Einstellungen.
   $('#phead').innerHTML =
-    '<h2 id="hTitle">'+esc(p.title||cur)+'</h2>'+
-    '<span class="badge phcur" title="'+T('Kennung')+'">'+esc(cur)+'</span>'+
-    '<span class="kurl"><span class="kurlt">'+T('Start-Adresse:')+' <code>'+esc(urlTxt)+'</code></span>'+
-      '<button type="button" class="phbtn" id="phCopy" title="'+T('Start-Adresse kopieren')+'" aria-label="'+T('Start-Adresse kopieren')+'">'+
-        '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span class="phbl">'+T('Kopieren')+'</span></button></span>'+
+    '<div class="phtxt"><span class="pheyebrow">'+T('Panel')+'</span><h2 id="hTitle">'+esc(p.title||cur)+'</h2></div>'+
     '<a class="phbtn phopen" href="'+esc(panelUrl(cur))+'" target="_blank" rel="noopener" title="'+T('Panel öffnen')+'" aria-label="'+T('Panel öffnen')+'">'+
       '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="phbl">'+T('Panel öffnen')+'</span></a>';
-  $('#phCopy').onclick=()=>copyText(location.origin+panelUrl(cur)).then(()=>snack(T('Adresse kopiert')),()=>snack(T('Kopieren nicht möglich. Markiere den Text und kopiere ihn von Hand.')));
 
   $('#pconfHost').innerHTML =
    // 1 · Tabs: Leiste + Raster
@@ -3152,23 +3199,25 @@ function renderEditor(){
    // Einstellungen: Allgemein -> Bildschirm (Groesse, Raster, Fuellen, Versatz) -> Aussehen -> Alarm
    '<section class="spane" data-sub="settings">'+
      '<div class="card"><h3>'+T('Allgemein')+'</h3><div class="sizes">'+
-       '<div class="field" style="max-width:320px"><label class="lbl">Name</label>'+
+       '<div class="field" style="max-width:320px"><label class="lbl" for="fTitle">Name</label>'+
          '<input type="text" id="fTitle" value="'+esc(p.title||'')+'" placeholder="tilebert"></div>'+
+       '<div class="field pstart"><label class="lbl" id="pStartLbl">'+T('Start-Adresse')+'</label><div class="pstartrow"><code id="pStartUrl" aria-labelledby="pStartLbl">'+esc(startUrl(cur))+'</code>'+
+         '<button type="button" class="btn ghost sm" id="phCopy" title="'+T('Start-Adresse kopieren')+'" aria-label="'+T('Start-Adresse kopieren')+'">'+T('Kopieren')+'</button></div>'+
+         '<div class="hint">'+T('Diese Adresse trägst du am Gerät ein.')+'</div></div>'+
      '</div>'+(cur!=='default'?'<div class="pdelcard"><p class="hint">'+T('Das Panel wird aus der Liste entfernt. Wirksam nach dem Speichern, bis dahin mit „Rückgängig“ zurückholbar.')+'</p><button type="button" class="btn" id="pDelBtn">'+T('Panel löschen')+'</button></div>':'')+'</div>'+
      '<div class="card"><h3>'+T('Bildschirm')+'</h3>'+
      '<div class="pfgrid">'+
        '<div><div class="lbl2">'+T('Format')+'</div>'+
-       '<p class="note">'+T('Legt fest, wie Tabs und Dashboard aufgebaut sind: quadratisch (480 × 480), breit mit zwei Hälften nebeneinander oder Handy (zwei Hälften untereinander, Tabs unten, als App nutzbar über „Zum Home-Bildschirm“).')+'</p>'+
+       '<p class="note">'+T('Legt fest, wie Tabs und Dashboard aufgebaut sind: eine Hälfte (480 × 480), zwei Hälften nebeneinander (960 × 480) oder hochkant für Handys (Tabs unten, als App nutzbar über „Zum Home-Bildschirm“).')+'</p>'+
        '<div class="sizepick">'+
-         '<button type="button" data-psize="1" class="'+((p.ui||{}).split===false&&!(p.ui||{}).phone?'on':'')+'"><span class="spv one"><i></i></span><b>'+T('Quadratisch')+'</b><small>480 × 480 · 4″-Display</small></button>'+
-         '<button type="button" data-psize="2" class="'+(((p.ui||{}).split===false||(p.ui||{}).phone)?'':'on')+'"><span class="spv two"><i></i><i></i></span><b>'+T('Breit (2 Hälften)')+'</b><small>960 × 480 · Shelly X2 / Tablet</small></button>'+
-         '<button type="button" data-psize="phone" class="'+((p.ui||{}).phone?'on':'')+'"><span class="spv phone"><i></i></span><b>'+T('Handy')+'</b><small>'+T('hochkant · Tabs unten · als App')+'</small></button>'+
+         PF_FORMS.map(f=>{ const k=f.k, ui=p.ui||{}, on=k==='phone'?!!ui.phone:(k==='one'?(ui.split===false&&!ui.phone):!(ui.split===false||ui.phone));
+           return '<button type="button" data-psize="'+(k==='one'?'1':(k==='two'?'2':'phone'))+'" class="'+(on?'on':'')+'">'+pfIcon(k)+'<b>'+T(f.t)+'</b><small>'+T(f.px)+'</small></button>'; }).join('')+
        '</div></div>'+
        '<div><div class="lbl2">'+T('Standardraster')+'</div>'+
        '<p class="note">'+T('Gilt für neue Tabs und das Dashboard. Einzelne Tabs können abweichen (Tab-Einstellungen).')+'</p>'+
        '<div class="sizepick">'+
-         '<button type="button" data-pgrid="3" class="'+(pGrid(p)===3?'on':'')+'"><span class="spv g3"><i></i></span><b>3 × 3</b><small>'+T('9 Kacheln (3 × 3), fein')+'</small></button>'+
-         '<button type="button" data-pgrid="2" class="'+(pGrid(p)===2?'on':'')+'"><span class="spv g2"><i></i></span><b>2 × 2</b><small>'+T('4 große Kacheln (2 × 2)')+'</small></button>'+
+         '<button type="button" data-pgrid="3" class="'+(pGrid(p)===3?'on':'')+'">'+pgIcon(3)+'<b>3 × 3</b><small>'+T('9 Kacheln (3 × 3), fein')+'</small></button>'+
+         '<button type="button" data-pgrid="2" class="'+(pGrid(p)===2?'on':'')+'">'+pgIcon(2)+'<b>2 × 2</b><small>'+T('4 große Kacheln (2 × 2)')+'</small></button>'+
        '</div></div>'+
      '</div>'+
      '<div class="sizes" style="margin-top:14px">'+
@@ -3250,6 +3299,7 @@ function renderEditor(){
   { const db=$('#pDelBtn'); if(db){ let tm=0;
     db.onclick=()=>{ if(!db.classList.contains('arm')){ db.classList.add('arm'); db.textContent=T('Wirklich löschen?'); tm=setTimeout(()=>{ db.classList.remove('arm'); db.textContent=T('Panel löschen'); },5000); return; }
       clearTimeout(tm); deletePanel(cur); }; } }
+  $('#phCopy').onclick=()=>copyText(startUrl(cur)).then(()=>snack(T('Adresse kopiert')),()=>snack(T('Kopieren nicht möglich. Markiere den Text und kopiere ihn von Hand.')));
   $('#fTitle').oninput=e=>{ p.title=e.target.value; const h=$('#hTitle'); if(h)h.textContent=e.target.value||cur; markDirty(); };
   bindAppearance(p);
   { const ff=$('#fFill'); if(ff) ff.onchange=e=>{ p.ui=p.ui||{};
@@ -3370,6 +3420,9 @@ function svName(uuid){ const c=(META.controls||[]).find(x=>x.uuid===uuid); retur
 // Favoriten) holt der Server (/api/tablayout): gespeicherte Eintraege + noch
 // nicht platzierte Bausteine aus Loxone. Entfernte Bausteine merkt sich
 // layouts[tab].removed, damit sie nicht wieder automatisch erscheinen.
+// Hinweis: POST /api/tablayout ist nur lesend (Server rechnet die wirksame Belegung fuer
+// das mitgeschickte, evtl. ungespeicherte Profil; es wird nichts gespeichert). Es ist ein
+// POST, weil das ganze Profil im Body mitgeht.
 const TB_TYPES=[['free','Frei'],['room','Raum'],['cat','Kategorie'],['zentral','Zentral'],
   ['raeume','Übersicht Räume'],['kategorien','Übersicht Kategorien']];
 // Standard-Symbole wie am Panel (panel.html TABS)
@@ -3571,7 +3624,7 @@ function renderDashProps(p){
     '<div class="field"><label class="lbl">'+T('Raster')+'</label><div class="seg" style="display:flex;gap:4px">'+
       '<button type="button" class="minibtn'+(g===3?' on':'')+'" data-dgrid="3">3 × 3</button>'+
       '<button type="button" class="minibtn'+(g===2?' on':'')+'" data-dgrid="2">2 × 2</button></div>'+
-      '<div class="hint">'+(two?T('Breit (2 Hälften)'):T('Quadratisch'))+'</div></div>'+
+      '<div class="hint">'+(two?T('Zwei Hälften'):T('Eine Hälfte'))+'</div></div>'+
     '<div class="field dexits"><label class="lbl">'+T('Dashboard schließen')+'</label>'+
       SV_EXITS.map(([k,l])=>'<label class="chk"><input type="checkbox" data-exit="'+k+'"'+(ex.indexOf(k)>=0?' checked':'')+'> <span>'+esc(T(l))+'</span></label>').join('')+
       '<div class="hint">'+T('Mehrere Haken sind möglich. Ohne Haken schließt nur ein Tipp auf eine freie Stelle das Dashboard.')+'</div></div>'+
@@ -4534,34 +4587,43 @@ function pwId(s){ return String(s||'').trim().toLowerCase().replace(/ä/g,'ae').
   .replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32); }
 function pwFreeId(base){ let id=base||'panel', n=2; while(pTaken(id)) id=(base||'panel')+'-'+(n++); return id; }
 const PW_STEPS=['Name und Gerät','Was soll das Panel zeigen?','Zusammenfassung'];
-const PW_DEV=[['shelly','Shelly Wall Display','960 × 480, zwei Hälften'],['tablet','Tablet oder 4″-Display','480 × 480, eine Hälfte'],['phone','Handy','hochkant, Tabs unten']];
 const PW_TABS=[['favoriten','Favoriten'],['raeume','Räume'],['kategorien','Kategorien'],['zentral','Zentral'],['room','Ein Raum'],['free','Freier Tab']];
 const PW_DESIGN=[['','Wie die anderen Panels'],['bunt','Bunt'],['hell','Hell'],['dunkel','Dunkel']];
 const PW_FOCUSABLE='button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,a[href],textarea:not([disabled])';
 function pwRooms(){ return (META.tabs||[]).filter(t=>t.room); }
-function pwStdTitle(){ const sid=dashStdId(); return sid?((PANELS[sid]||{}).title||''):''; }
-function pwDevHasShelly(){ try{ return devNames().some(n=>/^shelly/.test(gdModelKey(n)||'')); }catch(e){ return false; } }
+// Panels, die als Vorlage taugen ("Wie ein vorhandenes Panel")
+function pwPanels(){ return Object.keys(PANELS).filter(k=>k!=='__global__'&&!P_RESERVED.has(k)&&PANELS[k]); }
+function pwPanelName(k){ const t=(PANELS[k]||{}).title||''; return t&&t!==k?t+' ('+k+')':k; }
+function pFormOf(p){ const ui=(p&&p.ui)||{}; return ui.phone?'phone':(ui.split===false?'one':'two'); }
+// Vorauswahl der Form: ein bekanntes Shelly X2/X2i -> zwei Haelften, sonst eine Haelfte
+function pwDefaultForm(){ try{ return devNames().some(n=>/^shelly-x2/.test(gdModelKey(n)||''))?'two':'one'; }catch(e){ return 'one'; } }
 function pwTabsFor(c){ return c==='room'?['room']:(c==='empty'?['free']:['favoriten','raeume']); }
-function pwDash(){ const sid=dashStdId(); let d=PW.dash||(PW.content==='empty'?'leer':(sid?'std':'uhrwetter'));
-  if(d==='std'&&!sid) d='uhrwetter'; if(d==='termine'&&PW.split) d='uhrwetter'; return d; }
-function pwDashList(){ const sid=dashStdId(), sp=PW.split, l=[];
-  if(sid) l.push(['std',T('Wie das Standard-Panel')+(pwStdTitle()?' „'+pwStdTitle()+'“':'')]);
+function pwDash(){ let d=PW.dash||(PW.content==='empty'?'leer':'uhrwetter'); if(d==='termine'&&PW.split) d='uhrwetter'; return d; }
+function pwDashList(){ const sp=PW.split, l=[];
   l.push(['uhrwetter',sp?T('Uhr, Wetter und Kalender'):T('Uhr und Wetter')]);
   l.push(['kamera',sp?T('Uhr, Wetter und Kamera'):T('Uhr und Kamera')]);
   if(!sp) l.push(['termine',T('Uhr und Kalender')]);
   l.push(['leer',T('Leer')]); return l; }
 function pwTabLabel(k){ if(k==='room'){ const t=pwRooms().find(x=>x.tab===PW.room); return t?t.label:T('Ein Raum'); }
   return T((PW_TABS.find(x=>x[0]===k)||[k,k])[1]); }
-function pwDevLabel(){ return T((PW_DEV.find(x=>x[0]===PW.device)||PW_DEV[1])[1]); }
+function pwFormObj(k){ return PF_FORMS.find(x=>x.k===k)||PF_FORMS[0]; }
+function pwDevLabel(){ const f=pwFormObj(PW.device); return T(f.t)+' · '+T(f.px); }
 function pwDesignLabel(){ return T((PW_DESIGN.find(x=>x[0]===PW.design)||PW_DESIGN[0])[1]); }
-function pwSetDevice(k){ PW.device=k; PW.split=k==='shelly'; PW.phone=k==='phone'; }
+function pwSetDevice(k){ PW.device=k; PW.split=k==='two'; PW.phone=k==='phone'; }
 function pwFresh(){
-  const dev=pwDevHasShelly()?'shelly':'tablet';
-  Object.assign(PW,{step:1,title:'',idRaw:'',idTouched:false,content:'rec',tabs:pwTabsFor('rec'),room:'',dash:'',grid:2,design:'',
-    after:'now',assignDev:'',advId:false,advMore:false,touched:false,busy:false,err:{},saveErr:''});
-  pwSetDevice(dev); }
+  Object.assign(PW,{step:1,title:'',content:'rec',src:'',tabs:pwTabsFor('rec'),room:'',dash:'',grid:2,design:'',
+    after:'now',assignDev:'',advMore:false,touched:false,busy:false,err:{},saveErr:''});
+  pwSetDevice(pwDefaultForm()); }
+// Kennung nur automatisch aus dem Namen; ist sie vergeben, wird durchgezaehlt (flur, flur-2 ...)
 function pwAutoId(){ return pwFreeId(pwId(PW.title)||'panel'); }
-function pwCurId(){ return PW.idTouched?pwId(PW.idRaw):pwAutoId(); }
+function pwCurId(){ return pwAutoId(); }
+function pwAddrHtml(){
+  const named=!!PW.title.trim(), u=startUrl(pwCurId());
+  // Ohne Namen noch keine fertige Adresse: Ende gedaempft als „…“
+  const code=named?'<code>'+esc(u)+'</code>':'<code class="dim">'+esc(u.replace(/\?panel=.*$/,'?panel='))+'…</code>';
+  // Ueber localhost/127.0.0.1 erreichen Geraete diese Adresse nicht (wie npLan())
+  const lan=npLocalHost(location.host)&&!npServerAddr()?'<span class="pwlan">'+T('Du hast tilebert über localhost geöffnet. Am Gerät trägst du die Adresse des Servers im Heimnetz ein.')+'</span>':'';
+  return '<span class="pwurll">'+T('Start-Adresse')+'</span>'+code+lan; }
 function pwHasInput(){ return PW.touched||!!PW.title.trim()||PW.step>1; }
 function pwFocusables(){ const bx=$('#pwOv .wzbox'); return bx?Array.from(bx.querySelectorAll(PW_FOCUSABLE)).filter(e=>e.getClientRects().length&&!e.closest('[hidden]')):[]; }
 function pwOpen(){
@@ -4601,7 +4663,10 @@ async function pwTryClose(){
   pwClose(); }
 function pwSaveErrHide(){ const se=$('#pwSaveErr'); if(se){ se.hidden=true; se.textContent=''; } }
 function pwBack(){ if(PW.busy) return; if(PW.step===1) return pwTryClose(); pwReadDom(); PW.step--; pwSaveErrHide(); pwRender(true); }
-function pwOpt(on,attr,title,sub,dis){ return '<button type="button" role="radio" aria-checked="'+(on?'true':'false')+'" tabindex="'+(on?0:-1)+'" class="mzopt'+(on?' on':'')+'" '+attr+(dis?' disabled':'')+'><b>'+title+'</b><span>'+sub+'</span></button>'; }
+function pwOpt(on,attr,title,sub,dis,ico){ return '<button type="button" role="radio" aria-checked="'+(on?'true':'false')+'" tabindex="'+(on?0:-1)+'" class="mzopt'+(ico?' pwo':'')+(on?' on':'')+'" '+attr+(dis?' disabled':'')+'>'+
+  (ico?'<span class="pwico">'+ico+'</span><span class="pwtx"><b>'+title+'</b><span>'+sub+'</span></span>':'<b>'+title+'</b><span>'+sub+'</span>')+'</button>'; }
+// Kompakte Karte (Piktogramm oben): Raster, Dashboard-Varianten
+function pwMini(on,attr,title,sub,ico){ return '<button type="button" role="radio" aria-checked="'+(on?'true':'false')+'" tabindex="'+(on?0:-1)+'" class="mzopt pwo pwv'+(on?' on':'')+'" '+attr+'><span class="pwico">'+ico+'</span><span class="pwtx"><b>'+title+'</b>'+(sub?'<span>'+sub+'</span>':'')+'</span></button>'; }
 function pwErrHtml(id,msg){ return '<div class="pwerr" id="'+id+'"'+(msg?'':' hidden')+'>'+esc(msg||'')+'</div>'; }
 function pwErrSet(inp,errId,msg){ const e=$('#'+errId); if(e){ e.textContent=msg||''; e.hidden=!msg; }
   if(inp){ if(msg) inp.setAttribute('aria-invalid','true'); else inp.removeAttribute('aria-invalid'); } }
@@ -4617,24 +4682,21 @@ function pwRender(focusFirst){
   if(s===1){
     h+='<div class="field pwf"><label class="lbl" for="pwTitle">'+T('Name des Panels')+'</label>'+
       '<input type="text" id="pwTitle" maxlength="40" autocomplete="off" value="'+esc(PW.title)+'" placeholder="'+T('z. B. Flur')+'" aria-describedby="pwNameErr pwAddr">'+
-      pwErrHtml('pwNameErr',PW.err.name)+'<div class="pwhint" id="pwAddr"></div></div>'+
-      '<details class="pwadv" id="pwAdvId"'+(PW.advId?' open':'')+'><summary>'+T('Erweitert')+'</summary>'+
-      '<div class="field pwf"><label class="lbl" for="pwIdIn">'+T('Adresse ändern')+'</label>'+
-      '<input type="text" id="pwIdIn" autocomplete="off" spellcheck="false" value="'+esc(PW.idTouched?PW.idRaw:'')+'" placeholder="'+esc(pwAutoId())+'" aria-describedby="pwIdErr pwIdHint">'+
-      pwErrHtml('pwIdErr',PW.err.id)+'<div class="pwhint" id="pwIdHint">'+T('Kleinbuchstaben, Ziffern und Bindestrich. Leer lassen für die automatische Adresse.')+'</div></div></details>'+
-      '<p class="wzq pwgq" id="pwDevQ">'+T('Welches Gerät zeigt das Panel?')+'</p><div class="pwopts" role="radiogroup" aria-labelledby="pwDevQ">'+
-      PW_DEV.map(([k,l,sub])=>pwOpt(PW.device===k,'data-pwdev="'+k+'"',T(l),T(sub))).join('')+'</div>';
+      pwErrHtml('pwNameErr',PW.err.name)+'<div class="pwurl" id="pwAddr">'+pwAddrHtml()+'</div></div>'+
+      '<p class="wzq pwgq" id="pwDevQ">'+T('Welches Gerät zeigt das Panel?')+'</p><div class="pwopts pwdevs" role="radiogroup" aria-labelledby="pwDevQ">'+
+      PF_FORMS.map(f=>'<button type="button" role="radio" aria-checked="'+(PW.device===f.k)+'" tabindex="'+(PW.device===f.k?0:-1)+'" class="mzopt pwo pwv'+(PW.device===f.k?' on':'')+'" data-pwdev="'+f.k+'">'+
+        '<span class="pwico">'+pfIcon(f.k)+'</span><span class="pwtx"><b>'+T(f.t)+'</b><span class="pwpx">'+T(f.px)+'</span><span>'+T(f.ex)+'</span></span></button>').join('')+'</div>';
   } else if(s===2){
-    const rooms=pwRooms(), noRooms=!rooms.length, std=pwStdTitle(), sid=dashStdId();
-    const dashTxt=sid?T('Dashboard wie das Standard-Panel'):(PW.split?T('Dashboard mit Uhr, Wetter und Kalender'):T('Dashboard mit Uhr und Wetter'));
-    h+='<div class="pwopts" role="radiogroup" aria-label="'+T('Was soll das Panel zeigen?')+'">'+
-      pwOpt(PW.content==='rec','data-pwcontent="rec"',T('Empfohlen'),dashTxt+', '+T('dazu die Tabs Favoriten und Räume.'))+
-      pwOpt(PW.content==='room','data-pwcontent="room"',T('Ein Raum'),noRooms?T('Erst den Miniserver verbinden, dann stehen Räume zur Wahl.'):T('Dashboard und ein Tab mit den Kacheln eines Raums.'),noRooms)+
-      pwOpt(PW.content==='empty','data-pwcontent="empty"',T('Leer'),T('Nichts vorbelegt. Du baust alles selbst.'))+'</div>';
-    if(PW.content==='room'&&!noRooms) h+=pwRoomField('pwRoomA');
-    h+='<details class="pwadv" id="pwAdvMore"'+(PW.advMore?' open':'')+'><summary>'+T('Weitere Optionen')+'</summary><div class="pwmore">'+
+    const rooms=pwRooms(), noRooms=!rooms.length, panels=pwPanels(), dl=(pwDashList().find(x=>x[0]===pwDash())||['',''])[1];
+    const recTxt=T('Dashboard mit {x}, dazu die Tabs Favoriten und Räume.').replace('{x}',dl);
+    h+='<div class="pwopts pwgrp"><div role="radiogroup" aria-label="'+T('Was soll das Panel zeigen?')+'">'+
+      pwOpt(PW.content==='rec','data-pwcontent="rec" style="order:1"',T('Empfohlen'),recTxt,false,pcIcon('rec'))+
+      (panels.length?pwOpt(PW.content==='panel','data-pwcontent="panel" style="order:2"',T('Wie ein vorhandenes Panel'),T('Kopiert Tabs, Dashboard und Design.'),false,pcIcon('panel')):'')+
+      pwOpt(PW.content==='room','data-pwcontent="room" style="order:4"',T('Ein Raum'),noRooms?T('Erst den Miniserver verbinden, dann stehen Räume zur Wahl.'):T('Dashboard und ein Tab mit den Kacheln eines Raums.'),noRooms,pcIcon('room'))+
+      pwOpt(PW.content==='empty','data-pwcontent="empty" style="order:6"',T('Leer'),T('Nichts vorbelegt. Du baust alles selbst.'),false,pcIcon('empty'))+'</div>'+(PW.content==='panel'&&panels.length?pwSrcField(3):'')+(PW.content==='room'&&!noRooms?pwRoomField('pwRoomA',5):'')+'</div>';
+    if(PW.content!=='panel') h+='<details class="pwadv" id="pwAdvMore"'+(PW.advMore?' open':'')+'><summary>'+T('Weitere Optionen')+'</summary><div class="pwmore">'+
       '<p class="wzq" id="pwGridQ">'+T('Raster')+'</p><div class="pwopts pwopts2" role="radiogroup" aria-labelledby="pwGridQ">'+
-      pwOpt(PW.grid===2,'data-pwgrid="2"','2 × 2',T('4 große Kacheln, leicht zu treffen'))+pwOpt(PW.grid===3,'data-pwgrid="3"','3 × 3',T('mehr Kacheln auf einen Blick'))+'</div>'+
+      pwMini(PW.grid===2,'data-pwgrid="2"','2 × 2',T('4 große Kacheln, leicht zu treffen'),pgIcon(2))+pwMini(PW.grid===3,'data-pwgrid="3"','3 × 3',T('mehr Kacheln auf einen Blick'),pgIcon(3))+'</div>'+
       '<p class="wzq" id="pwDesQ">'+T('Design')+'</p><div class="pwchips" role="radiogroup" aria-labelledby="pwDesQ">'+
       PW_DESIGN.map(([k,l])=>'<button type="button" role="radio" aria-checked="'+(PW.design===k)+'" tabindex="'+(PW.design===k?0:-1)+'" class="mzchip'+(PW.design===k?' on':'')+'" data-pwdesign="'+k+'">'+T(l)+'</button>').join('')+'</div>'+
       '<p class="pwhint">'+T('Das Design der anderen Panels änderst du unter System → Alle Panels.')+'</p>'+
@@ -4642,17 +4704,18 @@ function pwRender(focusFirst){
       PW_TABS.map(([k])=>{ const on=PW.tabs.indexOf(k)>=0, full=!on&&PW.tabs.length>=4;
         return '<button type="button" aria-pressed="'+on+'" class="mzchip'+(on?' on':'')+'" data-pwtab="'+k+'"'+(full||(k==='room'&&!pwRooms().length)?' disabled':'')+'>'+esc(on?pwTabLabel(k):T((PW_TABS.find(x=>x[0]===k))[1]))+'</button>'; }).join('')+'</div>'+
       (PW.tabs.indexOf('room')>=0&&PW.content!=='room'?pwRoomField('pwRoomB'):'')+pwErrHtml('pwTabErr',PW.err.tabs)+
-      '<p class="wzq" id="pwDashQ">'+T('Dashboard')+'</p><div class="pwchips" role="radiogroup" aria-labelledby="pwDashQ">'+
-      pwDashList().map(([k,l])=>'<button type="button" role="radio" aria-checked="'+(pwDash()===k)+'" tabindex="'+(pwDash()===k?0:-1)+'" class="mzchip'+(pwDash()===k?' on':'')+'" data-pwdash="'+k+'">'+esc(l)+'</button>').join('')+'</div>'+
-      (sid?'<p class="pwhint">'+T('Das Dashboard wird vom Standard-Panel kopiert. Spätere Änderungen dort gelten hier nicht.')+'</p>':'')+
+      '<p class="wzq" id="pwDashQ">'+T('Dashboard')+'</p><div class="pwopts pwopts4" role="radiogroup" aria-labelledby="pwDashQ">'+
+      pwDashList().map(([k,l])=>pwMini(pwDash()===k,'data-pwdash="'+k+'"',esc(l),'',pdIcon(k,PW.split))).join('')+'</div>'+
       '</div></details>';
   } else {
     const id=pwCurId(), names=devNames().sort((a,b)=>a.localeCompare(b)), none=!names.length;
     const tabs=[T('Dashboard')].concat(PW.tabs.map(pwTabLabel)).join(', ');
     const dl=(pwDashList().find(x=>x[0]===pwDash())||['',''])[1];
     const row=(k,v)=>'<div class="pwsr"><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>';
-    h+='<dl class="pwsum">'+row(T('Name'),PW.title)+row(T('Adresse'),'/?panel='+id)+row(T('Gerät'),pwDevLabel())+row(T('Tabs'),tabs)+
-      row(T('Dashboard'),dl)+row(T('Raster'),PW.grid+' × '+PW.grid)+row(T('Design'),pwDesignLabel())+'</dl>'+
+    const base=row(T('Name'),PW.title)+row(T('Start-Adresse'),startUrl(id))+row(T('Gerät'),pwDevLabel());
+    h+='<dl class="pwsum">'+(PW.content==='panel'
+      ?base+row(T('Inhalt'),T('Wie {n}: Tabs, Dashboard und Design').replace('{n}',pwPanelName(PW.src)))
+      :base+row(T('Tabs'),tabs)+row(T('Dashboard'),dl)+row(T('Raster'),PW.grid+' × '+PW.grid)+row(T('Design'),pwDesignLabel()))+'</dl>'+
       '<p class="wzq pwgq" id="pwAfterQ">'+T('Danach')+'</p><div class="pwopts" role="radiogroup" aria-labelledby="pwAfterQ">'+
       pwOpt(PW.after==='now','data-pwafter="now"',T('Gerät jetzt einrichten'),T('Öffnet Geräte → Hinzufügen mit diesem Panel.'))+
       pwOpt(PW.after==='assign','data-pwafter="assign"',T('Bekanntes Gerät zuordnen'),none?T('Es ist noch kein Gerät bekannt.'):T('Das Gerät zeigt dann dieses Panel.'),none)+
@@ -4662,32 +4725,29 @@ function pwRender(focusFirst){
       '<p class="pwhint">'+T('Gespeichert wird nur dieses Panel.')+((dirty||SECT_DIRTY.size)?' '+T('Weitere ungespeicherte Änderungen bleiben offen und lassen sich danach wie gewohnt speichern.'):'')+'</p>';
   }
   b.innerHTML=h;
-  [['#pwTitle','name'],['#pwIdIn','id'],['.pwroom','room'],['#pwAssign','assign']].forEach(([q,k])=>{ const e=b.querySelector(q); if(e&&PW.err[k]) e.setAttribute('aria-invalid','true'); });
+  [['#pwTitle','name'],['#pwSrc','src'],['.pwroom','room'],['#pwAssign','assign']].forEach(([q,k])=>{ const e=b.querySelector(q); if(e&&PW.err[k]) e.setAttribute('aria-invalid','true'); });
   $('#pwBack').textContent=s===1?T('Abbrechen'):T('Zurück');
   $('#pwNext').textContent=s===3?T('Panel anlegen und speichern'):T('Weiter'); pwBtnState();
   pwBind(b);
   if(focusFirst){ b.scrollTop=0; const f=s===1?$('#pwTitle'):(b.querySelector('[role=radio][aria-checked=true]')||b.querySelector(PW_FOCUSABLE)); if(f) setTimeout(()=>f.focus(),0); }
   else if(keep){ const k=b.querySelector(keep); if(k) k.focus(); }
 }
-function pwRoomField(id){ return '<div class="field pwf pwsub"><label class="lbl" for="'+id+'">'+T('Raum')+'</label><select id="'+id+'" class="pwroom" aria-describedby="pwRoomErr">'+
+function pwSrcField(ord){ return '<div class="field pwf pwsub"'+(ord?' style="order:'+ord+'"':'')+'><label class="lbl" for="pwSrc">'+T('Panel')+'</label><select id="pwSrc" aria-describedby="pwSrcErr">'+
+  '<option value="">'+T('Panel wählen …')+'</option>'+pwPanels().map(k=>'<option value="'+esc(k)+'"'+(PW.src===k?' selected':'')+'>'+esc(pwPanelName(k))+'</option>').join('')+'</select>'+pwErrHtml('pwSrcErr',PW.err.src)+
+  (PW.src&&PANELS[PW.src]&&pFormOf(PANELS[PW.src])!==PW.device?'<div class="pwhint">'+T('Dieses Panel hat eine andere Form. Prüfe das Dashboard danach.')+'</div>':'')+'</div>'; }
+function pwRoomField(id,ord){ return '<div class="field pwf pwsub"'+(ord?' style="order:'+ord+'"':'')+'><label class="lbl" for="'+id+'">'+T('Raum')+'</label><select id="'+id+'" class="pwroom" aria-describedby="pwRoomErr">'+
   '<option value="">'+T('Raum wählen …')+'</option>'+pwRooms().map(t=>'<option value="'+esc(t.tab)+'"'+(PW.room===t.tab?' selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>'+pwErrHtml('pwRoomErr',PW.err.room)+'</div>'; }
 function pwBtnState(){ const x=PW.busy; ['#pwNext','#pwBack','#pwX'].forEach(i=>{ const e=$(i); if(e) e.disabled=x; });
   if(x) $('#pwNext').textContent=T('Wird gespeichert …'); }
 function pwBind(b){
   const touch=()=>{ PW.touched=true; };
   const ti=$('#pwTitle');
-  if(ti){ const addr=()=>{ $('#pwAddr').innerHTML=T('Adresse:')+' <code>/?panel='+esc(pwCurId())+'</code>'; const ii=$('#pwIdIn'); if(ii&&!PW.idTouched) ii.placeholder=pwAutoId(); };
+  if(ti){ const addr=()=>{ $('#pwAddr').innerHTML=pwAddrHtml(); };
     ti.oninput=()=>{ touch(); PW.title=ti.value.trim(); if(PW.err.name){ PW.err.name=''; pwErrSet(ti,'pwNameErr',''); } addr(); }; addr(); }
-  const ii=$('#pwIdIn');
-  if(ii){ const chk=()=>{ const v=ii.value.trim(); PW.idRaw=v; PW.idTouched=v!==''; let m='';
-      if(PW.idTouched){ const n=pwId(v); if(!n) m=T('Die Adresse braucht Buchstaben oder Ziffern.'); else if(pTaken(n)) m=T('Diese Adresse ist schon vergeben.'); }
-      PW.err.id=m; pwErrSet(ii,'pwIdErr',m); const a=$('#pwAddr'); if(a) a.innerHTML=T('Adresse:')+' <code>/?panel='+esc(pwCurId())+'</code>'; };
-    ii.oninput=()=>{ touch(); chk(); };
-    ii.onblur=()=>{ const n=pwId(ii.value); if(ii.value.trim()&&n&&n!==ii.value.trim()){ ii.value=n; chk(); } }; }
-  const d1=$('#pwAdvId'); if(d1) d1.ontoggle=()=>{ PW.advId=d1.open; };
   const d2=$('#pwAdvMore'); if(d2) d2.ontoggle=()=>{ PW.advMore=d2.open; };
   b.querySelectorAll('[data-pwdev]').forEach(x=>x.onclick=()=>{ touch(); pwReadDom(); pwSetDevice(x.dataset.pwdev); pwRender(); });
   b.querySelectorAll('[data-pwcontent]').forEach(x=>x.onclick=()=>{ touch(); const k=x.dataset.pwcontent; PW.content=k; PW.tabs=pwTabsFor(k); PW.dash=''; PW.err={}; pwRender(); });
+  const sr=$('#pwSrc'); if(sr) sr.onchange=()=>{ touch(); PW.src=sr.value; PW.err.src=''; pwRender(); };
   b.querySelectorAll('[data-pwgrid]').forEach(x=>x.onclick=()=>{ touch(); PW.grid=+x.dataset.pwgrid; pwRender(); });
   b.querySelectorAll('[data-pwdesign]').forEach(x=>x.onclick=()=>{ touch(); PW.design=x.dataset.pwdesign; pwRender(); });
   b.querySelectorAll('[data-pwdash]').forEach(x=>x.onclick=()=>{ touch(); PW.dash=x.dataset.pwdash; pwRender(); });
@@ -4702,13 +4762,11 @@ function pwCheck(s){
   PW.err={}; let foc='';
   if(s===1){ pwReadDom();
     if(!PW.title){ PW.err.name=T('Gib dem Panel einen Namen.'); foc='#pwTitle'; }
-    else if(!pwId(PW.title)&&!PW.idTouched){ PW.err.name=T('Der Name braucht mindestens einen Buchstaben oder eine Ziffer.'); foc='#pwTitle'; }
-    if(PW.idTouched){ const n=pwId(PW.idRaw);
-      if(!n) PW.err.id=T('Die Adresse braucht Buchstaben oder Ziffern.'); else if(pTaken(n)) PW.err.id=T('Diese Adresse ist schon vergeben.');
-      if(PW.err.id){ PW.advId=true; if(!foc) foc='#pwIdIn'; } }
+    else if(!pwId(PW.title)){ PW.err.name=T('Der Name braucht mindestens einen Buchstaben oder eine Ziffer.'); foc='#pwTitle'; }
   } else if(s===2){
-    if(!PW.tabs.length){ PW.err.tabs=T('Wähle mindestens einen Tab.'); PW.advMore=true; foc='[data-pwtab]'; }
-    if(PW.tabs.indexOf('room')>=0&&!PW.room){ PW.err.room=T('Wähle einen Raum.'); if(PW.content!=='room') PW.advMore=true; foc='.pwroom'; }
+    if(PW.content==='panel'){ if(!PW.src||!PANELS[PW.src]){ PW.err.src=T('Wähle ein Panel.'); foc='#pwSrc'; } }
+    else if(!PW.tabs.length){ PW.err.tabs=T('Wähle mindestens einen Tab.'); PW.advMore=true; foc='[data-pwtab]'; }
+    if(PW.content!=='panel'&&PW.tabs.indexOf('room')>=0&&!PW.room){ PW.err.room=T('Wähle einen Raum.'); if(PW.content!=='room') PW.advMore=true; foc='.pwroom'; }
   } else if(s===3){
     if(PW.after==='assign'&&!PW.assignDev){ PW.err.assign=T('Wähle ein Gerät.'); foc='#pwAssign'; }
   }
@@ -4735,13 +4793,15 @@ function pwDashItems(){
   return it;
 }
 function pwBuild(id){
+  if(PW.content==='panel'&&PANELS[PW.src]){   // Kopie des vorhandenen Panels: Tabs, Dashboard, Design; Form aus Schritt 1
+    const c=JSON.parse(JSON.stringify(PANELS[PW.src])); c.title=PW.title||id; if(c.saver) delete c.saver.std;
+    c.ui=c.ui||{}; delete c.ui.split; delete c.ui.phone; if(!PW.split) c.ui.split=false; if(PW.phone) c.ui.phone=true;
+    return c; }
   const tabs=PW.tabs.map(k=>k==='room'?(PW.room||null):(k==='free'?tbNewId({tabs:[]}):k)).filter(Boolean);
   const ui={grid:PW.grid}; if(!PW.split) ui.split=false; if(PW.phone) ui.phone=true;
   if(PW.design) ui.design={preset:PW.design,colors:{}};
   const p={title:PW.title||id, tabs, rooms:[], cats:[], ui, states:{}, tiles:{}};
-  const d=pwDash();
-  if(d==='std'&&dashStdSaver()) p.saver=dashStdSaver();
-  else { const items=pwDashItems(); if(items.length) p.saver={grid:PW.grid, exit:['x'], items}; }
+  { const items=pwDashItems(); if(items.length) p.saver={grid:PW.grid, exit:['x'], items}; }
   return p;
 }
 // Speichert NUR das neue Panel: Grundlage ist der zuletzt gespeicherte Stand aller anderen Panels.
@@ -4756,7 +4816,6 @@ async function pwPost(id,p){
 }
 async function pwCreate(){
   const id=pwCurId(), p=pwBuild(id);
-  if(pTaken(id)){ PW.step=1; PW.err.id=T('Diese Adresse ist schon vergeben.'); PW.advId=true; pwRender(true); return; }
   PW.busy=true; pwBtnState(); const se=$('#pwSaveErr'); se.hidden=true; se.textContent='';
   let j, fail='';
   try{ j=await pwPost(id,p); if(!j||!j.ok) fail=fehlerText(T('Speichern fehlgeschlagen.'),j||{}); }
@@ -5700,8 +5759,8 @@ function devTipsHTML(name,mo){
   const live=((LAST_DEVS||{}).devices||[]).find(x=>x.name===name), prof=live&&live.profile, P=prof&&PANELS[prof];
   let warn='';
   if(P&&mo.panes){ const ui=P.ui||{}, one=ui.split===false&&!ui.phone;
-    if(mo.panes===2&&one) warn=T('Zeigt gerade Panel „')+esc(P.title||prof)+T('“ quadratisch. Dieses Gerät ist breit und braucht das Format „Breit (2 Hälften)“.');
-    if(mo.panes===1&&!one&&!ui.phone) warn=T('Zeigt gerade Panel „')+esc(P.title||prof)+T('“ breit. Dieses Gerät ist quadratisch und braucht das Format „Quadratisch“.'); }
+    if(mo.panes===2&&one) warn=T('Zeigt gerade Panel „')+esc(P.title||prof)+T('“ mit einer Hälfte. Dieses Gerät hat zwei Hälften und braucht das Format „Zwei Hälften“.');
+    if(mo.panes===1&&!one&&!ui.phone) warn=T('Zeigt gerade Panel „')+esc(P.title||prof)+T('“ mit zwei Hälften. Dieses Gerät hat eine Hälfte und braucht das Format „Eine Hälfte“.'); }
   const tips=(mo.tips||[]);
   if(!tips.length&&!warn) return '';
   return '<div class="dtip"><b>'+T('Tipps für')+' '+esc(T(mo.label))+'</b>'+

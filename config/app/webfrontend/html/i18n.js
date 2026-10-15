@@ -879,10 +879,26 @@
         'One <b>active</b> and one <b>OK colour</b> per category for the background and border of the tile. Applies to all panels. ◐ on: the tile shows the state as a traffic light (e.g. alarm red/green, gate yellow/green). ◐ off: neutral. Measured values always stay neutral.',
       'Start-Adresse:': 'Start address:',
       'Format': 'Format',
-      'Legt fest, wie Tabs und Dashboard aufgebaut sind: quadratisch (480 × 480), breit mit zwei Hälften nebeneinander oder Handy (zwei Hälften untereinander, Tabs unten, als App nutzbar über „Zum Home-Bildschirm“).':
-        'Defines how tabs and dashboard are laid out: square (480 × 480), wide with two halves side by side, or phone (two halves stacked, tabs at the bottom, usable as an app via "Add to Home Screen").',
-      'Quadratisch': 'Square',
-      'Breit (2 Hälften)': 'Wide (2 halves)',
+      'Legt fest, wie Tabs und Dashboard aufgebaut sind: eine Hälfte (480 × 480), zwei Hälften nebeneinander (960 × 480) oder hochkant für Handys (Tabs unten, als App nutzbar über „Zum Home-Bildschirm“).':
+        'Defines how tabs and dashboard are laid out: one half (480 × 480), two halves side by side (960 × 480), or portrait for phones (tabs at the bottom, usable as an app via "Add to Home Screen").',
+      'Eine Hälfte': 'One half',
+      'Zwei Hälften': 'Two halves',
+      'Hochkant': 'Portrait',
+      'Optimiert für Handys': 'Optimized for phones',
+      'z. B. 390 × 844': 'e.g. 390 × 844',
+      'z. B. Shelly Wall Display X1i und andere 4″-Displays': 'e.g. Shelly Wall Display X1i and other 4″ displays',
+      'z. B. Shelly Wall Display X2i, Tablets im Querformat und vergleichbare Geräte': 'e.g. Shelly Wall Display X2i, tablets in landscape and similar devices',
+      'Start-Adresse': 'Start address',
+      'Diese Adresse trägst du am Gerät ein.': 'You enter this address on the device.',
+      'Hauptmenü': 'Main menu',
+      'Du hast tilebert über localhost geöffnet. Am Gerät trägst du die Adresse des Servers im Heimnetz ein.': 'You opened tilebert via localhost. On the device you enter the server\'s home network address.',
+      'Dashboard mit {x}, dazu die Tabs Favoriten und Räume.': 'Dashboard with {x}, plus the tabs Favorites and Rooms.',
+      'Wie ein vorhandenes Panel': 'Like an existing panel',
+      'Kopiert Tabs, Dashboard und Design.': 'Copies tabs, dashboard and design.',
+      'Wie {n}: Tabs, Dashboard und Design': 'Like {n}: tabs, dashboard and design',
+      'Panel wählen …': 'Choose panel …',
+      'Dieses Panel hat eine andere Form. Prüfe das Dashboard danach.': 'This panel has a different shape. Check the dashboard afterwards.',
+      'Wähle ein Panel.': 'Choose a panel.',
       'Gilt für neue Tabs und das Dashboard. Einzelne Tabs können abweichen (Tab-Einstellungen).':
         'Applies to new tabs and the dashboard. Individual tabs can differ (tab settings).',
       '9 Kacheln (3 × 3), fein': '9 tiles (3 × 3), fine',
@@ -1122,10 +1138,10 @@
       'Wecker': 'Alarm clock',
       'Panel neu laden': 'Reload panel',
       'Zeigt gerade Panel „': 'Currently shows panel "',
-      '“ quadratisch. Dieses Gerät ist breit und braucht das Format „Breit (2 Hälften)“.':
-        '" as square. This device is wide and needs the format "Wide (2 halves)".',
-      '“ breit. Dieses Gerät ist quadratisch und braucht das Format „Quadratisch“.':
-        '" as wide. This device is square and needs the format "Square".',
+      '“ mit einer Hälfte. Dieses Gerät hat zwei Hälften und braucht das Format „Zwei Hälften“.':
+        '" with one half. This device has two halves and needs the format "Two halves".',
+      '“ mit zwei Hälften. Dieses Gerät hat eine Hälfte und braucht das Format „Eine Hälfte“.':
+        '" with two halves. This device has one half and needs the format "One half".',
       'Leer lassen, um das Passwort zu behalten': 'Leave empty to keep the password',
       'nichts ändern': 'change nothing',
       'Der Server ist nicht erreichbar.': 'The server is not reachable.',
@@ -1213,41 +1229,41 @@
         'Device not reachable via adb. Is ADB over WLAN switched on at the device?',
       '"adb nicht freigegeben. Bestätige am Gerät „USB-Debugging zulassen“."':
         'adb not approved. Confirm "Allow USB debugging" on the device.',
-      'Querformat, zwei Hälften nebeneinander (Panel-Format „Breit (2 Hälften)“).':
-        'Landscape, two halves side by side (panel format "Wide (2 halves)").',
+      'Querformat, zwei Hälften nebeneinander (Panel-Format „Zwei Hälften“).':
+        'Landscape, two halves side by side (panel format "Two halves").',
       'TbViewer: Gerät hinzufügen → Shelly oder Android-Tablet.': 'TbViewer: Add device → Shelly or Android tablet.',
       'Dashboard und Abdunkeln übernimmt TbViewer, die Helligkeit regelt der Lichtsensor.':
         'TbViewer handles the dashboard and dimming, the light sensor controls the brightness.',
       '720 × 720: Zoom „Automatisch“ vergrößert das 480er-Raster auf den ganzen Schirm.':
         '720 × 720: zoom "Automatic" enlarges the 480 grid to the whole screen.',
-      'Panel-Format „Quadratisch“.': 'Panel format "Square".',
-      '480 × 480: passt 1:1, kein Zoom nötig. Panel-Format „Quadratisch“.':
-        '480 × 480: fits 1:1, no zoom needed. Panel format "Square".',
+      'Panel-Format „Eine Hälfte“.': 'Panel format "One half".',
+      '480 × 480: passt 1:1, kein Zoom nötig. Panel-Format „Eine Hälfte“.':
+        '480 × 480: fits 1:1, no zoom needed. Panel format "One half".',
       'TbViewer mit Start-Adresse inkl. ?device=… einrichten.': 'Set up TbViewer with the start address incl. ?device=…',
-      'Hochformat: Zoom „Automatisch“ füllt die Breite. Panel-Format „Quadratisch“.':
-        'Portrait: zoom "Automatic" fills the width. Panel format "Square".',
-      '480 × 480: Referenzgröße, kein Zoom. Panel-Format „Quadratisch“.':
-        '480 × 480: reference size, no zoom. Panel format "Square".',
+      'Hochformat: Zoom „Automatisch“ füllt die Breite. Panel-Format „Eine Hälfte“.':
+        'Portrait: zoom "Automatic" fills the width. Panel format "One half".',
+      '480 × 480: Referenzgröße, kein Zoom. Panel-Format „Eine Hälfte“.':
+        '480 × 480: reference size, no zoom. Panel format "One half".',
       '480 × 480: Referenzgröße. Agent per SSH (Gerät hinzufügen → Linux-Gerät).':
         '480 × 480: reference size. Agent via SSH (Add device → Linux device).',
-      '720 × 1280 quer: Zoom „Automatisch“, Panel-Format „Breit (2 Hälften)“.':
-        '720 × 1280 landscape: zoom "Automatic", panel format "Wide (2 halves)".',
+      '720 × 1280 quer: Zoom „Automatisch“, Panel-Format „Zwei Hälften“.':
+        '720 × 1280 landscape: zoom "Automatic", panel format "Two halves".',
       'LAN/PoE: feste IP-Adresse im Router vergeben (für ADB).':
         'LAN/PoE: assign a fixed IP address in the router (for ADB).',
-      'Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm.':
-        'Landscape, panel format "Wide (2 halves)"; zoom "Automatic" fills the screen.',
+      'Querformat, Panel-Format „Zwei Hälften“; Zoom „Automatisch“ füllt den Schirm.':
+        'Landscape, panel format "Two halves"; zoom "Automatic" fills the screen.',
       'Mit TbViewer lassen sich Display und Helligkeit steuern; die App startet nach einem Neustart nicht von selbst. Ohne sie hält die Seite den Schirm wach, bis die Leerlaufzeit abläuft.':
         'With TbViewer you can control display and brightness; the app does not start by itself after a reboot. Without it the page keeps the screen awake until the idle time runs out.',
       'Hochkant zeigt das Tablet nur eine Hälfte; unter 600 px Breite greift der Handy-Modus.':
         'In portrait the tablet shows only one half; below 600 px width the phone mode applies.',
       'Safari: Teilen → „Zum Home-Bildschirm“. Startet ohne Adressleiste als Vollbild-App (Start-Adresse mit ?device=…).':
         'Safari: Share → "Add to Home Screen". Starts without an address bar as a full-screen app (start address with ?device=…).',
-      'Querformat, Panel-Format „Breit (2 Hälften)“; Zoom „Automatisch“ füllt den Schirm (iPad mini ≈ 118 %).':
-        'Landscape, panel format "Wide (2 halves)"; zoom "Automatic" fills the screen (iPad mini ≈ 118 %).',
+      'Querformat, Panel-Format „Zwei Hälften“; Zoom „Automatisch“ füllt den Schirm (iPad mini ≈ 118 %).':
+        'Landscape, panel format "Two halves"; zoom "Automatic" fills the screen (iPad mini ≈ 118 %).',
       'Ton (Klingel) erst nach einmaligem Antippen: iOS gibt Audio nur nach Berührung frei.':
         'Sound (doorbell) only after one tap: iOS only allows audio after a touch.',
-      'Panel-Format „Handy“ (Tabs unten, volle Höhe); hochkant greift der Handy-Modus auch automatisch.':
-        'Panel format "Phone" (tabs at the bottom, full height); in portrait the phone mode also applies automatically.',
+      'Panel-Format „Hochkant“ (Tabs unten, volle Höhe); hochkant greift der Handy-Modus auch automatisch.':
+        'Panel format "Portrait" (tabs at the bottom, full height); in portrait the phone mode also applies automatically.',
       'Die Fenstergröße bestimmt das Format; Zoom bei Bedarf manuell setzen.':
         'The window size determines the format; set the zoom manually if needed.',
       'Statusleiste: Anzeige je Baustein': 'Status bar: display per block',
