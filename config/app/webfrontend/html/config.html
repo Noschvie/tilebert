@@ -2531,13 +2531,11 @@ const OV_OPT_KEY='lp_cfg_setup_opt_hidden';   // offene optionale Schritte per �
 function ovOptHidden(){ try{ return localStorage.getItem(OV_OPT_KEY)==='1'; }catch(e){ return false; } }
 function ovOptHide(){ try{ localStorage.setItem(OV_OPT_KEY,'1'); }catch(e){} }
 let OV_OPT_GONE=false;   // ohne Speicher (privates Fenster): ausgeblendet bis zum Neuladen
-// Warnzeile: nur bei Stoerung. Grau = Geraete laenger offline, Update; rot nur Miniserver getrennt.
+// Warnzeile: nur bei Stoerung. Grau = Update; rot nur Miniserver getrennt. (Offline-Geraete stehen in der Geraetekachel.)
 function ovWarnHTML(){
-  const devs=((LAST_DEVS||{}).devices)||[], now=Date.now()/1000, out=[];
+  const out=[];
   if(MSST&&MSST.configured&&!MSST.up&&!MSST.ok)
     out.push('<button class="ovwi crit" data-goto="system:loxone"><i class="sdot"></i>'+T('Miniserver getrennt')+'</button>');
-  const off=devs.filter(d=>{ if(d.online) return false; const l=Math.max(d.lastSeen||0,(d.detected&&d.detected.last)||0); return l>0&&now-l>3600; }).length;
-  if(off) out.push('<button class="ovwi" data-goto="devices:list"><i class="sdot"></i>'+off+' '+T(off===1?'Gerät seit über 1 h offline':'Geräte seit über 1 h offline')+'</button>');
   if(UPD&&UPD.newer) out.push('<a class="ovwi" href="'+esc(location.protocol+'//'+location.hostname+'/admin/system/plugininstall.cgi')+'" target="_blank" rel="noopener">'+
     '<i class="sdot wait"></i>'+T('Update')+' '+esc(UPD.latest||'')+' '+T('verfügbar')+'</a>');
   return out.join('');
@@ -2575,7 +2573,7 @@ function renderOverview(){
       '<div class="msmon" id="ovMsMon">'+msMonHTML()+'</div></button>'+
     '<div class="ovcard ovpanels"><span class="ovk">'+T('Geräte')+'</span>'+
       '<b>'+dot(online.length>0)+online.length+' / '+devs.length+' '+T('online')+'</b>'+
-      (devs.length?devs.map(d=>'<button class="ovp" data-goto="devices:list"><b class="ovpd">'+(devReconnecting(d)?'<i class="sdot wait"></i>':dot(d.online))+esc(d.name)+'</b>'+
+      (devs.length?devs.slice().sort((a,b)=>(!!b.online-!!a.online)||String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base',numeric:true})).map(d=>'<button class="ovp" data-goto="devices:list"><b class="ovpd">'+(devReconnecting(d)?'<i class="sdot wait"></i>':dot(d.online))+esc(d.name)+'</b>'+
         '<small>'+(d.online?(d.profile?esc(d.profile):T('kein Panel')):devReconnecting(d)?T('verbindet …'):T('offline'))+'</small></button>').join('')
         :'<button class="ovp" data-goto="devices:add"><b>'+T('Noch kein Gerät verbunden')+'</b><small>'+T('Gerät hinzufügen')+' ›</small></button>')+'</div>';
   ovWarnSync();

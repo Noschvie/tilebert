@@ -1123,8 +1123,6 @@
       'Kennung': 'ID',
       'Start-Adresse kopieren': 'Copy start address',
       'Miniserver getrennt': 'Miniserver disconnected',
-      'Gerät seit über 1 h offline': 'device offline for more than 1 h',
-      'Geräte seit über 1 h offline': 'devices offline for more than 1 h',
       'verfügbar': 'available',
       'Kalender einrichten': 'Set up calendar',
       'Optional': 'Optional',

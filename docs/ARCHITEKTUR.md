@@ -1,6 +1,6 @@
 # tilebert – Architektur-Übersicht (Nachschlagewerk)
 
-Stand: Version 0.20.23 (Dateigrößen 2026-10-13; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
+Stand: Version 0.20.24 (Dateigrößen 2026-10-13; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
 bei Zweifel `grep -n`. Pfade relativ zu `/home/dietpi/projekte/loxohnepanel`. Kürzel: `W` = `config/app/bin/webvisu.py`,
 `P` = `config/app/webfrontend/html/panel.html`, `C` = `.../config.html`.
 
