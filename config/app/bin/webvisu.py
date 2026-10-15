@@ -43,6 +43,7 @@ from aiohttp import WSMsgType, web
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from loxone_api import LoxoneClient  # noqa: E402
+from loxone_api.client import LoxoneAuthError  # noqa: E402
 from loxone_ws import LoxoneWS, WS_CLOSE_NO_HAMMER, describe_close  # noqa: E402
 
 
@@ -76,7 +77,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.22"
+APP_VERSION = "0.20.23"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -1103,9 +1104,29 @@ _WIN_CLOSED = {"geschlossen", "zu", "dicht", "verschlossen", "closed", "shut"}
 _WIN_OPEN = {"offen", "auf", "geöffnet", "geoeffnet", "gekippt", "open", "opened", "tilted"}
 
 def _is_sentinel(v) -> bool:
-    """Loxone-Fehlwert: INT32_MAX bzw. INT32_MAX/1000 (2147483,647) - echte Zaehlerstaende bleiben."""
+    """Loxone-Fehlwert: INT32_MAX bzw. INT32_MAX/1000 (2147483,647) - echte Zaehlerstaende bleiben.
+    NaN/Inf zaehlen ebenfalls als Fehlwert (sonst ungueltiges JSON, das Panel verwirft die Nachricht)."""
+    if not math.isfinite(v):
+        return True
     a = abs(v)
     return abs(a - 2147483.647) < 0.01 or abs(a - 2147483647) < 1
+
+
+def _json_sicher(obj) -> str:
+    """JSON fuers Panel: NaN/Inf sind kein gueltiges JSON (JSON.parse verwirft die ganze
+    Nachricht). Normalfall ohne Umweg; sonst werden solche Zahlen rekursiv zu null."""
+    try:
+        return json.dumps(obj, allow_nan=False)
+    except ValueError:
+        def clean(o):
+            if isinstance(o, float):
+                return o if math.isfinite(o) else None
+            if isinstance(o, dict):
+                return {k: clean(v) for k, v in o.items()}
+            if isinstance(o, (list, tuple)):
+                return [clean(v) for v in o]
+            return o
+        return json.dumps(clean(obj), allow_nan=False)
 
 _NUMFMT = re.compile(r"^(%[-+ 0-9.]*[dfeg])(.*)$")
 _PREFIX = ["k", "M", "G", "T"]
@@ -1341,7 +1362,7 @@ def _config() -> dict:
             "host": env["LOXPANEL_MS_HOST"],
             "user": env.get("LOXPANEL_MS_USER", ""),
             "pass": env.get("LOXPANEL_MS_PASS", ""),
-            "port": int(env.get("LOXPANEL_MS_PORT", "443")),
+            "port": int(env.get("LOXPANEL_MS_PORT") or 443),
             "verify_tls": env.get("LOXPANEL_MS_VERIFY_TLS", "false").lower() in ("1", "true", "yes"),
         }
     # Beispiel-Config nur nutzen, wenn vorhanden. Beim LoxBerry-Plugin verdeckt
@@ -1819,6 +1840,7 @@ class App:
         self.conn_dev: dict[web.WebSocketResponse, str] = {}   # ws -> Geraete-Kennung (?device=)
         self.conn_info: dict[web.WebSocketResponse, dict] = {}  # ws -> {dev, kiosk, ip, ts} (Geraeteverwaltung)
         self._drv_session: aiohttp.ClientSession | None = None   # HTTP-Session fuer Display-Treiber (Kiosk-Apps)
+        self._sec_memo: tuple = (None, [])                          # (Schluessel, gesicherte UUIDs) fuer sec_uuids()
         self.conn_player: dict[web.WebSocketResponse, str] = {}   # ws -> AudioZone-UUID der aktiven Player-Pane (via setplayer)
         self.conn_energy: dict[web.WebSocketResponse, str] = {}   # ws -> EFM/EnergyManager2-UUID der aktiven Energiefluss-Pane (via setenergy)
         self.conn_camera: dict[web.WebSocketResponse, str] = {}   # ws -> Intercom-UUID der aktiven Kamera-Pane (via setcamera)
@@ -2048,6 +2070,8 @@ class App:
         if not self.verify_tls:
             ctx.check_hostname = False
             ctx.verify_mode = _ssl.CERT_NONE
+        else:
+            ctx.load_default_certs(_ssl.Purpose.SERVER_AUTH)   # System-CAs, sonst scheitert jedes Zertifikat
         return ctx
 
     def housekeeping(self) -> None:
@@ -3630,6 +3654,8 @@ class App:
         sp = watt("Spwr")                       # Speicher: >0 entlaedt (rein), <0 laedt (raus)
         try:
             soc = float(self._state(c, "Ssoc"))
+            if _is_sentinel(soc):
+                soc = None
         except (TypeError, ValueError):
             soc = None
 
@@ -8489,6 +8515,32 @@ class App:
                 log.info("Audioserver-Backend fuer %s", host)
         return be
 
+    def sec_uuids(self) -> list[str]:
+        """UUIDs (Baustein + uuidAction + Unterbausteine), die der Miniserver als gesichert
+        (isSecured) fuehrt. Das Panel fragt dafuer auf JEDEM Bedienweg die PIN ab."""
+        key = (id(self.controls), len(self.controls))
+        if self._sec_memo[0] != key:
+            out: set[str] = set()
+            for k, c in self.controls.items():
+                if not isinstance(c, dict):
+                    continue
+                if c.get("isSecured"):
+                    out.add(str(k))
+                    if c.get("uuidAction"):
+                        out.add(str(c["uuidAction"]))
+                # Unterbausteine nach ihrem eigenen isSecured, unabhaengig vom Elternbaustein
+                for sc in (c.get("subControls") or {}).values():
+                    if isinstance(sc, dict) and sc.get("isSecured") and sc.get("uuidAction"):
+                        out.add(str(sc["uuidAction"]))
+            self._sec_memo = (key, sorted(out))
+        return self._sec_memo[1]
+
+    def needs_pin(self, uuid: str, cmd: str) -> bool:
+        """Befehl ohne PIN an einen gesicherten Baustein: nicht ausfuehren, PIN verlangen."""
+        if not uuid or cmd.startswith(("__", "roomfav/get")):
+            return False
+        return uuid in self.sec_uuids()
+
     async def command(self, uuid: str, cmd: str, pin: str | None = None) -> str | None:
         """Fuehrt einen Befehl aus. Mit pin: gesicherter Befehl (Visu-Passwort)."""
         if not (self.client and uuid and cmd):
@@ -8820,7 +8872,7 @@ class App:
 
         async def _do():
             async with lock:
-                await ws.send_json(payload)
+                await ws.send_str(_json_sicher(payload))
         try:
             # Zeitlimit gilt fuer Warten auf die Sperre UND das Senden
             await asyncio.wait_for(_do(), timeout=5)
@@ -9077,6 +9129,11 @@ class App:
             if not await self._send_or_drop(ws, energy_msg):
                 return
             last["energy"] = energy_msg
+        sec_msg = {"t": "sec", "u": self.sec_uuids()}
+        if sec_msg != last.get("sec"):
+            if not await self._send_or_drop(ws, sec_msg):
+                return
+            last["sec"] = sec_msg
         if saver_msg is not None and saver_msg != last.get("saver"):
             if not await self._send_or_drop(ws, saver_msg):
                 return
@@ -9718,6 +9775,13 @@ async def api_settings_ms(request: web.Request) -> web.Response:
     if not ms.get("pass"):
         return web.json_response({"ok": False, "error": "Passwort fehlt. Gib es bei geänderter Adresse oder geändertem Benutzer neu ein."},
                                  status=400)
+    force = bool(data.get("force"))            # "trotzdem speichern"
+    # Erst pruefen, dann speichern: falsches Kennwort/unerreichbarer Miniserver
+    # darf die funktionierende Konfiguration nicht ueberschreiben.
+    problem = await _ms_pruefen(ms)
+    if problem and not force:
+        return web.json_response({"ok": False, "saved": False, "kind": problem[0], "error": problem[1],
+                                  "canForce": True})
     cfg["miniserver"] = ms
     try:
         _write_cfg(cfg)
@@ -9728,7 +9792,56 @@ async def api_settings_ms(request: web.Request) -> web.Response:
         log.info("Miniserver-Settings gespeichert, verbunden (%d Controls)", n)
         return web.json_response({"ok": True, "connected": True, "nControls": n})
     except Exception as err:
-        return web.json_response({"ok": False, "error": f"Verbindung fehlgeschlagen: {err}"})
+        if problem and force:
+            log.warning("Miniserver-Zugang trotz Fehler gespeichert: %s", problem[1])
+            return web.json_response({"ok": True, "connected": False, "saved": True, "warning": problem[1],
+                                      "nControls": 0})
+        return web.json_response({"ok": False, "saved": True, "error": f"Verbindung fehlgeschlagen: {err}"})
+
+
+async def _ms_token_frei(c, jwt: str, user: str, alg: str) -> None:
+    """Token der Probe-Anmeldung wieder freigeben (jdev/sys/killtoken), damit ein Speichern
+    keine Token-Leichen am Miniserver hinterlaesst. Best effort, Fehler sind egal."""
+    try:
+        import hashlib, hmac, urllib.parse
+        st, pl = await c._get_json("/jdev/sys/getkey")
+        key = str(((pl.get("LL") or {}).get("value")) or "").strip()
+        dm = hashlib.sha256 if str(alg).upper() == "SHA256" else hashlib.sha1
+        h = hmac.new(bytes.fromhex(key), jwt.encode(), dm).hexdigest()
+        await c._get_text(f"/jdev/sys/killtoken/{h}/{urllib.parse.quote(user, safe='')}")
+    except Exception as err:
+        log.debug("Probe-Token nicht freigegeben: %s", type(err).__name__)
+
+
+async def _ms_pruefen(ms: dict) -> tuple[str, str] | None:
+    """Miniserver-Zugang probeweise anmelden (eigener Client, App-Zustand unberuehrt).
+    None = ok, sonst (Art, Meldung): auth | cert | unreachable | other."""
+    c = _make_client(ms["host"], ms["user"], ms["pass"], ms.get("port", 443), ms.get("verify_tls", False))
+    try:
+        async with asyncio.timeout(20):
+            await c.__aenter__()
+            k2 = await c.getkey2()
+            jwt = await c.authenticate()
+            await _ms_token_frei(c, jwt, ms["user"], getattr(k2, "hashAlg", "SHA1"))
+    except LoxoneAuthError:
+        return ("auth", "Anmeldung abgelehnt: Benutzer oder Kennwort falsch.")
+    except (_ssl.SSLCertVerificationError, aiohttp.ClientConnectorCertificateError):
+        return ("cert", "Zertifikat des Miniservers nicht vertrauenswürdig (Zertifikat prüfen abschalten oder CA hinterlegen).")
+    except (asyncio.TimeoutError, TimeoutError):
+        return ("unreachable", "Miniserver antwortet nicht (Zeitüberschreitung). Adresse und Port prüfen.")
+    except (aiohttp.ClientConnectionError, OSError) as err:
+        if "CERTIFICATE_VERIFY_FAILED" in str(err):
+            return ("cert", "Zertifikat des Miniservers nicht vertrauenswürdig (Zertifikat prüfen abschalten oder CA hinterlegen).")
+        log.info("Miniserver-Pruefung: %s", err)
+        return ("unreachable", "Miniserver nicht erreichbar. Adresse und Port prüfen.")
+    except Exception as err:
+        return ("other", f"Verbindung fehlgeschlagen: {err}")
+    finally:
+        try:
+            await c.close()
+        except Exception:
+            pass
+    return None
 
 
 async def api_settings_cmdwatch(request: web.Request) -> web.Response:
@@ -11535,6 +11648,9 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
             app._last_sent.setdefault(ws, {})["saver"] = _sv
         await app._send_or_drop(ws, {"t": "ms", "ok": app.ms_ok(), "since": int(app.ms_down_since * 1000)})
         await app._send_or_drop(ws, {"t": "cmdwatch", "on": app.cmd_watch})
+        _sec = {"t": "sec", "u": app.sec_uuids()}
+        await app._send_or_drop(ws, _sec)
+        app._last_sent.setdefault(ws, {})["sec"] = _sec
         await app._send_or_drop(ws, {"t": "diag", "on": app.diag})
         await app._send_or_drop(ws, {"t": "clock", **server_clock()})
         # Klingelt es gerade noch (bell-Impuls steht an), bekommt auch ein neu
@@ -11562,6 +11678,13 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                 if data is None:                 # Panel getrennt: Rest abgearbeitet, Ende
                     return
                 pin = data.get("pin")
+                if pin is None and app.needs_pin(str(data.get("uuid") or ""), str(data.get("cmd") or "")):
+                    # Gesicherter Baustein ohne PIN (Weg ohne eigene Abfrage): nicht senden, PIN verlangen
+                    if data.get("id") is not None:
+                        await app._send_or_drop(ws, {"t": "cmdack", "id": data.get("id"), "ok": True})
+                    await app._send_or_drop(ws, {"t": "cmdresult", "ok": False, "needPin": True,
+                                                 "uuid": str(data.get("uuid")), "cmd": str(data.get("cmd"))})
+                    continue
                 code = await app.command(str(data.get("uuid") or ""), str(data.get("cmd") or ""),
                                          None if pin is None else str(pin))
                 pu = app.push_uuid(str(data.get("uuid") or "")) if data.get("cmd") == "pulse" else None

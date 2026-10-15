@@ -72,24 +72,112 @@ resetpw() {
 	fi
 }
 
+# Prueft ein Archiv und entpackt es nach $2 (leeres Zwischenverzeichnis im
+# Container). Pflicht: nur normale Dateien/Ordner, keine absoluten/../-Pfade,
+# mindestens panels.json, loxpanel.cfg oder theme.json, und alle vorhandenen
+# davon muessen gueltiges JSON (Objekt) sein. Exit 0 = ok, sonst Meldung auf stdout.
+CHKPY='
+import sys, os, json, tarfile
+arc, dst = sys.argv[1], sys.argv[2]
+def fail(m):
+    print(m); sys.exit(3)
+try:
+    t = tarfile.open(arc, "r:gz")
+    ms = t.getmembers()
+except Exception as e:
+    fail("Archiv defekt oder kein tar.gz (%s)" % e)
+if not ms:
+    fail("Archiv ist leer")
+if len(ms) > 5000:
+    fail("Archiv hat zu viele Eintraege (%d, erlaubt 5000)" % len(ms))
+if sum(m.size for m in ms if m.isreg()) > 50 * 1024 * 1024:
+    fail("Archiv ist entpackt groesser als 50 MB")
+for m in ms:
+    n = os.path.normpath(m.name)
+    if n.startswith("/") or n == ".." or n.startswith("../"):
+        fail("Unzulaessiger Pfad im Archiv: %s" % m.name)
+    if not (m.isreg() or m.isdir()):
+        fail("Unzulaessiger Eintrag im Archiv: %s" % m.name)
+try:
+    t.extractall(dst, members=ms, filter="data")
+except Exception as e:
+    fail("Entpacken fehlgeschlagen (%s)" % e)
+vorhanden = 0
+for f in ("panels.json", "loxpanel.cfg", "theme.json"):
+    p = os.path.join(dst, f)
+    if not os.path.isfile(p):
+        continue
+    vorhanden += 1
+    try:
+        d = json.load(open(p, encoding="utf-8"))
+    except Exception as e:
+        fail("%s ist kein gueltiges JSON (%s)" % (f, e))
+    if not isinstance(d, dict):
+        fail("%s hat unerwarteten Inhalt" % f)
+if not vorhanden:
+    fail("Pflichtdateien fehlen (panels.json, loxpanel.cfg oder theme.json)")
+'
+
+# Nur pruefen (z.B. nach Upload): entpackt in Zwischenordner, loescht ihn wieder.
+verify() {
+	local bn
+	bn=$(basename "$1")
+	[ -f "$BACKUPDIR/$bn" ] || { echo "Backup nicht gefunden: $bn"; exit 1; }
+	sudo docker run --rm -e CHK="$CHKPY" -v "$DATADIR":/data "$(_img)" sh -c \
+		'printf "%s" "$CHK" > /tmp/chk.py; mkdir -p /tmp/v; python -I /tmp/chk.py "/data/backups/$0" /tmp/v' "$bn"
+}
+
 restore() {
-	local bn ts
+	local bn ts out
 	bn=$(basename "$1")     # nur Dateiname, keine Pfad-Tricks
 	[ -f "$BACKUPDIR/$bn" ] || { echo "Backup nicht gefunden: $bn"; exit 1; }
 	mkdir -p "$BACKUPDIR"
 	ts=$(date +%Y%m%d-%H%M%S)
-	# Ist-Stand vor dem Ueberschreiben sichern (Rueckweg offen halten)
-	_indocker "cd /data/config 2>/dev/null && tar -czf /data/backups/loxpanelfav-config-$ts-vor-restore.tar.gz $TAREX . 2>/dev/null" \
-		&& echo "Aktuellen Stand gesichert (loxpanelfav-config-$ts-vor-restore.tar.gz)."
-	echo "Spiele $bn ein..."
-	# config leeren und Backup als root einspielen (ueberschreibt root-Dateien)
+	echo "Pruefe $bn ..."
+	# Schritt 1+2 im Container: Archiv in Zwischenordner (neben config, gleiches
+	# Volume) entpacken und pruefen. Erst wenn alles stimmt, wird config angefasst;
+	# bei Fehler bleibt die alte Konfiguration unveraendert.
+	# Schritt 3: Sperre gegen Doppellaeufe, Ist-Stand sichern, alte Dateien
+	# beiseite schieben, neue einsetzen, bei Fehler alte zurueck.
 	# adb/ (Schluessel + Fully-Cache) bleibt stehen: der Schluessel kommt aus dem
 	# Backup zurueck, die APK muss nicht erneut geladen werden.
-	if _indocker "mkdir -p /data/config && cd /data/config && find . -mindepth 1 -maxdepth 1 ! -name adb -exec rm -rf {} + && tar -xzf /data/backups/$bn -C /data/config"; then
-		echo "Konfiguration wiederhergestellt."
-	else
-		echo "Wiederherstellung fehlgeschlagen."; exit 1
+	out=$(sudo docker run --rm -e CHK="$CHKPY" -e BN="$bn" -e TS="$ts" -e TAREX="$TAREX" -v "$DATADIR":/data "$(_img)" sh -c '
+		mkdir -p /data/config
+		# Sperre mit Verfall: aelter als 10 Minuten = verwaist (Abbruch/Neustart), wird aufgehoben
+		if [ -d /data/.restore.lock ] && [ -n "$(find /data/.restore.lock -maxdepth 0 -mmin +10)" ]; then
+			echo "Veraltete Sperre aufgehoben."; rm -rf /data/.restore.lock
+		fi
+		if ! mkdir /data/.restore.lock 2>/dev/null; then echo "Es laeuft bereits eine Wiederherstellung."; exit 4; fi
+		T=/data/.restore-neu; O=/data/.restore-alt
+		trap "rm -rf /data/.restore.lock $T" EXIT
+		rm -rf "$T" "$O"; mkdir -p "$T"
+		printf "%s" "$CHK" > /tmp/chk.py
+		python -I /tmp/chk.py "/data/backups/$BN" "$T" || exit 3
+		echo "OK_GEPRUEFT"
+		(cd /data/config && tar -czf "/data/backups/loxpanelfav-config-$TS-vor-restore.tar.gz" $TAREX . 2>/dev/null) && echo "OK_GESICHERT"
+		# Eintraege einzeln per Glob (Leerzeichen im Namen sind unkritisch); adb/ bleibt stehen
+		mvalt() { for g in /data/config/* /data/config/.[!.]*; do [ -e "$g" ] || continue; [ "${g##*/}" = adb ] && continue; mv "$g" "$O"/ || return 1; done; }
+		wipe() { for g in /data/config/* /data/config/.[!.]*; do [ -e "$g" ] || continue; [ "${g##*/}" = adb ] || rm -rf "$g"; done; }
+		back() { for g in "$O"/* "$O"/.[!.]*; do [ -e "$g" ] || continue; rm -rf "/data/config/${g##*/}"; mv "$g" /data/config/; done; }
+		# Fehlt dem Archiv loxpanel.cfg oder panels.json, bleibt die aktuelle Datei erhalten
+		for f in loxpanel.cfg panels.json; do
+			if [ ! -e "$T/$f" ] && [ -e "/data/config/$f" ]; then cp -a "/data/config/$f" "$T/$f"; fi
+		done
+		mkdir "$O"
+		if ! mvalt; then back; echo "Austausch fehlgeschlagen, alter Stand zurueck."; exit 5; fi
+		if cp -a "$T"/. /data/config/; then rm -rf "$O"; else
+			wipe; back
+			echo "Einspielen fehlgeschlagen, alter Stand zurueck."; exit 5
+		fi
+		echo OK_FERTIG' 2>&1)
+	local rc=$?
+	case "$out" in *OK_GESICHERT*) echo "Aktuellen Stand gesichert (loxpanelfav-config-$ts-vor-restore.tar.gz).";; esac
+	if [ $rc -ne 0 ] || [ "${out%OK_FERTIG*}" = "$out" ]; then
+		echo "Wiederherstellung abgebrochen, alte Konfiguration unveraendert (oder zurueckgesetzt):"
+		echo "$out" | grep -v '^OK_'
+		exit 1
 	fi
+	echo "Konfiguration wiederhergestellt."
 	# Container neu starten, damit die App die Panels frisch einliest (ohne Neu-Build)
 	sudo docker restart loxpanelfav 2>&1 && echo "Panel neu gestartet."
 }
@@ -133,6 +221,7 @@ case "$1" in
 		;;
 	backup)  backup ;;
 	restore) restore "$2" ;;
+	verify)  verify "$2"; exit $? ;;
 	resetpw) resetpw ;;
 	*) echo "Nutzung: $0 start|stop|restart|check|backup|restore <datei>|resetpw"; exit 1 ;;
 esac

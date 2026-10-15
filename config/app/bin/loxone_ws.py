@@ -122,6 +122,8 @@ class LoxoneWS:
         if not self.verify_tls:
             ctx.check_hostname = False
             ctx.verify_mode = ssl.CERT_NONE
+        else:
+            ctx.load_default_certs(ssl.Purpose.SERVER_AUTH)   # System-CAs, sonst scheitert jedes Zertifikat
         return ctx
 
     async def connect(self) -> None:
@@ -139,7 +141,7 @@ class LoxoneWS:
         url = f"{scheme}://{self.host}:{self.port}/ws/rfc6455"
         log.info("WS verbinde %s", url)
         self._ws = await self._session.ws_connect(
-            url, ssl=(self._ssl() if self.secure else None),
+            url, ssl=((await asyncio.to_thread(self._ssl)) if self.secure else None),
             protocols=["remotecontrol"], max_msg_size=0)
 
         # 1) getkey -> HMAC(token) -> authwithtoken

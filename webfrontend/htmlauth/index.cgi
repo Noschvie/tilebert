@@ -57,14 +57,20 @@ sub _lox_cred {
 
 # Miniserver-Zugang an den Container weiterreichen und Ergebnis-HTML liefern.
 sub apply_miniserver {
-    my ($data) = @_;
-    my $ua = LWP::UserAgent->new(timeout => 25);
+    my ($data, $fromlox) = @_;
+    my $ua = LWP::UserAgent->new(timeout => 60);   # Pruefung (bis 20 s) + Struktur laden
     my $r  = $ua->post("$api/api/settings/miniserver", 'X-LoxPanel-Token' => $tok,
         'Content-Type' => 'application/json', Content => encode_json($data));
     if ($r->is_success) {
         my $j = eval { decode_json($r->decoded_content) };
         return "<div class='alert alert-success'>Verbunden &ndash; " . ($j->{nControls} // 0) . " Controls geladen.</div>"
+            if $j && $j->{ok} && $j->{connected};
+        return "<div class='alert alert-warning'>Gespeichert, aber nicht verbunden: " . h($j->{warning} // '') . "</div>"
             if $j && $j->{ok};
+        return "<div class='alert alert-danger'>Nicht gespeichert: " . h($j->{error} // 'unbekannt')
+            . ($fromlox ? " (Zugang in LoxBerry pr&uuml;fen oder oben im Formular von Hand eintragen und mit dem H&auml;kchen &bdquo;Auch bei fehlgeschlagener Pr&uuml;fung speichern&ldquo; speichern.)</div>"
+                     : " (Zum Speichern trotz Fehler das H&auml;kchen &bdquo;Auch bei fehlgeschlagener Pr&uuml;fung speichern&ldquo; setzen.)</div>")
+            if $j && $j->{canForce};
         return "<div class='alert alert-danger'>Fehler: " . h($j ? ($j->{error} // 'unbekannt') : 'ungueltige Antwort') . "</div>";
     }
     return "<div class='alert alert-danger'>Container nicht erreichbar &ndash; l&auml;uft er? (unten &bdquo;Starten&ldquo;)</div>";
@@ -119,6 +125,7 @@ if ($action eq 'miniserver') {
         pass       => scalar($cgi->param('pass')) // '',
         port       => int((scalar($cgi->param('port')) || 443)),
         verify_tls => ($cgi->param('tls') ? JSON::true : JSON::false),
+        force      => ($cgi->param('force') ? JSON::true : JSON::false),
     });
 }
 elsif ($action eq 'fromlox') {
@@ -135,7 +142,7 @@ elsif ($action eq 'fromlox') {
             pass       => _lox_cred($m->{Pass_RAW},  $m->{Pass}),
             port       => int($m->{Port} || 443),   # LoxBerry-Port spiegeln (80=Gen1/HTTP, 443=Gen2/HTTPS)
             verify_tls => JSON::false,
-        });
+        }, 1);
     } else {
         $msg = "<div class='alert alert-danger'>In LoxBerry ist kein Miniserver konfiguriert (Hauptmen&uuml; &rarr; Miniserver).</div>";
     }
@@ -197,7 +204,15 @@ elsif ($action eq 'upload_backup') {
             my $name = "loxpanelfav-config-$ts-upload.tar.gz";
             if (open(my $out, '>:raw', "$bdir/$name")) {
                 print $out $data; close $out;
-                $msg = "<div class='alert alert-success'>Sicherung hochgeladen: " . h($name) . " &ndash; mit &bdquo;Wiederherstellen&ldquo; einspielen.</div>";
+                # Archiv sofort pruefen (entpacken, Pflichtdateien, JSON); defekt -> verwerfen
+                my $vout = `'$ctl' verify '$name' 2>&1`;
+                if ($? != 0) {
+                    unlink "$bdir/$name";
+                    $vout =~ s/\s+$//;
+                    $msg = "<div class='alert alert-danger'>Sicherung unbrauchbar, Datei verworfen: " . h($vout) . "</div>";
+                } else {
+                    $msg = "<div class='alert alert-success'>Sicherung hochgeladen und gepr&uuml;ft: " . h($name) . " &ndash; mit &bdquo;Wiederherstellen&ldquo; einspielen.</div>";
+                }
             } else {
                 $msg = "<div class='alert alert-danger'>Speichern fehlgeschlagen.</div>";
             }
@@ -451,6 +466,7 @@ print <<"HTML";
           <div><label class="l">Passwort</label><input class="i" data-role="none" type="password" name="pass" placeholder="$passph" autocomplete="new-password"></div>
         </div>
         <label class="lpx-chk"><input type="checkbox" data-role="none" name="tls"> Zertifikat pr&uuml;fen (Gen2 selbstsigniert: aus)</label>
+        <label class="lpx-chk"><input type="checkbox" data-role="none" name="force"> Auch bei fehlgeschlagener Pr&uuml;fung speichern</label>
         <p class="lpx-note" style="margin:6px 0 0">Port 443 = HTTPS (Gen2), Port 80 = HTTP (Gen1).</p>
       </form>
       <div class="lpx-row">

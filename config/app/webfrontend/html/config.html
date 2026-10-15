@@ -816,8 +816,8 @@
   .donate:hover svg{animation:cupCheers .6s ease;} @keyframes cupCheers{30%{transform:rotate(-14deg)}60%{transform:rotate(8deg)}}
   @media (prefers-reduced-motion:reduce){ .donate:hover svg{animation:none;} }
   /* Karten ohne eigene Knoepfe (gespeichert wird unten): Zeile nur fuer die Rueckmeldung */
-  .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave))){margin-top:6px;min-height:0;}
-  .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave))) .toast:empty{display:none;}
+  .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave):not([hidden]))){margin-top:6px;min-height:0;}
+  .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave):not([hidden]))) .toast:empty{display:none;}
   .saveinfo{font-size:13px;color:var(--muted);}
   .savebar.dirty .saveinfo{color:var(--fg);font-weight:600;}
   .savebar.dirty .saveinfo::before{content:'';display:inline-block;width:8px;height:8px;border-radius:var(--r-round,32%);background:var(--dot);margin-right:8px;vertical-align:1px;}
@@ -1721,7 +1721,7 @@
   .cardhead .qhelp{margin-left:auto;}
   .cardhead>.secst{margin-left:auto;} .cardhead>.secst+.qhelp{margin-left:0;}
   .card>h3+.hint,.card>h3+.note{margin-top:-6px;}
-  .card .actions,.card .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave))){margin-top:12px;}
+  .card .actions,.card .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave):not([hidden]))){margin-top:12px;}
   .npchoice .nptiles+.note.keep{margin:12px 0 0;}
   /* 5) Dunkel: Karten heben sich vom Grund ab (Tokens leicht angehoben) */
   :root[data-theme="dunkel"]{--bg:#131a15; --panel:#27342b; --panel2:#2f3e34; --line:#3d4e42; --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.28);}
@@ -1876,7 +1876,7 @@
               <div class="field"><label class="lbl" data-i18n>Passwort</label><input type="password" id="ms_pass" autocomplete="new-password" placeholder="Leer lassen, um das Passwort zu behalten" data-i18n-ph></div>
             </div>
             <label class="chk" style="margin-top:12px"><input type="checkbox" id="ms_tls"><span data-i18n>Zertifikat prüfen (bei Miniserver Gen 2 mit selbstsigniertem Zertifikat ausschalten)</span></label>
-            <div class="actions"><button class="btn" id="ms_save" data-i18n>Verbinden &amp; Speichern</button><span class="toast" id="ms_toast"></span></div>
+            <div class="actions"><button class="btn" id="ms_save" data-i18n>Verbinden &amp; Speichern</button><button class="btn ghost" id="ms_force" data-i18n hidden>Trotzdem speichern</button><span class="toast" id="ms_toast"></span></div>
           </div>
           <div class="card" id="cwCard">
             <h3 data-i18n>Befehlskontrolle</h3>
@@ -2881,7 +2881,9 @@ const SECTS=[
   {k:'nt', label:'Nachtmodus', btn:'#nt_save', root:'#ntCard'},
   {k:'dg', label:'Server-Protokoll', btn:'#dg_save', root:'#dgCard'}];
 const SECT_DIRTY=new Set();
-function sectDirty(k){ if(!SECT_DIRTY.has(k)){ SECT_DIRTY.add(k); const t=$('#toast'); if(t){ t.className='toast'; t.textContent=''; } } saveInfo(); }
+// Zaehler je Bereich: eine Aenderung WAEHREND des Speicherns darf nicht als gespeichert gelten.
+const SECT_GEN={};
+function sectDirty(k){ SECT_GEN[k]=(SECT_GEN[k]||0)+1; if(!SECT_DIRTY.has(k)){ SECT_DIRTY.add(k); const t=$('#toast'); if(t){ t.className='toast'; t.textContent=''; } } saveInfo(); }
 function sectBind(){
   SECTS.forEach(sc=>{ const b=$(sc.btn); if(!b) return; b.hidden=true; b.classList.add('sectsave');
     (sc.root?[...document.querySelectorAll(sc.root)]:[b.closest('.card')]).forEach(root=>{ if(!root||root._sect) return; root._sect=sc.k;
@@ -2905,9 +2907,11 @@ async function sectSaveAll(){
     for(const sc of SECTS){ if(!SECT_DIRTY.has(sc.k)) continue; const b=$(sc.btn); if(!b||!b.onclick) continue;
       const toast=b.parentNode&&b.parentNode.querySelector('.toast');
       if(toast) toast.className='toast';
+      const gen0=SECT_GEN[sc.k]||0;   // Stand beim Start: spaetere Eingaben bleiben ungespeichert
       let res; try{ res=await b.onclick(); }catch(e){ ok=false; continue; }
       // false: abgebrochen (z. B. Rueckfrage verneint), Bereich bleibt ungespeichert
-      if(res===false||(toast&&/err|bad/.test(toast.className))) ok=false; else SECT_DIRTY.delete(sc.k); }
+      if(res===false||(toast&&/err|bad/.test(toast.className))) ok=false;
+      else if((SECT_GEN[sc.k]||0)===gen0) SECT_DIRTY.delete(sc.k); }   // waehrend des Speicherns geaendert: bleibt offen
     // Neuladen noch im Lauf; SECT_SAVING erst danach zuruecksetzen
     if(SECT_RELOAD){ SECT_RELOAD=false; try{ await loadSettings(true); }catch(e){} }
   }finally{ SECT_SAVING=false; }
@@ -4342,18 +4346,23 @@ async function saveRun(){
       setTimeout(()=>t.classList.remove('show'),4000); return; } }
   if(!dirty){ return; }
   try{
-    const panels={}; Object.keys(PANELS).forEach(k=>{ if(pOwn(k)) panels[k]=PANELS[k]; });
+    // Stand beim Klick einfrieren: nur dieser Stand gilt danach als gespeichert, Aenderungen
+    // waehrend der Anfrage bleiben ungespeichert (Upstream #98).
+    const n0=dirtyN, SNAP=JSON.parse(JSON.stringify(PANELS));
+    const panels={}; Object.keys(SNAP).forEach(k=>{ if(pOwn(k)) panels[k]=SNAP[k]; });
     const r=await fetch('/api/panels',{method:'POST',headers:{'Content-Type':'application/json'},
                           body:JSON.stringify({panels})});
     const j=await r.json();
     let okT=true, errT='';
-    if(PANELS.__global__){
-      const g=PANELS.__global__;
+    if(SNAP.__global__){
+      const g=SNAP.__global__;
       const r2=await fetch('/api/theme',{method:'POST',headers:{'Content-Type':'application/json'},
                             body:JSON.stringify({ui:g.ui||{}, categories:g.catColors||{}})});
       const j2=await r2.json(); okT=j2.ok; errT=j2.error||'';
     }
-    if(j.ok&&okT){ dirty=false; dirtyN=0; snapSaved(); saveInfo(); saveBtnFlash(true);
+    if(j.ok&&okT){ SAVED_SNAP=SNAP;
+      if(dirtyN===n0){ dirty=false; dirtyN=0; } else dirtyN-=n0;   // neue Aenderungen waehrend des Speicherns: bleibt dirty
+      saveInfo(); saveBtnFlash(true);
       // Was der Server nicht uebernommen hat (unbekannt/ungueltig), nennen statt
       // es still zu verlieren; die Warnung bleibt stehen (siehe unten). Upstream #59
       const weg=j.verworfen||[];
@@ -5079,19 +5088,28 @@ checkUpdate();
   }
 }
 
-$('#ms_save').onclick=async()=>{
+async function msSave(force){
+  const g0=SECT_GEN.ms||0;
   const body={host:$('#ms_host').value.trim(),user:$('#ms_user').value.trim(),
     port:parseInt($('#ms_port').value)||443,verify_tls:$('#ms_tls').checked};
   const pw=$('#ms_pass').value; if(pw) body.pass=pw;
-  $('#ms_save').disabled=true;
+  if(force) body.force=true;
+  $('#ms_save').disabled=true; $('#ms_force').hidden=true;
   try{
     const r=await fetch('/api/settings/miniserver',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const j=await r.json();
-    if(j.ok){ flash($('#ms_toast'),T('Verbunden. {n} Bausteine gefunden.').replace('{n}',j.nControls),true); $('#ms_pass').value=''; loadSettings(); }
+    if(j.ok&&j.connected===false){ flash($('#ms_toast'),T('Gespeichert, aber nicht verbunden.')+' '+T(String(j.warning||'').replace(/[.\s]+$/,''))+'.',false); if((SECT_GEN.ms||0)===g0) SECT_DIRTY.delete('ms'); saveInfo(); loadSettings(); }   // gespeichert (nur nicht verbunden)
+    else if(j.ok){ flash($('#ms_toast'),T('Verbunden. {n} Bausteine gefunden.').replace('{n}',j.nControls),true); $('#ms_pass').value=''; loadSettings(); }
+    else if(j.canForce){   // Pruefung fehlgeschlagen: nichts gespeichert, auf Wunsch trotzdem
+      flash($('#ms_toast'),T('Nicht gespeichert.')+' '+T(String(j.error||'').replace(/[.\s]+$/,''))+'.',false);
+      $('#ms_force').hidden=false;
+    }
     else flashErr($('#ms_toast'),T('Verbindung fehlgeschlagen.'),j);
   }catch(e){ flashErr($('#ms_toast'),T('Verbindung fehlgeschlagen.'),e); }
   $('#ms_save').disabled=false;
-};
+}
+$('#ms_save').onclick=()=>msSave(false);
+$('#ms_force').onclick=()=>msSave(true);
 
 // Bildausschnitt einer Tuerstation: Fokuspunkt antippen/ziehen, Zoom, oder
 // ganzes Bild. Die Rahmen zeigen, was das Klingel-Popup davon zeigt.

@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Fixes aus LoxPanel (0.20.23)** — Prerelease. PIN-Abfrage auf jedem Bedienweg gesicherter Bausteine (aus LoxPanel #99), sichere Wiederherstellung von Sicherungen, kein Hängen bei ungültigen Energiewerten (#95), Miniserver-Zugang wird vor dem Speichern geprüft (#87, #100), Änderungen während des Speicherns gehen nicht mehr verloren (#98).
 - **Assistent visueller, Hauptmenü neu (0.20.22)** — Prerelease. Panel-Assistent mit Piktogrammen, Geräteform Eine Hälfte / Zwei Hälften / Hochkant, volle Start-Adresse, „Wie ein vorhandenes Panel“; Hauptmenü im Stil der Panel-Liste; Panelname als Titel im Inhalt; Config schreibt beim Öffnen nichts mehr.
 - **Panel-Assistent neu (0.20.21)** — Prerelease. „+ Panel hinzufügen“ in 3 Schritten (Name und Gerät, Inhalt, Zusammenfassung), speichert nur das neue Panel, ordnet auf Wunsch ein bekanntes Gerät zu; TbViewer 5.12.
 - **Config aus einem Guss, klarere Texte (0.20.20)** — Prerelease. Einheitliche Schalter, Höhen, Fokus und Zeilen; Gerätedetail in Karten; Raster-Editor, Speicherleiste und Dunkel-Theme angeglichen; Kontraste und Tippflächen nach WCAG; Panel löschen nur noch bewusst; alle Texte sprachlich überarbeitet; TbViewer 5.11.

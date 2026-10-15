@@ -2165,6 +2165,9 @@ let energyData = null;   // letzter {t:'energy'}-Push fuer die Energiefluss-Pane
 // Verlaufs-Pane (chart:<uuid>): gemeldeter Baustein|Zeitraum, letzter {t:'chart'}-Push,
 // in der Pane gewaehlter Zeitraum (gilt fuer alle Verlaufs-Panes dieses Panels).
 let curChartKey = '', chartData = null, chartRange = '24h';
+// Neue WebSocket-Verbindung: der Server kennt die Abos (Player/Energie/Kamera/Verlauf) nicht mehr.
+// Merker leeren, damit die naechste Ansicht sie wieder anmeldet (sonst bleiben die Panes leer).
+function abosVergessen(){ curPlayerZone=''; curEnergyUuid=''; curCameraUuid=''; curChartKey=''; }
 let themePhone = false;  // Handy-Profil (Profil -> Panel-Groesse "Handy")
 // Handy-Modus: Handy-Profil ODER schmales Hochformat-Display (jedes Panel auf
 // dem Handy): Flaechen untereinander, Tabs unten, volle Hoehe.
@@ -2808,10 +2811,18 @@ function dsSet(k,v){
   // den auf einen verschluckten Tipp folgenden click ebenfalls verschlucken
   document.addEventListener('click',e=>{ if(swC){ swC=false; clearTimeout(swT); e.stopImmediatePropagation(); e.preventDefault(); } },true);
 })();
-function doSecure(uuid,cmd,msg){
-  askPin(pin=>{ if(pin==null){pendingSecure=null;return;} pendingSecure={uuid,cmd}; send({t:'cmd',uuid,cmd,pin}); }, msg);
+// Vom Miniserver als gesichert gemeldete Bausteine (Server: {t:'sec'}). Jeder Bedienweg
+// (Pane, Slider, Widget, Szene ...) geht ueber sendCmd/sendCmdQ und fragt dann die PIN ab.
+let SEC=new Set();
+function isSec(uuid){ return SEC.has(uuid); }
+function sendCmdQ(uuid,cmd,secured){ if(secured||isSec(uuid)) doSecure(uuid,cmd,''); else send({t:'cmd',uuid,cmd}); }
+// rel: Loslassen einer Halten-Taste; geht nach dem Druck mit derselben PIN raus
+// (das Loslassen waehrend der Abfrage darf sie nicht ersetzen, Upstream #99).
+function doSecure(uuid,cmd,msg,rel){
+  askPin(pin=>{ if(pin==null){pendingSecure=null;return;} pendingSecure={uuid,cmd,rel}; send({t:'cmd',uuid,cmd,pin});
+    if(rel) send({t:'cmd',uuid:rel.uuid,cmd:rel.cmd,pin}); }, msg);
 }
-function sendCmd(uuid,cmd,secured){ markSent(); if(secured) doSecure(uuid,cmd,''); else send({t:'cmd',uuid,cmd}); }
+function sendCmd(uuid,cmd,secured){ markSent(); sendCmdQ(uuid,cmd,secured); }
 // Rueckmeldung (Mockup): Knopf reagiert sofort (:active ohne Verzoegerung) und
 // pulsiert als "gesendet", bis der Miniserver mit einer neuen Ansicht antwortet
 // (hoechstens 1,5 s). Gilt fuer Knoepfe, Kacheln, Szenen und Mini-Buttons.
@@ -2877,7 +2888,7 @@ function bindLive(g,blocks){
       return Math.round(Math.max(d.min,Math.min(d.max,x))/st)*st; };
     card.addEventListener('pointerdown',e=>{ e.preventDefault(); drag=true; card._drag=true; card.setPointerCapture(e.pointerId); v=at(e.clientY); dimPaint(card,v,g._dim); });
     card.addEventListener('pointermove',e=>{ if(drag){ v=at(e.clientY); dimPaint(card,v,g._dim); } });
-    const end=()=>{ if(!drag) return; drag=false; card._drag=false; const d=g._dim; send({t:'cmd',uuid:d.cmd.uuid,cmd:d.cmd.tmpl.replace('{v}',v)}); };
+    const end=()=>{ if(!drag) return; drag=false; card._drag=false; const d=g._dim; sendCmdQ(d.cmd.uuid,d.cmd.tmpl.replace('{v}',v)); };
     card.addEventListener('pointerup',end); card.addEventListener('pointercancel',end); }
 }
 // ---- Lichtszenen: Piktogramm zeigt das Licht der Szene (Option "sceneLight") ----
@@ -2909,7 +2920,7 @@ function avPaint(g,vol){ const bar=g.querySelector('.avbar'); if(!bar||!vol) ret
 function bindAudio(g,am){
   if(!am||!am.vol) return; g._am=am; avPaint(g,am.vol);
   const setV=v=>{ const vol=g._am.vol; v=Math.round(Math.max(vol.min,Math.min(vol.max,v))); vol.value=v; avPaint(g,vol);
-    send({t:'cmd',uuid:vol.cmd.uuid,cmd:vol.cmd.tmpl.replace('{v}',v)}); };
+    sendCmdQ(vol.cmd.uuid,vol.cmd.tmpl.replace('{v}',v)); };
   g.querySelectorAll('.avol [data-av]').forEach(b=>b.addEventListener('click',()=>{ _pressEl=b; markSent(); setV(g._am.vol.value+5*(+b.dataset.av)); }));
   const bar=g.querySelector('.avbar'); let drag=false, v=0;
   const at=y=>{ const r=bar.getBoundingClientRect(), vol=g._am.vol; return vol.min+(1-(y-r.top)/r.height)*(vol.max-vol.min); };
@@ -2948,7 +2959,7 @@ function bindAlarmEdit(g,blocks){
   if(sv) sv.addEventListener('click',()=>{ _pressEl=sv; markSent();
     const modes=st.days.filter(d=>d.on&&d.mode).map(d=>d.mode).concat(b.other||[]);
     const cmd='entryList/put/'+encodeURIComponent(b.eid)+'/'+encodeURIComponent(b.name)+'/'+st.secs+'/'+(st.active?1:0)+'/'+modes.join(',');
-    send({t:'cmd',uuid:b.uuid,cmd}); setTimeout(()=>back(),400); });
+    sendCmdQ(b.uuid,cmd); setTimeout(()=>back(),400); });
 }
 function dimPaint(card,v,d){
   const p=d.max>d.min?(v-d.min)/(d.max-d.min)*100:0;
@@ -3005,7 +3016,7 @@ function nudgeSld(sld,delta,valEl){ if(!sld)return;
   let v=+((+sld.value||0)+delta).toFixed(stellen(delta)); v=Math.max(min,Math.min(max,v));
   if(v===(+sld.value)) return;
   sld.value=v; sldFill(sld); if(valEl) valEl.textContent=v;
-  if(sld._uuid&&sld._tmpl) send({t:'cmd',uuid:sld._uuid,cmd:sld._tmpl.replace('{v}',v)}); }
+  if(sld._uuid&&sld._tmpl) sendCmdQ(sld._uuid,sld._tmpl.replace('{v}',v)); }
 
 let holdRelease=null;
 // (kein Video-Stopp-Timer noetig: g.innerHTML wird bei jeder Navigation neu
@@ -3015,7 +3026,7 @@ function stopVideo(){}
 function setMore(route){ const s=document.querySelector('.screen'); if(!s)return; let mb=s.querySelector('.moreb');
   if(route){ if(!mb){ mb=document.createElement('div'); mb.className='moreb'; mb.textContent='⋮'; s.appendChild(mb);} mb.onclick=()=>nav(route); }
   else if(mb){ mb.remove(); } }
-function endHold(){ if(holdRelease){ send({t:'cmd',uuid:holdRelease.uuid,cmd:holdRelease.cmd}); holdRelease=null; } }
+function endHold(){ if(holdRelease){ sendCmdQ(holdRelease.uuid,holdRelease.cmd); holdRelease=null; } }
 window.addEventListener('pointerup', endHold);
 window.addEventListener('pointercancel', endHold);
 
@@ -3559,7 +3570,7 @@ function renderPanel(blocks){
   const sb=blocks.find(b=>b.k==='slider'); const sld=g.querySelector('.sld');
   if(sb&&sld){ sld._uuid=sb.cmd.uuid; sld._tmpl=sb.cmd.tmpl; sldFill(sld);
     sld.addEventListener('input',()=>{ sldDragging=true; sldFill(sld); const sv=g.querySelector('.sval'); if(sv)sv.textContent=sld.value; });
-    sld.addEventListener('change',()=>{ sldDragging=false; send({t:'cmd',uuid:sld._uuid,cmd:sld._tmpl.replace('{v}',sld.value)}); });
+    sld.addEventListener('change',()=>{ sldDragging=false; sendCmdQ(sld._uuid,sld._tmpl.replace('{v}',sld.value)); });
     const sdn=g.querySelector('.srow .sbtn[data-sd="dn"]'), sup=g.querySelector('.srow .sbtn[data-sd="up"]');
     const step=(sb.step&&+sb.step>0)?+sb.step:SLD_STEP;
     if(sdn) sdn.addEventListener('pointerdown',ev=>{ ev.preventDefault(); nudgeSld(sld,-step,g.querySelector('.sval')); });
@@ -3578,6 +3589,8 @@ function renderPanel(blocks){
       btn.addEventListener('pointerdown',ev=>{ ev.preventDefault();
         if(c.nav){ _crumbNext={lvl:stack.length, html:svg(ICONS[c.icon]||ICONS.info)}; nav(c.nav); return; }
         if(btn._menu){ openMenu(btn,btn._menu); return; }
+        if(btn._cmd&&btn._hold&&btn._release&&((view&&view.secured)||isSec(btn._cmd.uuid))){
+          markSent(); doSecure(btn._cmd.uuid,btn._cmd.cmd,'',btn._release); return; }
         if(btn._cmd) sendCmd(btn._cmd.uuid,btn._cmd.cmd,view&&view.secured);
         if(btn._hold) holdRelease=btn._release||null;
       });
@@ -3587,7 +3600,7 @@ function renderPanel(blocks){
   if(fb&&fe){ fe.querySelectorAll('.fav').forEach(n=>{ const f=fb.items[+n.dataset.f]; if(!f)return;
     // Erst beim Tippen: die Favoriten liegen im scrollenden Raster, ein Wischer
     // darueber startet sonst einen Sender (aus LoxPanel #66).
-    n.addEventListener('click',()=>{ if(f.cmd){ send({t:'cmd',uuid:f.cmd.uuid,cmd:f.cmd.cmd}); back(); } }); }); }
+    n.addEventListener('click',()=>{ if(f.cmd){ sendCmdQ(f.cmd.uuid,f.cmd.cmd,view&&view.secured); back(); } }); }); }
   g.dataset.bsig=blockSig(blocks);   // Grundlage fuer den In-place-Abgleich in updatePanel
   renderTabs();
   panelEinpassen();
@@ -4641,7 +4654,7 @@ function connect(){
   // Reconnect stattdessen die zuletzt betrachtete Seite wiederherstellen.
   wsRx=Date.now();
   ws.onopen=()=>{ _wsFails=0; el('conn').classList.add('ok'); wsRx=Date.now(); clearTimeout(srvDownT); srvDownT=null; srvOk=true; linkBanner();
-    curChartKey=''; if(booted) send({t:'nav',route:stack[stack.length-1]});
+    abosVergessen(); if(booted) send({t:'nav',route:stack[stack.length-1]});
     deviceInfo().then(info=>send({t:'devinfo', info})).catch(()=>{});
     // Wieder verbunden (z.B. Laptop aufgewacht): ein Klingeln, dessen Ende
     // waehrend der Trennung verpasst wurde, beenden. Klingelt es noch, schickt
@@ -4749,7 +4762,9 @@ function connect(){
       DEVICE_ID=''; ws.close(); return; }
     if(msg.t==='setdevice'){ if(msg.name){ try{ localStorage.setItem('lp_device', msg.name); }catch(e){}
         DEVICE_ID=msg.name; ws.close(); } return; }   // in den Einstellungen benannt -> mit Kennung neu verbinden
-    if(msg.t==='cmdresult'){ if(msg.ok===false && pendingSecure){ const p=pendingSecure; pendingSecure=null; doSecure(p.uuid,p.cmd,'PIN falsch – nochmal'); } else pendingSecure=null; return; }
+    if(msg.t==='sec'){ SEC=new Set(msg.u||[]); return; }
+    if(msg.t==='cmdresult'&&msg.needPin){ if(!document.querySelector('.pinov')&&msg.uuid&&msg.cmd) doSecure(msg.uuid,msg.cmd,''); return; }   // Server verlangt PIN (Weg ohne PIN-Abfrage)
+    if(msg.t==='cmdresult'){ if(msg.ok===false && pendingSecure){ const p=pendingSecure; pendingSecure=null; doSecure(p.uuid,p.cmd,'PIN falsch – nochmal',p.rel); } else pendingSecure=null; return; }
     if(msg.t!=='view') return;
     clearSent();
     if(!booted){ booted=true; bootDone(); if(msg.route&&msg.route.view==='tab') stack=[msg.route]; }
@@ -5108,13 +5123,13 @@ function svPaintPlayer(cell, d){
   tr.innerHTML=cells.map((c,i)=>'<div class="btn'+(c.icon?' icon':'')+(c.big?' big':'')+'" data-c="'+i+'">'+
     (c.icon?svgF(ICONS[c.icon]||ICONS.info):esc(c.label||''))+'</div>').join('');
   tr.querySelectorAll('[data-c]').forEach(n=>{ const c=cells[+n.dataset.c];
-    n.addEventListener('pointerdown',ev=>{ ev.preventDefault(); if(c&&c.cmd) send({t:'cmd',uuid:c.cmd.uuid,cmd:c.cmd.cmd}); }); });
+    n.addEventListener('pointerdown',ev=>{ ev.preventDefault(); if(c&&c.cmd) sendCmdQ(c.cmd.uuid,c.cmd.cmd); }); });
   const v=cell.querySelector('.spv'); if(!v) return;
   v.style.display=(sl&&sl.cmd)?'':'none';
   v.querySelector('span').textContent=sl?String(sl.value):'';
   v.querySelectorAll('[data-v]').forEach(b=>b.onpointerdown=ev=>{ ev.preventDefault(); if(!sl||!sl.cmd) return;
     const nv=Math.max(0,Math.min(100,(+sl.value||0)+(+b.dataset.v)));
-    send({t:'cmd',uuid:sl.cmd.uuid,cmd:sl.cmd.tmpl.replace('{v}',nv)}); });
+    sendCmdQ(sl.cmd.uuid,sl.cmd.tmpl.replace('{v}',nv)); });
 }
 // Statusleiste oben im Dashboard (Profil: saver.bar, bis zu 4 Bausteine).
 // Neutral, solange alles normal ist; faerbt sich bei Hinweis/Alarm/scharf und
@@ -6140,7 +6155,7 @@ function renderPlayer(blocks){
     pane.querySelector('.ppvol .sbtn[data-sd="up"]').addEventListener('pointerdown',ev=>{ ev.preventDefault(); nudgeSld(s,SLD_STEP,el('ppsldv')); });
     s.addEventListener('input',()=>{ _playerVolDrag=true; sldFill(s); el('ppsldv').textContent=s.value; });
     s.addEventListener('change',()=>{ _playerVolDrag=false;
-      if(s._uuid&&s._tmpl) send({t:'cmd',uuid:s._uuid,cmd:s._tmpl.replace('{v}',s.value)}); });
+      if(s._uuid&&s._tmpl) sendCmdQ(s._uuid,s._tmpl.replace('{v}',s.value)); });
     _playerBuilt=true;
   }
   // Cover nur bei Aenderung neu laden (sonst Flackern)
@@ -6156,7 +6171,7 @@ function renderPlayer(blocks){
     if(tr.children.length!==cells.length){
       tr.innerHTML=cells.map((c,i)=>'<div class="btn'+(c.icon?' icon':'')+(c.big?' big':'')+'" data-c="'+i+'"></div>').join('');
       tr.querySelectorAll('[data-c]').forEach(n=>n.addEventListener('pointerdown',ev=>{ ev.preventDefault();
-        if(n._cmd) send({t:'cmd',uuid:n._cmd.uuid,cmd:n._cmd.cmd}); }));
+        if(n._cmd) sendCmdQ(n._cmd.uuid,n._cmd.cmd); }));
     }
     cells.forEach((c,i)=>{ const n=tr.querySelector('[data-c="'+i+'"]'); if(!n)return;
       n._cmd=c.cmd||null;
