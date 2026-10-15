@@ -1019,23 +1019,37 @@
   .mzanon{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px;}
   #mzLines{white-space:pre-wrap;margin:8px 0;}
 
-  /* Panel-Assistent */
-  .pwsteps{display:flex;gap:4px;padding:0 20px 10px;}
-  .pwsteps span{flex:1;font-size:11px;color:var(--muted);text-align:center;}
-  .pwsteps i{display:block;height:4px;border-radius:var(--r-pill);background:var(--panel2);margin-bottom:5px;}
-  .pwsteps .d i,.pwsteps .a i{background:var(--dot);} .pwsteps .a{color:var(--fg);font-weight:600;}
-  .pwstart{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-  @media (max-width:560px){ .pwstart{grid-template-columns:1fr;} }
-  .pwbig{display:flex;flex-direction:column;gap:6px;text-align:left;padding:18px;border-radius:var(--r-m);border:1px solid var(--line);background:var(--field);color:var(--fg);font:inherit;cursor:pointer;transition:transform .12s,box-shadow .12s;}
-  .pwbig:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(31,36,64,.12);}
-  .pwbig b{font-size:15px;font-family:var(--font-head);} .pwbig span{font-size:12px;color:var(--muted);line-height:1.45;}
-  .pwblank{margin-top:14px;} .pwblank .field{max-width:320px;}
-  .pwbar{display:flex;align-items:center;gap:6px;background:var(--bezel);border-radius:var(--r-m);padding:8px;flex-wrap:wrap;}
-  .pwbar span{color:var(--bezel-muted);font-size:12px;padding:6px 10px;border-radius:var(--r-s);}
-  .pwbar span.on{background:var(--bezel2);color:var(--bezel-strong);} .pwbar i{flex:1;}
-  .pwsw{display:inline-flex;gap:2px;vertical-align:-2px;margin-right:4px;} .pwsw i{width:12px;height:12px;border-radius:var(--r-round);border:1px solid rgba(0,0,0,.15);}
-  .pwname{display:grid;grid-template-columns:1fr 1fr;gap:12px;} .pwname .field{max-width:none;margin:0;}
-  @media (max-width:560px){ .pwname{grid-template-columns:1fr;} }
+  /* Panel-Assistent (3 Schritte): ein Akzent (--sel) fuer Fortschritt und Auswahl */
+  .pwov{grid-template-columns:min(560px,100%);justify-content:center;align-content:center;}
+  .pwov .pwbox{width:min(560px,100%);min-width:0;max-height:min(90vh,100%);}
+  .pwprog{display:flex;gap:6px;padding:0 20px 4px;}
+  .pwprog i{flex:1;height:4px;border-radius:var(--r-pill);background:var(--panel2);transition:background-color .2s;}
+  .pwprog i.on{background:var(--sel);}
+  .pwh:focus{outline:none;} .pwh{font-family:var(--font-head);font-size:16px;font-weight:600;margin:6px 0 14px;}
+  .pwf{max-width:none;margin:0;}
+  .pwhint{color:var(--muted);font-size:12px;line-height:1.45;margin-top:2px;} .pwhint code{background:var(--panel2);border-radius:var(--r-s);padding:1px 5px;}
+  .pwerr{color:var(--crit-txt);font-size:12px;line-height:1.4;margin-top:2px;} .pwerr[hidden]{display:none;}
+  .pwsaveerr{padding:10px 20px 0;font-size:13px;}
+  .pwbox input[aria-invalid="true"],.pwbox select[aria-invalid="true"]{border-color:var(--crit) !important;box-shadow:inset 0 0 0 1px var(--crit);}
+  .pwgq{margin-top:18px;}
+  .pwopts{display:grid;gap:8px;} .pwopts2{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+  .pwopts .mzopt{min-height:56px;padding-right:38px;}
+  .pwopts .mzopt:disabled{cursor:default;} .pwopts .mzopt:disabled b{opacity:.5;} .pwopts .mzopt:disabled span{color:var(--muted);}
+  .pwsub{margin:2px 0 4px 14px;gap:6px;}
+  .pwadv{margin-top:12px;}
+  .pwadv>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;color:var(--muted);font-size:13px;font-weight:600;list-style:none;}
+  .pwadv>summary::-webkit-details-marker{display:none;}
+  .pwadv>summary:focus-visible{outline:2px solid var(--prim);outline-offset:2px;border-radius:var(--r-s);}
+  .pwadv>.pwf,.pwadv>.pwmore{margin-top:4px;padding:12px 14px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);}
+  .pwmore .wzq{margin:14px 0 8px;} .pwmore .wzq:first-child{margin-top:0;}
+  .pwcnt{text-transform:none;letter-spacing:0;font-weight:400;margin-left:6px;}
+  .pwchips{display:flex;flex-wrap:wrap;gap:10px 8px;padding:2px 7px 2px 0;}
+  .pwchips .mzchip:disabled{opacity:.45;cursor:default;}
+  .pwmore .pwopts .mzopt{background:var(--field);}
+  .pwsum{margin:0;padding:4px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);}
+  .pwsr{display:grid;grid-template-columns:96px minmax(0,1fr);gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px;}
+  .pwsr:first-child{border-top:0;} .pwsr dt{color:var(--muted);} .pwsr dd{margin:0;overflow-wrap:anywhere;}
+  @media (max-width:560px){ .pwov{padding:12px;} .pwsr{grid-template-columns:84px minmax(0,1fr);} }
   /* Aenderungsliste an der Speicherleiste */
   #saveInfo{cursor:help;}
   .chgpop{position:fixed;z-index:2200;background:var(--panel);border-radius:var(--r-m);box-shadow:0 14px 36px rgba(0,0,0,.25);padding:12px 14px;max-width:min(420px,90vw);font-size:13px;animation:qin .15s ease-out;}
@@ -1086,7 +1100,7 @@
     .wrap:not(.slim) .pitem .pdel{top:50%;transform:translateY(-50%);right:6px;}
     .wrap:not(.slim) .pitem .popen{display:none;}
     .wrap:not(.slim) .addbtn{flex:0 0 auto;width:auto;padding:8px 12px;margin:0;}
-    .wrap:not(.slim) .addbtn .adt{display:none;}
+    .wrap:not(.slim) .addbtn{min-height:44px;white-space:nowrap;}
     .rubrics{flex-wrap:nowrap;gap:4px;}
   }
   /* Auswahlfelder fuellen ihr Feld (wie die Textfelder); Reiter duerfen ab
@@ -1689,7 +1703,6 @@
   .cardhead>.secst{margin-left:auto;} .cardhead>.secst+.qhelp{margin-left:0;}
   .card>h3+.hint,.card>h3+.note{margin-top:-6px;}
   .card .actions,.card .actions:has(> .sectsave):not(:has(> .btn:not(.sectsave))){margin-top:12px;}
-  .pwblank{margin-top:12px;}
   .npchoice .nptiles+.note.keep{margin:12px 0 0;}
   /* 5) Dunkel: Karten heben sich vom Grund ab (Tokens leicht angehoben) */
   :root[data-theme="dunkel"]{--bg:#131a15; --panel:#27342b; --panel2:#2f3e34; --line:#3d4e42; --shadow:0 1px 2px rgba(0,0,0,.35),0 8px 24px rgba(0,0,0,.28);}
@@ -4512,130 +4525,205 @@ function paintLoxlib(box,tgt){
   else if(!list.length) note(T('Keine Treffer.'));
 }
 
-// ---- Neues Panel: Assistent (optional) oder leer anlegen ----
-// Schritt 0 fragt "mit Assistent" oder "leer anlegen". Der Assistent fuehrt durch
-// Groesse -> Tabs -> Dashboard -> Design -> Name -> Geraet und legt das Panel fertig an.
+// ---- Neues Panel: Assistent in 3 Schritten ----
+// 1 Name und Geraet -> 2 Was soll das Panel zeigen? -> 3 Zusammenfassung (Panel anlegen und speichern).
+// Gespeichert wird NUR das neue Panel (Stand der uebrigen Panels = zuletzt gespeicherter Stand SAVED_SNAP);
+// weitere ungespeicherte Aenderungen bleiben offen und werden im Dialog genannt.
 const PW={};
 function pwId(s){ return String(s||'').trim().toLowerCase().replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').normalize('NFD').replace(/[̀-ͯ]/g,'')
   .replace(/ß/g,'ss').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,32); }
 function pwFreeId(base){ let id=base||'panel', n=2; while(pTaken(id)) id=(base||'panel')+'-'+(n++); return id; }
-const PW_FLOW=['start','groesse','tabs','dashboard','design','name','geraet'];
-const PW_TABS=[['favoriten','★ Favoriten','aus Loxone, vorbefüllt'],['raeume','Räume','Übersicht aller Räume'],
-  ['kategorien','Kategorien','Übersicht der Kategorien'],['zentral','Zentral','Zentralbausteine'],
-  ['room','Ein Raum','Bausteine eines Raums'],['free','Frei','leer, selbst belegen']];
-const PW_DASH=[['uhrwetter','Uhr & Wetter','ruhig, für jeden Raum'],['kamera','Uhr, Wetter & Kamera','Kamera-Bild im Blick'],
-  ['termine','Uhr, Wetter & Termine','Kalender auf dem Dashboard'],['klassisch','Klassisch','ohne eigene Belegung']];
+const PW_STEPS=['Name und Gerät','Was soll das Panel zeigen?','Zusammenfassung'];
+const PW_DEV=[['shelly','Shelly Wall Display','960 × 480, zwei Hälften'],['tablet','Tablet oder 4″-Display','480 × 480, eine Hälfte'],['phone','Handy','hochkant, Tabs unten']];
+const PW_TABS=[['favoriten','Favoriten'],['raeume','Räume'],['kategorien','Kategorien'],['zentral','Zentral'],['room','Ein Raum'],['free','Freier Tab']];
+const PW_DESIGN=[['','Wie die anderen Panels'],['bunt','Bunt'],['hell','Hell'],['dunkel','Dunkel']];
+const PW_FOCUSABLE='button:not([disabled]),input:not([disabled]),select:not([disabled]),summary,a[href],textarea:not([disabled])';
+function pwRooms(){ return (META.tabs||[]).filter(t=>t.room); }
+function pwStdTitle(){ const sid=dashStdId(); return sid?((PANELS[sid]||{}).title||''):''; }
+function pwDevHasShelly(){ try{ return devNames().some(n=>/^shelly/.test(gdModelKey(n)||'')); }catch(e){ return false; } }
+function pwTabsFor(c){ return c==='room'?['room']:(c==='empty'?['free']:['favoriten','raeume']); }
+function pwDash(){ const sid=dashStdId(); let d=PW.dash||(PW.content==='empty'?'leer':(sid?'std':'uhrwetter'));
+  if(d==='std'&&!sid) d='uhrwetter'; if(d==='termine'&&PW.split) d='uhrwetter'; return d; }
+function pwDashList(){ const sid=dashStdId(), sp=PW.split, l=[];
+  if(sid) l.push(['std',T('Wie das Standard-Panel')+(pwStdTitle()?' „'+pwStdTitle()+'“':'')]);
+  l.push(['uhrwetter',sp?T('Uhr, Wetter und Kalender'):T('Uhr und Wetter')]);
+  l.push(['kamera',sp?T('Uhr, Wetter und Kamera'):T('Uhr und Kamera')]);
+  if(!sp) l.push(['termine',T('Uhr und Kalender')]);
+  l.push(['leer',T('Leer')]); return l; }
+function pwTabLabel(k){ if(k==='room'){ const t=pwRooms().find(x=>x.tab===PW.room); return t?t.label:T('Ein Raum'); }
+  return T((PW_TABS.find(x=>x[0]===k)||[k,k])[1]); }
+function pwDevLabel(){ return T((PW_DEV.find(x=>x[0]===PW.device)||PW_DEV[1])[1]); }
+function pwDesignLabel(){ return T((PW_DESIGN.find(x=>x[0]===PW.design)||PW_DESIGN[0])[1]); }
+function pwSetDevice(k){ PW.device=k; PW.split=k==='shelly'; PW.phone=k==='phone'; }
+function pwFresh(){
+  const dev=pwDevHasShelly()?'shelly':'tablet';
+  Object.assign(PW,{step:1,title:'',idRaw:'',idTouched:false,content:'rec',tabs:pwTabsFor('rec'),room:'',dash:'',grid:2,design:'',
+    after:'now',assignDev:'',advId:false,advMore:false,touched:false,busy:false,err:{},saveErr:''});
+  pwSetDevice(dev); }
+function pwAutoId(){ return pwFreeId(pwId(PW.title)||'panel'); }
+function pwCurId(){ return PW.idTouched?pwId(PW.idRaw):pwAutoId(); }
+function pwHasInput(){ return PW.touched||!!PW.title.trim()||PW.step>1; }
+function pwFocusables(){ const bx=$('#pwOv .wzbox'); return bx?Array.from(bx.querySelectorAll(PW_FOCUSABLE)).filter(e=>e.getClientRects().length&&!e.closest('[hidden]')):[]; }
 function pwOpen(){
-  Object.assign(PW,{step:0,split:true,phone:false,grid:2,tabs:['favoriten','raeume'],room:'',dash:(dashStdId()?'std':'uhrwetter'),design:'',title:'',id:'',idTouched:false,blank:false});
+  pwFresh(); PW.opener=document.activeElement;
   let ov=$('#pwOv');
-  if(!ov){ ov=document.createElement('div'); ov.id='pwOv'; ov.className='wzov';
-    ov.innerHTML='<div class="wzbox" role="dialog" aria-label="'+T('Panel hinzufügen')+'">'+
-      '<div class="wzhd"><b>✨ '+T('Panel hinzufügen')+'</b><span class="wzstep" id="pwStep"></span>'+
-      '<button class="wzx" id="pwX" type="button" aria-label="'+T('Schließen')+'">✕</button></div>'+
-      '<div class="pwsteps" id="pwSteps"></div><div class="wzbody" id="pwBody"></div>'+
-      '<div class="wzft"><button class="btn ghost" id="pwBack" type="button">← '+T('Zurück')+'</button>'+
-      '<button class="btn" id="pwNext" type="button">'+T('Weiter')+' →</button></div></div>';
+  if(!ov){ ov=document.createElement('div'); ov.id='pwOv'; ov.className='wzov pwov';
+    ov.innerHTML='<div class="wzbox pwbox" role="dialog" aria-modal="true" aria-labelledby="pwHd">'+
+      '<div class="wzhd"><b id="pwHd">'+T('Panel hinzufügen')+'</b><span class="wzstep" id="pwStep" aria-live="polite"></span>'+
+      '<button class="wzx" id="pwX" type="button" aria-label="'+T('Schließen')+'">×</button></div>'+
+      '<div class="pwprog" id="pwProg" aria-hidden="true"><i></i><i></i><i></i></div><div class="wzbody" id="pwBody"></div>'+
+      '<div class="pwerr pwsaveerr" id="pwSaveErr" role="alert" hidden></div>'+
+      '<div class="wzft"><button class="btn ghost" id="pwBack" type="button"></button>'+
+      '<button class="btn" id="pwNext" type="button"></button></div></div>';
     document.body.appendChild(ov);
-    $('#pwX').onclick=pwClose; $('#pwBack').onclick=()=>{ if(PW.step>0){ PW.step--; if(PW.blank&&PW.step>0) PW.step=0; pwRender(); } };
-    $('#pwNext').onclick=pwNext;
-    ov.addEventListener('mousedown',e=>{ if(e.target===ov) pwClose(); });
-    document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&$('#pwOv')&&!$('#pwOv').hidden) pwClose(); });
+    $('#pwX').onclick=pwTryClose; $('#pwBack').onclick=pwBack; $('#pwNext').onclick=pwNext;
+    ov.addEventListener('mousedown',e=>{ if(e.target===ov) pwTryClose(); });
+    ov.addEventListener('keydown',e=>{
+      if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); pwTryClose(); return; }
+      if(e.key==='Tab'){ const f=pwFocusables(); if(!f.length) return; const a=document.activeElement, i=f.indexOf(a);
+        if(e.shiftKey&&(i<=0)){ e.preventDefault(); f[f.length-1].focus(); }
+        else if(!e.shiftKey&&(i<0||i===f.length-1)){ e.preventDefault(); f[0].focus(); } return; }
+      if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){ const t=e.target;
+        if(t&&t.tagName==='INPUT'&&t.type==='text'){ e.preventDefault(); if(!PW.busy) pwNext(); } }
+      const r=e.target&&e.target.closest&&e.target.closest('[role=radiogroup]');
+      if(r&&e.target.getAttribute('role')==='radio'&&/^Arrow(Down|Right|Up|Left)$/.test(e.key)){
+        const o=Array.from(r.querySelectorAll('[role=radio]:not([disabled])')), i=o.indexOf(e.target), d=/Down|Right/.test(e.key)?1:-1;
+        if(o.length){ e.preventDefault(); const n=o[(i+d+o.length)%o.length]; n.focus(); n.click(); } }
+    });
   }
-  ov.hidden=false; pwRender();
+  ov.hidden=false; document.body.classList.add('pwopen'); pwRender(true);
 }
-function pwClose(){ const ov=$('#pwOv'); if(ov) ov.hidden=true; }
-function pwOpt(on,attr,title,sub){ return '<button type="button" class="mzopt'+(on?' on':'')+'" '+attr+'><b>'+title+'</b><span>'+sub+'</span></button>'; }
-function pwRender(){
-  const key=PW_FLOW[PW.step], b=$('#pwBody'), wiz=PW_FLOW.slice(1);
-  $('#pwStep').textContent=key==='start'?'':T('Schritt')+' '+PW.step+' / '+wiz.length;
-  $('#pwSteps').innerHTML=key==='start'?'':wiz.map((k,i)=>'<span class="'+(i+1<PW.step?'d':(i+1===PW.step?'a':''))+'"><i></i>'+
-    T({groesse:'Format',tabs:'Tabs',dashboard:'Dashboard',design:'Design',name:'Name',geraet:'Gerät'}[k])+'</span>').join('');
-  if(key==='start'){
-    b.innerHTML='<p class="wzq">'+T('Wie möchtest du anfangen?')+'</p><div class="pwstart">'+
-      '<button type="button" class="pwbig" id="pwWiz"><b>✨ '+T('Mit Assistent')+'</b><span>'+T('In 6 Schritten: Format, Tabs, Dashboard, Design, Name, Gerät.')+'</span></button>'+
-      '<button type="button" class="pwbig" id="pwBlank"><b>'+T('Leer anlegen')+'</b><span>'+T('Ohne Assistent. Das neue Panel ist leer und öffnet sich direkt zum Bearbeiten.')+'</span></button></div>'+
-      (PW.blank?'<div class="pwblank"><div class="field"><label class="lbl">'+T('Name des Panels')+'</label><input type="text" id="pwBlankName" placeholder="'+T('z. B. Küche')+'"></div>'+
-        '<div class="hintp" id="pwBlankId"></div></div>':'');
-    $('#pwWiz').onclick=()=>{ PW.blank=false; PW.step=1; pwRender(); };
-    $('#pwBlank').onclick=()=>{ PW.blank=true; pwRender(); setTimeout(()=>{ const n=$('#pwBlankName'); if(n) n.focus(); },0); };
-    const bn=$('#pwBlankName');
-    if(bn){ const upd=()=>{ $('#pwBlankId').textContent=T('Kennung:')+' ?panel='+pwFreeId(pwId(bn.value)||'panel'); };
-      bn.oninput=upd; bn.onkeydown=e=>{ if(e.key==='Enter'){ e.preventDefault(); pwNext(); } }; upd(); }
-  } else if(key==='groesse'){
-    b.innerHTML='<p class="wzq">'+T('Welches Format hat das Display?')+'</p><div class="mzopts">'+
-      pwOpt(!PW.split&&!PW.phone,'data-pwsplit="1"',T('Quadratisch'),'480 × 480, '+T('z. B. 4″-Display'))+
-      pwOpt(PW.split&&!PW.phone,'data-pwsplit="2"',T('Breit (2 Hälften)'),'960 × 480, '+T('z. B. Shelly Wall Display X2'))+
-      pwOpt(!!PW.phone,'data-pwsplit="phone"',T('Handy'),T('hochkant, Tabs unten, als App auf dem Home-Bildschirm'))+'</div>'+
-      '<p class="wzq" style="margin-top:16px">'+T('Raster')+'</p><div class="mzopts">'+
-      pwOpt(PW.grid===2,'data-pwgrid="2"','2 × 2',T('4 große Kacheln, leicht zu treffen'))+
-      pwOpt(PW.grid===3,'data-pwgrid="3"','3 × 3',T('mehr Kacheln auf einen Blick'))+'</div>';
-  } else if(key==='tabs'){
-    const rooms=(META.tabs||[]).filter(t=>t.room);
-    b.innerHTML='<p class="wzq">'+T('Welche Tabs? (höchstens 4)')+'</p><div class="mzopts">'+
-      PW_TABS.map(([k,l,sub])=>pwOpt(PW.tabs.indexOf(k)>=0,'data-pwtab="'+k+'"',T(l),T(sub))).join('')+'</div>'+
-      (PW.tabs.indexOf('room')>=0?'<div class="field" style="margin-top:12px;max-width:280px"><label class="lbl">'+T('Raum')+'</label><select id="pwRoom">'+
-        rooms.map(t=>'<option value="'+esc(t.tab)+'"'+(PW.room===t.tab?' selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select></div>':'')+
-      '<p class="wzq" style="margin-top:16px">'+T('So sieht die Tab-Leiste aus')+'</p><div class="pwbar"><span>'+T('Dashboard')+'</span><i></i>'+
-      PW.tabs.map((k,i)=>'<span class="on">'+esc(pwTabLabel(k))+' · '+(i+1)+'</span>').reverse().join('')+'</div>'+
-      '<div class="wznote">'+T('Die Tabs stehen in der Reihenfolge deiner Auswahl. Später lässt sie sich per Ziehen ändern.')+'</div>';
-    const rs=$('#pwRoom'); if(rs){ if(!PW.room&&rooms[0]) PW.room=rooms[0].tab; rs.value=PW.room; rs.onchange=()=>{ PW.room=rs.value; pwRender(); }; }
-  } else if(key==='dashboard'){
-    const sid=dashStdId();
-    b.innerHTML='<p class="wzq">'+T('Was zeigt das Dashboard?')+'</p><div class="mzopts">'+
-      (sid?pwOpt(PW.dash==='std','data-pwdash="std"',T('Standard-Dashboard'),T('wie „')+esc((PANELS[sid]||{}).title||sid)+'“'):'')+
-      PW_DASH.map(([k,l,sub])=>{ // 1 Panel: nur zwei Widgets passen -> Kamera/Termine statt Wetter
-        if(!PW.split&&k==='kamera') l='Uhr & Kamera'; if(!PW.split&&k==='termine') l='Uhr & Termine';
-        if(PW.split&&k==='uhrwetter') sub='rechts die Termine';
-        return pwOpt(PW.dash===k,'data-pwdash="'+k+'"',T(l),T(sub)); }).join('')+'</div>'+
-      '<div class="wznote">'+T('Das Dashboard lässt sich danach im Raster-Editor frei belegen.')+'</div>';
-  } else if(key==='design'){
-    const pr=META.designPresets||{}, sw=k=>{ const c=pr[k]||{}; return '<span class="pwsw"><i style="background:'+esc(c.bezel||'#222')+'"></i><i style="background:'+esc(c.face1||'#eee')+'"></i><i style="background:'+esc(c.tile||'#fff')+'"></i></span>'; };
-    b.innerHTML='<p class="wzq">'+T('Welches Design?')+'</p><div class="mzopts">'+
-      pwOpt(PW.design==='','data-pwdesign=""',T('Wie alle Panels'),T('System → Alle Panels'))+
-      ['bunt','hell','dunkel'].map(k=>pwOpt(PW.design===k,'data-pwdesign="'+k+'"',sw(k)+' '+T(k.charAt(0).toUpperCase()+k.slice(1)),T('nur für dieses Panel'))).join('')+'</div>';
-  } else if(key==='name'){
-    b.innerHTML='<p class="wzq">'+T('Wie heißt das Panel?')+'</p><div class="pwname">'+
-      '<div class="field"><label class="lbl">'+T('Name')+'</label><input type="text" id="pwTitle" value="'+esc(PW.title)+'" placeholder="'+T('z. B. Küche')+'"></div>'+
-      '<div class="field"><label class="lbl">'+T('Kennung (für die Adresse)')+'</label><input type="text" id="pwIdIn" value="'+esc(PW.id)+'" placeholder="kueche"></div></div>'+
-      '<div class="wznote" id="pwUrl"></div>';
-    const ti=$('#pwTitle'), ii=$('#pwIdIn');
-    const upd=()=>{ if(!PW.idTouched) ii.value=pwFreeId(pwId(ti.value)||'panel'); PW.title=ti.value.trim(); PW.id=pwId(ii.value);
-      $('#pwUrl').innerHTML=T('Adresse am Gerät:')+' <code>http://'+esc(location.host)+'/?panel='+esc(PW.id||'…')+'</code>'+(pTaken(PW.id)?' <b class="bad">'+T('Diese Kennung ist schon vergeben.')+'</b>':''); pwBtns(); };
-    ti.oninput=upd; ii.oninput=()=>{ PW.idTouched=true; upd(); }; upd(); setTimeout(()=>ti.focus(),0);
-  } else if(key==='geraet'){
-    const url='http://'+location.host+'/?panel='+PW.id;
-    b.innerHTML='<p class="wzq">'+T('Gerät verbinden')+'</p>'+
-      '<div class="wznote" style="margin-top:0">'+T('Trage diese Start-Adresse in der App oder im Browser des Geräts ein. Mit „&device=Name“ erscheint das Gerät unter „Alle Geräte“.')+'</div>'+
-      '<pre class="cmdout" id="pwUrlTxt">'+esc(url)+'&amp;device='+esc(encodeURIComponent(PW.title||PW.id))+'</pre>'+
-      '<button type="button" class="btn ghost sm" id="pwCopy">'+T('Adresse kopieren')+'</button>'+
-      '<div class="wznote">'+T('Shelly Wall Display und andere Android-Geräte richtest du nach dem Anlegen per adb ein: Geräte → Gerät hinzufügen.')+'</div>'+
-      '<label class="chk" style="margin-top:12px"><input type="checkbox" id="pwGoDev"> <span>'+T('Weiter zu „Gerät hinzufügen“')+'</span></label>';
-    $('#pwCopy').onclick=()=>{ copyText($('#pwUrlTxt').textContent).then(()=>snack(T('Adresse kopiert')),()=>{}); };
+function pwClose(){ const ov=$('#pwOv'); if(ov) ov.hidden=true; document.body.classList.remove('pwopen');
+  try{ if(PW.opener&&PW.opener.focus&&document.contains(PW.opener)) PW.opener.focus(); else { const a=$('#addBtn'); if(a) a.focus(); } }catch(e){} }
+async function pwTryClose(){
+  if(PW.busy) return;
+  if(pwHasInput()&&!(await dlgAsk(T('Eingaben verwerfen?'),T('Das Panel ist noch nicht angelegt. Deine Eingaben gehen verloren.'),T('Verwerfen'),false,T('Weiter bearbeiten')))) return;
+  pwClose(); }
+function pwSaveErrHide(){ const se=$('#pwSaveErr'); if(se){ se.hidden=true; se.textContent=''; } }
+function pwBack(){ if(PW.busy) return; if(PW.step===1) return pwTryClose(); pwReadDom(); PW.step--; pwSaveErrHide(); pwRender(true); }
+function pwOpt(on,attr,title,sub,dis){ return '<button type="button" role="radio" aria-checked="'+(on?'true':'false')+'" tabindex="'+(on?0:-1)+'" class="mzopt'+(on?' on':'')+'" '+attr+(dis?' disabled':'')+'><b>'+title+'</b><span>'+sub+'</span></button>'; }
+function pwErrHtml(id,msg){ return '<div class="pwerr" id="'+id+'"'+(msg?'':' hidden')+'>'+esc(msg||'')+'</div>'; }
+function pwErrSet(inp,errId,msg){ const e=$('#'+errId); if(e){ e.textContent=msg||''; e.hidden=!msg; }
+  if(inp){ if(msg) inp.setAttribute('aria-invalid','true'); else inp.removeAttribute('aria-invalid'); } }
+function pwReadDom(){ const t=$('#pwTitle'); if(t) PW.title=t.value.trim(); }
+function pwRender(focusFirst){
+  const b=$('#pwBody'), s=PW.step;
+  // Fokus ueber das Neuzeichnen retten (Auswahl per Tastatur)
+  let keep=''; const ae=document.activeElement;
+  if(!focusFirst&&ae&&b.contains(ae)){ if(ae.id) keep='#'+ae.id; else { const a=Array.from(ae.attributes||[]).find(x=>/^data-pw/.test(x.name)); if(a) keep='['+a.name+'="'+a.value+'"]'; } }
+  $('#pwStep').textContent=T('Schritt {n} von 3').replace('{n}',s);
+  document.querySelectorAll('#pwProg i').forEach((i,k)=>i.classList.toggle('on',k<s));
+  let h='<h2 class="pwh" id="pwH2" tabindex="-1">'+T(PW_STEPS[s-1])+'</h2>';
+  if(s===1){
+    h+='<div class="field pwf"><label class="lbl" for="pwTitle">'+T('Name des Panels')+'</label>'+
+      '<input type="text" id="pwTitle" maxlength="40" autocomplete="off" value="'+esc(PW.title)+'" placeholder="'+T('z. B. Flur')+'" aria-describedby="pwNameErr pwAddr">'+
+      pwErrHtml('pwNameErr',PW.err.name)+'<div class="pwhint" id="pwAddr"></div></div>'+
+      '<details class="pwadv" id="pwAdvId"'+(PW.advId?' open':'')+'><summary>'+T('Erweitert')+'</summary>'+
+      '<div class="field pwf"><label class="lbl" for="pwIdIn">'+T('Adresse ändern')+'</label>'+
+      '<input type="text" id="pwIdIn" autocomplete="off" spellcheck="false" value="'+esc(PW.idTouched?PW.idRaw:'')+'" placeholder="'+esc(pwAutoId())+'" aria-describedby="pwIdErr pwIdHint">'+
+      pwErrHtml('pwIdErr',PW.err.id)+'<div class="pwhint" id="pwIdHint">'+T('Kleinbuchstaben, Ziffern und Bindestrich. Leer lassen für die automatische Adresse.')+'</div></div></details>'+
+      '<p class="wzq pwgq" id="pwDevQ">'+T('Welches Gerät zeigt das Panel?')+'</p><div class="pwopts" role="radiogroup" aria-labelledby="pwDevQ">'+
+      PW_DEV.map(([k,l,sub])=>pwOpt(PW.device===k,'data-pwdev="'+k+'"',T(l),T(sub))).join('')+'</div>';
+  } else if(s===2){
+    const rooms=pwRooms(), noRooms=!rooms.length, std=pwStdTitle(), sid=dashStdId();
+    const dashTxt=sid?T('Dashboard wie das Standard-Panel'):(PW.split?T('Dashboard mit Uhr, Wetter und Kalender'):T('Dashboard mit Uhr und Wetter'));
+    h+='<div class="pwopts" role="radiogroup" aria-label="'+T('Was soll das Panel zeigen?')+'">'+
+      pwOpt(PW.content==='rec','data-pwcontent="rec"',T('Empfohlen'),dashTxt+', '+T('dazu die Tabs Favoriten und Räume.'))+
+      pwOpt(PW.content==='room','data-pwcontent="room"',T('Ein Raum'),noRooms?T('Erst den Miniserver verbinden, dann stehen Räume zur Wahl.'):T('Dashboard und ein Tab mit den Kacheln eines Raums.'),noRooms)+
+      pwOpt(PW.content==='empty','data-pwcontent="empty"',T('Leer'),T('Nichts vorbelegt. Du baust alles selbst.'))+'</div>';
+    if(PW.content==='room'&&!noRooms) h+=pwRoomField('pwRoomA');
+    h+='<details class="pwadv" id="pwAdvMore"'+(PW.advMore?' open':'')+'><summary>'+T('Weitere Optionen')+'</summary><div class="pwmore">'+
+      '<p class="wzq" id="pwGridQ">'+T('Raster')+'</p><div class="pwopts pwopts2" role="radiogroup" aria-labelledby="pwGridQ">'+
+      pwOpt(PW.grid===2,'data-pwgrid="2"','2 × 2',T('4 große Kacheln, leicht zu treffen'))+pwOpt(PW.grid===3,'data-pwgrid="3"','3 × 3',T('mehr Kacheln auf einen Blick'))+'</div>'+
+      '<p class="wzq" id="pwDesQ">'+T('Design')+'</p><div class="pwchips" role="radiogroup" aria-labelledby="pwDesQ">'+
+      PW_DESIGN.map(([k,l])=>'<button type="button" role="radio" aria-checked="'+(PW.design===k)+'" tabindex="'+(PW.design===k?0:-1)+'" class="mzchip'+(PW.design===k?' on':'')+'" data-pwdesign="'+k+'">'+T(l)+'</button>').join('')+'</div>'+
+      '<p class="pwhint">'+T('Das Design der anderen Panels änderst du unter System → Alle Panels.')+'</p>'+
+      '<p class="wzq" id="pwTabQ">'+T('Tabs')+' <span class="pwcnt">'+PW.tabs.length+' '+T('von 4')+'</span></p><div class="pwchips" role="group" aria-labelledby="pwTabQ">'+
+      PW_TABS.map(([k])=>{ const on=PW.tabs.indexOf(k)>=0, full=!on&&PW.tabs.length>=4;
+        return '<button type="button" aria-pressed="'+on+'" class="mzchip'+(on?' on':'')+'" data-pwtab="'+k+'"'+(full||(k==='room'&&!pwRooms().length)?' disabled':'')+'>'+esc(on?pwTabLabel(k):T((PW_TABS.find(x=>x[0]===k))[1]))+'</button>'; }).join('')+'</div>'+
+      (PW.tabs.indexOf('room')>=0&&PW.content!=='room'?pwRoomField('pwRoomB'):'')+pwErrHtml('pwTabErr',PW.err.tabs)+
+      '<p class="wzq" id="pwDashQ">'+T('Dashboard')+'</p><div class="pwchips" role="radiogroup" aria-labelledby="pwDashQ">'+
+      pwDashList().map(([k,l])=>'<button type="button" role="radio" aria-checked="'+(pwDash()===k)+'" tabindex="'+(pwDash()===k?0:-1)+'" class="mzchip'+(pwDash()===k?' on':'')+'" data-pwdash="'+k+'">'+esc(l)+'</button>').join('')+'</div>'+
+      (sid?'<p class="pwhint">'+T('Das Dashboard wird vom Standard-Panel kopiert. Spätere Änderungen dort gelten hier nicht.')+'</p>':'')+
+      '</div></details>';
+  } else {
+    const id=pwCurId(), names=devNames().sort((a,b)=>a.localeCompare(b)), none=!names.length;
+    const tabs=[T('Dashboard')].concat(PW.tabs.map(pwTabLabel)).join(', ');
+    const dl=(pwDashList().find(x=>x[0]===pwDash())||['',''])[1];
+    const row=(k,v)=>'<div class="pwsr"><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>';
+    h+='<dl class="pwsum">'+row(T('Name'),PW.title)+row(T('Adresse'),'/?panel='+id)+row(T('Gerät'),pwDevLabel())+row(T('Tabs'),tabs)+
+      row(T('Dashboard'),dl)+row(T('Raster'),PW.grid+' × '+PW.grid)+row(T('Design'),pwDesignLabel())+'</dl>'+
+      '<p class="wzq pwgq" id="pwAfterQ">'+T('Danach')+'</p><div class="pwopts" role="radiogroup" aria-labelledby="pwAfterQ">'+
+      pwOpt(PW.after==='now','data-pwafter="now"',T('Gerät jetzt einrichten'),T('Öffnet Geräte → Hinzufügen mit diesem Panel.'))+
+      pwOpt(PW.after==='assign','data-pwafter="assign"',T('Bekanntes Gerät zuordnen'),none?T('Es ist noch kein Gerät bekannt.'):T('Das Gerät zeigt dann dieses Panel.'),none)+
+      (PW.after==='assign'&&!none?'<div class="field pwf pwsub"><label class="lbl" for="pwAssign">'+T('Gerät')+'</label><select id="pwAssign" aria-describedby="pwAssignErr"><option value="">'+T('Gerät wählen …')+'</option>'+
+        names.map(n=>'<option value="'+esc(n)+'"'+(PW.assignDev===n?' selected':'')+'>'+esc(n)+(gdPanelTitle((gdLive(n).profile)||(((DEV[n]||{}).prefs||{}).panel)||'')?' · '+esc(gdPanelTitle((gdLive(n).profile)||(((DEV[n]||{}).prefs||{}).panel)||'')):'')+'</option>').join('')+'</select>'+pwErrHtml('pwAssignErr',PW.err.assign)+'</div>':'')+
+      pwOpt(PW.after==='later','data-pwafter="later"',T('Später'),T('Das Panel öffnet sich zum Bearbeiten.'))+'</div>'+
+      '<p class="pwhint">'+T('Gespeichert wird nur dieses Panel.')+((dirty||SECT_DIRTY.size)?' '+T('Weitere ungespeicherte Änderungen bleiben offen und lassen sich danach wie gewohnt speichern.'):'')+'</p>';
   }
-  b.querySelectorAll('[data-pwsplit]').forEach(x=>x.onclick=()=>{ const v=x.dataset.pwsplit; PW.split=v!=='1'; PW.phone=v==='phone'; pwRender(); });
-  b.querySelectorAll('[data-pwgrid]').forEach(x=>x.onclick=()=>{ PW.grid=+x.dataset.pwgrid; pwRender(); });
-  b.querySelectorAll('[data-pwtab]').forEach(x=>x.onclick=()=>{ const k=x.dataset.pwtab, i=PW.tabs.indexOf(k);
-    if(k==='room'&&!PW.room){ const r0=(META.tabs||[]).find(t=>t.room); if(r0) PW.room=r0.tab; }
-    if(i>=0) PW.tabs.splice(i,1); else if(PW.tabs.length<4) PW.tabs.push(k); else snack(T('Höchstens 4 Tabs')); pwRender(); });
-  b.querySelectorAll('[data-pwdash]').forEach(x=>x.onclick=()=>{ PW.dash=x.dataset.pwdash; pwRender(); });
-  b.querySelectorAll('[data-pwdesign]').forEach(x=>x.onclick=()=>{ PW.design=x.dataset.pwdesign; pwRender(); });
-  pwBtns();
+  b.innerHTML=h;
+  [['#pwTitle','name'],['#pwIdIn','id'],['.pwroom','room'],['#pwAssign','assign']].forEach(([q,k])=>{ const e=b.querySelector(q); if(e&&PW.err[k]) e.setAttribute('aria-invalid','true'); });
+  $('#pwBack').textContent=s===1?T('Abbrechen'):T('Zurück');
+  $('#pwNext').textContent=s===3?T('Panel anlegen und speichern'):T('Weiter'); pwBtnState();
+  pwBind(b);
+  if(focusFirst){ b.scrollTop=0; const f=s===1?$('#pwTitle'):(b.querySelector('[role=radio][aria-checked=true]')||b.querySelector(PW_FOCUSABLE)); if(f) setTimeout(()=>f.focus(),0); }
+  else if(keep){ const k=b.querySelector(keep); if(k) k.focus(); }
 }
-function pwTabLabel(k){ if(k==='room'){ const t=(META.tabs||[]).find(x=>x.tab===PW.room); return t?t.label:T('Raum'); }
-  return T((PW_TABS.find(x=>x[0]===k)||[k,k])[1]).replace('★ ',''); }
-function pwBtns(){
-  const key=PW_FLOW[PW.step];
-  $('#pwBack').style.visibility=PW.step===0?'hidden':'';
-  $('#pwNext').style.display=(key==='start'&&!PW.blank)?'none':'';
-  $('#pwNext').textContent=key==='start'?T('Anlegen'):(key==='geraet'?T('Panel anlegen'):T('Weiter')+' →');
-  let ok=true;
-  if(key==='tabs') ok=PW.tabs.length>0;
-  if(key==='name') ok=!!PW.id && !pTaken(PW.id);
-  $('#pwNext').disabled=!ok;
+function pwRoomField(id){ return '<div class="field pwf pwsub"><label class="lbl" for="'+id+'">'+T('Raum')+'</label><select id="'+id+'" class="pwroom" aria-describedby="pwRoomErr">'+
+  '<option value="">'+T('Raum wählen …')+'</option>'+pwRooms().map(t=>'<option value="'+esc(t.tab)+'"'+(PW.room===t.tab?' selected':'')+'>'+esc(t.label)+'</option>').join('')+'</select>'+pwErrHtml('pwRoomErr',PW.err.room)+'</div>'; }
+function pwBtnState(){ const x=PW.busy; ['#pwNext','#pwBack','#pwX'].forEach(i=>{ const e=$(i); if(e) e.disabled=x; });
+  if(x) $('#pwNext').textContent=T('Wird gespeichert …'); }
+function pwBind(b){
+  const touch=()=>{ PW.touched=true; };
+  const ti=$('#pwTitle');
+  if(ti){ const addr=()=>{ $('#pwAddr').innerHTML=T('Adresse:')+' <code>/?panel='+esc(pwCurId())+'</code>'; const ii=$('#pwIdIn'); if(ii&&!PW.idTouched) ii.placeholder=pwAutoId(); };
+    ti.oninput=()=>{ touch(); PW.title=ti.value.trim(); if(PW.err.name){ PW.err.name=''; pwErrSet(ti,'pwNameErr',''); } addr(); }; addr(); }
+  const ii=$('#pwIdIn');
+  if(ii){ const chk=()=>{ const v=ii.value.trim(); PW.idRaw=v; PW.idTouched=v!==''; let m='';
+      if(PW.idTouched){ const n=pwId(v); if(!n) m=T('Die Adresse braucht Buchstaben oder Ziffern.'); else if(pTaken(n)) m=T('Diese Adresse ist schon vergeben.'); }
+      PW.err.id=m; pwErrSet(ii,'pwIdErr',m); const a=$('#pwAddr'); if(a) a.innerHTML=T('Adresse:')+' <code>/?panel='+esc(pwCurId())+'</code>'; };
+    ii.oninput=()=>{ touch(); chk(); };
+    ii.onblur=()=>{ const n=pwId(ii.value); if(ii.value.trim()&&n&&n!==ii.value.trim()){ ii.value=n; chk(); } }; }
+  const d1=$('#pwAdvId'); if(d1) d1.ontoggle=()=>{ PW.advId=d1.open; };
+  const d2=$('#pwAdvMore'); if(d2) d2.ontoggle=()=>{ PW.advMore=d2.open; };
+  b.querySelectorAll('[data-pwdev]').forEach(x=>x.onclick=()=>{ touch(); pwReadDom(); pwSetDevice(x.dataset.pwdev); pwRender(); });
+  b.querySelectorAll('[data-pwcontent]').forEach(x=>x.onclick=()=>{ touch(); const k=x.dataset.pwcontent; PW.content=k; PW.tabs=pwTabsFor(k); PW.dash=''; PW.err={}; pwRender(); });
+  b.querySelectorAll('[data-pwgrid]').forEach(x=>x.onclick=()=>{ touch(); PW.grid=+x.dataset.pwgrid; pwRender(); });
+  b.querySelectorAll('[data-pwdesign]').forEach(x=>x.onclick=()=>{ touch(); PW.design=x.dataset.pwdesign; pwRender(); });
+  b.querySelectorAll('[data-pwdash]').forEach(x=>x.onclick=()=>{ touch(); PW.dash=x.dataset.pwdash; pwRender(); });
+  b.querySelectorAll('[data-pwtab]').forEach(x=>x.onclick=()=>{ touch(); const k=x.dataset.pwtab, i=PW.tabs.indexOf(k);
+    if(i>=0) PW.tabs.splice(i,1); else if(PW.tabs.length<4) PW.tabs.push(k); PW.err.tabs=''; PW.err.room=''; pwRender(); });
+  b.querySelectorAll('[data-pwafter]').forEach(x=>x.onclick=()=>{ touch(); PW.after=x.dataset.pwafter; PW.err={}; pwRender(); });
+  b.querySelectorAll('.pwroom').forEach(r=>r.onchange=()=>{ touch(); PW.room=r.value; PW.err.room=''; pwErrSet(r,'pwRoomErr',''); });
+  const as=$('#pwAssign'); if(as) as.onchange=()=>{ touch(); PW.assignDev=as.value; PW.err.assign=''; pwErrSet(as,'pwAssignErr',''); };
 }
-// Dashboard-Vorlage im Raster (x ueber beide Flaechen bei 2 Panels)
+// Pruefung je Schritt; gibt die Stelle zurueck, an der der Fokus landen soll (oder '' = alles gut)
+function pwCheck(s){
+  PW.err={}; let foc='';
+  if(s===1){ pwReadDom();
+    if(!PW.title){ PW.err.name=T('Gib dem Panel einen Namen.'); foc='#pwTitle'; }
+    else if(!pwId(PW.title)&&!PW.idTouched){ PW.err.name=T('Der Name braucht mindestens einen Buchstaben oder eine Ziffer.'); foc='#pwTitle'; }
+    if(PW.idTouched){ const n=pwId(PW.idRaw);
+      if(!n) PW.err.id=T('Die Adresse braucht Buchstaben oder Ziffern.'); else if(pTaken(n)) PW.err.id=T('Diese Adresse ist schon vergeben.');
+      if(PW.err.id){ PW.advId=true; if(!foc) foc='#pwIdIn'; } }
+  } else if(s===2){
+    if(!PW.tabs.length){ PW.err.tabs=T('Wähle mindestens einen Tab.'); PW.advMore=true; foc='[data-pwtab]'; }
+    if(PW.tabs.indexOf('room')>=0&&!PW.room){ PW.err.room=T('Wähle einen Raum.'); if(PW.content!=='room') PW.advMore=true; foc='.pwroom'; }
+  } else if(s===3){
+    if(PW.after==='assign'&&!PW.assignDev){ PW.err.assign=T('Wähle ein Gerät.'); foc='#pwAssign'; }
+  }
+  return foc;
+}
+function pwNext(){
+  if(PW.busy) return;
+  const foc=pwCheck(PW.step);
+  if(foc){ pwRender(); const f=$('#pwBody').querySelector(foc); if(f) f.focus(); return; }
+  if(PW.step<3){ PW.step++; pwSaveErrHide(); pwRender(true); return; }
+  pwCreate();
+}
+// Dashboard-Vorlage im Raster (x ueber beide Haelften bei 2 Haelften)
 function pwDashItems(){
-  const g=PW.grid, two=PW.split, k=PW.dash; if(k==='klassisch') return [];
+  const g=PW.grid, two=PW.split, k=pwDash(); if(k==='leer') return [];
   const third=k==='kamera'?'camera':(k==='termine'?'calendar':null);
   if(g===2){ const it=[{type:'clock',x:0,y:0,w:2,h:1,align:'center',date:'long'},{type:'weather',x:0,y:1,w:2,h:1}];
     if(third){ if(two) it.push({type:third,x:2,y:0,w:2,h:2}); else it[1]={type:third,x:0,y:1,w:2,h:1}; }
@@ -4646,26 +4734,51 @@ function pwDashItems(){
   else if(two) it.push({type:'calendar',x:3,y:0,w:3,h:3});
   return it;
 }
-async function pwNext(){
-  const key=PW_FLOW[PW.step];
-  if(key==='start'&&PW.blank){   // ohne Assistent: nur Name -> Profil
-    const nm=($('#pwBlankName').value||'').trim(), id=pwFreeId(pwId(nm)||'panel');
-    PANELS[id]={title:nm||id, tabs:defaultTabs(), rooms:[], cats:[], ui:{grid:2}, states:{}, tiles:{}};
-    { const sv=dashStdSaver(); if(sv) PANELS[id].saver=sv; }
-    pwClose(); cur=id; tileSel=null; tbReset(); subPconf='settings'; renderList(); setRubric('pconf'); markDirty(); return; }
-  if(PW.step<PW_FLOW.length-1){ PW.step++; pwRender(); return; }
-  // Panel aus den Antworten anlegen
+function pwBuild(id){
   const tabs=PW.tabs.map(k=>k==='room'?(PW.room||null):(k==='free'?tbNewId({tabs:[]}):k)).filter(Boolean);
   const ui={grid:PW.grid}; if(!PW.split) ui.split=false; if(PW.phone) ui.phone=true;
   if(PW.design) ui.design={preset:PW.design,colors:{}};
-  const p={title:PW.title||PW.id, tabs, rooms:[], cats:[], ui, states:{}, tiles:{}};
-  if(PW.dash==='std'&&dashStdSaver()) p.saver=dashStdSaver();
+  const p={title:PW.title||id, tabs, rooms:[], cats:[], ui, states:{}, tiles:{}};
+  const d=pwDash();
+  if(d==='std'&&dashStdSaver()) p.saver=dashStdSaver();
   else { const items=pwDashItems(); if(items.length) p.saver={grid:PW.grid, exit:['x'], items}; }
-  PANELS[PW.id]=p; const goDev=!!($('#pwGoDev')&&$('#pwGoDev').checked);
-  pwClose(); cur=PW.id; tileSel=null; tbReset(); markDirty(); await save();
-  if(goDev){ goTo('devices','add'); npShow('android'); { const n=$('#np_name'); if(n) n.value=PW.title||PW.id; const p=$('#np_panel'); if(p) p.value=PW.id; } }
+  return p;
+}
+// Speichert NUR das neue Panel: Grundlage ist der zuletzt gespeicherte Stand aller anderen Panels.
+async function pwPost(id,p){
+  if(SAVE_RUN) await SAVE_RUN.catch(()=>{});
+  const src=SAVED_SNAP||PANELS, panels={};
+  Object.keys(src).forEach(k=>{ if(k!=='__global__'&&!P_RESERVED.has(k)) panels[k]=src[k]; });
+  panels[id]=p;
+  SAVE_DEPTH++;
+  try{ const r=await fetch('/api/panels',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({panels})}); return await r.json(); }
+  finally{ SAVE_DEPTH--; }
+}
+async function pwCreate(){
+  const id=pwCurId(), p=pwBuild(id);
+  if(pTaken(id)){ PW.step=1; PW.err.id=T('Diese Adresse ist schon vergeben.'); PW.advId=true; pwRender(true); return; }
+  PW.busy=true; pwBtnState(); const se=$('#pwSaveErr'); se.hidden=true; se.textContent='';
+  let j, fail='';
+  try{ j=await pwPost(id,p); if(!j||!j.ok) fail=fehlerText(T('Speichern fehlgeschlagen.'),j||{}); }
+  catch(e){ fail=fehlerText(T('Speichern fehlgeschlagen.'),e); }
+  PW.busy=false;
+  if(fail){ se.textContent=fail; se.hidden=false; pwBtnState(); $('#pwNext').textContent=T('Panel anlegen und speichern'); $('#pwNext').focus(); return; }
+  PANELS[id]=p;
+  if(SAVED_SNAP) SAVED_SNAP[id]=JSON.parse(JSON.stringify(p)); else { snapSaved(); dirty=false; dirtyN=0; }
+  const weg=(j.verworfen||[]);
+  const name=PW.title||id, after=PW.after, dev=PW.assignDev;
+  pwClose(); cur=id; tileSel=null; tbReset(); renderList(); saveInfo();
+  let msg=T('Panel „{n}“ angelegt und gespeichert').replace('{n}',name);
+  if(after==='assign'){
+    let ok=false;
+    try{ const r=await postJson('/api/device/prefs',{device:dev,prefs:{panel:id}}); ok=!!(r&&r.ok); }catch(e){}
+    if(ok){ msg=T('Panel „{n}“ angelegt, gespeichert und „{d}“ zugeordnet').replace('{n}',name).replace('{d}',dev); delete DEVP[dev]; try{ pollDevices(); }catch(e){} }
+    else msg=T('Panel „{n}“ gespeichert. Die Zuordnung zu „{d}“ hat nicht geklappt. Ordne es unter Geräte zu.').replace('{n}',name).replace('{d}',dev);
+  }
+  if(weg.length) msg+=' · '+T('Nicht gespeichert:')+' '+weg.join('; ');
+  if(after==='now'){ goTo('devices','add'); npShow('android'); { const n=$('#np_name'); if(n) n.value=name; const q=$('#np_panel'); if(q) q.value=id; } }
   else { subPconf='tabs'; tbTab=DK; renderList(); setRubric('pconf'); }
-  snack(T('Panel „')+(PW.title||PW.id)+T('“ angelegt'));
+  snack(msg);
 }
 $('#addBtn').onclick=()=>pwOpen();
 
@@ -5411,9 +5524,9 @@ function mzCustom(){ return MZ.modes.filter(m=>!MZ_PRESETS.some(p=>p.key===m.key
 function mzOpen(){
   let ov=$('#mzOv');
   if(!ov){ ov=document.createElement('div'); ov.id='mzOv'; ov.className='wzov';
-    ov.innerHTML='<div class="wzbox" role="dialog" aria-label="'+T('Betriebsmodus-Assistent')+'">'+
-      '<div class="wzhd"><b>🧭 '+T('Betriebsmodus-Assistent')+'</b><span class="wzstep" id="mzStep"></span>'+
-      '<button class="wzx" id="mzX" type="button" aria-label="'+T('Schließen')+'">✕</button></div>'+
+    ov.innerHTML='<div class="wzbox" role="dialog" aria-modal="true" aria-labelledby="mzHd">'+
+      '<div class="wzhd"><b id="mzHd">'+T('Betriebsmodus-Assistent')+'</b><span class="wzstep" id="mzStep"></span>'+
+      '<button class="wzx" id="mzX" type="button" aria-label="'+T('Schließen')+'">×</button></div>'+
       '<div class="wzprog"><i id="mzProg"></i></div><div class="wzbody" id="mzBody"></div>'+
       '<div class="wzft"><button class="btn ghost" id="mzBack" type="button">← '+T('Zurück')+'</button>'+
       '<button class="btn" id="mzNext" type="button">'+T('Weiter')+' →</button></div></div>';

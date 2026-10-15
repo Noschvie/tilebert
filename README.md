@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Panel-Assistent neu (0.20.21)** — Prerelease. „+ Panel hinzufügen“ in 3 Schritten (Name und Gerät, Inhalt, Zusammenfassung), speichert nur das neue Panel, ordnet auf Wunsch ein bekanntes Gerät zu; TbViewer 5.12.
 - **Config aus einem Guss, klarere Texte (0.20.20)** — Prerelease. Einheitliche Schalter, Höhen, Fokus und Zeilen; Gerätedetail in Karten; Raster-Editor, Speicherleiste und Dunkel-Theme angeglichen; Kontraste und Tippflächen nach WCAG; Panel löschen nur noch bewusst; alle Texte sprachlich überarbeitet; TbViewer 5.11.
 - **Einstellungen am Gerät: Feinschliff (0.20.19)** — Prerelease. Zahnrad-Wasserzeichen links unten, Hinweis „Mehr in der Config“ entfernt.
 - **Einstellungen am Gerät mit Branding (0.20.18)** — Prerelease. tilebert-Marke im Kopf, Zahnrad als Wasserzeichen in der Ecke, Kopfzeile dezent abgesetzt.

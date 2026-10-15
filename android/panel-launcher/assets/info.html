@@ -70,8 +70,8 @@ button:focus-visible,.x:focus-visible{outline:3px solid var(--b);outline-offset:
 <script>
 (function(){
 var T={
- de:{sub:"Viewer für tilebert",rs:"TbViewer neu starten",rs2:"Zum Neustart nochmal tippen",hm:"Launcher wählen",lh:"Als Startbildschirm",yes:"ja",no:"nein",build:"Build ",bad:"nicht erreichbar",close:"Schließen",st:"Einstellungen",ad:"Adresse ändern"},
- en:{sub:"Viewer for tilebert",rs:"Restart TbViewer",rs2:"Tap again to restart",hm:"Choose launcher",lh:"Set as home screen",yes:"yes",no:"no",build:"Build ",bad:"unreachable",close:"Close",st:"Settings",ad:"Change address"}};
+ de:{sub:"Viewer für tilebert",rs:"TbViewer neu starten",rs2:"Zum Neustart nochmal tippen",hm:"Launcher wählen",lh:"Standard-Launcher",yes:"ja",no:"nein",build:"Build ",bad:"nicht erreichbar",close:"Schließen",st:"Einstellungen",ad:"Adresse ändern"},
+ en:{sub:"Viewer for tilebert",rs:"Restart TbViewer",rs2:"Tap again to restart",hm:"Choose launcher",lh:"Default launcher",yes:"yes",no:"no",build:"Build ",bad:"unreachable",close:"Close",st:"Settings",ad:"Change address"}};
 var d={},t=T.de,A=window.TbInfo||{};
 try{d=JSON.parse(A.data())}catch(e){}
 t=T[d.lang==="en"?"en":(d.lang==="de"?"de":(/^de/.test(navigator.language)?"de":"en"))];
