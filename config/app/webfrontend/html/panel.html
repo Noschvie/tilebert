@@ -1230,8 +1230,8 @@
   .dsdlg .dsbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;}
   .dsov :focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
   @media (min-width:700px){
-    .dsmain{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"t p" "t a";grid-template-rows:auto 1fr;}
-    .dsmain>.dst-t{grid-area:t;} .dsmain>.dst-p{grid-area:p;} .dsmain>.dst-a{grid-area:a;}
+    .dsmain{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-areas:"t p" "t a" "f a";grid-template-rows:auto auto 1fr;}
+    .dsmain>.dst-t{grid-area:t;} .dsmain>.dst-p{grid-area:p;} .dsmain>.dst-a{grid-area:a;} .dsmain>.dst-f{grid-area:f;align-self:start;}
     .dsmain>.dsmsg{grid-column:1/-1;margin:0 4px;}
   }
   @media (max-height:360px){ .dsrow{min-height:48px;} }
@@ -2015,7 +2015,7 @@
   .saver.layout.bar2 .sv-bar{height:auto;min-height:52px;}
   .saver.layout.bar2 .sv-grid{top:calc(var(--svbar-h,52px) + 18px);}   /* zweizeilige Statusleiste: Raster rutscht nach */
 
-  /* ===== Werte gross (it.big, Panel-Option "Werte groß auf Kacheln") =====
+  /* ===== Werte gross (it.big, Geraete-Effekt "Werte groß") =====
      Reine Wert-Kachel: Name/Raum klein oben links, Wert gross unten links, das
      Bausteinsymbol als Wasserzeichen (8 %, ink) angeschnitten rechts unten.
      Schriftgroesse EINE fuer alle Wert-Kacheln eines Bildschirms: aus der Breite
@@ -2611,7 +2611,8 @@ function askPin(cb,msg){
 let DEV_TOK='', DEV_BTN=false;
 const DS={el:null, d:null, view:'', panelSel:null, idle:0, q:Promise.resolve(), err:''};
 const DS_IDLE_MS=60000;
-const DS_EN={'Einstellungen':'Settings','‹ Zurück':'‹ Back','Panel':'Panel','Töne':'Sounds','Klingel':'Doorbell','Alarm':'Alarm','Wecker':'Alarm clock',
+const DS_EN={'Einstellungen':'Settings','Effekte':'Effects','Animation':'Animation','Keine':'None','Mittel':'Medium','Viel':'High',
+  'Kontrast':'Contrast','Lichtszenen':'Light scenes','Werte groß':'Large values','Animierte Symbole':'Animated icons','‹ Zurück':'‹ Back','Panel':'Panel','Töne':'Sounds','Klingel':'Doorbell','Alarm':'Alarm','Wecker':'Alarm clock',
   'Hinweis':'Notice','Tipp':'Tap','Nachts abdunkeln':'Dim at night','Präsenzerkennung':'Presence detection','Helligkeit':'Brightness','Auto':'Auto','Fest':'Fixed',
   'Standard':'Default','Helligkeit fest':'Fixed brightness','geändert':'changed','Auf Standard zurücksetzen':'Reset to default','Alarm ausschalten?':'Turn alarm off?',
   'Ton aus – das Vollbild bleibt.':'Sound off – the full screen stays.','Abdunkeln auf {n} %':'Dim to {n} %','System':'System',
@@ -2722,6 +2723,13 @@ function dsMain(){
     if(!ab){ const fx=val('brightFix')||80, vs=[20,40,60,70,80,90,100]; if(vs.indexOf(fx)<0) vs.push(fx); vs.sort((a,b)=>a-b);
       h+=row('Helligkeit fest','brightFix','<button type="button" class="dsstep" data-fixstep="-1" aria-label="−">−</button><span class="dsval" data-fixval="'+fx+'" aria-live="polite">'+fx+' %</span><button type="button" class="dsstep" data-fixstep="1" aria-label="+">+</button>'); } }
   h+='</section>';
+  // Effekte (Werte gross baut der Server neu auf)
+  const mv=val('motion')||'full';
+  h+='<section class="dstile dst-f"><div class="dsh">'+esc(dsT('Effekte'))+'</div>'+
+    row('Animation','motion','<div class="dspills" role="group" aria-label="'+esc(dsT('Animation'))+'">'+
+      [['off','Keine'],['mid','Mittel'],['full','Viel']].map(([v,t])=>pill('data-motion="'+v+'"',v===mv,dsT(t))).join('')+'</div>')+
+    [['contrast','Kontrast'],['sceneLight','Lichtszenen'],['bigValues','Werte groß']].map(([k,lb])=>row(lb,k,sw(k,val(k)===true,lb))).join('')+
+    row('Animierte Symbole','iconAnim',sw('iconAnim',val('iconAnim')!==false,'Animierte Symbole'))+'</section>';
   h+='<div class="dsmsg" role="alert">'+esc(DS.err?dsT(DS.err):'')+'</div></div>';
   return h;
 }
@@ -2732,6 +2740,7 @@ function dsClick(e){
   const rb=t.closest('[data-rst]'); if(rb){ dsSet(rb.dataset.rst,null); return; }
   const sb=t.closest('.dssw'); if(sb){ dsToggle(sb.dataset.k,sb.getAttribute('aria-checked')!=='true'); return; }
   const sg=t.closest('[data-seg]'); if(sg){ dsSet('autoBright',sg.dataset.seg==='1'); return; }
+  const mo=t.closest('[data-motion]'); if(mo){ dsSet('motion',mo.dataset.motion); return; }
   const pp=t.closest('[data-panel]'); if(pp){ DS.panelSel=pp.dataset.panel; dsRender(); return; }
   const fs=t.closest('[data-fixstep]'); if(fs){ dsFix(+fs.dataset.fixstep); return; }
   if(t===o) dsClose();
@@ -4697,11 +4706,7 @@ function connect(){
       // Form-/Bewegungs-Variablen dahinter sitzen im :root (s. <style>).
       // Animationen: nur noch an/aus (ein Multiplikator fuer alle --anim-*-Dauern).
       // Animationsstufe: off = keine, mid = nur Ueberblendungen, full = alles
-      document.documentElement.style.setProperty('--anim-scale', msg.motion==='off' ? 0 : 1);
-      document.documentElement.dataset.motion = msg.motion||'full';
-      document.documentElement.classList.toggle('ianim', msg.iconAnim!==false);   // Animierte Symbole (Einstellung)
-      document.documentElement.dataset.contrast = msg.contrast ? '1' : '0';   // Mehr Kontrast: Schatten an Kacheln/Knoepfen
-      SCENE_LIGHT = !!msg.sceneLight;   // Lichtszenen: Piktogramm zeigt Lichtfarbe + Helligkeit
+      applyFx(msg);   // Effekte je Geraet (Animation, Kontrast, Lichtszenen, Animierte Symbole)
       if(saverOn()) applySaverSplit();      // Split-Erlaubnis kann sich geaendert haben -> Screensaver-Spaltigkeit nachziehen
       if(msg.missing) lpToast('noprof', 'Panel „'+msg.missing+'“ nicht gefunden. Das Standard-Panel wird angezeigt.', 'warn', 15);   // ?panel=<unbekannt>
       if(msg.lang){ LANG=msg.lang; document.documentElement.lang=LANG.split('-')[0]; tickClock(); }   // lang: Silbentrennung   // Panel-Sprache -> Datum/Uhr sofort aktualisieren
@@ -4740,6 +4745,7 @@ function connect(){
         location.replace(u.toString()); } return; }   // Betriebsmodus -> Profil live wechseln
     if(msg.t==='reload'){ location.reload(); return; }                       // Server -> Panel neu laden
     if(msg.t==='prefs'){ applyPrefs(msg.prefs);   // Geraete-Einstellungen live geaendert
+      if(msg.fx){ const sl=SCENE_LIGHT; applyFx(msg.fx); if(sl!==SCENE_LIGHT&&view) render(); }   // Effekte live
       if(msg.night){ NIGHT.dim=+msg.night.dim||0; applyNight(false); }
       if(msg.sensors) applySensors(msg.sensors);
       if(typeof msg.dpmsOff==='number'){ DISP.dpmsOff=msg.dpmsOff>0?msg.dpmsOff:0; armDpms(); }
@@ -4832,9 +4838,9 @@ function ambStops(stops,x){   // stops: [[wert,'#rrggbb'],...] aufsteigend
     return ambMix(ambHex(c0),ambHex(c1),(x-x0)/(x1-x0)); } }
   return ambHex(stops[stops.length-1][1]);
 }
-function ambSun(){   // [Aufgang, Untergang] in Minuten; ohne Wetter 6:30 / 19:30
-  const w=(frontData||{}).weather||{}, m=v=>{ const r=/^(\d{1,2}):(\d{2})/.exec(v||''); return r?(+r[1])*60+(+r[2]):null; };
-  const a=m(w.sunrise), b=m(w.sunset);
+function ambSun(){   // [Aufgang, Untergang] in Minuten; Sonnenzeiten des Servers (ohne Internet), sonst Wetter, sonst 6:30 / 19:30
+  const fd=frontData||{}, w=fd.weather||{}, su=fd.sun||{}, m=v=>{ const r=/^(\d{1,2}):(\d{2})/.exec(v||''); return r?(+r[1])*60+(+r[2]):null; };
+  const a=m(su.rise)!=null?m(su.rise):m(w.sunrise), b=m(su.set)!=null?m(su.set):m(w.sunset);
   return (a!=null&&b!=null&&b>a) ? [a,b] : [390,1170];
 }
 function ambLight(){   // {L: 0 Nacht .. 1 Mittag, warm: 0..1 Naehe zur Daemmerung}
@@ -6216,6 +6222,13 @@ let DEV_MODEL='';
 // Geraete-Einstellungen vom Server (wirksam: Geraet > Typ > Panel > Global). chg = Schluessel, die am Geraet geaendert sind.
 // Unbekanntes Geraet mit Handy-UA: Handy-Vorgaben (Klingel/Wecker/Hinweis aus, Alarm an), solange nicht geaendert.
 const PREFS={ sound:{ring:true,alarm:true,wake:true,notify:false,touch:false}, chg:[], caps:{} };
+// Effekte des Geraets (Server: prefs motion/contrast/sceneLight/iconAnim; Werte gross rendert der Server)
+function applyFx(f){ const de=document.documentElement;
+  de.style.setProperty('--anim-scale', f.motion==='off' ? 0 : 1);   // off = keine, mid = nur Ueberblendungen, full = alles
+  de.dataset.motion = f.motion||'full';
+  de.classList.toggle('ianim', f.iconAnim!==false);                // Animierte Symbole
+  de.dataset.contrast = f.contrast ? '1' : '0';                     // Mehr Kontrast: Schatten an Kacheln/Knoepfen
+  SCENE_LIGHT = !!f.sceneLight; }                                    // Lichtszenen: Piktogramm zeigt Lichtfarbe + Helligkeit
 function applyPrefs(p){ if(p && typeof p==='object'){ Object.assign(PREFS.sound,p.sound||{}); PREFS.chg=p.chg||[]; PREFS.caps=p.caps||{};
   if(lpHost.type==='tbview'){ try{ lpHost.api.setTouchSound(PREFS.sound.touch===true); }catch(e){} } } }   // Tipp-Ton: Android-Klickton der App
 function sndOn(k){

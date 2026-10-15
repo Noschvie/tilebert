@@ -1076,6 +1076,11 @@
   .chgpop ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px;} .chgpop .more{color:var(--muted);margin-top:6px;font-size:12px;}
   .aplist{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;}
   .apit{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--line);border-radius:var(--r-s);cursor:pointer;}
+  /* Wetterkarte: Quelle + Zustand, gelieferte Werte, Option Open-Meteo, Standort */
+  .wxsrc{font-size:13px;margin:0 0 10px;} .wxsrc .wxname{font-weight:600;margin-right:4px;}
+  .wxvals{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 14px;font-size:13px;}
+  .wxvals dt{color:var(--muted);font-size:12px;padding-top:1px;} .wxvals dd{margin:0;min-width:0;}
+  #wx_omrow{margin:0 0 14px;} #wx_sun{margin-top:6px;}
   .apit span{display:flex;flex-direction:column;min-width:0;} .apit small{opacity:.7;font-size:12px;}
   .crp{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
   .crphead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;} .crpsum{font-size:12px;color:var(--muted);}
@@ -1807,6 +1812,44 @@
   /* Karten Tuerstationen/Agenten: Kopf wie andere Karten */
   #ag_list .devanon.card{padding:22px;}
   #ag_list .devanon.card>h3{margin:0 0 4px;}
+  /* ===== 0.22.5 UI ===== */
+  /* Panel-Ansicht: Untermenue schmaler; auf Touch bleibt die Trefferflaeche 44 px (::after im Leistenabstand) */
+  .subtabs.psub{padding:6px 28px 2px;gap:4px;}
+  .subtabs.psub .stab{min-height:30px;padding:0 12px;}
+  @media (pointer:coarse),(max-width:760px){
+    .subtabs.psub{padding:6px 14px;}
+    .subtabs.psub .stab{min-height:32px;position:relative;}
+    .subtabs.psub .stab::after{content:"";position:absolute;inset:-6px 0;}
+  }
+  /* Start-Adresse: kleiner Link "Oeffnen" neben Kopieren */
+  .pstartopen{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 4px;font-size:13px;font-weight:600;color:var(--sel,var(--accent));text-decoration:none;}
+  .pstartopen:hover{text-decoration:underline;}
+  .pstartopen:focus-visible{outline:2px solid var(--sel,var(--accent));outline-offset:2px;border-radius:var(--r-s);}
+  .pstartopen svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+  @media (pointer:coarse),(max-width:760px){ .pstartopen{min-height:44px;padding:0 8px;} }
+  @media (max-width:480px){ .pstartrow code{flex:1 1 100%;} }   /* schmal: Adresse allein, Kopieren und Oeffnen darunter nebeneinander */
+  /* Raster-Editor, Bausteinlisten: Symbol | Name (bis 2 Zeilen) ueber Raum/Groesse | Haken, Zeile mind. 44 px */
+  .g2ed .libit{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;column-gap:10px;min-height:44px;padding:6px 10px;box-sizing:border-box;}
+  .g2ed .libit:hover{transform:none;background:var(--panel2);box-shadow:none;}
+  .g2ed .libit .ltx{display:flex;flex-direction:column;gap:2px;min-width:0;}
+  .g2ed .libit .lnm{font-size:13px;font-weight:500;line-height:1.3;white-space:normal;overflow:hidden;text-overflow:ellipsis;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow-wrap:break-word;hyphens:auto;}
+  .g2ed .libit .lsub{font-size:12px;line-height:1.3;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+  .g2ed .libit.used::after{grid-column:3;}
+  .g2ed .liblist{gap:6px;} .g2ed .liblist>*{flex:none;}
+  .g2ed .libgrp{margin:12px 4px 2px;}
+  /* Spalte etwas breiter, wo Platz ist */
+  .sved.g2ed{grid-template-columns:260px minmax(0,1fr) 250px;}
+  @container (max-width:1400px){ .sved.g2ed{grid-template-columns:230px minmax(0,1fr) 230px;} }
+  @container (max-width:1060px){ .sved.g2ed{grid-template-columns:220px minmax(0,1fr);} }
+  @container (max-width:560px){ .sved.g2ed{grid-template-columns:minmax(0,1fr);}
+    /* untereinander: Suche/Filter stehen fest, die Liste selbst scrollt (etwa 5 Zeilen) */
+    .sved.g2ed>.lib{max-height:none;} .g2ed .liblist{flex:none;max-height:270px;} }
+  @supports not (container-type:inline-size){
+    @media (max-width:1700px){ .sved.g2ed{grid-template-columns:230px minmax(0,1fr) 230px;} }
+    @media (max-width:1360px){ .sved.g2ed{grid-template-columns:220px minmax(0,1fr);} }
+    @media (max-width:860px){ .sved.g2ed{grid-template-columns:minmax(0,1fr);} .sved.g2ed>.lib{max-height:none;} .g2ed .liblist{flex:none;max-height:270px;} }
+  }
 </style>
 </head>
 <body>
@@ -1861,7 +1904,7 @@
 
       <!-- System + Geraete -->
       <div id="setHost" style="display:none">
-        <!-- System → Loxone: Miniserver, Befehlskontrolle, Wetter, Audioserver -->
+        <!-- System → Loxone: Miniserver, Wetter, Audioserver -->
         <section class="spane" data-sub="loxone">
           <p class="lead" data-i18n>Alles, was tilebert vom Miniserver übernimmt: Zugang, Befehle, Wetter und Audio.</p>
           <div class="card" id="msCard">
@@ -1878,47 +1921,43 @@
             <label class="chk" style="margin-top:12px"><input type="checkbox" id="ms_tls"><span data-i18n>Zertifikat prüfen (bei Miniserver Gen 2 mit selbstsigniertem Zertifikat ausschalten)</span></label>
             <div class="actions"><button class="btn" id="ms_save" data-i18n>Verbinden &amp; Speichern</button><button class="btn ghost" id="ms_force" data-i18n hidden>Trotzdem speichern</button><span class="toast" id="ms_toast"></span></div>
           </div>
-          <div class="card" id="cwCard">
-            <h3 data-i18n>Befehlskontrolle</h3>
-            <label class="chk"><input type="checkbox" id="cw_on" checked><span data-i18n>Zustellung jedes Befehls überwachen</span></label>
-            <p class="note" data-i18n>Nach jedem Tastendruck prüft das Panel, ob der Miniserver den Befehl angenommen hat. Bleibt die Antwort nach 12 s aus (z. B. bei WLAN-Aussetzern) oder wird der Befehl abgelehnt, erscheint eine Meldung.</p>
-            <div class="actions"><button class="btn" id="cw_save" data-i18n>Speichern</button><span class="toast" id="cw_toast"></span></div>
-          </div>
           <div class="card" id="wxCard">
             <h3 data-i18n>Wetter</h3>
-            <label class="chk"><input type="checkbox" id="wx_ms" checked><span data-i18n>Wetterdaten aus dem Miniserver übernehmen</span></label>
-            <p class="note" data-i18n>Standard ist das Wetter des Loxone-Wetterdienstes. Gibt es im Miniserver keinen, nimm den Haken weg: Dann kommt es von Open-Meteo (kostenlos, ohne Konto).</p>
-            <div id="wx_alt" hidden>
-              <div class="row2">
-                <div class="field"><label class="lbl" data-i18n>Breitengrad</label><input type="text" id="cal_lat" placeholder="47.071" autocomplete="off"></div>
-                <div class="field"><label class="lbl" data-i18n>Längengrad</label><input type="text" id="cal_lon" placeholder="15.439" autocomplete="off"></div>
-              </div>
-              <p class="hint" data-i18n>Leer: Standort des Miniservers.</p>
+            <p class="note keep" data-i18n>Standard ist der Loxone-Wetterdienst des Miniservers.</p>
+            <!-- Quelle, Zustand und gelieferte Werte (loadSettings) -->
+            <div class="wxsrc" id="cal_wxstatus"></div>
+            <dl class="wxvals" id="wx_vals" hidden></dl>
+            <!-- Open-Meteo nur ohne Loxone-Wetterdienst, nur bewusst eingeschaltet -->
+            <div id="wx_omrow" hidden>
+              <label class="apit"><input type="checkbox" id="wx_om"><span><b data-i18n>Open-Meteo verwenden</b><small data-i18n>Wetter aus dem Internet, kostenlos und ohne Konto. Aus: keine Anfrage ins Internet.</small></span></label>
             </div>
-            <div class="note" id="cal_wxstatus" style="margin-top:10px"></div>
+            <div class="row2 wxgeo">
+              <div class="field"><label class="lbl" data-i18n>Breitengrad</label><input type="text" id="cal_lat" placeholder="47.071" autocomplete="off"></div>
+              <div class="field"><label class="lbl" data-i18n>Längengrad</label><input type="text" id="cal_lon" placeholder="15.439" autocomplete="off"></div>
+            </div>
+            <p class="hint" id="wx_geohint"></p>
+            <p class="hint" id="wx_sun"></p>
             <div class="actions"><button class="btn" id="wx_save" data-i18n>Speichern</button><span class="toast" id="wx_toast"></span></div>
           </div>
           <!-- Ohne Audioserver in der Struktur nur ein Einzeiler (Klasse amnone, loadSettings) -->
           <div class="card" id="amCard">
             <h3 data-i18n>Audioserver</h3>
-            <p class="note" data-i18n>Zeigt Cover, Titel und Favoriten vom Loxone-Audioserver. Den Test-Ton für die Lautsprecher findest du unter System → Diagnose.</p>
-            <p class="note" data-i18n>tilebert liest Cover, Titel, Interpret und Favoriten live vom Audioserver (Gen 2, Port 7091). Die Adresse erkennt es selbst aus der Loxone-Struktur. Die Infos erscheinen bei der passenden Zone, auch bei Nachbauten wie Audioserver4Home.</p>
+            <p class="note" data-i18n>Zeigt Cover, Titel und Favoriten live vom Audioserver. Den Test-Ton findest du unter System → Diagnose.</p>
             <p class="note keep" id="am_none" data-i18n>Kein Audioserver gefunden</p>
-            <label class="chk"><input type="checkbox" id="am_enabled"><span data-i18n>Live-Daten vom Audioserver nutzen</span></label>
-            <div class="note" id="am_servers" style="margin-top:8px"></div>
+            <div class="aplist" id="am_servers"></div>
             <div class="actions"><button class="btn" id="am_save" data-i18n>Speichern</button><span class="toast" id="am_toast"></span></div>
           </div>
           <!-- Alarmbausteine: Alarmanlagen und Rauchmelder; gespeichert werden nur die abgeschalteten (ui.alarmOff, Speicherleiste unten) -->
           <div class="card" id="alCard" style="display:none">
             <h3 data-i18n>Alarmbausteine</h3>
-            <p class="note keep" data-i18n>Neue werden automatisch aktiv.</p>
+            <p class="note keep" data-i18n>Neue Alarmbausteine werden automatisch hinzugefügt und sind aktiv.</p>
             <div class="aplist" id="al_list"></div>
             <p class="hint" data-i18n>Ein aktiver Baustein zeigt auf allen Geräten ein rotes Vollbild. Den Ton schaltest du je Gerät ein oder aus.</p>
           </div>
         </section>
 
-        <!-- System → Kalender & Kameras: Kalender, Feiertage, Anzeige (Speicherbereich cal), Tuerstationen, Kameras (Speicherbereich ic) -->
-        <section class="spane" data-sub="content">
+        <!-- System → Kalender: Kalender, Feiertage, Anzeige (Speicherbereich cal) -->
+        <section class="spane" data-sub="calendar">
           <p class="lead" data-i18n>Zeigt Termine aus iCal-Abos im Dashboard und in den Kalender-Widgets aller Panels.</p>
           <div class="card" id="calCard">
             <h3 data-i18n>iCal-Kalender</h3>
@@ -1944,6 +1983,11 @@
             <p class="note" data-i18n>„Termine im Dashboard“ ist eine Obergrenze: Was neben Wetter und Uhr nicht mehr passt, bleibt weg (auf 480 × 480 etwa drei). Die vollständige Liste steht im Kalender-Widget.</p>
             <div class="actions"><button class="btn" id="cal_save" data-i18n>Speichern</button><span class="toast" id="cal_toast"></span></div>
           </div>
+        </section>
+
+        <!-- System → Kameras: Tuerstationen, weitere Kameras (Speicherbereich ic) -->
+        <section class="spane" data-sub="cameras">
+          <p class="lead" data-i18n>Türstationen aus Loxone und eigene Kameras für das Widget „Kamera“.</p>
           <!-- Tuerstationen aus Loxone; ohne Tuerstationen nur ein Einzeiler (Klasse icnone, loadSettings) -->
           <div class="card icwrap" id="icCard">
             <h3 data-i18n>Türstationen aus Loxone</h3>
@@ -1980,7 +2024,7 @@
               <div class="hint" style="flex:1 1 100%" data-i18n>Auch über Mitternacht möglich, z. B. 22:00 bis 06:30.</div>
               <div class="npwarn" id="nt_clockwarn" role="note" hidden style="flex:1 1 100%" data-i18n>Nacht ab und Nacht bis sind gleich. Dann ist nie Nacht.</div>
             </div>
-            <p class="hint" id="nt_f_sun" data-i18n>Nacht von Sonnenuntergang bis Sonnenaufgang. Die Zeiten kommen vom Miniserver, sonst vom Wetterdienst.</p>
+            <p class="hint" id="nt_f_sun" data-i18n>Nacht von Sonnenuntergang bis Sonnenaufgang. Die Zeiten kommen vom Miniserver oder werden aus seinem Standort berechnet.</p>
             <div class="actions"><button class="btn" id="nt_save" data-i18n>Speichern</button><span class="toast" id="nt_toast"></span></div>
           </div>
         </div>
@@ -2320,19 +2364,18 @@ const NAV={
   system:[
     {k:'loxone',label:'Loxone',at:'settings:loxone',cards:[
       {k:'ms',label:'Miniserver',sel:'#msCard',kw:'Zugangsdaten Zertifikat'},
-      {k:'cw',label:'Befehlskontrolle',sel:'#cwCard',kw:'Monitoring'},
       {k:'wx',label:'Wetter',sel:'#wxCard'},
       {k:'audio',label:'Audioserver',sel:'#amCard',kw:'Audio'},
       {k:'alarms',label:'Alarmbausteine',sel:'#alCard',kw:'Alarm Rauchmelder Alarmanlage Vollbild',need:()=>alList().length>0}]},
-    {k:'content',label:'Kalender & Kameras',at:'settings:content',cards:[
-      {k:'cal',label:'Kalender',sel:'#calCard',kw:'iCal'},
+    {k:'calendar',label:'Kalender',at:'settings:calendar',cards:[
+      {k:'cal',label:'iCal-Kalender',sel:'#calCard',kw:'iCal Kalender'},
       {k:'holidays',label:'Feiertage',sel:'#holCard'},
-      {k:'calview',label:'Kalender-Anzeige',sel:'#calViewCard'},
-      {k:'intercom',label:'Türstationen',sel:'#icCard',kw:'Kameras Intercom'},
-      {k:'cams',label:'Weitere Kameras',sel:'#camCard',kw:'Kameras'}]},
+      {k:'calview',label:'Kalender-Anzeige',sel:'#calViewCard'}]},
+    {k:'cameras',label:'Kameras',at:'settings:cameras',cards:[
+      {k:'intercom',label:'Türstationen',sel:'#icCard',kw:'Kameras Intercom Klingel'},
+      {k:'cams',label:'Weitere Kameras',sel:'#camCard',kw:'Kameras MJPEG'}]},
     {k:'panels',label:'Alle Panels',at:'global:panels',cards:[
       {k:'look',label:'Standard-Aussehen',sel:'#lookCard',kw:'Darstellung Aussehen'},
-      {k:'effects',label:'Effekte',sel:'#fxCard'},
       {k:'night',label:'Nachtmodus',sel:'#ntCard'},
       {k:'behavior',label:'Bedienung',sel:'#bhCard',kw:'Doppeltipp Wecker'},
       {k:'catcolors',label:'Kategorie-Farben',sel:'#ccCard',open:true}]},
@@ -2364,12 +2407,14 @@ const NAV={
 // Alte Sprungziele (Hash, goTo, data-goto) -> neues Ziel 'rubrik:reiter[:karte]'
 const NAV_OLD={
   'overview':'start', 'settings':'system:loxone', 'settings:miniserver':'system:loxone',
-  'settings:audio':'system:loxone:audio', 'settings:calendar':'system:content',
-  'settings:intercom':'system:content:intercom', 'settings:behavior':'system:panels:behavior',
+  'settings:audio':'system:loxone:audio',
+  'settings:intercom':'system:cameras:intercom', 'settings:behavior':'system:panels:behavior',
   'settings:g:appearance':'system:panels', 'global':'system:panels', 'global:appearance':'system:panels',
   'global:catcolors':'system:panels:catcolors', 'settings:security':'system:password',
   'settings:diagnose':'system:diagnose', 'devices:panels':'devices:list', 'devices:newpanel':'devices:add',
   'devices:supported':'devices:add:supported', 'devices:devs':'devices:list', 'devices:mode':'devices:list'};
+// frueherer Reiter "Kalender & Kameras" (content): Karten der Kameras -> Kameras, sonst Kalender
+const NAV_CONTENT_CAM=['intercom','cams'];
 const NAV_PTAB_OLD={profile:'settings', display:'appearance'};   // alter Panel-Reiter -> neuer
 // Reiterleiste einer internen Rubrik
 function navBar(r){
@@ -2550,7 +2595,7 @@ function renderOverview(){
   // Pflicht in Arbeitsreihenfolge; Fortschritt zaehlt nur die Pflicht
   const must=[[!!ms,T('Miniserver verbinden'),'system:loxone'],[designed,T('Panel gestalten'),'panel:tabs'],
     [devs.length>0,T('Gerät verbinden'),'devices:add'],[typed,T('Gerätetyp festlegen'),'devices:list']];
-  const opt=[[!!cal,T('Kalender einrichten'),'system:content'],[!!ADMIN.enabled,ADMIN.enabled?T('Passwort gesetzt'):T('Passwort setzen'),'system:password']];
+  const opt=[[!!cal,T('Kalender einrichten'),'system:calendar'],[!!ADMIN.enabled,ADMIN.enabled?T('Passwort gesetzt'):T('Passwort setzen'),'system:password']];
   const done=must.filter(s=>s[0]).length, pct=Math.round(done/must.length*100), optOpen=opt.filter(s=>!s[0]);
   const dot=on=>'<i class="sdot'+(on?' on':'')+'"></i>';
   const step=([ok,l,g])=>'<button class="ovstep'+(ok?' ok':'')+'" data-goto="'+g+'"><span class="ck">'+(ok?'✓':'')+'</span>'+esc(l)+'</button>';
@@ -2573,7 +2618,7 @@ function renderOverview(){
       '<div class="msmon" id="ovMsMon">'+msMonHTML()+'</div></button>'+
     '<div class="ovcard ovpanels"><span class="ovk">'+T('Geräte')+'</span>'+
       '<b>'+dot(online.length>0)+online.length+' / '+devs.length+' '+T('online')+'</b>'+
-      (devs.length?devs.slice().sort((a,b)=>(!!b.online-!!a.online)||String(a.name||'').localeCompare(String(b.name||''),undefined,{sensitivity:'base',numeric:true})).map(d=>'<button class="ovp" data-goto="devices:list"><b class="ovpd">'+(devReconnecting(d)?'<i class="sdot wait"></i>':dot(d.online))+esc(d.name)+'</b>'+
+      (devs.length?devSort(devs).map(d=>'<button class="ovp" data-goto="devices:list"><b class="ovpd">'+(devReconnecting(d)?'<i class="sdot wait"></i>':dot(d.online))+esc(d.name)+'</b>'+
         '<small>'+(d.online?(d.profile?esc(d.profile):T('kein Panel')):devReconnecting(d)?T('verbindet …'):T('offline'))+'</small></button>').join('')
         :'<button class="ovp" data-goto="devices:add"><b>'+T('Noch kein Gerät verbunden')+'</b><small>'+T('Gerät hinzufügen')+' ›</small></button>')+'</div>';
   ovWarnSync();
@@ -2694,7 +2739,7 @@ function palItems(){
       (t.cards||[]).filter(c=>!c.need||c.need(id)).forEach(c=>L.push({t:nm+' · '+T(c.label),s:T('Panel')+' → '+T(t.label),k:(kwOf(c)+' '+PAL_KW_PANEL).trim(),ic:'panel',go:()=>goTo('panel',id,t.k,c.k)})); });
     L.push({t:nm+' · '+T('Dashboard'),s:T('Panel'),k:PAL_KW_PANEL,ic:'grid',go:()=>{ cur=id; tbReset(); subPconf='tabs'; tbTab=DK; setRubric('pconf'); }});
     (p.tabs||[]).forEach(k=>L.push({t:nm+' · '+tbLabel(p,k),s:T('Tab'),k:PAL_KW_PANEL,ic:'tab',go:()=>{ cur=id; tbReset(); subPconf='tabs'; tbTab=k; setRubric('pconf'); }})); });
-  Object.keys(DEV).forEach(n=>L.push({t:n,s:T('Gerät'),k:PAL_KW_DEV,ic:'device',go:()=>goTo('devices','list',n)}));
+  devSort(Object.keys(DEV)).forEach(n=>L.push({t:n,s:T('Gerät'),k:PAL_KW_DEV,ic:'device',go:()=>goTo('devices','list',n)}));
   L.push({t:T('Speichern'),s:T('Aktion')+' · Strg/⌘ S',ic:'check',go:()=>{ if(dirty||SECT_DIRTY.size) save(); }});
   L.push({t:T('Panel öffnen'),s:T('Aktion'),k:PAL_KW_PANEL,ic:'open',go:()=>window.open(panelUrl(cur),'_blank')});
   L.push({t:T('Panel hinzufügen'),s:T('Aktion'),k:PAL_KW_PANEL,ic:'plus',go:()=>$('#addBtn').click()});
@@ -2740,6 +2785,7 @@ function setRubric(r){
   $('#setHost').style.display = (ov||pc)?'none':'';     // System und Geraete teilen sich setHost
   $('#phead').style.display = pc?'':'none';
   $('#subtabs').style.display = ov?'none':'';
+  $('#subtabs').classList.toggle('psub', r==='pconf');   // Panel-Ansicht: schmaleres Untermenue
   saveBarVis();
   if(ov){ renderOverview(); refreshAdmin(); navHashWrite(); return; }
   renderList();                                          // aktives Panel nur im Panel-Editor markieren
@@ -2798,6 +2844,7 @@ function navNorm(r, sub, x, y){
   if(sub==='g'&&x){ sub='g:'+x; x=''; }            // settings:g:appearance aus dem Hash
   const old=NAV_OLD[sub?r+':'+sub:r];
   if(old){ const o=old.split(':'); r=o[0]; sub=o[1]||''; x=o[2]||x; }
+  if(sub==='content'&&(r==='system'||r==='settings')){ r='system'; sub=NAV_CONTENT_CAM.includes(x)?'cameras':'calendar'; }
   const n=NAV_RUB[r]; if(!n||n==='start') return {r:'start',k:'start'};
   if(n==='panel'){ let id='', tab='';
     if(r==='panel'){ if(x){ id=sub; tab=x; } else if(pOwn(sub)) id=sub; else tab=sub; }
@@ -2871,7 +2918,6 @@ document.addEventListener('click',e=>{ const b=e.target.closest('[data-goto]'); 
 const SECTS=[
   {k:'ms', label:'Miniserver', btn:'#ms_save', root:'#msCard'},
   {k:'wx', label:'Wetter', btn:'#wx_save', root:'#wxCard'},
-  {k:'cw', label:'Befehlskontrolle', btn:'#cw_save', root:'#cwCard'},
   {k:'ic', label:'Kameras', btn:'#ic_save', root:'#icCard,#camCard'},
   {k:'dev', label:'Alle Geräte', btn:'#dev_save', root:'#dev_list'},
   {k:'am', label:'Audioserver', btn:'#am_save', root:'#amCard'},
@@ -3041,25 +3087,6 @@ function bindFont(p,key,id){
     else { fc.style.display='none'; fs.value?p.ui[key]=fs.value:delete p.ui[key]; } markDirty(); };
   if(fc) fc.oninput=()=>{ p.ui=p.ui||{}; const v=fc.value.trim(); v?p.ui[key]=v:delete p.ui[key]; markDirty(); };
 }
-// Animationsstufen: keine / mittel (nur Ueberblendungen) / viel (alles)
-function motionOpts(cur,withGlobal){
-  const o=(v,t)=>'<option value="'+v+'"'+(cur===v?' selected':'')+'>'+T(t)+'</option>';
-  return (withGlobal?o('','Wie Standard'):'')+o('off','Keine')+o('mid','Mittel')+o('full','Viel');
-}
-// Mehr Kontrast: Schatten an Kacheln/Knoepfen (global an/aus, je Panel abweichend)
-function contrastOpts(cur,withGlobal){
-  const o=(v,t)=>'<option value="'+v+'"'+(cur===v?' selected':'')+'>'+T(t)+'</option>';
-  return (withGlobal?o('','Wie Standard'):'')+o('off','Aus (flach)')+o('on','Mehr Kontrast');
-}
-// Lichtszenen: Piktogramm zeigt Lichtfarbe + Helligkeit der Szene (lernend)
-function bigValOpts(cur,withGlobal){
-  const o=(v,t)=>'<option value="'+v+'"'+(cur===v?' selected':'')+'>'+T(t)+'</option>';
-  return (withGlobal?o('','Wie Standard'):'')+o('off','Aus')+o('on','An');
-}
-function sceneLightOpts(cur,withGlobal){
-  const o=(v,t)=>'<option value="'+v+'"'+(cur===v?' selected':'')+'>'+T(t)+'</option>';
-  return (withGlobal?o('','Wie Standard'):'')+o('off','Einheitliches Symbol')+o('on','Lichtfarbe zeigen');
-}
 // Aussehen: Design (Farben) und Schrift. Sprache steht bei "Bedienung" bzw. im
 // Profil, die Textfarbe kommt aus dem Design (Farbe "Schrift").
 function appearanceFields(ui){
@@ -3076,7 +3103,7 @@ function appearanceFields(ui){
     sizeField('Wettervorschau','saverFcSize',ui)+'</div></details>';
 }
 
-// System → Alle Panels (intern Rubrik global): Standard-Aussehen, Effekte, Nachtmodus, Bedienung,
+// System → Alle Panels (intern Rubrik global): Standard-Aussehen, Nachtmodus, Bedienung,
 // Kategorie-Farben. Alles ausser dem Nachtmodus speichert ueber die Speicherleiste in theme.json.
 function renderGlobalEditor(p){
   ntPark();
@@ -3087,16 +3114,6 @@ function renderGlobalEditor(p){
     '<section class="spane" data-sub="panels"><div class="card" id="lookCard"><h3>'+T('Standard-Aussehen')+'</h3>'+
       '<p class="note">'+T('Vorlage, Farben und Schrift aller Panels.')+'</p>'+
       '<div class="sizes">'+appearanceFields(p.ui)+'</div></div>'+
-    '<div class="card" id="fxCard"><h3>'+T('Effekte')+'</h3><div class="sizes">'+
-      '<div class="field" style="max-width:260px"><label class="lbl">'+T('Animation')+'</label><select id="gMotion">'+motionOpts((p.ui||{}).motion||'full',false)+'</select></div>'+
-      '<div class="field" style="max-width:320px"><label class="lbl">'+T('Kontrast')+'</label><select id="gContrast">'+contrastOpts((p.ui||{}).contrast==='on'?'on':'off',false)+'</select></div>'+
-      '<div class="field" style="max-width:340px"><label class="lbl">'+T('Lichtszenen')+'</label><select id="gSceneLight">'+sceneLightOpts((p.ui||{}).sceneLight==='on'?'on':'off',false)+'</select></div>'+
-      '<div class="field" style="max-width:260px"><label class="lbl">'+T('Werte groß auf Kacheln')+'</label><select id="gBigVals">'+bigValOpts(((p.ui||{}).bigValues===true||(p.ui||{}).bigValues==='on')?'on':'off',false)+'</select></div>'+
-      '<label class="chk" style="flex:1 1 100%;margin-top:4px"><input type="checkbox" id="gIconAnim"'+((p.ui||{}).iconAnim==='off'?'':' checked')+'>'+
-        '<span>'+T('Animierte Symbole: Klingel und Wecker wackeln, Jalousiepfeile wippen, die Heizung flackert, Symbole ploppen beim Einschalten, neue Werte ticken ein')+'</span></label>'+
-      '</div>'+
-      '<p class="hint">'+T('Animation: Keine, Mittel (nur Überblendungen) oder Viel (mit Zoom). Kontrast: weicher Schatten an Kacheln und Knöpfen. Lichtszenen: Das Symbol zeigt Lichtfarbe und Helligkeit und lernt jede Szene beim ersten Einschalten. Auf schwachen Geräten helfen Animation „Mittel“ und Kontrast „Aus“.')+'</p>'+
-    '</div>'+
     globalBehaviorHTML(p.ui||{})+
     // Expertenkarte zuletzt und eingeklappt; Sprung "Kategorie-Farben" klappt sie auf (NAV open)
     '<details class="card" id="ccCard"><summary><h3>'+T('Kategorie-Farben (Ampel)')+'</h3></summary>'+
@@ -3108,16 +3125,6 @@ function renderGlobalEditor(p){
   { const ui=p.ui=p.ui||{};
     $('#sysDblOff').onchange=e=>{ if(e.target.checked) delete ui.dblTapOff; else ui.dblTapOff=false; markDirty(); };
     $('#sysAlarms').onchange=e=>{ if(e.target.checked) delete ui.alarmsEnabled; else ui.alarmsEnabled=false; markDirty(); }; }
-  { const gm=$('#gMotion'); if(gm) gm.onchange=()=>{ p.ui=p.ui||{};
-      if(gm.value==='full') delete p.ui.motion; else p.ui.motion=gm.value; markDirty(); }; }
-  { const gs=$('#gSceneLight'); if(gs) gs.onchange=()=>{ p.ui=p.ui||{};
-      if(gs.value==='on') p.ui.sceneLight='on'; else delete p.ui.sceneLight; markDirty(); }; }
-  { const ga=$('#gIconAnim'); if(ga) ga.onchange=()=>{ p.ui=p.ui||{};
-      if(ga.checked) delete p.ui.iconAnim; else p.ui.iconAnim='off'; markDirty(); }; }
-  { const gb=$('#gBigVals'); if(gb) gb.onchange=()=>{ p.ui=p.ui||{};
-      if(gb.value==='on') p.ui.bigValues='on'; else delete p.ui.bigValues; markDirty(); }; }
-  { const gc=$('#gContrast'); if(gc) gc.onchange=()=>{ p.ui=p.ui||{};
-      if(gc.value==='on') p.ui.contrast='on'; else delete p.ui.contrast; markDirty(); }; }
   renderCatColors(p);
   $('#delSlot').innerHTML='';
   $('#saveBtn').onclick=save;
@@ -3189,11 +3196,9 @@ function renderEditor(){
   if(p.__global){ renderGlobalEditor(p); return; }
   const ok=PCONF_TABS.map(t=>t.k);
   if(!ok.includes(subPconf)) subPconf='tabs';
-  // Seitentitel des Panels (ueber den Reitern): Label "Panel", Name, rechts "Panel oeffnen". Adresse + Kopieren: Reiter Einstellungen.
+  // Seitentitel des Panels (ueber den Reitern): Label "Panel", Name. Adresse, Kopieren und Oeffnen: Reiter Einstellungen.
   $('#phead').innerHTML =
-    '<div class="phtxt"><span class="pheyebrow">'+T('Panel')+'</span><h2 id="hTitle">'+esc(p.title||cur)+'</h2></div>'+
-    '<a class="phbtn phopen" href="'+esc(panelUrl(cur))+'" target="_blank" rel="noopener" title="'+T('Panel öffnen')+'" aria-label="'+T('Panel öffnen')+'">'+
-      '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg><span class="phbl">'+T('Panel öffnen')+'</span></a>';
+    '<div class="phtxt"><span class="pheyebrow">'+T('Panel')+'</span><h2 id="hTitle">'+esc(p.title||cur)+'</h2></div>';
 
   $('#pconfHost').innerHTML =
    // 1 · Tabs: Leiste + Raster
@@ -3204,7 +3209,9 @@ function renderEditor(){
        '<div class="field" style="max-width:320px"><label class="lbl" for="fTitle">Name</label>'+
          '<input type="text" id="fTitle" value="'+esc(p.title||'')+'" placeholder="tilebert"></div>'+
        '<div class="field pstart"><label class="lbl" id="pStartLbl">'+T('Start-Adresse')+'</label><div class="pstartrow"><code id="pStartUrl" aria-labelledby="pStartLbl">'+esc(startUrl(cur))+'</code>'+
-         '<button type="button" class="btn ghost sm" id="phCopy" title="'+T('Start-Adresse kopieren')+'" aria-label="'+T('Start-Adresse kopieren')+'">'+T('Kopieren')+'</button></div>'+
+         '<button type="button" class="btn ghost sm" id="phCopy" title="'+T('Start-Adresse kopieren')+'" aria-label="'+T('Start-Adresse kopieren')+'">'+T('Kopieren')+'</button>'+
+         '<a class="pstartopen" id="pStartOpen" href="'+esc(startUrl(cur))+'" target="_blank" rel="noopener" title="'+T('Panel in neuem Tab öffnen')+'">'+T('Öffnen')+
+           '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17 17 7M9 7h8v8"/></svg></a></div>'+
          '<div class="hint">'+T('Diese Adresse trägst du am Gerät ein.')+'</div></div>'+
      '</div>'+(cur!=='default'?'<div class="pdelcard"><p class="hint">'+T('Das Panel wird aus der Liste entfernt. Wirksam nach dem Speichern, bis dahin mit „Rückgängig“ zurückholbar.')+'</p><button type="button" class="btn" id="pDelBtn">'+T('Panel löschen')+'</button></div>':'')+'</div>'+
      '<div class="card"><h3>'+T('Bildschirm')+'</h3>'+
@@ -3252,20 +3259,6 @@ function renderEditor(){
    '<section class="spane" data-sub="appearance"><div class="card"><h3>Aussehen</h3>'+
      '<p class="note">'+T('Gilt nur für dieses Panel. „Wie Standard“ übernimmt System → Alle Panels.')+'</p>'+
      '<div class="sizes">'+appearanceFields(p.ui)+'</div></div>'+
-     '<div class="card"><h3>'+T('Effekte')+'</h3><div class="sizes">'+
-       '<div class="field" style="max-width:260px"><label class="lbl">Animation</label>'+
-         '<select id="fMotion">'+motionOpts((p.ui||{}).motion||'',true)+'</select></div>'+
-       '<div class="field" style="max-width:320px"><label class="lbl">Kontrast</label>'+
-         '<select id="fContrast">'+contrastOpts((p.ui||{}).contrast||'',true)+'</select></div>'+
-       '<div class="field" style="max-width:320px"><label class="lbl">Lichtszenen</label>'+
-         '<select id="fSceneLight">'+sceneLightOpts((p.ui||{}).sceneLight||'',true)+'</select></div>'+
-       '<div class="field" style="max-width:260px"><label class="lbl">'+T('Animierte Symbole')+'</label>'+
-         '<select id="fIconAnim">'+['','on','off'].map(v=>'<option value="'+v+'"'+(((p.ui||{}).iconAnim||'')===v?' selected':'')+'>'+T(v===''?'Wie Standard':(v==='on'?'An':'Aus'))+'</option>').join('')+'</select></div>'+
-     '</div><p class="hint">'+T('Auf schwachen Geräten helfen Animation „Mittel“ oder „Keine“ und Kontrast „Aus“.')+'</p></div>'+
-     '<div class="card"><h3>'+T('Kacheln')+'</h3><div class="sizes">'+
-       '<div class="field" style="max-width:260px"><label class="lbl">'+T('Werte groß auf Kacheln')+'</label>'+
-         '<select id="fBigVals">'+bigValOpts((p.ui||{}).bigValues===true?'on':((p.ui||{}).bigValues||''),true)+'</select></div></div>'+
-     '<p class="hint">'+T('Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol blass im Hintergrund. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert. Pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.')+'</p></div>'+
      '<div class="card"><h3>'+T('Am Gerät')+'</h3>'+
        '<label class="chk"><input type="checkbox" id="fDevBtn"'+((p.ui||{}).devBtn===true?' checked':'')+'><span>'+T('Zahnrad für die Einstellungen am Gerät zeigen')+'</span></label>'+
        '<p class="hint">'+T('Die Einstellungen öffnen auch mit fünf schnellen Tipps. Nicht am Handy.')+'</p></div>'+
@@ -3280,7 +3273,7 @@ function renderEditor(){
          '<select id="fReload">'+reloadOpts((p.ui||{}).reloadHours)+'</select>'+
          '<div class="hint">'+T('Gegen Einfrieren. Lädt nur neu, wenn das Dashboard offen ist.')+'</div></div>'+
        '</div>'+
-       '<p class="hint">'+T('Abdunkeln, Präsenzerkennung, Helligkeit und Töne stellst du je Gerät ein: Geräte → Alle Geräte.')+'</p></div>'+
+       '<p class="hint">'+T('Abdunkeln, Präsenzerkennung, Helligkeit, Töne und Effekte stellst du je Gerät ein: Geräte → Alle Geräte.')+'</p></div>'+
      '<div class="card"><h3>'+T('Nacht')+'</h3>'+
        '<p class="hint keep">'+T('Wann Nacht ist, legst du unter System → Alle Panels → Nachtmodus fest.')+'</p>'+
        '<div class="sizes">'+
@@ -3335,17 +3328,7 @@ function renderEditor(){
     document.querySelectorAll('[data-psize]').forEach(x=>x.classList.toggle('on',x===b));
     delete tbEff[DK]; delete tbLast[DK]; tbHist[DK]=[]; tbSel=-1;
     markDirty(); renderTabEditor(); });
-  { const fm=$('#fMotion'); if(fm) fm.onchange=e=>{ p.ui=p.ui||{};
-      if(e.target.value) p.ui.motion=e.target.value; else delete p.ui.motion; markDirty(); }; }
-  { const fs=$('#fSceneLight'); if(fs) fs.onchange=e=>{ p.ui=p.ui||{};
-      if(e.target.value) p.ui.sceneLight=e.target.value; else delete p.ui.sceneLight; markDirty(); }; }
-  { const fb=$('#fBigVals'); if(fb) fb.onchange=e=>{ p.ui=p.ui||{};
-      if(e.target.value) p.ui.bigValues=e.target.value; else delete p.ui.bigValues; markDirty(); }; }
   { const fd=$('#fDevBtn'); if(fd) fd.onchange=e=>{ p.ui=p.ui||{}; if(e.target.checked) p.ui.devBtn=true; else delete p.ui.devBtn; markDirty(); }; }
-  { const fa=$('#fIconAnim'); if(fa) fa.onchange=e=>{ p.ui=p.ui||{};
-      if(e.target.value) p.ui.iconAnim=e.target.value; else delete p.ui.iconAnim; markDirty(); }; }
-  { const fc=$('#fContrast'); if(fc) fc.onchange=e=>{ p.ui=p.ui||{};
-      if(e.target.value) p.ui.contrast=e.target.value; else delete p.ui.contrast; markDirty(); }; }
   { const fr=$('#fReload'); if(fr) fr.onchange=()=>{ p.ui=p.ui||{};
       if(fr.value==='') delete p.ui.reloadHours; else p.ui.reloadHours=Number(fr.value); markDirty(); }; }
   renderTabList(p);
@@ -3630,7 +3613,7 @@ function renderDashProps(p){
     '<div class="field dexits"><label class="lbl">'+T('Dashboard schließen')+'</label>'+
       SV_EXITS.map(([k,l])=>'<label class="chk"><input type="checkbox" data-exit="'+k+'"'+(ex.indexOf(k)>=0?' checked':'')+'> <span>'+esc(T(l))+'</span></label>').join('')+
       '<div class="hint">'+T('Mehrere Haken sind möglich. Ohne Haken schließt nur ein Tipp auf eine freie Stelle das Dashboard.')+'</div></div>'+
-    '<div class="field damb"><label class="lbl" title="'+esc(T('Tageslicht: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten aus dem Wetter). Außentemperatur: kalt blau, mild grün, warm gelb, heiß orange bis rot. Ohne Wetterdaten bleiben die festen Farben.'))+'">'+T('Farbverlauf')+' <span class="dinfo">ⓘ</span></label>'+
+    '<div class="field damb"><label class="lbl" title="'+esc(T('Tageslicht: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten vom Miniserver). Außentemperatur: kalt blau, mild grün, warm gelb, heiß orange bis rot. Ohne Wetterdaten bleiben die festen Farben.'))+'">'+T('Farbverlauf')+' <span class="dinfo">ⓘ</span></label>'+
       [['ambBg',T('Hintergrund')],['ambClock',T('Uhrzeit')]].map(([k,l])=>
         '<div class="dambrow"><span>'+l+'</span><select data-amb="'+k+'">'+
         [['',T('Feste Farben (Vorlage)')],['light',T('Nach Tageslicht')],['temp',T('Nach Außentemperatur')]].concat(k==='ambBg'?[['image',T('Eigenes Bild')]]:[]).map(([v,t])=>
@@ -3867,6 +3850,11 @@ function renderTabEditor(){
   tbFitCells(two?2*g:g, two, cell);
   tbBindLib(p); tbBindSide(p); tbBindDrag(p);
 }
+// Baustein ohne Loxone-Symbol: vier kleine Kacheln statt eines einzelnen Quadrats (sieht sonst wie eine Checkbox aus)
+const LIB_NOICON='<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>';
+// Listenzeile der Bibliothek: Name (bis 2 Zeilen), darunter Raum bzw. Groesse; Haken "schon im Tab" per CSS rechts
+function tbLibTxt(name, sub){ return '<span class="ltx"><span class="lnm">'+esc(name||'')+'</span>'+(sub?'<span class="lsub">'+esc(sub)+'</span>':'')+'</span>'; }
+function tbLibTip(name, room, used){ const t=(name||'')+(room?' · '+room:'')+(used?' · '+T('schon im Tab'):''); return ' title="'+esc(t)+'"'; }
 // Bibliothek: Bausteine (nach Raum, mit Suche) bzw. Raeume/Kategorien und Widgets
 function tbLibHTML(p,k){
   const g=tbGrid(p,k), fk=tbFolder(k), placed=new Set((tbEff[k]||[]).map(it=>it.uuid).filter(Boolean));
@@ -3876,15 +3864,15 @@ function tbLibHTML(p,k){
   const usedT=new Set((tbEff[k]||[]).map(it=>it.type));
   if(tbLibTab==='widgets')
     return tabs+'<div class="liblist">'+Object.keys(SV_W).filter(t=>t!=='tile').sort((a,b)=>(usedT.has(b)?1:0)-(usedT.has(a)?1:0)).map(t=>
-      '<div class="libit wg c-'+t+(usedT.has(t)?' used':'')+'" data-new="'+t+'">'+tbIcoHtml('',WG_ICONS[t])+'<span class="lnm">'+esc(T(SV_W[t].label))+'</span>'+
-      '<small>'+gridMin(t,g,tbTabF()).join('×')+'</small></div>').join('')+'</div>'+
+      '<div class="libit wg c-'+t+(usedT.has(t)?' used':'')+'" data-new="'+t+'"'+tbLibTip(T(SV_W[t].label),'',usedT.has(t))+'>'+tbIcoHtml('',WG_ICONS[t])+
+      tbLibTxt(T(SV_W[t].label),gridMin(t,g,tbTabF()).join('×'))+'</div>').join('')+'</div>'+
       '<div class="libhint">'+T('Ziehe ein Widget ins Raster und wähle rechts Baustein oder Quelle.')+'</div>';
   const q=tbLibQ.toLowerCase();
   let list;
   if(fk){ list=tbFolderList(fk).filter(o=>!q||o.name.toLowerCase().includes(q))
       .sort((a,b)=>(placed.has(b.uuid)?1:0)-(placed.has(a.uuid)?1:0)).map(o=>
-      '<div class="libit'+(placed.has(o.uuid)?' used':'')+'" data-new="'+fk+'" data-uuid="'+esc(o.uuid)+'">'+tbIcoHtml('',BICONS.folder)+
-      '<span class="lnm">'+esc(o.name)+'</span>'+(placed.has(o.uuid)?'<small>✓</small>':'')+'</div>').join(''); }
+      '<div class="libit'+(placed.has(o.uuid)?' used':'')+'" data-new="'+fk+'" data-uuid="'+esc(o.uuid)+'"'+tbLibTip(o.name,'',placed.has(o.uuid))+'>'+tbIcoHtml('',BICONS.folder)+
+      tbLibTxt(o.name,'')+'</div>').join(''); }
   else {
     const cs=(META.controls||[]).filter(c=>(!q||(c.name||'').toLowerCase().includes(q)||(c.roomName||'').toLowerCase().includes(q))
         && (!tbLibRoom||(c.room||'')===tbLibRoom) && (!tbLibCat||(c.cat||'')===tbLibCat))
@@ -3893,11 +3881,11 @@ function tbLibHTML(p,k){
     // schon im Tab: oben als eigene Gruppe, danach alle uebrigen nach Raum
     const inTab=cs.filter(c=>placed.has(c.uuid)), rest=cs.filter(c=>!placed.has(c.uuid));
     if(inTab.length) list+='<div class="libgrp">'+T('In diesem Tab')+'</div>'+inTab.map(c=>
-      '<div class="libit used" data-new="tile" data-uuid="'+esc(c.uuid)+'">'+tbIcoHtml(c.iconUrl)+
-      '<span class="lnm">'+esc(c.name)+'</span><small>'+esc(c.roomName||'')+'</small></div>').join('');
+      '<div class="libit used" data-new="tile" data-uuid="'+esc(c.uuid)+'"'+tbLibTip(c.name,c.roomName,true)+'>'+tbIcoHtml(c.iconUrl,LIB_NOICON)+
+      tbLibTxt(c.name,c.roomName||'')+'</div>').join('');
     rest.slice(0,400).forEach(c=>{ if(c.roomName!==room){ room=c.roomName; list+='<div class="libgrp">'+esc(room||T('Ohne Raum'))+'</div>'; }
-      list+='<div class="libit'+(placed.has(c.uuid)?' used':'')+'" data-new="tile" data-uuid="'+esc(c.uuid)+'">'+tbIcoHtml(c.iconUrl)+
-        '<span class="lnm">'+esc(c.name)+'</span>'+(placed.has(c.uuid)?'<small title="'+T('schon im Tab')+'">✓</small>':'')+'</div>'; });
+      list+='<div class="libit'+(placed.has(c.uuid)?' used':'')+'" data-new="tile" data-uuid="'+esc(c.uuid)+'"'+tbLibTip(c.name,'',placed.has(c.uuid))+'>'+tbIcoHtml(c.iconUrl,LIB_NOICON)+
+        tbLibTxt(c.name,'')+'</div>'; });
   }
   // Filter nach Raum / Kategorie (nur in der Bausteinliste)
   const opt=(arr,sel,all)=>'<option value="">'+all+'</option>'+arr.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))
@@ -3973,7 +3961,7 @@ function tbSideHTML(p){
       (META.statRanges||[['24h','24 h'],['7d','7 Tage'],['30d','30 Tage']]).map(r=>
         '<option value="'+esc(r[0])+'"'+((it.range||'24h')===r[0]?' selected':'')+'>'+esc(r[1])+'</option>').join('')+'</select>'; }
   if(it.type==='weather'||it.type==='wxdetail') h+='<div class="hintp">'+T('Quelle: System → Loxone → Wetter.')+'</div>';
-  if(it.type==='calendar') h+='<div class="hintp">'+T('Quelle: System → Kalender & Kameras.')+'</div>';
+  if(it.type==='calendar') h+='<div class="hintp">'+T('Quelle: System → Kalender.')+'</div>';
   if(it.type==='weather') h+='<div class="lbl2">'+T('Vorschau (Tage)')+'</div><div class="seg">'+
     [1,2,3].map(n=>'<button data-wxd="'+n+'"'+(Math.min(it.days||3,3)===n?' class="on"':'')+'>'+n+'</button>').join('')+'</div>';
   if(it.type==='weather') h+='<label class="chk" style="margin-top:8px"><input type="checkbox" id="tbWxDet"'+(it.detail?' checked':'')+'> <span>'+T('Detailansicht beim Antippen eines Tages')+'</span></label>'+
@@ -4002,7 +3990,7 @@ function tbSideHTML(p){
       (sel.length>1?'<div class="lbl2">'+T('Zurück zur ersten Kamera nach')+'</div>'+
         '<label class="row" style="gap:8px;align-items:center"><input type="number" id="tbCamBack" min="0" max="240" step="1" inputmode="numeric" style="width:80px" value="'+(it.back==null?3:it.back)+'"> '+T('Minuten')+'</label>'+
         '<div class="hintp">'+T('Ohne Bedienung wechselt das Widget zurück zu Kamera 1. 0 = aus.')+'</div>':'')
-      :'<div class="hintp">'+T('Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kalender & Kameras ein.')+'</div>');
+      :'<div class="hintp">'+T('Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kameras ein.')+'</div>');
   }
   const blk=tbBlocks(it), look=(it.type==='tile'||it.type==='room'||it.type==='cat')&&it.uuid;
   const hidden=new Set(p.hide||[]);
@@ -4246,7 +4234,7 @@ let SAVED_SNAP=null;
 function snapSaved(){ try{ SAVED_SNAP=JSON.parse(JSON.stringify(PANELS)); }catch(e){ SAVED_SNAP=null; } }
 function stable(v){ return JSON.stringify(v,(k,x)=>(x&&typeof x==='object'&&!Array.isArray(x))?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x); }
 const CHG_UI={devBtn:'Zahnrad am Gerät',grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Präsenzerkennung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Präsenz zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
-  nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',motion:'Animation',iconAnim:'Animierte Symbole',contrast:'Kontrast',sceneLight:'Lichtszenen',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
+  nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
   nudgeX:'Versatz horizontal (px)',iconSize:'Symbol',nameSize:'Kachelname',subSize:'Statuszeile',bold:'Kachelnamen',dblTapOff:'Doppeltipp',alarmsEnabled:'Wecker',alarmOff:'Alarmbausteine',
   lang:'Sprache',saverFcSize:'Wettervorschau',tileShadow:'Kachel-Schatten'};
 function changeList(){ return panelChanges().concat([...SECT_DIRTY].map(k=>T((SECTS.find(x=>x.k===k)||{}).label||k))); }
@@ -4715,7 +4703,7 @@ function pwRender(focusFirst){
       pwDashList().map(([k,l])=>pwMini(pwDash()===k,'data-pwdash="'+k+'"',esc(l),'',pdIcon(k,PW.split))).join('')+'</div>'+
       '</div></details>';
   } else {
-    const id=pwCurId(), names=devNames().sort((a,b)=>a.localeCompare(b)), none=!names.length;
+    const id=pwCurId(), names=devSort(devNames()), none=!names.length;
     const tabs=[T('Dashboard')].concat(PW.tabs.map(pwTabLabel)).join(', ');
     const dl=(pwDashList().find(x=>x[0]===pwDash())||['',''])[1];
     const row=(k,v)=>'<div class="pwsr"><dt>'+k+'</dt><dd>'+esc(v)+'</dd></div>';
@@ -4999,17 +4987,16 @@ checkUpdate();
     }
   }
   const am=SET.audiometa||{};
-  const ae=$('#am_enabled'); if(ae&&!keep('am')) ae.checked=am.enabled!==false;
   const srv=keep('am')?null:$('#am_servers');
   { const amc=$('#amCard'); if(amc) amc.classList.toggle('amnone',!(am.servers||[]).length); }   // ohne Audioserver nur der Einzeiler
-  if(srv){ const list=am.servers||[];
-    // Je erkanntem Audioserver ein Schalter + Zustand (verbunden / nicht erreichbar)
-    srv.innerHTML = list.length
-      ? '<div class="lbl" style="margin-bottom:4px">'+T('Erkannte Audioserver')+'</div>'+list.map(s=>
-          '<label class="chk"><input type="checkbox" class="am_srv" data-host="'+esc(s.host)+'"'+(s.off?'':' checked')+'><span><b>'+esc(s.addr||s.host)+'</b> · '+
-          '<span style="color:'+(s.state==='verbunden'?'var(--good)':(s.state==='aus'?'var(--muted)':'var(--crit)'))+'">'+esc(T(s.state))+'</span></span></label>').join('')+
-        '<p class="hint" style="margin-top:4px">'+T('Ohne Haken holt tilebert keine Live-Daten von diesem Audioserver, z. B. wenn es ihn nicht mehr gibt. Die Zonen lassen sich weiter über den Miniserver bedienen.')+'</p>'
-      : T('Kein Audioserver in der Loxone-Struktur gefunden.'); }
+  if(srv){
+    // Je erkanntem Audioserver ein Schalter, darunter Adresse und Zustand (verbunden / nicht erreichbar)
+    srv.innerHTML=(am.servers||[]).map(s=>{ const st=String(s.state||'').split(' (')[0];
+      return '<label class="apit amrow'+(s.off?' off':'')+'"><input type="checkbox" class="am_srv" data-host="'+esc(s.host)+'"'+(s.off?'':' checked')+'>'+
+        '<span><b>'+T('Live-Daten von {n}').replace('{n}',esc(s.name||T('Audioserver')))+'</b><small>'+esc(s.addr||s.host)+
+        (st&&st!=='aus'?' · <i style="font-style:normal;color:var('+(st==='verbunden'?'--good':st==='startet'?'--muted':'--crit')+')">'+esc(T(st))+'</i>':'')+'</small></span></label>'; }).join('');
+    srv.querySelectorAll('.am_srv').forEach(c=>c.onchange=()=>{ c.closest('.apit').classList.toggle('off',!c.checked); });
+  }
   // Nachtquelle: Loxone-Betriebsmodus/Baustein | Sonne | feste Uhrzeit
   const nt=SET.night||{}, ntSel=$('#nt_control'), ntSrc=$('#nt_src');
   if(ntSel && ntSrc && !keep('nt')){
@@ -5029,8 +5016,7 @@ checkUpdate();
       $('#cal_days').value=cal.days||14;
       if($('#cal_svevents')) $('#cal_svevents').value=cal.sv_events||3;
       if($('#cal_colors')) $('#cal_colors').checked=cal.colors!==false; }
-    if(!keep('cw')) $('#cw_on').checked=SET.cmdWatch!==false;
-    if(!keep('wx')){ { const ms=cal.weather_ms!==false; $('#wx_ms').checked=ms; $('#wx_alt').hidden=ms; }
+    if(!keep('wx')){ $('#wx_om').checked=!!cal.weather_om;
       $('#cal_lat').value=(cal.lat==null?'':cal.lat);
       $('#cal_lon').value=(cal.lon==null?'':cal.lon); }
     const st=cal.status||{};
@@ -5069,21 +5055,50 @@ checkUpdate();
     // Auto-Standort vom Miniserver als Platzhalter zeigen (falls keine Koordinaten gesetzt)
     const autoGeo=(cal.ms_lat!=null&&cal.ms_lon!=null);
     if(autoGeo){ $('#cal_lat').placeholder=cal.ms_lat; $('#cal_lon').placeholder=cal.ms_lon; }
-    const ws=$('#cal_wxstatus');
-    if(ws){
-      const manual=(cal.lat!=null&&cal.lat!=='');
-      const auto=(!manual&&autoGeo)
-        ? ' <span class="ccmut">· '+T('Automatisch vom Miniserver:')+' '+esc(cal.ms_location||'')+' ('+cal.ms_lat+' / '+cal.ms_lon+')</span>'
-        : '';
-      // Der Loxone-Wetterserver hat Vorrang; dann sind Koordinaten und Open-Meteo unbenutzt.
-      if(st.wx_source==='miniserver') ws.innerHTML='<b class="ok">'+T('Wetter vom Loxone-Wetterdienst')+'</b>'
-        +' <span class="ccmut">· '+T('Open-Meteo wird nicht abgefragt.')+'</span>';
-      else if(st.wx_error) ws.innerHTML='<b class="bad">'+T('Fehler:')+'</b> '+esc(st.wx_error);
-      else if(st.wx_configured) ws.innerHTML='<b class="ok">'+T('Wetter geladen')+'</b>'+auto;
-      else if(autoGeo) ws.innerHTML='<span class="ccmut">'+T('Standort vom Miniserver wird verwendet.')+'</span>'+auto;
-      else ws.innerHTML='<span class="ccmut">'+T('Kein Standort eingetragen.')+'</span>';
-    }
+    wxRender(cal, st, autoGeo);
   }
+}
+
+// Wetterkarte: aktive Quelle mit Zustand, gelieferte Werte, Open-Meteo-Option
+// (nur ohne Loxone-Wetterdienst), Sonnenzeiten mit Herkunft.
+const WX_VALS=[['temp','Temperatur'],['feels','Gefühlt'],['humidity','Luftfeuchte'],['wind','Wind'],['pressure','Luftdruck'],
+  ['rain','Regenmenge'],['cond','Wetterlage'],['hilo','Hoch/Tief'],['hourly','Stundenverlauf'],['days','Vorschau (Tage)'],
+  ['radiation','Sonneneinstrahlung'],['pop','Regenwahrscheinlichkeit'],['uv','UV-Index']];
+function wxRender(cal, st, autoGeo){
+  const ws=$('#cal_wxstatus'); if(!ws) return;
+  const lox=!!cal.wx_lox, om=!lox&&!!cal.weather_om;
+  $('#wx_omrow').hidden=lox;
+  const ok=t=>'<b class="ok">'+t+'</b>', bad=t=>'<b class="bad">'+t+'</b>', mut=t=>'<span class="ccmut">'+t+'</span>';
+  const stale=st.weather_stale?' '+mut('· '+T('Das Panel zeigt weiter den Stand von {zeit} Uhr.').replace('{zeit}',esc(st.weather_stale))):'';
+  let h;
+  if(lox){
+    h='<span class="wxname">'+T('Loxone-Wetterdienst')+'</span> ';
+    if(st.wx_error) h+=bad(T(st.wx_error))+stale;
+    else if(cal.wx_active==='miniserver'&&!st.wx_wait) h+=ok(T('aktiv'));
+    else h+=mut(T('wartet auf Daten'));
+  } else if(om){
+    h='<span class="wxname">Open-Meteo</span> ';
+    if(st.wx_error) h+=bad(T('Fehler:'))+' '+esc(st.wx_error)+stale;
+    else if(cal.wx_active==='open-meteo') h+=ok(T('aktiv'));
+    else if(!autoGeo&&!(cal.lat!=null&&cal.lat!=='')) h+=mut(T('Kein Standort eingetragen.'));
+    else h+=mut(T('wartet auf Daten'));
+  } else {
+    h='<span class="wxname">'+T('Kein Loxone-Wetterdienst')+'</span> '+mut(T('Ohne Wetterdienst gibt es kein Wetter. Du kannst Open-Meteo einschalten.'));
+  }
+  ws.innerHTML=h;
+  // Gelieferte Werte der aktiven Quelle
+  const f=cal.wx_fields||{}, dl=$('#wx_vals'), an=WX_VALS.filter(v=>f[v[0]]), aus=WX_VALS.filter(v=>!f[v[0]]);
+  if(dl){ dl.hidden=!an.length;
+    dl.innerHTML=an.length?'<dt>'+T('Liefert')+'</dt><dd>'+an.map(v=>esc(T(v[1]))).join(' · ')+'</dd>'
+      +(aus.length?'<dt>'+T('Fehlt')+'</dt><dd class="ccmut">'+aus.map(v=>esc(T(v[1]))).join(' · ')+'</dd>':''):''; }
+  // Sonnenzeiten: immer ohne Internet
+  const sun=cal.sun, se=$('#wx_sun');
+  if(se){ const src={miniserver:'vom Miniserver',berechnet:'berechnet aus dem Standort des Miniservers',standort:'berechnet aus deinem Standort',wetter:'aus dem Wetter'};
+    se.textContent=sun?T('Sonnenzeiten heute:')+' '+sun.rise+' – '+sun.set+' · '+T(src[sun.src]||''):T('Keine Sonnenzeiten: Standort fehlt.'); }
+  const gh=$('#wx_geohint');
+  if(gh) gh.textContent=T('Leer: Standort des Miniservers.')
+    +(autoGeo?' '+(cal.ms_location?cal.ms_location+' ':'')+'('+cal.ms_lat+' / '+cal.ms_lon+').':'')
+    +' '+(lox?T('Gilt für die Sonnenzeiten.'):T('Gilt für Sonnenzeiten und Open-Meteo.'));
 }
 
 async function msSave(force){
@@ -5175,7 +5190,7 @@ function crpBind(row, ic){
   row.querySelector('.crprst').onclick=()=>{ c={x:50,y:50,z:1,fit:'cover'}; paint(); };
   paint();
 }
-// Weitere Kameras (System → Kalender & Kameras): je Kamera eine Box wie die Tuerstationen
+// Weitere Kameras (System → Kameras): je Kamera eine Box wie die Tuerstationen
 let CAMS=[];
 const CAM_OPEN=new Set();   // aufgeklappte Kamera-Zeilen (neue/leere immer offen)
 function camHost(u){ u=String(u||'').trim(); if(!u) return ''; try{ return new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(u)?u:'http://'+u).host; }catch(e){ return u.replace(/^[a-z][a-z0-9+.-]*:\/\//i,'').split(/[\/?#]/)[0].replace(/^[^@]*@/,''); } }
@@ -5215,7 +5230,7 @@ function icRingDevs(sel){
   const m={}; Object.keys((META&&META.devices)||{}).forEach(n=>{ m[n]={name:n,model:((META.devices[n]||{}).model)||''}; });
   (((LAST_DEVS||{}).devices)||[]).forEach(d=>{ m[d.name]={name:d.name,model:d.model||((d.detected||{}).guess)||''}; });
   (sel||[]).forEach(n=>{ if(!m[n]) m[n]={name:n,model:''}; });
-  return Object.values(m).sort((a,b)=>a.name.localeCompare(b.name,'de'));
+  return devSort(Object.values(m));
 }
 const icWalls=ic=>!Array.isArray(ic.ringTargets);
 function icRingSum(ic){ return icWalls(ic)?'':T('Klingelt an: Auswahl'); }
@@ -5283,8 +5298,7 @@ $('#nt_save').onclick=async()=>{
   $('#nt_save').disabled=false;
 };
 $('#am_save').onclick=async()=>{
-  const body={enabled:$('#am_enabled').checked,
-    off:[...document.querySelectorAll('#am_servers .am_srv')].filter(c=>!c.checked).map(c=>c.dataset.host)};
+  const body={off:[...document.querySelectorAll('#am_servers .am_srv')].filter(c=>!c.checked).map(c=>c.dataset.host)};
   $('#am_save').disabled=true;
   try{
     const r=await fetch('/api/settings/audiometa',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
@@ -5378,8 +5392,6 @@ if($('#cal_add')) $('#cal_add').onclick=()=>{
   if(felder.length) felder[felder.length-1].focus();
 };
 
-// Wetterquelle (System -> Miniserver)
-$('#wx_ms').onchange=()=>{ $('#wx_alt').hidden=$('#wx_ms').checked; };
 // Geraete-Logs (System -> Diagnose): alle per adb erreichbaren Geraete
 async function devLogDownload(name, ip, toast){
   flash(toast, T('Lese Geräteprotokoll per adb (bis zu 1 Minute). Halte in den nächsten 10 s die Hand ans Gerät und nimm sie wieder weg (Test des Näherungssensors).'), true);
@@ -5395,7 +5407,7 @@ async function devLogDownload(name, ip, toast){
 function renderDiagDevices(){
   const box=$('#dg_devs'); if(!box) return;
   const devs=((LAST_DEVS&&LAST_DEVS.devices)||[]).filter(d=>(d.caps||[]).indexOf('reboot')>=0);
-  box.innerHTML=devs.length ? devs.map(d=>'<div class="dgdev"><i class="sdot'+(d.online?' on':devReconnecting(d)?' wait':'')+'"></i><b>'+esc(d.name)+'</b>'+
+  box.innerHTML=devs.length ? devSort(devs).map(d=>'<div class="dgdev"><i class="sdot'+(d.online?' on':devReconnecting(d)?' wait':'')+'"></i><b>'+esc(d.name)+'</b>'+
       '<small>'+esc((d.detected&&d.detected.ip)||d.ip||'')+'</small><button class="btn sm ghost" data-dglog="'+esc(d.name)+'">'+T('Protokoll holen')+'</button></div>').join('')
     : '<p class="hint">'+T('Kein Gerät mit adb gefunden. Android-Geräte erscheinen hier, sobald der Gerätetyp gesetzt ist (Geräte → Alle Geräte) und adb über WLAN läuft.')+'</p>';
   box.querySelectorAll('[data-dglog]').forEach(b=>b.onclick=()=>{ const d=devs.find(x=>x.name===b.dataset.dglog)||{};
@@ -5414,13 +5426,10 @@ $('#dg_dl').onclick=()=>{ location.href='/api/settings/diag/download'; setTimeou
 $('#dg_clear').onclick=async()=>{ if(!confirm(T('Server-Protokoll löschen? Das lässt sich nicht rückgängig machen.'))) return;
   try{ const j=await (await fetch('/api/settings/diag/clear',{method:'POST'})).json(); dgShow(j); flash($('#dg_toast'),T('Gelöscht'),true); }catch(e){ flashErr($('#dg_toast'),T('Löschen fehlgeschlagen.'),e); } };
 dgLoad();
-$('#cw_save').onclick=async()=>{
-  try{ const r=await fetch('/api/settings/cmdwatch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({on:$('#cw_on').checked})});
-    const j=await r.json(); if(j.ok){ flash($('#cw_toast'),T('Gespeichert'),true); SET.cmdWatch=$('#cw_on').checked; } else flashErr($('#cw_toast'),T('Speichern fehlgeschlagen.'),j);
-  }catch(e){ flashErr($('#cw_toast'),T('Speichern fehlgeschlagen.'),e); }
-};
+
 $('#wx_save').onclick=async()=>{
-  const body={ms:$('#wx_ms').checked, lat:$('#cal_lat').value.trim(), lon:$('#cal_lon').value.trim()};
+  const body={lat:$('#cal_lat').value.trim(), lon:$('#cal_lon').value.trim()};
+  if(!$('#wx_omrow').hidden) body.om=$('#wx_om').checked;   // Open-Meteo nur ohne Loxone-Wetterdienst
   try{ const r=await fetch('/api/settings/weather',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const j=await r.json(); if(j.ok){ flash($('#wx_toast'),T('Gespeichert'),true); setTimeout(()=>loadSettings(),2500); } else flashErr($('#wx_toast'),T('Speichern fehlgeschlagen.'),j);
   }catch(e){ flashErr($('#wx_toast'),T('Speichern fehlgeschlagen.'),e); }
@@ -5593,7 +5602,7 @@ const MZ_PRESETS=[
 const MZ={devices:[],modes:[],step:0,benannt:''};
 function mzKey(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,''); }
 const MZ_FLOW=['geraete','modi','zuordnung','fertig'];
-function mzDevNames(){ return Array.from(new Set(KNOWN_NAMES.concat(Object.keys(DEV)))).sort(); }
+function mzDevNames(){ return devSort(Array.from(new Set(KNOWN_NAMES.concat(Object.keys(DEV))))); }
 function mzAnon(){ return ((LAST_DEVS||{}).anonymous)||[]; }
 function mzCustom(){ return MZ.modes.filter(m=>!MZ_PRESETS.some(p=>p.key===m.key)); }
 function mzOpen(){
@@ -5750,6 +5759,9 @@ const DEV_PEND=new Set();   // zum Entfernen vorgemerkt (10 s Rückgängig), noc
 let DEV_SIG=null;   // Gruppierung der letzten Darstellung / Offline-Bereich offen (null = automatisch)
 function devLive(n){ return ((LAST_DEVS||{}).devices||[]).find(d=>d.name===n); }
 function devOnline(n){ const d=devLive(n); return !!d&&(!!d.online||devReconnecting(d)); }
+// Einheitliche Reihenfolge jeder Geraeteliste: online (auch "verbindet …") oben, offline darunter, je alphabetisch. Eintraege: Namen oder Objekte mit .name.
+function devSort(list){ const nm=x=>String(typeof x==='string'?x:(x&&x.name)||''), cmp=(a,b)=>nm(a).localeCompare(nm(b),undefined,{sensitivity:'base',numeric:true});
+  return (list||[]).slice().sort((a,b)=>(devOnline(nm(b))-devOnline(nm(a)))||cmp(a,b)); }
 function devNames(){ return Array.from(new Set(KNOWN_NAMES.concat(Object.keys(DEV)))).filter(n=>!DEV_PEND.has(n)); }
 // zuletzt gesehen (Sekunden) oder 0, wenn unbekannt
 function devLastSeen(n){ const d=devLive(n); return d?Math.max(d.lastSeen||0,(d.detected&&d.detected.last)||0):0; }
@@ -5859,7 +5871,7 @@ function gdRowHTML(n){
     '<span class="gst">'+gdStatus(n)+'</span><span class="gdc" aria-hidden="true">›</span></button>';
 }
 function gdListHTML(names){
-  const on=names.filter(devOnline).sort((a,b)=>a.localeCompare(b)), off=names.filter(n=>!devOnline(n)).sort((a,b)=>a.localeCompare(b)), open=gdOffOpen();
+  const on=devSort(names.filter(devOnline)), off=devSort(names.filter(n=>!devOnline(n))), open=gdOffOpen();
   return '<div class="card gdlistcard"><div class="gdhd" aria-hidden="true"><span></span><span>'+T('Gerät')+'</span><span>'+T('Typ')+'</span><span>'+T('Panel')+'</span><span>'+T('Status')+'</span><span></span></div>'+
     on.map(gdRowHTML).join('')+
     (off.length?'<button type="button" class="gdoffh" aria-expanded="'+open+'" aria-controls="gdoff"><span class="gdoffc" aria-hidden="true">›</span>'+T('Offline')+' ('+off.length+')</button>'+
@@ -5926,6 +5938,16 @@ function gdHTML(n){
       sel('brightMin',gdOpts([5,10,20,30,40,50],gdVal(n,'brightMin'),gdPct))+' '+sel('brightMax',gdOpts([50,60,70,80,90,100],gdVal(n,'brightMax'),gdPct)));
     else if(!ab) h+=gr(T('Helligkeit fest'),gdChg(n,'brightFix')?'<span class="gchg">'+T('geändert')+'</span> '+rst('brightFix'):T('Standard'),sel('brightFix',gdOpts([20,40,60,70,80,90,100],gdVal(n,'brightFix'),gdPct)));
     h+='</div>'; }
+  // Effekte (Typ-Vorgabe: schwache Wandpanels Animation "Mittel", ohne Kontrast)
+  { const mv=gdVal(n,'motion')||'full';
+    h+='<div class="gds gdfx"><h3>'+T('Effekte')+'</h3>'+
+      gr(T('Animation'),stdSub('motion'),'<select data-gk="motion" data-gt="str" aria-label="'+T('Animation')+'">'+
+        [['off','Keine'],['mid','Mittel'],['full','Viel']].map(([v,t])=>'<option value="'+v+'"'+(v===mv?' selected':'')+'>'+T(t)+'</option>').join('')+'</select>')+
+      gr(T('Kontrast'),stdSub('contrast'),sw('contrast',gdVal(n,'contrast')===true,'bool',T('Kontrast')))+
+      gr(T('Lichtszenen'),stdSub('sceneLight'),sw('sceneLight',gdVal(n,'sceneLight')===true,'bool',T('Lichtszenen')))+
+      gr(T('Werte groß'),stdSub('bigValues'),sw('bigValues',gdVal(n,'bigValues')===true,'bool',T('Werte groß')))+
+      gr(T('Animierte Symbole'),stdSub('iconAnim'),sw('iconAnim',gdVal(n,'iconAnim')!==false,'bool',T('Animierte Symbole')))+
+      '<p class="gdnote">'+T('Mittel: nur Überblendungen. Kontrast: Schatten an Kacheln. Lichtszenen: Symbol in Lichtfarbe. Werte groß: Messwerte groß, je Kachel änderbar.')+'</p></div>'; }
   // Erweitert
   if(!phone){ const dd=d.display||null;
     h+='<details class="gdadv"'+(GD_ADV?' open':'')+'><summary>'+T('Erweitert: Zoom, Display-Treiber')+'</summary>'+

@@ -102,9 +102,12 @@
       'Adresse geändert – bitte Passwort neu eingeben': 'Address changed – please enter the password again',
       'kein gültiges JSON': 'not valid JSON',
       // Werte groß auf Kacheln
-      'Kacheln': 'Tiles',
-      'Werte groß auf Kacheln': 'Large values on tiles',
       'Werte groß': 'Large values',
+      // Geraete-Detail: Effekte
+      'Mittel': 'Medium',
+      'Viel': 'High',
+      'Mittel: nur Überblendungen. Kontrast: Schatten an Kacheln. Lichtszenen: Symbol in Lichtfarbe. Werte groß: Messwerte groß, je Kachel änderbar.':
+        'Medium: cross-fades only. Contrast: shadow on tiles. Light scenes: icon in light colour. Large values: measurements shown large, changeable per tile.',
       'Panel-Standard': 'Panel default',
       'immer groß': 'always large',
       'nie groß': 'never large',
@@ -157,10 +160,39 @@
       'Wetter': 'Weather',
       'Breitengrad': 'Latitude',
       'Längengrad': 'Longitude',
-      'Open-Meteo wird nicht abgefragt.': 'Open-Meteo is not queried.',
-      'Wetter geladen': 'Weather loaded',
-      'Standort vom Miniserver wird verwendet.': 'The location from the Miniserver is used.',
-      'Automatisch vom Miniserver:': 'Automatically from the Miniserver:',
+      'Standard ist der Loxone-Wetterdienst des Miniservers.': 'The default is the Miniserver\'s Loxone weather service.',
+      'Loxone-Wetterdienst': 'Loxone weather service',
+      'Kein Loxone-Wetterdienst': 'No Loxone weather service',
+      'aktiv': 'active',
+      'wartet auf Daten': 'waiting for data',
+      'Daten des Wetterdienstes nicht verwertbar': 'Weather service data not usable',
+      'Ohne Wetterdienst gibt es kein Wetter. Du kannst Open-Meteo einschalten.':
+        'Without a weather service there is no weather. You can switch on Open-Meteo.',
+      'Open-Meteo verwenden': 'Use Open-Meteo',
+      'Wetter aus dem Internet, kostenlos und ohne Konto. Aus: keine Anfrage ins Internet.':
+        'Weather from the internet, free and without an account. Off: no request to the internet.',
+      'Gilt für die Sonnenzeiten.': 'Applies to the sun times.',
+      'Gilt für Sonnenzeiten und Open-Meteo.': 'Applies to sun times and Open-Meteo.',
+      'Liefert': 'Provides',
+      'Fehlt': 'Missing',
+      'Temperatur': 'Temperature',
+      'Gefühlt': 'Feels like',
+      'Luftfeuchte': 'Humidity',
+      'Wind': 'Wind',
+      'Luftdruck': 'Air pressure',
+      'Regenmenge': 'Rainfall',
+      'Wetterlage': 'Conditions',
+      'Hoch/Tief': 'High/low',
+      'Stundenverlauf': 'Hourly',
+      'Sonneneinstrahlung': 'Solar radiation',
+      'Regenwahrscheinlichkeit': 'Chance of rain',
+      'UV-Index': 'UV index',
+      'Sonnenzeiten heute:': 'Sun times today:',
+      'vom Miniserver': 'from the Miniserver',
+      'berechnet aus dem Standort des Miniservers': 'calculated from the Miniserver\'s location',
+      'berechnet aus deinem Standort': 'calculated from your location',
+      'aus dem Wetter': 'from the weather',
+      'Keine Sonnenzeiten: Standort fehlt.': 'No sun times: location missing.',
       // Anzeige am Panel
       'Anzeige': 'Display',
       'Kalenderfarben am Panel zeigen': 'Show calendar colors on the panel',
@@ -325,7 +357,6 @@
       'Einrichtung': 'Setup',
       'Entfernen (Entf)': 'Remove (Del)',
       'Entfernt': 'Removed',
-      'Erkannte Audioserver': 'Detected audio servers',
       'Farbig (Ampel)': 'Colored (traffic light)',
       'Farbverlauf': 'Gradient',
       'Fenster': 'Window',
@@ -367,7 +398,6 @@
       'Kartenfarbe': 'Map color',
       'Kategorie': 'Category',
       'Kategorie-Farben': 'Category colors',
-      'Kein Audioserver in der Loxone-Struktur gefunden.': 'No audio server found in the Loxone structure.',
       'Kein Platz für': 'No room for',
       'Keine': 'None',
       'Keine passenden Bausteine in der Anlage.': 'No matching blocks in the system.',
@@ -410,7 +440,7 @@
       'Panels': 'Panels',
       'Passend zum Design': 'Matches the design',
       'Port': 'Port',
-      'Quelle: System → Kalender & Kameras.': 'Source: System → Calendar & cameras.',
+      'Quelle: System → Kalender.': 'Source: System → Calendar.',
       'Quelle: System → Loxone → Wetter.': 'Source: System → Loxone → Weather.',
       'Raster auf': 'Grid on',
       'Rauchmelder': 'Smoke detector',
@@ -458,7 +488,6 @@
       'Welche Betriebsmodi?': 'Which operating modes?',
       'Welches Design?': 'Which design?',
       'Welches Gerät ist das?': 'Which device is this?',
-      'Wetterdaten aus dem Miniserver übernehmen': 'Take over weather data from the Miniserver',
       'Widgets': 'Widgets',
       'Wie Gerätetyp': 'Like device type',
       'Wie alle Panels': 'Like all panels',
@@ -471,7 +500,6 @@
       'Zurück': 'Back',
       'Zurück zur ersten Kamera nach': 'Back to the first camera after',
       'Zurücksetzen': 'Reset',
-      'Zustellung jedes Befehls überwachen': 'Monitor delivery of every command',
       'alle 12 Stunden': 'every 12 hours',
       'alle 24 Stunden': 'every 24 hours',
       'alle 6 Stunden': 'every 6 hours',
@@ -600,12 +628,7 @@
         'Verify certificate (turn off for a Miniserver Gen 2 with a self-signed certificate)',
       'Zeigt, welche Typen vorkommen und welche tilebert noch nicht unterstützt.':
         'Shows which types occur and which ones tilebert does not support yet.',
-      'Standard ist das Wetter des Loxone-Wetterdienstes. Gibt es im Miniserver keinen, nimm den Haken weg: Dann kommt es von Open-Meteo (kostenlos, ohne Konto).':
-        'The default is the weather from the Loxone weather service. If the Miniserver has none, untick this: the weather then comes from Open-Meteo (free, no account).',
       'Leer: Standort des Miniservers.': 'Empty: location of the Miniserver.',
-      'Befehlskontrolle': 'Command check',
-      'Nach jedem Tastendruck prüft das Panel, ob der Miniserver den Befehl angenommen hat. Bleibt die Antwort nach 12 s aus (z. B. bei WLAN-Aussetzern) oder wird der Befehl abgelehnt, erscheint eine Meldung.':
-        'After every tap the panel checks whether the Miniserver accepted the command. If there is no answer after 12 s (e.g. WLAN dropouts) or the command is rejected, a message appears.',
       'Video-Streams (MJPEG) von Loxone-Türstationen und eigenen Überwachungskameras. Alle erscheinen im Widget „Kamera“.':
         'Video streams (MJPEG) from Loxone door stations and your own surveillance cameras. All of them appear in the "Camera" widget.',
       'Türstationen aus Loxone': 'Door stations from Loxone',
@@ -616,12 +639,12 @@
       'Bis es einen Namen hat, steht es unter „Alle Geräte“ → „Ohne Namen“. Dort vergibst du ihn.':
         'Until it has a name, it is listed under "All devices" → "Unnamed". You assign the name there.',
       'Aus Loxone, nicht löschbar': 'From Loxone, cannot be removed',
-      'Zeigt Cover, Titel und Favoriten vom Loxone-Audioserver. Den Test-Ton für die Lautsprecher findest du unter System → Diagnose.':
-        'Shows cover, title and favourites from the Loxone Audioserver. You find the test tone for the speakers under System → Diagnostics.',
       'Audioserver': 'Audioserver',
-      'tilebert liest Cover, Titel, Interpret und Favoriten live vom Audioserver (Gen 2, Port 7091). Die Adresse erkennt es selbst aus der Loxone-Struktur. Die Infos erscheinen bei der passenden Zone, auch bei Nachbauten wie Audioserver4Home.':
-        'tilebert reads cover, title, artist and favorites live from the audio server (Gen 2, port 7091). It detects the address itself from the Loxone structure. The info appears at the matching zone, also for clones such as Audioserver4Home.',
-      'Live-Daten vom Audioserver nutzen': 'Use live data from the Audioserver',
+      'Zeigt Cover, Titel und Favoriten live vom Audioserver. Den Test-Ton findest du unter System → Diagnose.':
+        'Shows cover, title and favourites live from the Audioserver. You find the test tone under System → Diagnostics.',
+      'Live-Daten von {n}': 'Live data from {n}',
+      'startet': 'starting',
+      'nicht erreichbar': 'not reachable',
       'Zeigt Termine aus iCal-Abos im Dashboard und in den Kalender-Widgets aller Panels.':
         'Shows appointments from iCal subscriptions in the dashboard and in the calendar widgets of all panels.',
       'Abo-Link (webcal:// oder https://) aus iCloud (Kalender → Teilen → Öffentlicher Kalender), Google oder einem anderen Dienst. tilebert liest nur und braucht keinen Login. Mehrere Kalender erscheinen gemeinsam in einer Liste.':
@@ -655,8 +678,8 @@
         'Night until',
       'Auch über Mitternacht möglich, z. B. 22:00 bis 06:30.':
         'Past midnight works too, e.g. 22:00 to 06:30.',
-      'Nacht von Sonnenuntergang bis Sonnenaufgang. Die Zeiten kommen vom Miniserver, sonst vom Wetterdienst.':
-        'Night from sunset to sunrise. Times come from the Miniserver, otherwise from the weather service.',
+      'Nacht von Sonnenuntergang bis Sonnenaufgang. Die Zeiten kommen vom Miniserver oder werden aus seinem Standort berechnet.':
+        'Night from sunset to sunrise. Times come from the Miniserver or are calculated from its location.',
       'Bitte wählen':
         'Please choose',
       'Bitte einen Betriebsmodus wählen.':
@@ -665,8 +688,8 @@
         'Please enter a start and end time.',
       'Display & Nacht':
         'Display & night',
-      'Abdunkeln, Präsenzerkennung, Helligkeit und Töne stellst du je Gerät ein: Geräte → Alle Geräte.':
-        'Dimming, presence detection, brightness and sounds are set per device: Devices → All devices.',
+      'Abdunkeln, Präsenzerkennung, Helligkeit, Töne und Effekte stellst du je Gerät ein: Geräte → Alle Geräte.':
+        'Dimming, presence detection, brightness, sounds and effects are set per device: Devices → All devices.',
       'Nacht-Kamera':
         'Night camera',
       'Das Dashboard bleibt immer der Startpunkt; nur Wischen oder Tippen führt zu den Tabs.':
@@ -761,7 +784,9 @@
       'Erweitert':
         'Advanced',
       'Tabs & Dashboard': 'Tabs & dashboard',
-      'Kalender & Kameras': 'Calendar & cameras',
+      'Türstationen aus Loxone und eigene Kameras für das Widget „Kamera“.': 'Door stations from Loxone and your own cameras for the “Camera” widget.',
+      'Öffnen': 'Open',
+      'Panel in neuem Tab öffnen': 'Open panel in a new tab',
       'Alles, was tilebert vom Miniserver übernimmt: Zugang, Befehle, Wetter und Audio.':
         'Everything tilebert takes from the Miniserver: access, commands, weather and audio.',
       'Kein Audioserver gefunden': 'No audio server found',
@@ -871,10 +896,6 @@
       'Farben anpassen': 'Adjust colours',
       'Größen (px, leer: Standard)': 'Sizes (px, empty: default)',
       'Vorlage, Farben und Schrift aller Panels.': 'Template, colours and font of all panels.',
-      'Animierte Symbole: Klingel und Wecker wackeln, Jalousiepfeile wippen, die Heizung flackert, Symbole ploppen beim Einschalten, neue Werte ticken ein':
-        'Animated icons: bell and alarm clock wobble, blind arrows bob, the heating flickers, icons pop when switched on, new values tick in',
-      'Animation: Keine, Mittel (nur Überblendungen) oder Viel (mit Zoom). Kontrast: weicher Schatten an Kacheln und Knöpfen. Lichtszenen: Das Symbol zeigt Lichtfarbe und Helligkeit und lernt jede Szene beim ersten Einschalten. Auf schwachen Geräten helfen Animation „Mittel“ und Kontrast „Aus“.':
-        'Animation: None, Medium (cross-fades only) or High (with zoom). Contrast: soft shadow on tiles and buttons. Light scenes: the icon shows light colour and brightness and learns each scene the first time it is switched on. On weak devices, animation "Medium" and contrast "Off" help.',
       'Je Kategorie eine <b>Aktiv-</b> und eine <b>OK-Farbe</b> für Hintergrund und Rahmen der Kachel. Gilt für alle Panels. ◐ an: Die Kachel zeigt den Zustand als Ampel (z. B. Alarm rot/grün, Tor gelb/grün). ◐ aus: neutral. Messwerte bleiben immer neutral.':
         'One <b>active</b> and one <b>OK colour</b> per category for the background and border of the tile. Applies to all panels. ◐ on: the tile shows the state as a traffic light (e.g. alarm red/green, gate yellow/green). ◐ off: neutral. Measured values always stay neutral.',
       'Start-Adresse:': 'Start address:',
@@ -920,16 +941,12 @@
         'Hidden everywhere on this panel (tabs, rooms, categories). Tap to show them again.',
       'Gilt nur für dieses Panel. „Wie Standard“ übernimmt System → Alle Panels.':
         'Applies to this panel only. "Like default" takes over System → All panels.',
-      'Auf schwachen Geräten helfen Animation „Mittel“ oder „Keine“ und Kontrast „Aus“.':
-        'On weak devices, animation "Medium" or "None" and contrast "Off" help.',
-      'Messwert-Kacheln (Temperatur, Feuchte, CO₂, Leistung, Zähler) zeigen den Wert groß und das Symbol blass im Hintergrund. Textkacheln und Kacheln mit Schnellbedienung bleiben unverändert. Pro Kachel änderbar unter Raster-Editor → Kachel → Aussehen.':
-        'Measurement tiles (temperature, humidity, CO₂, power, meters) show the value large and the icon faintly in the background. Text tiles and tiles with quick control stay unchanged. Changeable per tile under Grid editor → Tile → Appearance.',
       'Die Farben kommen aus dem Miniserver: Fenster offen gelb, Alarm oder Rauch ausgelöst rot, Alarm scharf blau. Statusbausteine zeigen ihre Farbe aus Loxone Config.':
         'The colours come from the Miniserver: window open yellow, alarm or smoke triggered red, alarm armed blue. Status blocks show their colour from Loxone Config.',
       'Mehrere Haken sind möglich. Ohne Haken schließt nur ein Tipp auf eine freie Stelle das Dashboard.':
         'Several ticks are possible. Without ticks, only a tap on a free spot closes the dashboard.',
-      'Tageslicht: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten aus dem Wetter). Außentemperatur: kalt blau, mild grün, warm gelb, heiß orange bis rot. Ohne Wetterdaten bleiben die festen Farben.':
-        'Daylight: slightly bright in the morning, bright at noon, darker in the evening, dark at night (sun times from the weather). Outside temperature: cold blue, mild green, warm yellow, hot orange to red. Without weather data the fixed colours stay.',
+      'Tageslicht: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten vom Miniserver). Außentemperatur: kalt blau, mild grün, warm gelb, heiß orange bis rot. Ohne Wetterdaten bleiben die festen Farben.':
+        'Daylight: slightly bright in the morning, bright at noon, darker in the evening, dark at night (sun times from the Miniserver). Outside temperature: cold blue, mild green, warm yellow, hot orange to red. Without weather data the fixed colours stay.',
       'Feste Farben (Vorlage)': 'Fixed colours (template)',
       'Bild wählen …': 'Choose image …',
       'JPG, PNG oder WebP, höchstens 12 MB. Wird sofort hochgeladen. Querformat passt am besten.':
@@ -973,8 +990,8 @@
         'A tick shows the camera, dragging changes the order. The first camera starts first; on the panel you switch with the number buttons.',
       'Ohne Bedienung wechselt das Widget zurück zu Kamera 1. 0 = aus.':
         'Without interaction the widget switches back to camera 1. 0 = off.',
-      'Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kalender & Kameras ein.':
-        'No camera with a video address yet. Enter one under System → Calendar & cameras.',
+      'Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kameras ein.':
+        'No camera with a video address yet. Enter one under System → Cameras.',
       'Abgewählte Bausteine zeigt dieses Panel nirgends an, auch nicht in anderen Räumen oder Kategorien.':
         'This panel does not show deselected blocks anywhere, not even in other rooms or categories.',
       'Keine Bausteine vorhanden.': 'No blocks available.',
@@ -1019,11 +1036,8 @@
         'MP3, OGG, WAV, M4A or AAC, 5 MB at most. Uploaded immediately. "Test ring" rings on all devices that show the panel chosen under System → Diagnostics → Test tone.',
       'Lädt hoch …': 'Uploading …',
       'Eigene Datei hochgeladen': 'Own file uploaded',
-      'Ohne Haken holt tilebert keine Live-Daten von diesem Audioserver, z. B. wenn es ihn nicht mehr gibt. Die Zonen lassen sich weiter über den Miniserver bedienen.':
-        'Without the tick tilebert fetches no live data from this Audioserver, e.g. if it no longer exists. The zones can still be controlled via the Miniserver.',
       'Noch kein Kalender eingetragen.': 'No calendar entered yet.',
       'Den Grund nennt der jeweilige Kalender.': 'Each calendar states its reason.',
-      'Wetter vom Loxone-Wetterdienst': 'Weather from the Loxone weather service',
       'Kein Standort eingetragen.': 'No location entered.',
       'Tippe oder ziehe ins Bild, um den wichtigen Bereich zu wählen. Die Rahmen zeigen, was Popup und Widget davon anzeigen. Ohne Zoom lässt sich nur der Teil verschieben, den das breitere Format sonst abschneidet.':
         'Tap or drag in the image to choose the important area. The frames show what popup and widget display of it. Without zoom you can only shift the part that the wider format would otherwise cut off.',
@@ -1338,7 +1352,7 @@
       'OK': 'OK',
       'z. B. Pacifico, cursive': 'e.g. Pacifico, cursive',
       'Alarmbausteine': 'Alarm blocks',
-      'Neue werden automatisch aktiv.': 'New ones are switched on automatically.',
+      'Neue Alarmbausteine werden automatisch hinzugefügt und sind aktiv.': 'New alarm blocks are added automatically and switched on.',
       'Ein aktiver Baustein zeigt auf allen Geräten ein rotes Vollbild. Den Ton schaltest du je Gerät ein oder aus.': 'An active block shows a red full screen on all devices. You switch the sound on or off per device.',
       '„{n}“ zeigt dann auf keinem Gerät ein Vollbild.': '“{n}” will then show no full screen on any device.',
       'Ausnahmen für dieses Panel': 'Exceptions for this panel',

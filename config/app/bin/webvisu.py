@@ -67,7 +67,7 @@ from adapters import JalousieAdapter, LightControllerV2Adapter  # noqa: E402
 from audioserver import make_backend, AudioBackend  # noqa: E402
 from audioserver_events import AudioEventClient  # noqa: E402
 import front_info  # noqa: E402  # Kalender (iCal-Abos) + Wetter (Open-Meteo) fuer die Front
-import loxone_weather  # noqa: E402  # Wetter vom Loxone-Wetterserver (Vorrang vor Open-Meteo)
+import loxone_weather  # noqa: E402  # Wetter vom Loxone-Wetterserver (Standardquelle)
 import theme_colors  # noqa: E402  # Panel-Theme aus einer Grundfarbe herleiten
 
 log = logging.getLogger("loxpanel.webvisu")
@@ -77,7 +77,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.24"
+APP_VERSION = "0.20.25"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -202,6 +202,10 @@ _SND_WALL = {"ring": True, "alarm": True, "wake": True, "notify": False, "touch"
 _SND_PERSONAL = {"ring": False, "alarm": True, "wake": False, "notify": False, "touch": False}
 _D_SHELLY = {"nightDim": 75, "prox": True, "autoBright": True, "brightMin": 20, "brightMax": 90, "sound": _SND_WALL}
 _D_WALL = {"nightDim": 65, "prox": False, "autoBright": False, "brightFix": 80, "sound": _SND_WALL}
+# Effekte: schwache Wandpanels (Shelly, NSPanel, SM41/SM55) mit Animation "Mittel" und ohne Schatten
+_FX_WEAK = {"motion": "mid", "contrast": False}
+_D_SHELLY = {**_D_SHELLY, **_FX_WEAK}
+_D_WALL_WEAK = {**_D_WALL, **_FX_WEAK}
 DEVICE_MODELS = {
     # scale: Vorgabe-Zoom (auto = 480er-Raster gleichmaessig auf den Schirm),
     # wake: Wach-Sperre der Seite (Browser ohne Kiosk-App), tips: Hinweise unter
@@ -216,18 +220,18 @@ DEVICE_MODELS = {
                   "tips": ["720 × 720: Zoom „Automatisch“ vergrößert das 480er-Raster auf den ganzen Schirm.",
                            "Panel-Format „Eine Hälfte“.",
                            "TbViewer per ADB (Gerät hinzufügen)."]},
-    "nspro86": {"label": "Sonoff NSPanel Pro 86", "os": "android", "defaults": _D_WALL, "scale": "off", "panes": 1,
+    "nspro86": {"label": "Sonoff NSPanel Pro 86", "os": "android", "defaults": _D_WALL_WEAK, "scale": "off", "panes": 1,
                 "tips": ["480 × 480: passt 1:1, kein Zoom nötig. Panel-Format „Eine Hälfte“.",
                          "TbViewer mit Start-Adresse inkl. ?device=… einrichten."]},
-    "nspro120": {"label": "Sonoff NSPanel Pro 120", "os": "android", "defaults": _D_WALL, "scale": "auto", "panes": 1,
+    "nspro120": {"label": "Sonoff NSPanel Pro 120", "os": "android", "defaults": _D_WALL_WEAK, "scale": "auto", "panes": 1,
                  "tips": ["Hochformat: Zoom „Automatisch“ füllt die Breite. Panel-Format „Eine Hälfte“.",
                           "TbViewer mit Start-Adresse inkl. ?device=… einrichten."]},
-    "sm41-android": {"label": "4″-Standardgerät YC-SM41 (Android)", "os": "android", "defaults": _D_WALL, "scale": "off", "panes": 1,
+    "sm41-android": {"label": "4″-Standardgerät YC-SM41 (Android)", "os": "android", "defaults": _D_WALL_WEAK, "scale": "off", "panes": 1,
                      "tips": ["480 × 480: Referenzgröße, kein Zoom. Panel-Format „Eine Hälfte“."]},
-    "sm41-debian": {"label": "4″-Standardgerät YC-SM41 (Debian + Agent)", "os": "linux", "defaults": _D_WALL, "scale": "off", "panes": 1,
+    "sm41-debian": {"label": "4″-Standardgerät YC-SM41 (Debian + Agent)", "os": "linux", "defaults": _D_WALL_WEAK, "scale": "off", "panes": 1,
                     "tips": ["480 × 480: Referenzgröße. Agent per SSH (Gerät hinzufügen → Linux-Gerät).",
                              "Display und Neustart übernimmt der Agent."]},
-    "sm55": {"label": "YC-SM55P", "os": "android", "defaults": _D_WALL, "scale": "auto", "panes": 2,
+    "sm55": {"label": "YC-SM55P", "os": "android", "defaults": _D_WALL_WEAK, "scale": "auto", "panes": 2,
              "tips": ["720 × 1280 quer: Zoom „Automatisch“, Panel-Format „Zwei Hälften“.",
                       "LAN/PoE: feste IP-Adresse im Router vergeben (für ADB)."]},
     "tablet": {"label": "Android-Tablet (7–10″)", "os": "android", "defaults": _D_WALL, "defaults_sensor": {"nightDim": 70, "prox": True, "autoBright": True, "brightMin": 20, "brightMax": 100}, "defaults_browser": {"nightDim": 60, "sound": {**_SND_WALL, "notify": False}}, "scale": "auto", "wake": True, "panes": 2,
@@ -281,6 +285,9 @@ PREF_SOURCES = ("ring", "alarm", "wake")      # Geraete-Override der Quellen (pr
 _PERSONAL_MODELS = ("phone", "other")         # Handy/PC-Browser: Klingel nur auf ausdrueckliche Wahl
 BASE_SOUND = {"ring": True, "alarm": True, "wake": True, "notify": False, "touch": False}   # Hinweiston: nur per Geraet an
 PREF_BASE = {"nightDim": 0, "prox": True, "autoBright": True, "brightMin": 10, "brightMax": 100, "brightFix": 80}
+# Effekte je Geraet (frueher ui.* global/je Panel): Standard ohne Typ-Vorgabe
+FX_BASE = {"motion": "full", "contrast": False, "sceneLight": False, "bigValues": False, "iconAnim": True}
+FX_KEYS = tuple(FX_BASE)
 
 
 def _clean_prefs(raw, panel_ids=None) -> dict:
@@ -313,9 +320,11 @@ def _clean_prefs(raw, panel_ids=None) -> dict:
         v = num(raw.get(k), lo, hi)
         if v is not None:
             out[k] = v
-    for k in ("prox", "autoBright"):
+    for k in ("prox", "autoBright", "contrast", "sceneLight", "bigValues", "iconAnim"):
         if isinstance(raw.get(k), bool):
             out[k] = raw[k]
+    if raw.get("motion") in ("off", "mid", "full"):
+        out["motion"] = raw["motion"]
     pn = raw.get("panel")
     if isinstance(pn, str) and pn.strip() and (panel_ids is None or pn.strip() in panel_ids):
         out["panel"] = pn.strip()[:40]
@@ -744,7 +753,7 @@ PANEL_ID_RESERVED = frozenset((
     "__proto__", "constructor", "prototype", "toString", "toLocaleString", "valueOf",
     "hasOwnProperty", "isPrototypeOf", "propertyIsEnumerable", "__defineGetter__",
     "__defineSetter__", "__lookupGetter__", "__lookupSetter__"))
-# "Werte gross" (ui.bigValues je Panel, tiles.<uuid>.big = "on"|"off"): reine
+# "Werte gross" (prefs.bigValues je Geraet, tiles.<uuid>.big = "on"|"off"): reine
 # Wert-Bausteine zeigen ihren Messwert gross, Piktogramm als Wasserzeichen.
 # Zahl und Einheit kommen unveraendert aus dem Loxone-Format, nur getrennt.
 BIG_TYPES = ("InfoOnlyAnalog", "Meter")
@@ -1660,13 +1669,11 @@ def _diag_apply(on: bool) -> None:
 
 
 def _cmd_watch_config() -> bool:
-    """Befehls-Monitoring (loxpanel.cfg `cmdwatch.on`, Standard an): das Panel
-    wartet auf die Quittung jedes Befehls und meldet, wenn keine kommt."""
-    try:
-        cw = _load_cfg().get("cmdwatch")
-    except Exception:
-        return True
-    return bool(cw.get("on", True)) if isinstance(cw, dict) else True
+    """Befehls-Monitoring: das Panel wartet auf die Quittung jedes Befehls und
+    meldet, wenn keine kommt. In der Config ausgeblendet, immer an: ein
+    gespeichertes `cmdwatch.on=false` wird ignoriert (Einstellung und API
+    /api/settings/cmdwatch bleiben im Code)."""
+    return True
 
 
 def _night_config() -> dict:
@@ -1718,6 +1725,20 @@ def _night_source(cfg: dict | None) -> str:
     if src in ("loxone", "sun", "clock"):
         return src
     return "loxone" if str(cfg.get("control") or "").strip() else "sun"
+
+
+def _wx_override_coords(cal) -> tuple[float, float] | None:
+    """In der Config eingetragener Standort (calendar.lat/lon) als Paar, sonst None.
+    Uebersteuert den Standort des Miniservers (Sonnenzeiten, Open-Meteo)."""
+    if not isinstance(cal, dict):
+        return None
+    try:
+        lat, lon = float(cal.get("lat")), float(cal.get("lon"))
+    except (TypeError, ValueError):
+        return None
+    if -90 <= lat <= 90 and -180 <= lon <= 180:
+        return lat, lon
+    return None
 
 
 def _calendar_config() -> dict:
@@ -1820,6 +1841,7 @@ class App:
         # Original-Audioserver, Sonn und jedem Nachbau, ohne IP-Eingabe.
         self.audiometa_cfg = audiometa or {}
         self.mediaservers: dict[str, str] = {}          # serverUUID -> "host:port"
+        self.mediaserver_names: dict[str, str] = {}     # serverUUID -> Name aus der Struktur
         self.audio_clients: dict[str, AudioEventClient] = {}  # host -> Client
         # uuidAction -> Loxone-playerid (fuer Audioserver-Kommandos)
         self.playerid_by_action: dict[str, int] = {}
@@ -1851,6 +1873,7 @@ class App:
         self.devinfo = load_devinfo()   # uid -> {name, info, ip, first, last} (Geraete-Erkennung)
         if seed_kiosk_last(self.kiosk_last, self.devinfo):
             self._save_kiosk_last()
+        self._fx_pending = self._fx_mig_init()   # Effekte: Geraete, die noch uebernehmen (s. migrate_fx)
         self.last_mode = ""             # zuletzt gesetzter Betriebsmodus (fuer Nachziehen beim Verbinden)
         self._struct_sig: str | None = None   # Signatur der Loxone-Struktur (erkennt Config-Aenderungen)
         self._pending_reload = False          # -> Panels beim naechsten Tick neu laden ({t:"reload"})
@@ -1912,8 +1935,14 @@ class App:
         # tatsaechlich verwendete Quelle fuer die Diagnose.
         self.weather_cfg: dict = {}
         self._lox_wx: dict[str, list] = {}
-        self._wx_source: str = "open-meteo"
-        # Standort des Miniservers (aus msInfo) als Wetter-Fallback ohne Konfiguration.
+        # Aktive Wetterquelle: "miniserver", "open-meteo" oder "" (kein Wetter).
+        # Open-Meteo nur als bewusst gewaehlte Option (calendar.weather_om) und nur
+        # ohne Loxone-Wetterdienst; einen automatischen Rueckfall gibt es nicht.
+        self._wx_source: str = ""
+        # Struktur einmal geladen? Erst dann steht fest, ob es einen Wetterdienst gibt
+        # (fuer die einmalige Umstellung bestehender Open-Meteo-Anlagen, _wx_migrate).
+        self._struct_loaded: bool = False
+        # Standort des Miniservers (aus msInfo): Sonnenzeiten und Open-Meteo ohne Eingabe.
         self.ms_lat: float | None = None
         self.ms_lon: float | None = None
         self.ms_location: str = ""
@@ -2126,6 +2155,9 @@ class App:
         ms = st.get("mediaServer") or {}
         self.mediaservers = {u: (v or {}).get("host", "")
                              for u, v in ms.items() if isinstance(v, dict) and (v or {}).get("host")}
+        self.mediaserver_names = {u: str((v or {}).get("name") or "")[:60]
+                                  for u, v in ms.items() if isinstance(v, dict) and (v or {}).get("host")}
+        self._audiometa_migrate()
         # Standort des Miniservers (Loxone setzt latitude/longitude immer, fuer
         # Astro/Sonnenstand) -> Wetter ohne Konfiguration (Fallback fuer loxpanel.cfg).
         info = st.get("msInfo") or {}
@@ -2164,6 +2196,8 @@ class App:
         wsrv = st.get("weatherServer")
         self.weather_cfg = wsrv if isinstance(wsrv, dict) else {}
         self._lox_wx = {}
+        self._struct_loaded = True
+        self._wx_migrate()
         self.playerid_by_action = {}
         self.audiohost_by_action = {}
         for _u, _c in self.controls.items():
@@ -3037,24 +3071,14 @@ class App:
             # Handy-Profil: Flaechen untereinander, Tabs unten, volle Hoehe
             "phone": ui.get("phone") is True,
             "devBtn": ui.get("devBtn") is True,   # Zahnrad im Panelkopf (Einstellungen am Geraet)
-            "bigValues": ui.get("bigValues") in (True, "on"),   # Werte gross: global (Darstellung) + Panel-Override wie sceneLight
+            "bigValues": False,   # Werte gross: je Geraet (FX_KEYS), ws_handler setzt den wirksamen Wert
             # Split-Pane pro Tab: Tab-Kennung -> "weather"|"calendar"|"player:<uuid>".
             # Nur wirksam, wenn split an ist. Das Panel rendert die passende Pane.
             # Zusatzflaeche je Tab (Pane 2) entfaellt: Widgets liegen jetzt frei im
             # Raster, breite Displays zeigen zwei Seiten nebeneinander.
             "panes": {},
-            # Animationen in drei Stufen - global (Settings) mit optionaler
-            # Pro-Panel-Ueberschreibung (ui.motion in panels.json):
-            # "off" keine, "mid" nur Ueberblendungen, "full" alles (Standard).
-            "motion": (ui.get("motion") if ui.get("motion") in ("off", "mid") else "full"),
-            # Mehr Kontrast: Kacheln/Knoepfe mit weichem Schatten (global mit
-            # Pro-Panel-Ueberschreibung wie motion). Kostet etwas Rechenleistung.
-            "contrast": ui.get("contrast") == "on",
-            # Lichtszenen: Piktogramm zeigt Lichtfarbe + Helligkeit (lernend)
-            "sceneLight": ui.get("sceneLight") == "on",
-            # Animierte Symbole (Klingel wackelt, Jalousie-Pfeil wippt ...):
-            # global an (Standard) mit Pro-Panel-Ueberschreibung wie motion.
-            "iconAnim": ui.get("iconAnim") != "off",
+            # Effekte (Animation, Kontrast, Lichtszenen, Animierte Symbole) stehen je Geraet
+            # (devices[name].prefs, FX_KEYS) und kommen ueber prefs_msg ans Panel.
             # Eigene Screensaver-Belegung (None = bisheriger Screensaver).
             "grid": _grid(ui.get("grid")),      # Standardraster des Panels (2x2 / 3x3)
             "saver": _sanitize_saver(prof.get("saver"), _grid(ui.get("grid"))),
@@ -3862,12 +3886,28 @@ class App:
         except (TypeError, ValueError):
             return str(mid) in teile
 
-    def _sun_minutes(self) -> tuple[int, int] | None:
-        """Sonnenauf-/-untergang als Minuten seit Mitternacht (Ortszeit).
+    def _sun_info(self) -> tuple[int, int, str] | None:
+        """Sonnenauf-/-untergang heute als Minuten seit Mitternacht plus Herkunft.
 
-        Rangfolge: zuerst der MINISERVER (globalStates `sunrise`/`sunset` liefern
-        genau dieses Format), sonst der Wetterdienst aus den Front-Daten ("HH:MM").
-        None, wenn keine Quelle brauchbare Werte hat."""
+        Ohne Internet. Rangfolge: 1) eingetragener Standort (Config, Uebersteuerung)
+        -> berechnet ("standort"); 2) Miniserver-States `sunrise`/`sunset`
+        ("miniserver"); 3) Standort des Miniservers -> berechnet ("berechnet");
+        4) Sonnenzeiten im Wetterblock ("wetter"). None ohne jede Quelle.
+        Berechnet wird mit loxone_weather.sun_times (NOAA, Zeitzone des Servers)."""
+        def _calc(lat, lon):
+            try:
+                st = loxone_weather.sun_times(date.today(), float(lat), float(lon))
+            except (TypeError, ValueError):
+                return None
+            if not st:
+                return None
+            a, b = loxone_weather._hm_min(st[0]), loxone_weather._hm_min(st[1])
+            return (a, b) if a is not None and b is not None and a < b else None
+        ov = _wx_override_coords(self.calendar_cfg)
+        if ov:
+            r = _calc(*ov)
+            if r:
+                return r[0], r[1], "standort"
         gs = self.global_states or {}
         ms = []
         for key in ("sunrise", "sunset"):
@@ -3875,7 +3915,11 @@ class App:
             v = self.states.get(u) if isinstance(u, str) else None
             ms.append(int(v) if isinstance(v, (int, float)) and 0 <= v < 1440 else None)
         if ms[0] is not None and ms[1] is not None:
-            return ms[0], ms[1]
+            return ms[0], ms[1], "miniserver"
+        if self.ms_lat is not None and self.ms_lon is not None:
+            r = _calc(self.ms_lat, self.ms_lon)
+            if r:
+                return r[0], r[1], "berechnet"
         w = (self._front or {}).get("weather") or {}
         out = []
         for key in ("sunrise", "sunset"):
@@ -3887,7 +3931,21 @@ class App:
                 out.append(int(h) * 60 + int(m))
             except ValueError:
                 return None
-        return out[0], out[1]
+        return out[0], out[1], "wetter"
+
+    def _sun_minutes(self) -> tuple[int, int] | None:
+        """Sonnenauf-/-untergang als Minuten seit Mitternacht (Ortszeit), siehe
+        _sun_info(). None, wenn keine Quelle brauchbare Werte hat."""
+        r = self._sun_info()
+        return (r[0], r[1]) if r else None
+
+    def _sun_block(self) -> dict | None:
+        """Sonnenzeiten fuer Panel und Config: {rise, set, src} als "HH:MM"."""
+        r = self._sun_info()
+        if not r:
+            return None
+        hm = lambda v: f"{v // 60:02d}:{v % 60:02d}"
+        return {"rise": hm(r[0]), "set": hm(r[1]), "src": r[2]}
 
     def _night_now(self) -> bool:
         """Ist gerade Nacht?
@@ -5091,7 +5149,7 @@ class App:
         p = d.get("prefs") if isinstance(d.get("prefs"), dict) and not ignore_dev else {}
         td = self._type_defaults(dev, d)
         dp = self.panel_dpms(pid)
-        base = dict(PREF_BASE)
+        base = {**PREF_BASE, **FX_BASE}
         if not dev:                                    # Browser ohne Kennung: Panel-Werte wie bisher
             night, sens = self.panel_night(pid), self.panel_sensors(pid)
             base.update({"nightDim": night["dim"], "prox": sens["prox"] != "off", "autoBright": sens["auto"],
@@ -5122,7 +5180,84 @@ class App:
         v["brightFix"] = pick("brightFix")
         v["panel"] = p.get("panel", "")
         src["panel"] = "geändert" if p.get("panel") else "standard"
+        for k in FX_KEYS:                              # Effekte (Animation, Kontrast ...)
+            v[k] = pick(k)
         return {"v": v, "src": src}
+
+    def _fx_mig_init(self) -> set:
+        """Einmalig beim ersten Start mit Effekten je Geraet (Marke `fxMig` in der Config): die
+        bis dahin bekannten Geraete merken. Nur sie uebernehmen beim naechsten Verbinden die alten
+        Panel-/Global-Effekte (migrate_fx); spaeter neue Geraete starten mit der Typ-Vorgabe."""
+        try:
+            cfg = _load_cfg()
+            if isinstance(cfg.get("fxMig"), list):
+                return {n for n in cfg["fxMig"] if isinstance(n, str)}
+            names = {n for n in self.devices if isinstance(n, str)}
+            names |= {e.get("name") for e in self.devinfo.values() if isinstance(e, dict) and isinstance(e.get("name"), str)}
+            names = {n for n in names if n and not (self.devices.get(n) or {}).get("fxm")}
+            cfg["fxMig"] = sorted(names)
+            _write_cfg(cfg)
+            return names
+        except Exception:
+            log.exception("Effekte-Migration: Start fehlgeschlagen")
+            return set()
+
+    def _fx_mig_done(self, dev: str) -> None:
+        self._fx_pending.discard(dev)
+        try:
+            cfg = _load_cfg()
+            cfg["fxMig"] = sorted(self._fx_pending)
+            _write_cfg(cfg)
+        except Exception as err:
+            log.warning("Effekte-Migration: Merker nicht gespeichert: %s", err)
+
+    def migrate_fx(self, dev: str, pid: str | None) -> None:
+        """Einmalig je Geraet (Marke `fxm`): Effekte, die bisher global oder am Panel standen
+        (ui.motion/contrast/sceneLight/bigValues/iconAnim), auf das Geraet uebertragen, das
+        dieses Panel zeigt. Gleich der Typ-Vorgabe -> nichts speichern. Danach zaehlt nur das Geraet."""
+        if not dev or dev not in getattr(self, "_fx_pending", ()):
+            return
+        cfg = self.devices.get(dev)
+        if isinstance(cfg, dict) and cfg.get("fxm"):
+            self._fx_mig_done(dev)
+            return
+        cfg = cfg if isinstance(cfg, dict) else {}
+        ui = {**self.theme.get("ui", {}), **((self.panels.get(pid or "") or self.panels.get("default") or {}).get("ui") or {})}
+        old: dict = {}
+        if ui.get("motion") in ("off", "mid", "full"):
+            old["motion"] = ui["motion"]
+        if ui.get("contrast") in ("on", "off"):
+            old["contrast"] = ui["contrast"] == "on"
+        if ui.get("sceneLight") in ("on", "off"):
+            old["sceneLight"] = ui["sceneLight"] == "on"
+        if ui.get("bigValues") in (True, "on", "off"):
+            old["bigValues"] = ui["bigValues"] in (True, "on")
+        if ui.get("iconAnim") in ("on", "off"):
+            old["iconAnim"] = ui["iconAnim"] == "on"
+        std = self.effective_prefs(dev, pid, True)["v"]
+        have = cfg.get("prefs") or {}
+        mig = {k: v for k, v in old.items() if k not in have and std.get(k) != v}
+        if not mig and not cfg:
+            self._fx_mig_done(dev)
+            return
+        ent = dict(cfg) if cfg else {"auto": True, "modes": {}}
+        ent["fxm"] = True
+        pr = _clean_prefs({**have, **mig}, set(self.panels))
+        if pr:
+            ent["prefs"] = pr
+        try:
+            devs = dict(self.devices)
+            devs[dev] = ent
+            self._write_devices(devs)
+            self._fx_mig_done(dev)
+            log.info("Geraet %s: Effekte uebernommen: %s", dev, ", ".join(mig) or "-")
+        except Exception as err:
+            log.warning("Effekte von %s nicht uebernommen: %s", dev, err)
+
+    def fx_of(self, dev: str, pid: str | None) -> dict:
+        """Wirksame Effekte eines Geraets fuer das Panel (Browser ohne Kennung: Standard)."""
+        v = self.effective_prefs(dev, pid)["v"]
+        return {k: v[k] for k in FX_KEYS}
 
     def migrate_panel_prefs(self, dev: str, pid: str | None) -> None:
         """Einmalig je Geraet (Marke `pm`): Abdunkeln, Praesenz und Helligkeit, die bisher am
@@ -5209,7 +5344,7 @@ class App:
                 "night": {**self.panel_night(pid), "dim": min(90, v["nightDim"])},
                 "sensors": {**sens, "prox": "wake" if v["prox"] else "off", "auto": bool(v["autoBright"]),
                             "min": v["brightMin"], "max": v["brightMax"], "fix": v["brightFix"]},
-                "dpmsOff": v["dpmsOff"]}
+                "dpmsOff": v["dpmsOff"], "fx": {k: v[k] for k in FX_KEYS}}
 
     async def prefs_push(self, dev: str) -> int:
         """Geaenderte Einstellungen live an die Panels des Geraets (ohne Neuladen)."""
@@ -5217,8 +5352,12 @@ class App:
         for ws in [w for w in list(self.conn_prof) if self.conn_dev.get(w) == dev]:
             pid = (self.conn_prof.get(ws) or {}).get("id")
             m = self.prefs_msg(dev, pid)
+            prof = self.conn_prof.get(ws)
+            if isinstance(prof, dict) and prof.get("bigValues") != m["fx"]["bigValues"]:
+                prof["bigValues"] = m["fx"]["bigValues"]   # Werte gross: Kacheln neu aufbauen
+                self._dirty = True
             n += await self._send_all([ws], {"t": "prefs", "prefs": m["prefs"], "night": m["night"],
-                                             "sensors": m["sensors"], "dpmsOff": m["dpmsOff"]})
+                                             "sensors": m["sensors"], "dpmsOff": m["dpmsOff"], "fx": m["fx"]})
         return n
 
     def _write_devices(self, devices: dict) -> None:
@@ -5264,7 +5403,7 @@ class App:
             model = cfg.get("model") if cfg.get("model") in DEVICE_MODELS else ""
             scale = _clean_scale(cfg.get("scale"))
             prefs = _clean_prefs(cfg.get("prefs"), panel_ids)
-            if not modes and not display and not model and scale is None and not prefs:
+            if not modes and not display and not model and scale is None and not prefs and not cfg.get("fxm"):
                 continue
             entry = {"auto": bool(cfg.get("auto", True)), "modes": modes}
             if display:
@@ -5279,6 +5418,8 @@ class App:
                 entry["scale"] = scale                 # Skalierung (sonst Vorgabe des Geraetetyps)
             if cfg.get("pm"):
                 entry["pm"] = True                     # Panel-Werte schon auf das Geraet uebertragen (einmalig)
+            if cfg.get("fxm"):
+                entry["fxm"] = True                    # Effekte schon auf das Geraet uebertragen (einmalig)
             if prefs:
                 entry["prefs"] = prefs                 # Toene, Abdunkeln, Praesenz, Helligkeit ... (s. _clean_prefs)
             out[name.strip()[:60]] = entry
@@ -7700,7 +7841,7 @@ class App:
             blocks = [{"k": "video", "src": f"/mjpeg?id={quote(uuid)}", "bell": bell,
                        "reconnectH": self._cam_reconnect_h(uuid)}] if has_url else \
                      [{"k": "state", "icon": "cam", "tone": "crit" if bell else "idle",
-                       "text": "Es klingelt" if bell else "Kein Video", "sub": "" if bell else "Video-Adresse unter System → Kalender & Kameras eintragen"}]
+                       "text": "Es klingelt" if bell else "Kein Video", "sub": "" if bell else "Video-Adresse unter System → Kameras eintragen"}]
             if cells:
                 blocks.append({"k": "row", "act": True, "cells": cells[:4]})
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
@@ -8401,18 +8542,16 @@ class App:
     async def audio_events_task(self) -> None:
         """Verwaltet je Audioserver (aus /mediaServer der Struktur) einen
         Gen-2-Event-Client (WS 7091). Startet neue Server, stoppt verschwundene;
-        reagiert so auf Struktur-/Config-Aenderungen. `enabled` (audiometa) ist
-        der Master-Schalter. Adressen kommen automatisch aus der Struktur —
+        reagiert so auf Struktur-/Config-Aenderungen. Abgeschaltet wird je
+        Audioserver ueber audiometa.off (Hostliste). Adressen kommen automatisch aus der Struktur —
         keine IP-Eingabe noetig."""
         while True:
-            enabled = (self.audiometa_cfg or {}).get("enabled", True)
             off = set((self.audiometa_cfg or {}).get("off") or [])   # je Audioserver abgeschaltet
             want = set()
-            if enabled:
-                for hp in self.mediaservers.values():
-                    host = (hp or "").split(":")[0].strip()
-                    if host and host not in off:
-                        want.add(host)
+            for hp in self.mediaservers.values():
+                host = (hp or "").split(":")[0].strip()
+                if host and host not in off:
+                    want.add(host)
             for host in want:
                 if host not in self.audio_clients:
                     am = self.audiometa_cfg or {}
@@ -8442,12 +8581,35 @@ class App:
             if self.audio_clients.get(host) is cl:
                 self.audio_clients.pop(host, None)
 
+    def _audiometa_migrate(self) -> None:
+        """Einmalig: ein frueherer globaler Schalter `audiometa.enabled=false` wird
+        zur off-Liste aller bekannten Audioserver (Verhalten bleibt gleich); das
+        Flag entfaellt danach. Ohne bekannte Hosts wartet die Migration."""
+        am = self.audiometa_cfg or {}
+        if "enabled" not in am:
+            return
+        hosts = {(hp or "").split(":")[0].strip() for hp in self.mediaservers.values()}
+        hosts.discard("")
+        if am.get("enabled") is False and not hosts:
+            return
+        try:
+            cfg = _load_cfg()
+            cur = dict(cfg.get("audiometa", {}) if isinstance(cfg.get("audiometa"), dict) else {})
+            if cur.pop("enabled", True) is False:
+                cur["off"] = sorted(set(cur.get("off") or []) | hosts)
+            cfg["audiometa"] = cur
+            _write_cfg(cfg)
+            self.audiometa_cfg = _audiometa_config()
+            log.info("Audioserver-Schalter migriert: aus bei %s", ", ".join(sorted(cur.get("off") or [])) or "keinem")
+        except Exception:
+            log.exception("Audioserver-Migration fehlgeschlagen")
+
     def _audio_server_info(self, hp: str) -> dict:
         """Ein erkannter Audioserver fuer die Config: Adresse, abgeschaltet?, Zustand."""
         host = (hp or "").split(":")[0].strip()
         off = host in set((self.audiometa_cfg or {}).get("off") or [])
         cl = self.audio_clients.get(host)
-        if off or not (self.audiometa_cfg or {}).get("enabled", True):
+        if off:
             state = "aus"
         elif cl is None:
             state = "startet"
@@ -8455,7 +8617,8 @@ class App:
             state = "verbunden"
         else:
             state = "nicht erreichbar" + (f" ({cl.last_err})" if getattr(cl, "last_err", None) else "")
-        return {"host": host, "addr": hp, "off": off, "state": state[:160]}
+        name = next((self.mediaserver_names.get(u) for u, v in self.mediaservers.items() if v == hp), "") or ""
+        return {"host": host, "addr": hp, "name": name, "off": off, "state": state[:160]}
 
     def _mark_dirty(self) -> None:
         self._dirty = True
@@ -8746,10 +8909,52 @@ class App:
                 out.append(None)
         return out[0], out[1]
 
+    def _wx_om_active(self, cal: dict | None = None) -> bool:
+        """Open-Meteo abfragen? Nur, wenn die Option bewusst eingeschaltet ist
+        (calendar.weather_om) UND die Anlage keinen Loxone-Wetterdienst hat.
+        Sonst gibt es keinerlei Anfrage an Open-Meteo."""
+        cal = self.calendar_cfg if cal is None else cal
+        return isinstance(cal, dict) and cal.get("weather_om") is True and not self.weather_cfg
+
+    def _wx_migrate(self) -> None:
+        """Einmalig beim Update: Bestehende Anlagen, die bisher still Open-Meteo
+        nutzten (kein Loxone-Wetterdienst, Standort vorhanden), bekommen die
+        Option Open-Meteo eingeschaltet, damit ihr Wetter nicht verschwindet.
+        Merker calendar.wx_migrated, danach nie wieder. Neuinstallationen (kein
+        Miniserver, kein Standort eingetragen) bleiben bei "nur Loxone". Bei
+        einer Bestandsanlage mit Miniserver wartet die Entscheidung auf die
+        Struktur, erst dann steht fest, ob es einen Wetterdienst gibt."""
+        raw = _load_cfg()
+        if not isinstance(raw, dict):
+            return
+        rc = raw.get("calendar") if isinstance(raw.get("calendar"), dict) else {}
+        if rc.get("wx_migrated"):
+            return
+        has_host = bool((raw.get("miniserver") or {}).get("host")) if isinstance(raw.get("miniserver"), dict) else False
+        manual = _wx_override_coords(rc) is not None
+        bestand = has_host or manual or rc.get("weather_ms") is False
+        if bestand and has_host and not self._struct_loaded:
+            return
+        cal = dict(rc)
+        cal["wx_migrated"] = True
+        om = (bestand and not self.weather_cfg and "weather_om" not in cal
+              and (manual or (self.ms_lat is not None and self.ms_lon is not None)))
+        if om:
+            cal["weather_om"] = True
+        raw["calendar"] = cal
+        try:
+            _write_cfg(raw)
+        except OSError:
+            log.exception("Wetter-Umstellung nicht gespeichert")
+            return
+        self.calendar_cfg = _calendar_config()
+        log.info("Wetterquelle umgestellt: %s", "Open-Meteo bleibt eingeschaltet (kein Loxone-Wetterdienst)"
+                 if om else "Loxone-Wetterdienst (Standard)")
+
     def _loxone_weather(self) -> dict | None:
         """Wetter vom Loxone-Wetterserver aufbereitet — oder None, wenn die
-        Anlage keinen hat bzw. die Daten nicht tragfaehig sind. Dann bleibt
-        Open-Meteo zustaendig."""
+        Anlage keinen hat bzw. die Daten (noch) nicht tragfaehig sind. Einen
+        Rueckfall auf Open-Meteo gibt es dann nicht."""
         states = (self.weather_cfg or {}).get("states")
         if not isinstance(states, dict):
             return None
@@ -8757,14 +8962,15 @@ class App:
         if not actual:
             return None
         forecast = self._lox_wx.get(states.get("forecast")) or []
-        sr, ss = self._ms_sun_hhmm()
+        sun = self._sun_block() or {}
+        sr, ss = sun.get("rise"), sun.get("set")
         fore = 4                                  # Widgets zeigen 1-4 Tage davon
         try:
             return loxone_weather.build(self.weather_cfg, actual, forecast,
                                         sunrise=sr, sunset=ss, fore_days=fore,
                                         lat=self.ms_lat, lon=self.ms_lon)
         except Exception:
-            log.exception("Wetterserver: Aufbereitung fehlgeschlagen — Open-Meteo bleibt")
+            log.exception("Wetterserver: Aufbereitung fehlgeschlagen — kein Wetter")
             return None
 
     async def stream_task(self) -> None:
@@ -9048,7 +9254,7 @@ class App:
         t0 = time.perf_counter()
         try:
             # Profil-Id statt Objekt: jede Verbindung haelt ihr eigenes (inhaltsgleiches) Profil-dict
-            rk = ("view", json.dumps(route, sort_keys=True, default=str), (prof or {}).get("id"))
+            rk = ("view", json.dumps(route, sort_keys=True, default=str), (prof or {}).get("id"), bool((prof or {}).get("bigValues")))
             msg = memo.get(rk)
             if msg is None:
                 msg = memo[rk] = self.render(route, prof)
@@ -9103,7 +9309,7 @@ class App:
                 _log_exc_limited(("camera", str(_cuid)), "intercom_blocks fehlgeschlagen (%s)", _cuid)
         saver_msg = None
         try:
-            sk = ("saver", (prof or {}).get("id"))
+            sk = ("saver", (prof or {}).get("id"), bool((prof or {}).get("bigValues")))
             saver_msg = memo.get(sk)
             if saver_msg is None:
                 saver_msg = memo[sk] = self.saver_data(prof or {})
@@ -9188,6 +9394,9 @@ class App:
 
     def _front_payload(self, data: dict) -> dict:
         return {"t": "front", "weather": data.get("weather"),
+                # Sonnenzeiten ohne Internet (Miniserver bzw. berechnet), unabhaengig
+                # vom Wetter: Ambient-Licht braucht sie auch ohne Wetterquelle.
+                "sun": self._sun_block(),
                 "events": data.get("events") or [], "holidays": data.get("holidays") or {},
                 "calName": data.get("calName") or "Family",
                 # Legende der Kalender (Name + Farbe, ohne die Abo-URLs) und
@@ -9218,20 +9427,36 @@ class App:
         return raus
 
     def _front_wetter(self, data: dict, wx: dict | None) -> None:
-        """Wetter vom Loxone-Wetterserver einsetzen (Vorrang vor Open-Meteo) und
-        die tatsaechlich verwendete Quelle fuer die Diagnose festhalten."""
+        """Wetter vom Loxone-Wetterserver einsetzen und die aktive Quelle fuer die
+        Diagnose festhalten. Mit Wetterdienst ist allein er zustaendig: liefert er
+        (noch) nichts Brauchbares, gibt es kein Wetter, keinen Rueckfall."""
+        meta = data["meta"]
         if wx is not None:
             data["weather"] = wx
-            data["meta"]["wx_configured"] = True
-            data["meta"]["wx_error"] = None
-        data["meta"]["wx_source"] = "miniserver" if wx is not None else "open-meteo"
-        self._wx_source = data["meta"]["wx_source"]
+            meta["wx_configured"] = True
+            meta["wx_error"] = None
+            meta["wx_source"] = "miniserver"
+        elif self.weather_cfg:
+            data["weather"] = None
+            meta["wx_configured"] = True
+            meta["wx_source"] = "miniserver"
+            states = (self.weather_cfg or {}).get("states") or {}
+            if self._lox_wx.get(states.get("actual") if isinstance(states, dict) else None):
+                # Daten da, aber verworfen (Zeit, Einheit, Wetterlage, Vorhersage):
+                # als Fehler melden, _front_keep haelt den letzten guten Stand.
+                meta["wx_error"] = "Daten des Wetterdienstes nicht verwertbar"
+            else:
+                meta["wx_error"] = None
+                meta["wx_wait"] = True      # Wetterdienst da, erster Push steht aus
+        else:
+            meta["wx_source"] = "open-meteo" if meta.get("wx_configured") else ""
+        self._wx_source = meta["wx_source"]
 
     def _front_nur_wetter(self, wx: dict | None) -> dict | None:
         """Front aus dem letzten Stand neu bauen, nur mit frischem Wetter.
 
         So reagiert die Front auf einen Wetter-Push des Miniservers, ohne
-        Kalender und Open-Meteo erneut abzufragen. Wie oft der Miniserver
+        den Kalender erneut abzufragen. Wie oft der Miniserver
         schickt, bestimmt er selbst. Hing daran ein Kalenderabruf, fragte
         tilebert iCloud Durchgang an Durchgang an, und iCloud sperrte das Abo
         mit 503 und Retry-After. Der letzte Stand ist schon durch _front_keep()
@@ -9242,7 +9467,7 @@ class App:
             return None
         data = copy.deepcopy(self._front_last)
         # Liefert der Wetterserver gerade nichts Brauchbares, bleibt der letzte
-        # Stand samt seiner Quelle stehen; Open-Meteo kommt im naechsten Takt.
+        # Stand samt seiner Quelle stehen (kein Rueckfall auf Open-Meteo).
         if wx is not None:
             self._front_wetter(data, wx)
         self._front_meta = data.get("meta", {})
@@ -9320,18 +9545,20 @@ class App:
             connector=aiohttp.TCPConnector(limit_per_host=3))
         try:
             while True:
+                self._wx_migrate()                   # einmalig, ohne Miniserver sofort
                 cfg = dict(self.calendar_cfg or {})
-                # Koordinaten automatisch vom Miniserver, wenn keine in der Config.
-                if cfg.get("lat") in (None, "") and self.ms_lat is not None:
-                    cfg["lat"], cfg["lon"] = self.ms_lat, self.ms_lon
-                # Wetter vom Miniserver hat Vorrang; Open-Meteo bleibt Rueckfall
-                # fuer Anlagen ohne Loxone-Wetterdienst. Liefert der Wetterserver
-                # Wetter, braucht es weder Koordinaten noch einen zweiten Abruf.
+                # Wetterquelle: der Loxone-Wetterdienst, sonst Open-Meteo NUR als
+                # bewusst gewaehlte Option. Ist sie aus, bleiben die Koordinaten
+                # leer und load_front fragt Open-Meteo nicht an.
+                om = self._wx_om_active(cfg)
+                geo = _wx_override_coords(cfg) or (
+                    (self.ms_lat, self.ms_lon) if self.ms_lat is not None and self.ms_lon is not None else None)
+                cfg["lat"], cfg["lon"] = geo if (om and geo) else (None, None)
                 cfg["fore_days"] = 4                 # Vorschau-Tage waehlt jedes Wetter-Widget selbst (max. 4)
                 try:
-                    wx = self._loxone_weather() if cfg.get("weather_ms", True) is not False else None
-                    configured = bool(front_info.calendar_sources(cfg)) or wx is not None or (
-                        cfg.get("lat") not in (None, "") and cfg.get("lon") not in (None, ""))
+                    wx = self._loxone_weather() if self.weather_cfg else None
+                    configured = (bool(front_info.calendar_sources(cfg)) or bool(self.weather_cfg)
+                                  or cfg.get("lat") is not None)
                 except Exception:
                     # Ungewoehnliche Wetterdaten duerfen Kalender/Wetter nicht bis zum
                     # Neustart lahmlegen: diesen Durchgang auslassen, spaeter neu.
@@ -9350,7 +9577,7 @@ class App:
                             # darf keinen Abruf nach dem anderen nach sich ziehen.
                             self._front_cal_due = time.monotonic() + FRONT_INTERVAL
                             data = await front_info.load_front(self._front_session, cfg,
-                                                               skip_weather=wx is not None)
+                                                               skip_weather=not om)
                             self._front_wetter(data, wx)
                             data = self._front_keep(data)   # Aussetzer loescht nichts
                             self._front_last = copy.deepcopy(data)
@@ -9361,8 +9588,8 @@ class App:
                         payload = None
                 else:
                     self._front_meta = {}
-                    self._wx_source = "open-meteo"
-                    payload = {"t": "front", "weather": None, "events": [],
+                    self._wx_source = ""
+                    payload = {"t": "front", "weather": None, "sun": self._sun_block(), "events": [],
                                "holidays": {}, "cals": [], "calColors": True,
                                "svEvents": 3,
                                "calName": (cfg.get("name") or "Family")}
@@ -9647,7 +9874,6 @@ async def api_settings(request: web.Request) -> web.Response:
     cameras = [{"id": k, "name": str(e.get("name") or ""), "url": _mask_url((e.get("url") or "").strip()),
                 "user": e.get("user", ""), "hasPass": bool(e.get("pass")), "crop": _clean_crop(e.get("crop"))}
                for k, e in ic.items() if k.startswith("cam_") and isinstance(e, dict)]
-    am = cfg.get("audiometa", {}) if isinstance(cfg.get("audiometa"), dict) else {}
     cal = cfg.get("calendar", {}) if isinstance(cfg.get("calendar"), dict) else {}
     return web.json_response({
         "miniserver": {
@@ -9659,8 +9885,7 @@ async def api_settings(request: web.Request) -> web.Response:
         },
         "intercoms": intercoms,
         "cameras": cameras,
-        "audiometa": {"enabled": bool(am.get("enabled", True)),
-                      "servers": [app._audio_server_info(hp) for hp in sorted(set(app.mediaservers.values()))]},
+        "audiometa": {"servers": [app._audio_server_info(hp) for hp in sorted(set(app.mediaservers.values()))]},
         "calendar": {
             # Quellen normalisiert (inkl. Migration einer alten einzelnen
             # ical_url), damit die Einstellungsseite genau das sieht, womit der
@@ -9678,7 +9903,15 @@ async def api_settings(request: web.Request) -> web.Response:
             "lon": cal.get("lon"),
             "days": cal.get("days", 14),
             "fore_days": cal.get("fore_days", 4),
-            "weather_ms": cal.get("weather_ms", True) is not False,
+            # Wetterquelle: wx_lox = Anlage hat den Loxone-Wetterdienst (dann ist er
+            # die Quelle), weather_om = Option Open-Meteo (nur ohne Wetterdienst
+            # wirksam und angeboten), wx_active = gerade aktive Quelle ("" = keine),
+            # wx_fields = welche Werte sie gerade liefert, sun = Sonnenzeiten heute.
+            "wx_lox": bool(app.weather_cfg),
+            "weather_om": cal.get("weather_om") is True,
+            "wx_active": app._wx_source,
+            "wx_fields": _wx_fields((app._front or {}).get("weather")),
+            "sun": app._sun_block(),
             # Screensaver-Kamera ("Fenster zur Aussenwelt"): nur relevant/anzeigbar,
             # wenn kein iCal genutzt wird - die UI blendet das Feld sonst aus.
             "screensaverIntercom": cal.get("screensaverIntercom") or "",
@@ -9853,14 +10086,14 @@ async def api_settings_cmdwatch(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
     on = bool(data.get("on"))
     cfg = _load_cfg()
-    cfg["cmdwatch"] = {"on": on}
+    cfg["cmdwatch"] = {"on": on}      # ausgeblendet, immer an: app.cmd_watch bleibt True (siehe _cmd_watch_config)
     try:
         _write_cfg(cfg)
     except OSError as err:
         return web.json_response({"ok": False, "error": str(err)}, status=500)
-    app.cmd_watch = on
+    app.cmd_watch = _cmd_watch_config()
     for ws in list(app.conn_route):
-        await app._send_or_drop(ws, {"t": "cmdwatch", "on": on})
+        await app._send_or_drop(ws, {"t": "cmdwatch", "on": app.cmd_watch})
     log.info("Befehls-Monitoring %s", "an" if on else "aus")
     return web.json_response({"ok": True})
 
@@ -9963,8 +10196,8 @@ async def api_settings_night(request: web.Request) -> web.Response:
 
 
 async def api_settings_audiometa(request: web.Request) -> web.Response:
-    """Audioserver-Live-Daten (Gen-2-Event-Kanal) an/aus. Adressen werden
-    automatisch aus der Struktur gelesen — es gibt nur den Master-Schalter."""
+    """Audioserver-Live-Daten (Gen-2-Event-Kanal) je Audioserver an/aus (`off` =
+    abgeschaltete Hostnamen). Adressen werden automatisch aus der Struktur gelesen."""
     app: App = request.app["app"]
     try:
         data = await request.json()
@@ -9972,7 +10205,7 @@ async def api_settings_audiometa(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
     cfg = _load_cfg()
     am = dict(cfg.get("audiometa", {}) if isinstance(cfg.get("audiometa"), dict) else {})
-    am["enabled"] = bool(data.get("enabled"))
+    am.pop("enabled", None)          # globaler Schalter entfaellt (Migration: off-Liste)
     if isinstance(data.get("off"), list):        # je Audioserver abschalten (Hostnamen)
         am["off"] = sorted({str(h).strip()[:120] for h in data["off"] if str(h).strip()})
     cfg["audiometa"] = am
@@ -9983,12 +10216,14 @@ async def api_settings_audiometa(request: web.Request) -> web.Response:
     app.audiometa_cfg = _audiometa_config()
     # Bei Deaktivierung laufende Clients sofort schliessen; beim Aktivieren
     # startet der audio_events_task sie beim naechsten Durchlauf automatisch.
+    # Nur die abgeschalteten schliessen; eingeschaltete laufen weiter (sonst
+    # verwaiste Clients + Duplikate durch den audio_events_task).
     for host, cl in list(app.audio_clients.items()):
-        if not am["enabled"] or host in set(am.get("off") or []):
+        if host in set(am.get("off") or []):
+            app.audio_clients.pop(host, None)
             await cl.close()
-        app.audio_clients.clear()
     app._dirty = True
-    log.info("Audioserver-Live-Daten %s", "aktiv" if am["enabled"] else "aus")
+    log.info("Audioserver-Live-Daten aus bei: %s", ", ".join(am.get("off") or []) or "keinem")
     return web.json_response({"ok": True})
 
 
@@ -10169,10 +10404,37 @@ async def api_sound(request: web.Request) -> web.Response:
     return web.Response(body=body, content_type=ctype, headers={"Cache-Control": "no-cache"})
 
 
+def _wx_fields(w) -> dict:
+    """Welche Werte der aktuelle Wetterblock fuehrt (fuer die Config-Karte)."""
+    if not isinstance(w, dict):
+        return {}
+    fc = [f for f in (w.get("forecast") or []) if isinstance(f, dict)]
+    det = [f.get("det") or {} for f in fc]
+    hrs = [h for d in det for h in (d.get("hours") or []) if isinstance(h, dict)]
+    hrs += [h for h in (w.get("hourly") or []) if isinstance(h, dict)]
+    has = lambda v: v not in (None, "")
+    return {
+        "temp": has(w.get("temp")),
+        "feels": has(w.get("feels")),
+        "humidity": has(w.get("humidity")),
+        "wind": has(w.get("wind")),
+        "pressure": has(w.get("pressure")),
+        "rain": has(w.get("precip_sum")) or any(has(d.get("rain")) for d in det),
+        "cond": has(w.get("cond")),
+        "hilo": has(w.get("hi")) and has(w.get("lo")),
+        "hourly": bool(w.get("hourly")),
+        "days": len(fc) > 1,
+        "radiation": any(has(d.get("radiation")) for d in det) or any(has(h.get("rad")) for h in hrs),
+        "pop": any(has(f.get("pop")) for f in fc) or any(has(h.get("pop")) for h in hrs),
+        "uv": has(w.get("uv")) or any(has(d.get("uv")) for d in det),
+    }
+
+
 async def api_settings_weather(request: web.Request) -> web.Response:
-    """Wetterquelle (System -> Miniserver): {ms: bool, lat, lon}. ms = Wetter vom
-    Loxone-Wetterserver; sonst Open-Meteo mit den Koordinaten (leer = Standort
-    des Miniservers)."""
+    """Wetter (System -> Loxone): {om: bool, lat, lon}. om = Option Open-Meteo
+    (wirkt nur ohne Loxone-Wetterdienst), lat/lon = eingetragener Standort
+    (leer = Standort des Miniservers; gilt fuer Sonnenzeiten und Open-Meteo).
+    Nur mitgeschickte Felder werden geschrieben; ein aelteres `ms` wird ignoriert."""
     app: App = request.app["app"]
     try:
         data = await request.json()
@@ -10190,18 +10452,24 @@ async def api_settings_weather(request: web.Request) -> web.Response:
 
     cfg = _load_cfg()
     cal = dict(cfg.get("calendar") or {}) if isinstance(cfg.get("calendar"), dict) else {}
-    cal["weather_ms"] = bool(data.get("ms", True))
-    lat, lon = _coord(data.get("lat"), 90.0), _coord(data.get("lon"), 180.0)
-    cal["lat"] = lat if (lat is not None and lon is not None) else None
-    cal["lon"] = lon if (lat is not None and lon is not None) else None
+    if "om" in data:
+        cal["weather_om"] = bool(data.get("om"))
+        cal["wx_migrated"] = True       # bewusste Wahl: keine Umstellung mehr
+    if "lat" in data or "lon" in data:
+        lat, lon = _coord(data.get("lat"), 90.0), _coord(data.get("lon"), 180.0)
+        cal["lat"] = lat if (lat is not None and lon is not None) else None
+        cal["lon"] = lon if (lat is not None and lon is not None) else None
     cfg["calendar"] = cal
     try:
         _write_cfg(cfg)
     except OSError as err:
         return web.json_response({"ok": False, "error": str(err)}, status=500)
     app.calendar_cfg = _calendar_config()
+    app._front_cal_due = 0.0   # voll neu laden: Quelle an/aus wirkt sofort
     app._front_refresh.set()
-    log.info("Wetterquelle: %s", "Miniserver" if cal["weather_ms"] else "Open-Meteo")
+    log.info("Wetter gespeichert: Open-Meteo %s, Standort %s",
+             "an" if cal.get("weather_om") is True else "aus",
+             "eingetragen" if cal.get("lat") is not None else "Miniserver")
     return web.json_response({"ok": True})
 
 
@@ -10393,6 +10661,8 @@ async def api_save_devices(request: web.Request) -> web.Response:
             e["prefs"] = old_p
         if isinstance(e, dict) and (app.devices.get(n) or {}).get("pm"):
             e["pm"] = True
+        if isinstance(e, dict) and (app.devices.get(n) or {}).get("fxm"):
+            e["fxm"] = True
     devices = App._sanitize_devices(raw, set(app.panels))
     # Leeres Display-Kennwort = unveraendert (/api/meta gibt es nicht heraus),
     # aber nur beim selben Ziel (Treiber und Host), sonst ginge das gespeicherte
@@ -10473,10 +10743,10 @@ async def api_device_prefs(request: web.Request) -> web.Response:
     pid = pid or (cfg.get("prefs") or {}).get("panel") or None
     e = app.effective_prefs(name, pid)
     flat = {"sound." + k: e["v"]["sound"][k] for k in PREF_SOUNDS}
-    flat.update({k: e["v"][k] for k in ("nightDim", "prox", "autoBright", "brightMin", "brightMax", "brightFix", "panel")})
+    flat.update({k: e["v"][k] for k in ("nightDim", "prox", "autoBright", "brightMin", "brightMax", "brightFix", "panel", *FX_KEYS)})
     es = app.effective_prefs(name, pid, True)["v"]          # Standard: ohne Geraete-Aenderungen
     std = {"sound." + k: es["sound"][k] for k in PREF_SOUNDS}
-    std.update({k: es[k] for k in ("nightDim", "prox", "autoBright", "brightMin", "brightMax", "brightFix")})
+    std.update({k: es[k] for k in ("nightDim", "prox", "autoBright", "brightMin", "brightMax", "brightFix", *FX_KEYS)})
     extra = {"panels": [{"id": k, "title": str((v or {}).get("title") or k)[:40]} for k, v in app.panels.items()],
              "current": pid or ""} if ds else {}
     return web.json_response({"ok": True, "device": name, "model": cfg.get("model") or "", **extra,
@@ -11580,6 +11850,8 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
             pid = (cfg.get("modes") or {}).get(app.last_mode) or pid
     prof = app.resolve_profile(pid)
     app.migrate_panel_prefs(dev, prof.get("id"))
+    app.migrate_fx(dev, prof.get("id"))
+    prof["bigValues"] = app.fx_of(dev, prof.get("id"))["bigValues"]   # Werte gross: je Geraet
     app.migrate_ring_targets()
     app.conn_prof[ws] = prof
     app.conn_dev[ws] = dev
@@ -11624,10 +11896,10 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                             "sensors": _pm["sensors"],
                             "screensaverCam": app._screensaver_cam(),
                             "camCrop": app.cam_crops(),
-                            "motion": prof["motion"],
-                            "contrast": prof["contrast"],
-                            "sceneLight": prof["sceneLight"],
-                            "iconAnim": prof["iconAnim"],
+                            "motion": _pm["fx"]["motion"],          # Effekte: je Geraet (s. FX_KEYS)
+                            "contrast": _pm["fx"]["contrast"],
+                            "sceneLight": _pm["fx"]["sceneLight"],
+                            "iconAnim": _pm["fx"]["iconAnim"],
                             "saver": prof.get("saver"),
                             "ambBg": prof.get("ambBg", ""), "ambClock": prof.get("ambClock", ""),
                             "bgImg": bg_url(prof["id"]) if prof.get("ambBg") == "image" else "",

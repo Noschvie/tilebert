@@ -16,7 +16,7 @@ Grundsatz: nur anzeigen, was der Miniserver eindeutig hergibt.
   ("%.1f km/h"). Laesst sich eine Einheit nicht bestimmen, faellt der Wert weg —
   lieber eine Kachel weniger als eine falsch beschriftete Zahl.
 * Laesst sich das Wetter gar nicht beschriften oder sind die Zeitstempel
-  unplausibel, liefert `build()` None und der Aufrufer bleibt bei Open-Meteo.
+  unplausibel, liefert `build()` None und es gibt kein Wetter (kein Rueckfall auf Open-Meteo).
 
 Was der Wetterdienst nicht liefert, bleibt leer: Regenwahrscheinlichkeit und
 UV-Index gibt es dort nicht (`solarRadiation` ist Einstrahlung in W/m², kein
@@ -236,7 +236,7 @@ def build(cfg: dict, actual: list, forecast: list, *,
           fore_days: int = 4, now: datetime | None = None,
           lat: float | None = None, lon: float | None = None) -> dict | None:
     """Wetter-Block fuer die Front bauen — oder None, wenn die Daten nicht
-    tragfaehig sind (dann bleibt der Aufrufer bei Open-Meteo).
+    tragfaehig sind (dann zeigt der Aufrufer kein Wetter).
 
     `cfg` ist der `weatherServer`-Block der Struktur, `actual`/`forecast` sind
     die Eintragslisten aus `loxone_ws.LoxoneWS._parse_weather`. Sonnenzeiten
@@ -245,7 +245,7 @@ def build(cfg: dict, actual: list, forecast: list, *,
     now = now or datetime.now()
     texte = weather_texts(cfg)
     if not texte:
-        log.info("Wetterserver: keine Wetterlage-Texte in der Struktur — Open-Meteo bleibt")
+        log.info("Wetterserver: keine Wetterlage-Texte in der Struktur — kein Wetter")
         return None
 
     cur = actual[0] if actual and isinstance(actual[0], dict) else None
@@ -261,7 +261,7 @@ def build(cfg: dict, actual: list, forecast: list, *,
     # rutschen Stunden ueber die Tagesgrenze und "heute" bekommt fremde Werte.
     versatz = _volle_stunde(now) - _volle_stunde(t_roh)
     if abs(versatz) > MAX_RUECK:
-        log.warning("Wetterserver: Zeitstempel unplausibel (%s statt ~%s) — Open-Meteo bleibt",
+        log.warning("Wetterserver: Zeitstempel unplausibel (%s statt ~%s) — kein Wetter",
                     t_roh, now.replace(microsecond=0))
         return None
     global _LETZTER_VERSATZ
@@ -275,13 +275,13 @@ def build(cfg: dict, actual: list, forecast: list, *,
     # Fahrenheit-Angabe laesst die Quelle ausfallen (das Panel schreibt "°").
     t_unit = _fmt_unit(fmt, "temp") or ""
     if "f" in t_unit.lower().replace("°", ""):
-        log.warning("Wetterserver liefert Temperatur in %s — Open-Meteo bleibt", t_unit)
+        log.warning("Wetterserver liefert Temperatur in %s — kein Wetter", t_unit)
         return None
 
     cond = texte.get(_typ(cur))
     icon = icon_for(cond)
     if not icon:
-        log.info("Wetterserver: Wetterlage %r nicht einordenbar - Open-Meteo bleibt", cond)
+        log.info("Wetterserver: Wetterlage %r nicht einordenbar — kein Wetter", cond)
         return None
 
     # Vorhersage nach Tagen buendeln (nur plausible Zeitstempel).
@@ -297,7 +297,7 @@ def build(cfg: dict, actual: list, forecast: list, *,
             continue
         tage.setdefault(t.date(), []).append((t, e))
     if not tage:
-        log.info("Wetterserver: keine brauchbare Vorhersage — Open-Meteo bleibt")
+        log.info("Wetterserver: keine brauchbare Vorhersage — kein Wetter")
         return None
     for liste in tage.values():
         liste.sort(key=lambda p: p[0])
