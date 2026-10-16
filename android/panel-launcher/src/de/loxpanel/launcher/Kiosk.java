@@ -61,6 +61,7 @@ public class Kiosk extends Activity implements SensorEventListener {
     static final String KEY_MODE = "mode";      // "tbview" | "fully" (Standard: fully)
     private static final long RETRY_MS = 3000;
     private static final long LIGHT_HOLD_MS = 3000;   // Hysterese gegen kurze Lichtwechsel
+    private static final float SHELLY_MIN_BRIGHT = 0.04f;   // kleinste Fensterhelligkeit, die der Shelly wirklich minimal umsetzt
 
     private final Handler ui = new Handler();
     private WebView web;
@@ -97,11 +98,11 @@ public class Kiosk extends Activity implements SensorEventListener {
                 | WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         FrameLayout root = new FrameLayout(this);
         rootView = root;
-        root.setBackgroundColor(Color.BLACK);
+        // kein eigener Hintergrund: die WebView (schwarz) deckt alles, spart eine Vollbild-Fuellung je Frame
 
         web = new WebView(this);
         web.setBackgroundColor(Color.BLACK);
-        web.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        // kein eigener Hardware-Layer: spart Offscreen-Textur (~4 MB) + eine Vollbild-Kopie je Frame
         web.setOverScrollMode(View.OVER_SCROLL_NEVER);
         web.setVerticalScrollBarEnabled(false);
         web.setHorizontalScrollBarEnabled(false);
@@ -141,6 +142,10 @@ public class Kiosk extends Activity implements SensorEventListener {
         saver.setVisibility(View.GONE);
         root.addView(saver, new FrameLayout.LayoutParams(-1, -1));
         setContentView(root);
+        // Fensterhintergrund (Startbild) nach dem Start nicht mehr unter der WebView mitzeichnen,
+        // Fenster deckend: spart je Frame eine Vollbild-Fuellung und das Mischen im SurfaceFlinger
+        getWindow().setBackgroundDrawable(null);
+        getWindow().setFormat(android.graphics.PixelFormat.OPAQUE);
 
         sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         if (sm != null) {
@@ -412,6 +417,9 @@ public class Kiosk extends Activity implements SensorEventListener {
             Float base = (autoOn && lightLevel >= 0) ? Float.valueOf(autoFraction()) : (fixPct > 0 ? Float.valueOf(fixPct / 100f) : null);
             b = base == null ? WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE : Math.max(0.01f, base);
         }
+        // Shelly: Werte unter dem Systemminimum (~3,5 %) setzt die Firmware NICHT auf minimal, sondern faellt auf
+        // Backlight 169/255 zurueck (gemessen: 0-2 % -> 169, 4 % -> 11, 25 % -> 65). Daher dort mind. 4 %.
+        if (b >= 0f && b < SHELLY_MIN_BRIGHT && StockHome.isShelly()) b = SHELLY_MIN_BRIGHT;
         if (Math.abs(b - shown) < 0.005f) return;
         shown = b;
         WindowManager.LayoutParams lp = getWindow().getAttributes();

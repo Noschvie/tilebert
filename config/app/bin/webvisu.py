@@ -78,7 +78,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.27"
+APP_VERSION = "0.20.28"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -695,6 +695,7 @@ def _ms_reason_code(rejected: bool, close_code: int | None, out_of_service: bool
     if close_code in (4004, 4005):
         return "user_changed"
     return "net"
+SINGLE_WAIT_S = 1.5        # ?single=1&after=: so lange auf ein neues Kamerabild warten, sonst 204
 WIDGET_CAM_FPS = 5        # Bilder/s fuer Kamera-Widgets (Dashboard); Klingel-Vollansicht ungebremst
 ICON_CACHE_MAX = 800     # Icons im Speicher (Loxone-SVGs, je wenige KB)
 COVER_TIMEOUT = 10       # s: Albumcover vom Audioserver/aus dem Netz (sonst haengt die Anfrage offen)
@@ -3439,8 +3440,12 @@ class App:
                     # gemischt sind (Screensaver, Favoriten, freie Tabs).
                     tiles[u] = self._control_item(u, prof, show_room=show_room)
                 elif it["type"] == "intercom":
+                    # Widget wie das Kamera-Widget gebremst (&fps -> LITE 2 Abrufe/s statt bis 4);
+                    # die Klingel-/Detailansicht (control-View) bleibt ungebremst
                     cams[u] = {"name": _clean(self.controls[u].get("name")),
-                               "blocks": self.intercom_blocks(u) or []}
+                               "blocks": [({**b, "src": b["src"] + f"&fps={WIDGET_CAM_FPS}"}
+                                          if b.get("k") == "video" and "fps=" not in str(b.get("src", "")) else b)
+                                          for b in (self.intercom_blocks(u) or [])]}
                 elif it["type"] == "energy":
                     eb = self.energy_blocks(u)
                     if eb is not None:
@@ -11681,6 +11686,7 @@ class CamHub:
         self.uuid, self.url, self.auth = uuid, url, auth
         self.subs: set[asyncio.Queue] = set()
         self.last: bytes | None = None          # letztes Bild -> neuer Betrachter sieht sofort etwas
+        self.seq = 0                             # Nummer von `last` (?single=1&after=: nur neue Bilder)
         self.task: asyncio.Task | None = None
         self.ok = False                          # Kamera liefert gerade
         self._idle = None                         # Nachlauf-Timer ohne Betrachter
@@ -11725,6 +11731,7 @@ class CamHub:
         if not frame:
             return
         self.last = frame
+        self.seq += 1
         for q in list(self.subs):
             if q.full():                         # langsamer Betrachter: aeltestes Bild verwerfen
                 with contextlib.suppress(asyncio.QueueEmpty):
@@ -11843,16 +11850,31 @@ async def mjpeg_handler(request: web.Request) -> web.StreamResponse:
     except asyncio.TimeoutError:
         hub.unsubscribe(q)
         return web.Response(status=502, text="camera unreachable")
+    except BaseException:
+        hub.unsubscribe(q)                       # Anfrage abgebrochen: Betrachter abmelden (sonst bleibt die Kamera verbunden)
+        raise
 
     # ?single=1: nur das aktuelle Einzelbild (schwache Panels holen so 1-2 Bilder/s,
     # statt einen Dauerstrom zu dekodieren - der Speicher des Browsers bleibt begrenzt).
     # Der Verteiler bleibt danach noch IDLE_KEEP_S verbunden, das naechste Bild ist frisch.
+    # &after=<Nummer>: das Panel hat dieses Bild schon -> kurz auf ein neues warten statt dasselbe
+    # noch einmal zu schicken (liefert die Kamera langsamer als abgefragt, sparen Netz, Dekodieren
+    # und Zeichnen am Panel; Antwort 204 = weiter das bisherige Bild zeigen). X-Seq = Nummer des Bildes.
     if request.query.get("single"):
-        hub.unsubscribe(q)
-        while not q.empty():
-            first = q.get_nowait()
+        try:
+            while not q.empty():
+                first = q.get_nowait()
+            if hub.last is not None and request.query.get("after") == str(hub.seq):
+                try:
+                    await asyncio.wait_for(q.get(), timeout=SINGLE_WAIT_S)
+                except asyncio.TimeoutError:
+                    return web.Response(status=204, headers={"Cache-Control": "no-cache, no-store", "X-Seq": str(hub.seq)})
+        finally:
+            hub.unsubscribe(q)                   # auch bei abgebrochener Anfrage (Panel bricht beim Umschalten ab)
+        if hub.last is not None:
+            first = hub.last                     # neuestes Bild, passend zu hub.seq
         return web.Response(body=first, content_type="image/jpeg",
-                            headers={"Cache-Control": "no-cache, no-store"})
+                            headers={"Cache-Control": "no-cache, no-store", "X-Seq": str(hub.seq)})
 
     bnd = CamHub.BOUNDARY
     resp = web.StreamResponse(status=200, headers={

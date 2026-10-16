@@ -693,12 +693,7 @@
   /* Anti-Einbrennen: Inhalt driftet langsam ueber den Schirm. Kleinere Amplitude
      als bei der reinen Uhr, damit Wetter/Termine nicht ueber den Rand wandern. */
   .saver .sv-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;
-    width:min(92%,440px);animation:svdrift 360s step-end infinite;}
-  @keyframes svdrift{
-    0%{transform:translate(-14px,-5px);}   25%{transform:translate(14px,-5px);}
-    50%{transform:translate(14px,5px);}     75%{transform:translate(-14px,5px);}
-    100%{transform:translate(-14px,-5px);}
-  }
+    width:min(92%,440px);transform:var(--svd,translate(-14px,-5px));}   /* Drift-Stufe setzt svDrift() (alle 90 s) */
   .sv-clock{display:flex;flex-direction:column;align-items:center;gap:4px;}
   /* Kompakte Front, sobald Wetter/Termine dazukommen (sonst passt es nicht aufs
      480x480-Panel). Die reine Uhr (ohne Front-Daten) bleibt gross. */
@@ -738,9 +733,7 @@
   .saver.layout .sv-grid{display:grid;position:absolute;inset:70px 12px 12px;padding:14px;gap:10px;border-radius:var(--r-xl);
     background:rgba(var(--bezel-ink-rgb,255,255,255),.035);
     grid-template-columns:repeat(var(--svc,3),minmax(0,1fr));grid-template-rows:repeat(var(--svr,3),minmax(0,1fr));
-    animation:svgriddrift 480s step-end infinite;}
-  @keyframes svgriddrift{0%,100%{transform:translate(-3px,-2px);}25%{transform:translate(3px,-2px);}
-    50%{transform:translate(3px,2px);}75%{transform:translate(-3px,2px);}}
+    transform:var(--svgd,translate(-3px,-2px));}   /* Einbrennschutz: Stufe setzt svDrift() (alle 120 s) */
   .svw{min-width:0;min-height:0;position:relative;display:flex;}
   /* Tabs als Raster: 3 Spalten x 3 Zeilen je Seite (160 px je 480er-Display),
      gleiche Zellen wie der Screensaver; mehrere Seiten rasten beim Wischen ein. */
@@ -908,7 +901,7 @@
      je Profil) im Stil eines Tab-Symbols */
   .saver .sv-bar{display:none;}
   .saver.layout .sv-bar{display:flex;position:absolute;left:12px;right:12px;top:8px;height:52px;align-items:center;gap:8px;z-index:3;
-    animation:svgriddrift 480s step-end infinite;}   /* Einbrennschutz wie das Raster (immer, auch bei Animation "Keine") */
+    transform:var(--svgd,translate(-3px,-2px));}   /* Einbrennschutz wie das Raster (immer, auch bei Animation "Keine") */
   .sv-st{display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;
     align-self:stretch;}   /* volle Leistenhoehe: Platz fuer die Zahlen-Bubble ueber dem Symbol (sonst abgeschnitten) */
   .sv-st .svsti{height:100%;max-height:52px;}
@@ -1684,6 +1677,15 @@
   html.ianim:not([data-motion="off"]) .tile.an-down .head>:first-child,
   html.ianim:not([data-motion="off"]) .shade .sbar.on[data-dir="down"] svg{animation:icBobDown 1.1s ease-in-out infinite;}
   html.ianim:not([data-motion="off"]) .tile.an-heat .head>:first-child{animation:icHeat 2.4s ease-in-out infinite;}
+  /* Shelly (lite): Kamerabild als eigene Ebene -> je neuem Bild nur das Bild hochladen statt die Kacheln darunter neu zu rastern */
+  html.lite .sv-cam-img:not(.camimg),html.lite img.camimg.on{will-change:transform;}
+  /* Unsichtbare Endlos-Animationen anhalten (svCover/camsDark): Seite unter dem deckenden Dashboard,
+     ausgeblendetes Dashboard, Display aus. Jede laufende Animation laesst den Kompositor mit 60 Bildern/s
+     arbeiten. Nur Endlos-Animationen: einmalige (Einblenden) laufen normal zu Ende. */
+  html.svcover :is(#grid,#playerpane,#frontpane,#tabs) :is(.edot,.dstate.tone-crit,.dstate.tone-crit .sico,.video .vbell,.vbico,.sent,.secico,.sbar.on svg,.tile:is(.an-ring,.an-up,.an-down,.an-heat) .head>:first-child),
+  html.svcover :is(#grid,#playerpane,#frontpane,#tabs) .secbox::after,html.svhid #saver .secbox::after,html.scroff .secbox::after,
+  html.svhid #saver :is(.edot,.dstate.tone-crit,.dstate.tone-crit .sico,.video .vbell,.vbico,.sent,.secico,.sbar.on svg,.tile:is(.an-ring,.an-up,.an-down,.an-heat) .head>:first-child),
+  html.scroff :is(.edot,.dstate.tone-crit,.dstate.tone-crit .sico,.video .vbell,.vbico,.sent,.secico,.sbar.on svg,.tile:is(.an-ring,.an-up,.an-down,.an-heat) .head>:first-child){animation-play-state:paused !important;}
   .vbell{display:inline-flex;align-items:center;gap:6px;}
   .vbico{width:16px;height:16px;display:grid;} .vbico svg{width:100%;height:100%;stroke:currentColor;fill:none;stroke-width:2;}
 
@@ -5659,17 +5661,19 @@ function camCropAll(){ document.querySelectorAll('img[data-camid]').forEach(camC
 function camStream(img, src, reconnectH, onErr, onOk){
   if(!img||!src) return;
   const mid=/[?&]id=([^&]+)/.exec(src); img.dataset.camid=mid?decodeURIComponent(mid[1]):''; camCrop(img);
+  img._camSeq=null;
   const single=LITE && src.indexOf('/mjpeg?')===0, tick=/[?&]fps=/.test(src)?500:250;
   const load=()=>{
     clearTimeout(img._camRetry); clearTimeout(img._camCycle); clearTimeout(img._camTick);
     if(CAM_DARK) return;                       // Display aus: erst beim Aufwecken (camsDark) laden
-    img.src=src+(src.indexOf('?')<0?'?':'&')+(single?'single=1&':'')+'_t='+Date.now();
+    const u=src+(src.indexOf('?')<0?'?':'&')+(single?'single=1&':'')+'_t='+Date.now();
+    if(single) camFetch(img, u); else img.src=u;
     if(reconnectH>0) img._camCycle=setTimeout(()=>{ if(img.isConnected) load(); }, reconnectH*3600*1000);
   };
   img._camLoad=load;
   // Fehler: neuer Versuch nach 8 s, bei Dauerausfall wachsend bis 60 s; bei
   // ausgeblendeter Seite gar nicht (die Rueckkehr ans Panel baut ohnehin neu auf).
-  img.onerror=()=>{ if(onErr) onErr(); clearTimeout(img._camRetry);
+  img.onerror=()=>{ img._camSeq=null; if(onErr) onErr(); clearTimeout(img._camRetry);
     img._camFails=(img._camFails||0)+1;
     const wait=Math.min(60000, CAM_RETRY_MS*Math.pow(2, img._camFails-1));
     img._camRetry=setTimeout(function again(){ if(!img.isConnected) return;
@@ -5678,14 +5682,39 @@ function camStream(img, src, reconnectH, onErr, onOk){
     // Einzelbild-Modus: naechstes Bild nach `tick`, bei ausgeblendeter Seite pausieren
     if(single) img._camTick=setTimeout(function next(){ if(!img.isConnected||!img._camLoad) return;
       if(document.hidden||CAM_DARK){ img._camTick=setTimeout(next, 2000); return; }
-      img.src=src+'&single=1&_t='+Date.now(); }, tick); };
+      camFetch(img, src+'&single=1&_t='+Date.now()); }, tick); };
   camImgs.add(img);
   load();
   if(_camNight) camStills();   // neu gezeichnete Kamera waehrend der Nachtsperre: Hinweis gleich zeigen
 }
+// Einzelbild erst komplett laden, dann zeigen (Blob): das <img> dekodiert und zeichnet so jedes
+// Bild einmal statt bei jedem eintreffenden Netzwerkpaket ein Teilbild neu. Sichtbar gleich.
+function camFetch(img, u){
+  if(typeof AbortController!=='function'||!window.fetch||!window.URL||!URL.createObjectURL){ img.src=u; return; }   // alte WebViews: wie bisher
+  if(img._camAbort) img._camAbort.abort();
+  const ac=new AbortController(); img._camAbort=ac;
+  const to=setTimeout(()=>{ ac._to=true; ac.abort(); }, 10000);   // haengender Server: als Fehler werten (Retry)
+  // after=<Nummer des gezeigten Bildes>: der Server antwortet erst mit einem neuen Bild (oder 204 = unveraendert)
+  if(img._camSeq) u+='&after='+img._camSeq;
+  fetch(u,{cache:'no-store',signal:ac.signal}).then(r=>{ if(!r.ok) throw new Error('http '+r.status);
+      if(img._camAbort===ac) img._camSeq=r.headers.get('X-Seq')||null;
+      return r.status===204 ? null : r.blob(); })
+    .then(b=>{ clearTimeout(to); if(img._camAbort!==ac) return; img._camAbort=null;
+      if(!img._camLoad||CAM_DARK||!img.isConnected) return;
+      if(!b){ if(img.onload) img.onload(); return; }   // Bild unveraendert: nichts neu dekodieren/zeichnen, naechste Abfrage
+      const old=img._camBlob; img._camBlob=URL.createObjectURL(b); img.src=img._camBlob;
+      if(old) URL.revokeObjectURL(old); })   // altes Bild bleibt bis zum neuen sichtbar (schon dekodiert)
+    .catch(e=>{ clearTimeout(to); if(img._camAbort!==ac) return; img._camAbort=null;
+      if(e&&e.name==='AbortError'&&!ac._to) return; if(img.onerror) img.onerror(); });
+}
+function camFetchStop(img){
+  img._camSeq=null;   // Bild wird entfernt -> beim naechsten Laden sofort das aktuelle holen
+  if(img._camAbort){ img._camAbort.abort(); img._camAbort=null; }
+  if(img._camBlob){ URL.revokeObjectURL(img._camBlob); img._camBlob=null; }
+}
 function camStop(img){ if(!img) return;
   clearTimeout(img._camRetry); clearTimeout(img._camCycle); clearTimeout(img._camTick);
-  img.onerror=null; img.onload=null; img._camLoad=null; img.src=''; camImgs.delete(img); }
+  img.onerror=null; img.onload=null; img._camLoad=null; camFetchStop(img); img.src=''; camImgs.delete(img); }
 // Alle noch angezeigten Streams neu aufbauen (entfernte Bilder vergessen).
 // Aus dem DOM entfernte Bilder (Neuaufbau der Seite, Widget weg) laden ihren
 // MJPEG-Stream sonst weiter, bis der Browser sie irgendwann aufraeumt - auf dem
@@ -5705,13 +5734,15 @@ document.addEventListener('visibilitychange',()=>{ if(!document.hidden) camsRefr
 // Zwei Gruende, die Kameras anzuhalten: Display aus (_camScreenOff) und Nacht ohne
 // Annaeherung (_camNight, nur TbView mit Naeherungssensor). CAM_DARK = einer davon.
 let CAM_DARK=false, _camScreenOff=false, _camNight=false;
-function camsDark(on){ _camScreenOff=!!on; camsApply(); }
+function camsDark(on){ _camScreenOff=!!on;
+  // Animationen nur bei TbViewer anhalten: der meldet das Einschalten sofort (Fully erst ueber den 5-s-Abruf)
+  document.documentElement.classList.toggle('scroff', _camScreenOff && lpHost.type==='tbview'); camsApply(); }
 function camsApply(){ const on=_camScreenOff||_camNight;
   document.documentElement.classList.toggle('camnight', _camNight && !_camScreenOff);
   if(CAM_DARK===on){ if(on) camStills(); return; }
   CAM_DARK=on;
   if(on){ camStills(); camImgs.forEach(img=>{ clearTimeout(img._camTick); clearTimeout(img._camRetry); clearTimeout(img._camCycle);
-    if(img.getAttribute('src')) img.removeAttribute('src'); }); }   // ohne src: Laden bricht ab, ohne Fehler-Ereignis
+    camFetchStop(img); if(img.getAttribute('src')) img.removeAttribute('src'); }); }   // ohne src: Laden bricht ab, ohne Fehler-Ereignis
   else { camStills(true); camsRefresh(); }
   clog(_camScreenOff?'Display aus – Kamera angehalten':(_camNight?'Nacht – Kamera bis zur Annäherung angehalten':'Kamera läuft'));
 }
@@ -6103,6 +6134,22 @@ function renderCalendarPane(elc){ if(!elc) return; const d=frontData||{};
 const FRONT_TEST=new URLSearchParams(location.search).has('front');
 if(FRONT_TEST){ const fp=el('frontPage'); if(fp) fp.classList.remove('hidden'); }
 function saverOn(){ return !el('saver').classList.contains('hidden'); }
+// Was gerade verdeckt ist (Seite unter dem Dashboard bzw. das ausgeblendete Dashboard), nach der
+// Blende als Klasse an <html> (svcover/svhid) -> CSS haelt dort die Endlos-Animationen an.
+let _svCoverT=null;
+function svCover(){ clearTimeout(_svCoverT); const on=saverOn(), h=document.documentElement.classList;
+  h.remove(on?'svhid':'svcover');   // sofort: was jetzt sichtbar wird, laeuft wieder
+  _svCoverT=setTimeout(()=>{ if(saverOn()===on) h.add(on?'svcover':'svhid'); }, 1500); }   // nach der Blende (anim-slow)
+// Einbrennschutz-Drift per Takt statt CSS-Daueranimation: eine laufende (auch step-end) Animation
+// laesst den Kompositor im WebView jede Bildschirmaktualisierung (60/s) arbeiten, hier gibt es nur
+// einen Stilwechsel je Stufe. Gleiche Positionen und Stufenlaengen wie bisher (Uhr 4x90 s, Raster 4x120 s).
+const SV_DRIFT=[['--svd',90000,['-14px,-5px','14px,-5px','14px,5px','-14px,5px']],
+  ['--svgd',120000,['-3px,-2px','3px,-2px','3px,2px','-3px,2px']]];
+function svDrift(){ const st=el('saver').style, now=Date.now(); let next=Infinity;   // am #saver: kein Stil-Neuberechnen der ganzen Seite
+  SV_DRIFT.forEach(([k,ms,pos])=>{ const v='translate('+pos[Math.floor(now/ms)%4]+')';
+    if(st.getPropertyValue(k)!==v) st.setProperty(k,v); next=Math.min(next, ms-now%ms); });
+  setTimeout(svDrift, next+50); }
+svDrift();
 // Screensaver zweispaltig NUR im Querformat (breites 2-Pane-Tablet, z.B. Shelly
 // X2) – gleiches Kriterium wie das Kachel-Grid (s. render()). Das quadratische
 // 4"-Panel bleibt einspaltig (Wetter oben, Uhr, Termine untereinander).
@@ -6118,7 +6165,7 @@ function applySaverSplit(){
 function showSaver(){ tickClock();
   if(el('saver').classList.contains('hidden')) closeSheets();   // Popups nicht ueber dem Dashboard stehen lassen
   applySaverSplit();
-  el('saver').classList.remove('hidden');
+  el('saver').classList.remove('hidden'); svCover();
   if(saverLayoutOn()) svStartCams();
   renderFront();   // ggf. Screensaver-Kamera jetzt erst starten (war waehrend der Ausblendung bewusst aus)
 }
@@ -6135,7 +6182,7 @@ const SAVER_GUARD_MS = 500;
 function justLeftSaver(){ return (Date.now() - _saverClosedAt) < SAVER_GUARD_MS; }
 function hideSaver(){
   const wasOn=!el('saver').classList.contains('hidden');
-  el('saver').classList.add('hidden');
+  el('saver').classList.add('hidden'); svCover();
   stopScreensaverCam();   // MJPEG-Stream sofort stoppen, sobald der Screensaver weg ist (spart Bandbreite/CPU)
   svStopCams();
   // Zurueck am Panel: Kamerabilder neu aufbauen. ERST nach dem Stoppen des
