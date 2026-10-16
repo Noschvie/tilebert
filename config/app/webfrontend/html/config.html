@@ -1850,6 +1850,50 @@
     @media (max-width:1360px){ .sved.g2ed{grid-template-columns:220px minmax(0,1fr);} }
     @media (max-width:860px){ .sved.g2ed{grid-template-columns:minmax(0,1fr);} .sved.g2ed>.lib{max-height:none;} .g2ed .liblist{flex:none;max-height:270px;} }
   }
+  /* Raster-Editor Feinschliff (0.20.26): Suche/Filter schrumpfen nicht, Filter volle Breite,
+     Einstellungen direkt unter dem Raster (keine Luecke, wenn die Liste links hoeher ist) */
+  .g2ed .lib>*:not(.liblist){flex-shrink:0;}
+  .g2ed .libq,.g2ed .libfilt select{min-height:32px;max-width:none;}
+  .g2ed .libfilt{margin-top:0;}
+  .sved.g2ed{grid-template-rows:auto 1fr;}
+  .sved.g2ed>.side{align-self:start;}
+  .g2ed .libgrp{margin:14px 4px 4px;}
+  /* viele Bausteine: Zeilen ausserhalb des sichtbaren Bereichs nicht layouten (Neuzeichnen ~2,5x schneller) */
+  .g2ed .liblist>.libit{content-visibility:auto;contain-intrinsic-size:auto 44px;}
+  /* Kacheln: ruhig wie am Panel (kein Hochspringen), Fokus sichtbar, Entfernen nur als Kontur */
+  .g2ed .ew{box-shadow:0 1px 2px rgba(0,0,0,.12);}
+  .g2ed .ew:hover{transform:none;box-shadow:0 1px 2px rgba(0,0,0,.12),0 0 0 2px color-mix(in srgb,var(--sel,var(--prim)) 45%,transparent);}
+  .g2ed .ew:focus{outline:none;} .g2ed .ew:focus-visible{outline:2px solid var(--sel,var(--prim));outline-offset:2px;}
+  .g2ed .edel{background:var(--panel);color:var(--crit);box-shadow:inset 0 0 0 1.5px var(--crit);}
+  .g2ed .edel:hover{transform:none;background:var(--crit);color:var(--on-crit);}
+  .g2ed .edel::after{content:'';position:absolute;inset:-10px;}
+  /* Touch: Ecke nur an der gewaehlten Kachel greifbar, dort mit groesserer Trefferflaeche */
+  @media (pointer:coarse){ .g2ed .ew:not(.sel) .rs{pointer-events:none;} .g2ed .ew.sel .rs::after{content:'';position:absolute;inset:-12px;} }
+  /* kleine Zellen (Handy): Raumzeile weg, Name darf umbrechen */
+  .g2ed .egrid.small .ew{padding:6px 7px;} .g2ed .egrid.small .ew .erm{display:none;}
+  .g2ed .egrid.small .ew .enm{font-size:11px;line-height:1.2;display:block;white-space:nowrap;text-overflow:ellipsis;}   /* nicht mitten im Wort trennen */
+  .g2ed .egrid.small .edel{top:2px;right:2px;width:20px;height:20px;line-height:20px;font-size:10px;}
+  .g2ed .liblist{padding-bottom:56px;}   /* letzte Zeile nicht unter der Speichern-Leiste */
+  .g2ed .egrid.small .ew .sz{display:none;}
+  /* leere Seite: Hinweis gut lesbar ueber den Zellen */
+  .g2ed .pgbg.empty{z-index:2;pointer-events:none;}
+  .g2ed .pgbg.empty span{position:relative;font-size:12px;padding:4px 12px;border-radius:var(--r-pill);
+    background:var(--bezel);color:color-mix(in srgb,var(--bezel-ink) 78%,transparent);}
+  .g2ed .egrid .pgl small{color:color-mix(in srgb,var(--bezel-ink) 72%,transparent);}
+  /* Ziehen: Cursor und keine Textauswahl */
+  body.tbdragging,body.tbdragging *{cursor:grabbing !important;user-select:none;}
+  /* Touch: ueber Liste und Raster scrollen; gezogen wird nach kurzem Halten (Ecke sofort) */
+  .g2ed .libit,.g2ed .egrid,.g2ed .ew{touch-action:pan-x pan-y;-webkit-touch-callout:none;}
+  .g2ed .ew{user-select:none;-webkit-user-select:none;}
+  .g2ed .ew .rs{touch-action:none;}
+  .g2ed .ew.armed,.g2ed .libit.armed{outline:2px solid var(--sel,var(--prim));outline-offset:2px;}
+  .g2ed .libnone{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:8px 4px;font-size:13px;color:var(--muted);}
+  @media (pointer:coarse),(max-width:760px){
+    .dpwrap .dphd,.g2ed .tbsech,.tbicobtn{min-height:44px;}
+  }
+  @media (max-width:760px){ .g2ed .liblist{padding-bottom:2px;}
+    .g2ed .libfilt{flex-direction:row;} .g2ed .libfilt select{flex:1 1 0;}
+  }
 </style>
 </head>
 <body>
@@ -3243,13 +3287,13 @@ function renderEditor(){
 
    '<section class="spane" data-sub="tabs"><div class="card"><h3>Tabs</h3>'+
      '<p class="note">'+T('Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> ganz rechts. Zum Umsortieren Tabs ziehen.')+'</p>'+
-     '<p class="note">'+T('Bis zu <b>4 Tabs</b>. Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).')+'</p>'+
+     '<p class="note">'+T('Bis zu <b>4 Tabs</b>. Zum Bearbeiten antippen. <b>Frei</b>: du belegst selbst. <b>Raum</b>, <b>Kategorie</b>, <b>Zentral</b>: aus Loxone vorbefüllt und anpassbar, neue Bausteine kommen hinten dazu. <b>Übersichten</b>: alle Räume oder Kategorien wie in der Loxone-App.')+'</p>'+
      '<div id="tbStrip" class="tbstrip"></div><div id="tbProps"></div></div>'+
      '<div class="card svedcard" id="tbEdCard"><h3 id="tbEdHead">'+T('Raster')+'</h3>'+
      '<p class="note" id="tbEdNote"></p>'+
      '<div id="tbEd"></div></div>'+
      '<div class="card" id="hidCard" style="display:none"><h3>'+T('Ausgeblendete Kacheln')+'</h3>'+
-       '<p class="note">'+T('Auf diesem Panel überall ausgeblendet (Tabs, Räume, Kategorien). Antippen blendet sie wieder ein.')+'</p>'+
+       '<p class="note">'+T('Auf diesem Panel überall ausgeblendet (Tabs, Räume, Kategorien). Antippen blendet eine Kachel wieder ein.')+'</p>'+
        '<div class="chips" id="hidList"></div></div></section>'+
 
    // 2 · Dashboard
@@ -3421,7 +3465,9 @@ let tbTab=null, tbSel=-1, tbEff={}, tbDrag=null, tbIconOpen=false;
 // p.saver (x ueber beide Flaechen, y innerhalb der Flaeche); im Editor liegt es
 // wie ein Tab mit festen Seiten (1 Panel = 1 Seite, 2 Panels = 2 Seiten nebeneinander).
 const DK='__dash';
-function tbReset(){ tbEff={}; tbHist={}; tbLast={}; tbSel=-1; }
+let tbLoadErr={};
+function tbReset(){ tbEff={}; tbHist={}; tbLast={}; tbSel=-1; tbLoadErr={};
+  const sn=$('#snack'); if(sn&&sn.classList.contains('hasundo')) sn.classList.remove('show'); }   // Rueckgaengig gilt nicht ueber Panelwechsel
 function tbDashPages(p){ return ((p.ui||{}).split===false)?1:2; }
 function tbTabF(){ return tbTab!==DK; }       // Groessen wie in Tabs (Kachel auch 2x2) oder wie im Dashboard
 function tbDashLoad(p, list){ const cols=tbDashPages(p)*svGrid(p);
@@ -3500,12 +3546,18 @@ async function tbLoad(p,k){
   try{
     const r=await fetch('/api/tablayout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({panel:cur,tab:k,profile:p})});
-    const j=await r.json(); tbEff[k]=(j&&j.items)||[];
-  }catch(e){ tbEff[k]=((p.layouts||{})[k]||{}).items||[]; }
+    const j=await r.json(); if(!r.ok||!j||!Array.isArray(j.items)) throw 0; tbEff[k]=j.items;
+  }catch(e){ const own=((p.layouts||{})[k]||{}).items;
+    // vorbefuellter Tab ohne eigene Belegung: nicht leer bearbeiten lassen (wuerde die Vorbefuellung ersetzen)
+    if(!own&&(tbType(k)!=='free'||k==='favoriten')) tbLoadErr[k]=true;
+    else { tbEff[k]=(own||[]).map(it=>Object.assign({},it));
+      snack(T('Die Belegung aus Loxone konnte nicht geladen werden. Angezeigt wird der gespeicherte Stand.'),null,5000); } }
   if(PANELS[cur]===p && tbTab===k) renderTabEditor();
 }
-function tbCommit(p){ const k=tbTab, now=JSON.stringify(tbEff[k]||[]);
-  if(tbLast[k]!==undefined && tbLast[k]!==now){ (tbHist[k]=tbHist[k]||[]).push(tbLast[k]); if(tbHist[k].length>40) tbHist[k].shift(); }
+function tbCommit(p,merge){ const k=tbTab, now=JSON.stringify(tbEff[k]||[]), t=Date.now();
+  const join=merge&&tbCommit.mk===k&&t-tbCommit.mt<700&&(tbHist[k]||[]).length;     // schnelle Pfeil-Schritte = ein Schritt
+  if(!join && tbLast[k]!==undefined && tbLast[k]!==now){ (tbHist[k]=tbHist[k]||[]).push(tbLast[k]); if(tbHist[k].length>40) tbHist[k].shift(); }
+  tbCommit.mk=merge?k:null; tbCommit.mt=t;
   tbLast[k]=now;
   tbStore(p,k);                                               // Raster mit der Belegung festhalten
   markDirty(); }
@@ -3537,8 +3589,8 @@ function renderTabList(p){
   box.querySelectorAll('[data-tb]').forEach(b=>{
     b.onclick=ev=>{ const i=+b.dataset.tb;
       if(ev.target.closest('[data-tbdel]')){ const k=p.tabs[i];
-        undoable(p, T('Tab „')+tbLabel(p,k)+T('“ entfernt'), ()=>{
-          p.tabs.splice(i,1); if(p.layouts) delete p.layouts[k]; if(p.tabIcons) delete p.tabIcons[k]; delete tbEff[k];
+        undoable(p, T('Tab „{n}“ entfernt').replace('{n}',tbLabel(p,k)), ()=>{
+          p.tabs.splice(i,1); if(p.layouts) delete p.layouts[k]; if(p.tabIcons) delete p.tabIcons[k]; delete tbEff[k]; delete tbHist[k]; delete tbLast[k]; delete tbLoadErr[k];
           tbTab=p.tabs[Math.max(0,i-1)]||DK; tbSel=-1; markDirty(); renderTabList(p); }); return; }
       tbTab=p.tabs[i]; tbSel=-1; tbIconOpen=false; renderTabList(p); };
     b.ondragstart=e=>{ tbDragIdx=+b.dataset.tb; b.classList.add('dragging'); try{ e.dataTransfer.setData('text/plain',''); e.dataTransfer.effectAllowed='move'; }catch(x){} };
@@ -3566,7 +3618,7 @@ function stPickHTML(selIds, boxId, compact){
         '<label><input type="checkbox"'+(k>=0?' checked':'')+'> <span>'+esc(c.name)+'<small style="display:block;opacity:.6;font-size:11px">'+esc(T(ST_TL[c.type]||c.type))+(c.roomName?' · '+esc(c.roomName):'')+'</small></span></label>'+
         '<span class="cnum">'+(k>=0?k+1:'')+'</span></div>'; }).join('')+'</div>'
     :'<div class="hintp">'+T('Keine passenden Bausteine in der Anlage.')+'</div>')+
-    (compact?'':'<div class="hintp">'+T('Die Farben kommen aus dem Miniserver: Fenster offen gelb, Alarm oder Rauch ausgelöst rot, Alarm scharf blau. Statusbausteine zeigen ihre Farbe aus Loxone Config.')+'</div>');
+    (compact?'':'<div class="hintp">'+T('Farben vom Miniserver: Fenster offen gelb, Alarm oder Rauch rot, Alarm scharf blau. Statusbausteine nutzen ihre Farbe aus Loxone Config.')+'</div>');
 }
 function stPickBind(box, onIds, rerender, max){
   if(!box) return; max=max||4;
@@ -3651,7 +3703,7 @@ function renderDashProps(p){
       w.classList.toggle('open',dPropsOpen); hd.setAttribute('aria-expanded',dPropsOpen?'true':'false'); }; }
   const items=()=>tbEff[DK]||tbDashLoad(p);
   box.querySelectorAll('[data-dgrid]').forEach(b=>b.onclick=()=>{ const ng=+b.dataset.dgrid; if(ng===g) return;
-    undoable(p, T('Raster auf ')+ng+' × '+ng+T(' umgestellt'), ()=>{
+    undoable(p, T('Raster auf {n} × {n} umgestellt.').replace(/\{n\}/g,ng), ()=>{
       const s2=svCfg(p), cur0=items(); s2.grid=ng; s2.items=[];
       tbEff[DK]=gridReflow(cur0, tbDashPages(p)*ng, ng, ng, t=>gridSizes(t,ng,false));
       tbHist[DK]=[]; delete tbLast[DK]; tbSel=-1; tbCommit(p); renderTabList(p); }); });
@@ -3731,7 +3783,7 @@ function renderTabProps(p){
   { const hd=box.querySelector('.dphd'); hd.onclick=()=>{ const w=hd.parentNode; tPropsOpen=!w.classList.contains('open');
       w.classList.toggle('open',tPropsOpen); hd.setAttribute('aria-expanded',tPropsOpen?'true':'false'); }; }
   const redo=()=>{ markDirty(); renderTabList(p); };
-  const dropLay=o=>{ if(p.tabs.indexOf(o)<0){ if(p.layouts) delete p.layouts[o]; if(p.tabIcons) delete p.tabIcons[o]; delete tbEff[o]; } };
+  const dropLay=o=>{ if(p.tabs.indexOf(o)<0){ if(p.layouts) delete p.layouts[o]; if(p.tabIcons) delete p.tabIcons[o]; delete tbEff[o]; delete tbHist[o]; delete tbLast[o]; delete tbLoadErr[o]; } };
   const setKey=nk=>{ if(p.tabs.indexOf(nk)>=0 && nk!==k){ alert(T('Dieser Tab ist schon vorhanden. Wähle einen anderen.')); renderTabProps(p); return; }
     p.tabs[i]=nk; dropLay(k); tbTab=nk; tbSel=-1; redo(); };
   $('#tbType').onchange=e=>{ const v=e.target.value, fr=l=>(l.find(t=>p.tabs.indexOf(t.tab)<0)||l[0]||{}).tab;
@@ -3749,9 +3801,12 @@ function renderTabProps(p){
   if(tbIconOpen) renderIconPick('builtin',tgt);
   box.querySelectorAll('[data-tbgrid]').forEach(b=>b.onclick=()=>{ const ng=+b.dataset.tbgrid; if(ng===g) return;
     const items=tbEff[k]||[];
-    undoable(p, T('Raster auf ')+ng+' × '+ng+T(' umgestellt'), ()=>{
+    // zu breite Groessen (ueber beide Haelften) vorher aussortieren, sonst faellt das Widget weg
+    const out=gridReflow(items, ng, 60, ng, t=>{ const sz=gridSizes(t,ng,true), fit=sz.filter(([w])=>w<=ng); return fit.length?fit:sz; });
+    const lost=items.length-out.length;
+    undoable(p, T('Raster auf {n} × {n} umgestellt.').replace(/\{n\}/g,ng)+(lost?' '+T('Ohne Platz entfallen: {n}.').replace('{n}',lost):''), ()=>{
       const lay=tbLay(p,k); lay.grid=ng;
-      tbEff[k]=gridReflow(items, ng, 60, ng, t=>gridSizes(t,ng,true)); tbSel=-1; tbCommit(p); renderTabList(p); }); });
+      tbEff[k]=out; tbSel=-1; tbCommit(p); tbHist[k]=[]; renderTabList(p); }); });   // Verlauf passt nicht zum neuen Raster
 }
 // Seiten im Editor nebeneinander: Spalte = Seite*(g+1)+x (+1 Trennspalte je Seite)
 // ---- Raster-Editor (Herzstueck): Bibliothek links, Panel-Vorschau Mitte, Einstellungen rechts ----
@@ -3785,16 +3840,20 @@ function tbIcoHtml(url, glyph){ return url ? '<span class="eico img" style="--u:
                                         : '<span class="eico">'+svg(glyph||WG_ICONS.tile)+'</span>'; }
 function renderTabEditor(){
   const host=$('#tbEd'), card=$('#tbEdCard'); if(!host) return;
+  const ae=document.activeElement, keepF=!!(ae&&ae.closest&&ae.closest('#tbGridEd .ew'));
   const p=PANELS[cur]; if(!p) return;
   const k=tbTab, head=$('#tbEdHead');
   if(card) card.style.display=(k&&tbIsLayout(k))?'':'none';
   if(!k||!tbIsLayout(k)){ host.innerHTML=''; return; }
   if(head) head.textContent=T('Raster')+' · '+tbLabel(p,k);
   if(k===DK && !tbEff[k]) tbEff[k]=tbDashLoad(p);
+  if(!tbEff[k]&&tbLoadErr[k]){ host.innerHTML='<div class="libnone" role="status"><span>'+T('Die Belegung aus Loxone konnte nicht geladen werden.')+'</span>'+
+      '<button type="button" class="minibtn" id="tbRetry">'+T('Erneut laden')+'</button></div>';
+    $('#tbRetry').onclick=()=>{ delete tbLoadErr[k]; renderTabEditor(); }; return; }
   if(!tbEff[k]){ host.innerHTML='<div class="hintp">'+T('Lade Kacheln …')+'</div>'; tbLoad(p,k); return; }
   { const n=$('#tbEdNote'); if(n) n.textContent = k===DK
       ? T('So sieht das Dashboard am Panel aus. Ohne Belegung zeigt es das klassische Dashboard (Uhr, Wetter, Termine).')
-      : T('So sieht der Tab am Panel aus. Weitere Seiten folgen darunter, wie beim Wischen nach unten. Unten liegt immer eine leere Seite zum Ablegen.'); }
+      : T('So sieht der Tab am Panel aus. Weitere Seiten folgen darunter. Unten liegt immer eine leere Seite zum Ablegen.'); }
   const g=tbGrid(p,k), items=tbEff[k], rows=tbRows(items,g), pages=k===DK?tbDashPages(p):rows/g, two=!((p.ui||{}).split===false);
   const cell=two?Math.round(gridCell(g)*0.9):Math.round(gridCell(g)*1.15);
   const bands=two?Math.ceil(pages/2):pages, fc=tbFace(p,k);
@@ -3813,20 +3872,22 @@ function renderTabEditor(){
       '<span>'+(k===DK?T('Dashboard'):T('Seite')+' '+((two&&!phn)?Math.floor(pg/2)+1:pg+1))+'</span>'+
       (two&&sideT?'<small>'+sideT+'</small>':'')+xHtml+'</div>'+
       '<div class="pgbg'+(empty?' empty':'')+'" style="grid-column:'+cr.c+' / span '+g+';grid-row:'+(cr.r)+' / span '+g+'">'+
-        (empty?'<span>'+T('Hierher ziehen: neue Seite')+'</span>':'')+'</div>';
+        (empty?'<span>'+T('Hierher ziehen für neue Seite')+'</span>':'')+'</div>';
     for(let y=0;y<g;y++) for(let x=0;x<g;x++){ const c=tbCR(p,pg,x,y,g);
       cells+='<div class="bg" data-x="'+(k===DK?pg*g+x:x)+'" data-y="'+(k===DK?y:pg*g+y)+'" style="grid-column:'+c.c+';grid-row:'+c.r+'"></div>'; }
   }
   const ws=items.map((it,i)=>{ const c=tbPlace(p,it,g), sel=i===tbSel;
     let inner;
     if(it.type==='tile'){ const ct=tbCtl(it.uuid);
-      inner=tbIcoHtml(ct&&ct.iconUrl)+'<span class="enm">'+esc(ct?ct.name:T('Baustein wählen'))+'</span>'+
+      inner=tbIcoHtml(ct&&ct.iconUrl,LIB_NOICON)+'<span class="enm">'+esc(ct?ct.name:T('Baustein wählen'))+'</span>'+
             (ct&&ct.roomName&&tbType(k)!=='room'?'<span class="erm">'+esc(ct.roomName)+'</span>':''); }
     else if(it.type==='room'||it.type==='cat'){
       inner=tbIcoHtml('',BICONS.folder)+'<span class="enm">'+esc(tbFolderName(it.type,it.uuid)||T('wählen'))+'</span>'; }
     else { const d=SV_W[it.type]||{}, sub=(it.uuid&&(it.type==='intercom'||SV_PICK[it.type]))?svName(it.uuid):'';
-      inner=tbIcoHtml('',WG_ICONS[it.type])+'<span class="enm">'+esc(d.label||it.type)+'</span>'+(sub?'<span class="erm">'+esc(sub)+'</span>':''); }
+      inner=tbIcoHtml('',WG_ICONS[it.type])+'<span class="enm">'+esc(d.label?T(d.label):it.type)+'</span>'+(sub?'<span class="erm">'+esc(sub)+'</span>':''); }
+    const nm=it.type==='tile'?((tbCtl(it.uuid)||{}).name||T('Baustein wählen')):(it.type==='room'||it.type==='cat')?(tbFolderName(it.type,it.uuid)||T('wählen')):T((SV_W[it.type]||{}).label||it.type);
     return '<div class="ew c-'+it.type+(sel?' sel':'')+(it.type==='tile'||it.type==='room'||it.type==='cat'?' tilelike':'')+'" data-i="'+i+'" '+
+      'tabindex="0" role="button" aria-pressed="'+(sel?'true':'false')+'" aria-label="'+esc(nm+', '+it.w+' × '+it.h)+'" '+
       'style="grid-column:'+c.c+';grid-row:'+c.r+'">'+inner+
       '<span class="sz">'+it.w+'×'+it.h+'</span>'+
       (sel?'<button type="button" class="edel" data-edel="1" title="'+T('Entfernen (Entf)')+'">✕</button>':'')+
@@ -3835,9 +3896,9 @@ function renderTabEditor(){
   host.innerHTML='<div class="sved g2ed">'+
     '<div class="lib">'+tbLibHTML(p,k)+'</div>'+
     '<div class="stage">'+
-      '<div class="stbar"><button type="button" class="minibtn" id="tbUndo"'+(canUndo?'':' disabled')+' title="'+T('Rückgängig (Strg+Z)')+'">↶ '+T('Rückgängig')+'</button>'+
+      '<div class="stbar"><button type="button" class="minibtn" id="tbUndo"'+(canUndo?'':' disabled')+' title="'+T(canUndo?'Rückgängig (Strg+Z)':'Noch nichts zum Rückgängigmachen')+'">↶ '+T('Rückgängig')+'</button>'+
         '<span class="sthint"></span>'+
-        (seeded?'<button class="minibtn" id="tbReset">'+T('Aus Loxone neu füllen')+'</button>':'<button class="minibtn" id="tbClear">'+T('Leeren')+'</button>')+'</div>'+
+        (seeded?'<button class="minibtn" id="tbReset">'+T('Aus Loxone neu füllen')+'</button>':'<button type="button" class="minibtn" id="tbClear"'+(items.length?'':' disabled')+'>'+T('Leeren')+'</button>')+'</div>'+
       '<div class="frame'+(fc.light?' light':'')+'" style="--face:'+esc(fc.face)+';--bezel:'+esc(fc.bezel)+';--bezel-ink:'+esc(fc.bi)+';--tilec:'+esc(fc.tile)+';--ink:'+esc(fc.ink)+';--ink2:'+esc(fc.ink2)+';--dot:'+esc(fc.dot)+'">'+
         '<div class="egrid tbgrid" id="tbGridEd" style="--cell:'+cell+'px;grid-template-columns:'+colT+';grid-template-rows:'+rowT.join(' ')+'">'+cells+ws+'</div></div></div>'+
     '<div class="side">'+tbSideHTML(p)+'</div></div>';
@@ -3849,7 +3910,13 @@ function renderTabEditor(){
   $('#tbUndo').onclick=()=>tbUndo(p);
   tbFitCells(two?2*g:g, two, cell);
   tbBindLib(p); tbBindSide(p); tbBindDrag(p);
+  if(keepF){ const f=host.querySelector('#tbGridEd .ew[data-i="'+tbSel+'"]')||host.querySelector('#tbGridEd .ew'); if(f) f.focus({preventScroll:true}); }
 }
+// Schmal (Einstellungen unter dem Raster): nach Antippen einer Kachel die Einstellungen ins Bild holen
+function tbShowSide(){ const sd=document.querySelector('#tbEd .sved.g2ed>.side'), st=document.querySelector('#tbEd .stage'); if(!sd||!st||tbSel<0) return;
+  if(sd.getBoundingClientRect().top<st.getBoundingClientRect().bottom-4) return;      // steht daneben
+  const r=sd.querySelector('.tbhead')||sd, b=r.getBoundingClientRect();
+  if(b.top>innerHeight-80||b.bottom<0) r.scrollIntoView({block:'center',behavior:'smooth'}); }
 // Baustein ohne Loxone-Symbol: vier kleine Kacheln statt eines einzelnen Quadrats (sieht sonst wie eine Checkbox aus)
 const LIB_NOICON='<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>';
 // Listenzeile der Bibliothek: Name (bis 2 Zeilen), darunter Raum bzw. Groesse; Haken "schon im Tab" per CSS rechts
@@ -3866,7 +3933,7 @@ function tbLibHTML(p,k){
     return tabs+'<div class="liblist">'+Object.keys(SV_W).filter(t=>t!=='tile').sort((a,b)=>(usedT.has(b)?1:0)-(usedT.has(a)?1:0)).map(t=>
       '<div class="libit wg c-'+t+(usedT.has(t)?' used':'')+'" data-new="'+t+'"'+tbLibTip(T(SV_W[t].label),'',usedT.has(t))+'>'+tbIcoHtml('',WG_ICONS[t])+
       tbLibTxt(T(SV_W[t].label),gridMin(t,g,tbTabF()).join('×'))+'</div>').join('')+'</div>'+
-      '<div class="libhint">'+T('Ziehe ein Widget ins Raster und wähle rechts Baustein oder Quelle.')+'</div>';
+      '<div class="libhint">'+T('Widget ins Raster ziehen, dann Baustein oder Quelle wählen.')+'</div>';
   const q=tbLibQ.toLowerCase();
   let list;
   if(fk){ list=tbFolderList(fk).filter(o=>!q||o.name.toLowerCase().includes(q))
@@ -3886,6 +3953,7 @@ function tbLibHTML(p,k){
     rest.slice(0,400).forEach(c=>{ if(c.roomName!==room){ room=c.roomName; list+='<div class="libgrp">'+esc(room||T('Ohne Raum'))+'</div>'; }
       list+='<div class="libit'+(placed.has(c.uuid)?' used':'')+'" data-new="tile" data-uuid="'+esc(c.uuid)+'"'+tbLibTip(c.name,'',placed.has(c.uuid))+'>'+tbIcoHtml(c.iconUrl,LIB_NOICON)+
         tbLibTxt(c.name,'')+'</div>'; });
+    if(rest.length>400) list+='<div class="libhint">'+T('{n} weitere – Suche oder Filter eingrenzen.').replace('{n}',rest.length-400)+'</div>';
   }
   // Filter nach Raum / Kategorie (nur in der Bausteinliste)
   const opt=(arr,sel,all)=>'<option value="">'+all+'</option>'+arr.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))
@@ -3893,7 +3961,8 @@ function tbLibHTML(p,k){
   const filt=fk?'':'<div class="libfilt"><select id="tbLibRoom">'+opt(META.rooms||[],tbLibRoom,T('Alle Räume'))+'</select>'+
     '<select id="tbLibCat">'+opt(META.cats||[],tbLibCat,T('Alle Kategorien'))+'</select></div>';
   return tabs+'<input type="search" id="tbLibQ" class="libq" placeholder="'+T('Suchen…')+'" value="'+esc(tbLibQ)+'">'+filt+
-    '<div class="liblist">'+(list||'<div class="libhint">'+T('Keine Treffer.')+'</div>')+'</div>'+
+    '<div class="liblist">'+(list||'<div class="libnone" role="status"><span>'+T('Keine Treffer.')+'</span>'+
+      ((tbLibQ||tbLibRoom||tbLibCat)?'<button type="button" class="minibtn" data-libreset="1">'+T('Suche und Filter zurücksetzen')+'</button>':'')+'</div>')+'</div>'+
     '';
 }
 // Kachelgroesse an die verfuegbare Breite anpassen (kleine Fenster: kein seitliches Scrollen)
@@ -3903,7 +3972,7 @@ function tbFitCells(cols, two, base){
   const avail=stage.clientWidth-32-(two?18+8:0)-(cols-1)*8;     // Rahmen-Innenabstand, Trennspalte, Luecken
   // grosse Flaechen: etwas groesser als die Grundgroesse; kleine: bis 30 px, sonst scrollt der Rahmen
   const cell=Math.max(30, Math.min(Math.round(base*1.5), Math.floor(avail/cols)));
-  grid.style.setProperty('--cell', cell+'px');
+  grid.style.setProperty('--cell', cell+'px'); grid.classList.toggle('small', cell<76);
   // Groessenaenderung der Buehne (Fenster, Seitenleiste ein-/ausklappen, Spaltenumbruch)
   // nur die Zellgroesse nachziehen - kein Neuaufbau, keine springenden Kacheln
   if(window.ResizeObserver && stage._ro!==true){ stage._ro=true;
@@ -3914,25 +3983,31 @@ let tbFit=null, tbFitRaf=0;
 function tbBindLib(p){
   const host=$('#tbEd'); if(!host) return;
   host.querySelectorAll('[data-lib]').forEach(b=>b.onclick=()=>{ tbLibTab=b.dataset.lib; renderTabEditor(); });
-  const q=$('#tbLibQ'); if(q) q.oninput=()=>{ tbLibQ=q.value; const pos=q.selectionStart;
+  const q=$('#tbLibQ'); if(q) q.oninput=()=>{ tbLibQ=q.value; clearTimeout(tbBindLib.t); tbBindLib.t=setTimeout(()=>{ if(!q.isConnected) return;   // entprellt (viele Bausteine)
+    const pos=q.selectionStart;
     const lib=host.querySelector('.lib'); lib.innerHTML=tbLibHTML(p,tbTab); tbBindLib(p); tbBindDrag(p,true);
-    const q2=$('#tbLibQ'); q2.focus(); try{ q2.setSelectionRange(pos,pos); }catch(e){} };
+    const q2=$('#tbLibQ'); q2.focus(); try{ q2.setSelectionRange(pos,pos); }catch(e){} }, 120); };
+  { const rs=host.querySelector('[data-libreset]'); if(rs) rs.onclick=()=>{ tbLibQ=''; tbLibRoom=''; tbLibCat='';
+    const lib=host.querySelector('.lib'); lib.innerHTML=tbLibHTML(p,tbTab); tbBindLib(p); tbBindDrag(p,true); const q2=$('#tbLibQ'); if(q2) q2.focus(); }; }
   [['#tbLibRoom',v=>tbLibRoom=v],['#tbLibCat',v=>tbLibCat=v]].forEach(([id,set])=>{ const sel=$(id); if(sel) sel.onchange=()=>{ set(sel.value);
     const lib=host.querySelector('.lib'); lib.innerHTML=tbLibHTML(p,tbTab); tbBindLib(p); tbBindDrag(p,true); }; });
 }
 // Rueckgaengig: Stand vor jeder Aenderung merken (tbCommit)
 function tbUndo(p){ const k=tbTab, h=tbHist[k]||[]; if(!h.length) return;
-  const prev=h.pop(); tbEff[k]=JSON.parse(prev); tbLast[k]=prev; tbSel=-1;
-  tbStore(p,k); markDirty(); renderTabEditor(); }
+  const prev=h.pop(); tbEff[k]=JSON.parse(prev); tbLast[k]=prev; tbSel=-1; tbCommit.mk=null;
+  { const lay=k===DK?null:(p.layouts||{})[k]; if(lay&&lay.removed){ const back=new Set(tbEff[k].map(it=>it.uuid).filter(Boolean));
+    lay.removed=lay.removed.filter(u=>!back.has(u)); if(!lay.removed.length) delete lay.removed; } }
+  tbStore(p,k); markDirty(); renderTabEditor(); snack(T('Rückgängig gemacht.'),null,2500); }
 function tbSideHTML(p){
   const it=(tbEff[tbTab]||[])[tbSel];
   if(!it) return tbSec('tips',T('So geht’s'),'<div class="tips"><ol>'+
-    '<li>'+T('Baustein oder Widget links suchen und <b>ins Raster ziehen</b>.')+'</li>'+
-    '<li>'+T('Kachel <b>antippen</b>: Hier erscheinen Größe, Inhalt und Aussehen.')+'</li>'+
-    '<li>'+T('<b>Ecke</b> ziehen: Größe ändern. Auf eine andere Kachel ziehen: <b>tauschen</b>.')+'</li>'+
-    '<li>'+T('<b>✕</b> oder <b>Entf</b> entfernt, <b>Strg+Z</b> macht rückgängig.')+'</li></ol></div>');
+    '<li>'+T('Baustein oder Widget in der Liste suchen und <b>ins Raster ziehen</b>.')+'</li>'+
+    '<li>'+T('Kachel <b>antippen</b>, um Größe, Inhalt und Aussehen einzustellen.')+'</li>'+
+    '<li>'+T('An der <b>Ecke</b> ziehen ändert die Größe. Auf eine andere Kachel ziehen <b>tauscht</b> beide.')+'</li>'+
+    '<li>'+T('<b>✕</b> oder <b>Entf</b> entfernt, <b>Strg+Z</b> macht rückgängig.')+'</li>'+
+    '<li>'+T('Am Touchscreen Baustein oder Kachel <b>kurz halten</b>, dann ziehen. Wischen scrollt.')+'</li></ol></div>');
   const g=tbGrid(p,tbTab), items=tbEff[tbTab], rows=tbRows(items,g), d=SV_W[it.type]||{};
-  const head='<div class="box tbhead"><b>'+esc(it.type==='tile'?T('Baustein-Kachel'):(d.label||T({room:'Raum-Kachel',cat:'Kategorie-Kachel'}[it.type]||'')))+'</b><button class="minibtn del" id="tbDel">'+T('Entfernen')+'</button></div>';
+  const head='<div class="box tbhead"><b>'+esc(it.type==='tile'?T('Baustein-Kachel'):(d.label?T(d.label):T({room:'Raum-Kachel',cat:'Kategorie-Kachel'}[it.type]||'')))+'</b><button class="minibtn del" id="tbDel">'+T('Entfernen')+'</button></div>';
   const size='<div class="seg">'+
     gridSizes(it.type,g,tbTabF()).map(([w,hh])=>'<button data-size="'+w+'x'+hh+'" title="'+w+' '+T('breit')+' × '+hh+' '+T('hoch')+'"'+
       (it.w===w&&it.h===hh?' class="on"':(tbFree(items,it.x,it.y,w,hh,tbSel,rows,g)?'':' class="blocked"'))+'>'+w+'×'+hh+'</button>').join('')+'</div>'+
@@ -3968,11 +4043,11 @@ function tbSideHTML(p){
     '<div class="hintp">'+T('Öffnet ein Fenster mit Temperaturverlauf, Regen je Stunde, Wind, UV und Sonnenzeiten des Tages.')+'</div>';
   if(it.type==='status'){   // Status-Ampel: bis zu 4 Bausteine als Chips (Haken + Ziehen), optional Verlauf
     h+='<div class="lbl2">'+T('Status (max. 4)')+'</div>'+stPickHTML(it.ctls,'tbStCh')+
-      '<div class="hintp">'+T('Die Farben kommen aus dem Miniserver: Fenster offen gelb, Alarm oder Rauch ausgelöst rot, Alarm scharf blau. Statusbausteine zeigen ihre Farbe aus Loxone Config.')+'</div>';
+      '<div class="hintp">'+T('Farben vom Miniserver: Fenster offen gelb, Alarm oder Rauch rot, Alarm scharf blau. Statusbausteine nutzen ihre Farbe aus Loxone Config.')+'</div>';
     h+='<div class="lbl2">'+T('Standard-Aussehen')+'</div><div class="seg">'+
       '<button data-stlook="auto"'+(it.look!=='color'?' class="on"':'')+'>'+T('Passend zum Design')+'</button>'+
       '<button data-stlook="color"'+(it.look==='color'?' class="on"':'')+'>'+T('Farbig (Ampel)')+'</button></div>'+
-      '<div class="hintp">'+T('„Passend zum Design“ übernimmt die Farben des Tabs oder Dashboards, die Ampel erscheint als Akzentfarbe. „Farbig“ färbt die ganze Kachel.')+'</div>';
+      '<div class="hintp">'+T('„Passend zum Design“ übernimmt die Farben des Tabs oder Dashboards, die Ampel dient als Akzent. „Farbig“ färbt die ganze Kachel.')+'</div>';
     const trks=(META.controls||[]).filter(c=>c.type==='Tracker');
     if(trks.length) h+='<div class="lbl2">'+T('Verlauf (ab 2 × 2)')+'</div><select id="tbStTrk"><option value="">'+T('kein Verlauf')+'</option>'+
       trks.map(c=>'<option value="'+esc(c.uuid)+'"'+(c.uuid===it.trk?' selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select>';
@@ -3986,10 +4061,10 @@ function tbSideHTML(p){
         '<span class="grip" aria-hidden="true">⋮⋮</span>'+
         '<label><input type="checkbox"'+(sel.indexOf(c.id)>=0?' checked':'')+'> <span>'+esc(c.name)+'</span></label>'+
         '<span class="cnum">'+(sel.indexOf(c.id)>=0?sel.indexOf(c.id)+1:'')+'</span></div>').join('')+'</div>'+
-      '<div class="hintp">'+T('Haken zeigt die Kamera an, Ziehen ändert die Reihenfolge. Die erste Kamera startet zuerst; am Panel wechselst du per Zahlenknopf.')+'</div>'+
+      '<div class="hintp">'+T('Haken blendet eine Kamera ein, Ziehen ändert die Reihenfolge. Die erste startet zuerst, am Panel wechselst du per Zahlenknopf.')+'</div>'+
       (sel.length>1?'<div class="lbl2">'+T('Zurück zur ersten Kamera nach')+'</div>'+
         '<label class="row" style="gap:8px;align-items:center"><input type="number" id="tbCamBack" min="0" max="240" step="1" inputmode="numeric" style="width:80px" value="'+(it.back==null?3:it.back)+'"> '+T('Minuten')+'</label>'+
-        '<div class="hintp">'+T('Ohne Bedienung wechselt das Widget zurück zu Kamera 1. 0 = aus.')+'</div>':'')
+        '<div class="hintp">'+T('Ohne Bedienung springt das Widget zurück zu Kamera 1. 0 = aus.')+'</div>':'')
       :'<div class="hintp">'+T('Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kameras ein.')+'</div>');
   }
   const blk=tbBlocks(it), look=(it.type==='tile'||it.type==='room'||it.type==='cat')&&it.uuid;
@@ -4015,7 +4090,7 @@ function tbBlocks(it){
   return null;
 }
 // Einklappbarer Bereich der Seitenleiste; offen/zu merkt sich je Bereich (ueber Neuzeichnen hinweg)
-const tbSecOpen={tips:true};   // "So geht's" anfangs offen
+const tbSecOpen={tips:true,size:true};   // "So geht's" anfangs offen
 function tbSec(k,title,body,force){ const o=tbSecOpen[k]||force;
   return '<div class="box tbsec'+(o?' open':'')+'" data-sec="'+k+'"><button type="button" class="tbsech" aria-expanded="'+(o?'true':'false')+'"><span>'+title+'</span>'+
     '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
@@ -4073,7 +4148,7 @@ function tbBindSide(p){
     if(tbFree(items,it.x,it.y,w,h,tbSel,rows,g)){ it.w=w; it.h=h; redo(); return; }
     const cols=tbTab===DK?tbDashPages(p)*g:(tbTwo()?2*g:g);
     for(let y=0;y<rows;y++) for(let x=0;x<cols;x++) if(tbFree(items,x,y,w,h,tbSel,rows,g)){ it.x=x; it.y=y; it.w=w; it.h=h; redo(); return; }
-    snack(T('Kein Platz für')+' '+w+' × '+h+'. '+T('Verkleinere oder entferne zuerst andere Widgets.')); });
+    snack(T('Kein Platz für {w} × {h}. Verkleinere oder entferne zuerst andere Kacheln.').replace('{w}',w).replace('{h}',h)); });
   host.querySelectorAll('[data-align]').forEach(b=>b.onclick=()=>{ it.align=b.dataset.align; redo(); });
   host.querySelectorAll('[data-date]').forEach(b=>b.onclick=()=>{ it.date=b.dataset.date; redo(); });
   const del=$('#tbDel'); if(del) del.onclick=()=>tbDelete(p);
@@ -4109,13 +4184,24 @@ function tbBindDrag(p, libOnly){
     const c=tbPlace(p,{x,y,w,h},g); ghost.style.gridColumn=c.c; ghost.style.gridRow=c.r;
     ghost.classList.toggle('bad',!ok); ghost.classList.toggle('swap',!!swap); ghost.hidden=false; };
   const hideGhost=()=>{ if(ghost) ghost.hidden=true; };
-  const start=(ev,d)=>{ if(ev.button>0) return; ev.preventDefault(); tbDrag=d; d.sx=ev.clientX; d.sy=ev.clientY; d.moved=false;
+  const start=(ev,d)=>{ if(ev.button>0) return; if(ev.pointerType!=='touch'||d.kind==='resize') ev.preventDefault();
+    tbDrag=d; d.sx=ev.clientX; d.sy=ev.clientY; d.moved=false;
+    // Touch: erst nach kurzem Halten ziehen, sonst scrollt die Seite (Ecke zieht sofort)
+    d.touch=ev.pointerType==='touch'&&d.kind!=='resize'; d.armed=!d.touch;
+    if(d.touch){ const el=d.el||d.src; d.hold=setTimeout(()=>{ if(tbDrag!==d) return; d.armed=true; if(el) el.classList.add('armed');
+      try{ navigator.vibrate&&navigator.vibrate(15); }catch(x){} }, 250); }
     window.addEventListener('pointermove',move); window.addEventListener('pointerup',up);
-    window.addEventListener('pointercancel',cancel); window.addEventListener('keydown',onKey); window.addEventListener('blur',cancel); };
+    window.addEventListener('pointercancel',cancel); window.addEventListener('keydown',onKey); window.addEventListener('blur',cancel);
+    window.addEventListener('touchmove',noScroll,{passive:false}); window.addEventListener('contextmenu',noCtx,true); };
+  const noCtx=e=>{ if(tbDrag) e.preventDefault(); };      // langes Halten: kein Kontextmenue
+  // gehaltener Finger: Seite nicht scrollen lassen
+  const noScroll=e=>{ if(tbDrag&&tbDrag.armed&&tbDrag.touch&&e.cancelable) e.preventDefault(); };
   // Aufraeumen nach Ende ODER Abbruch (Touch-Geste, Fensterwechsel, Esc): nichts bleibt haengen
   const cleanup=()=>{ ['pointermove','pointerup','pointercancel','keydown','blur'].forEach((n,i)=>window.removeEventListener(n,[move,up,cancel,onKey,cancel][i]));
-    cancelAnimationFrame(rafId); rafId=0; stopScroll(); const d=tbDrag; tbDrag=null; hideGhost();
-    if(d&&d.chip) d.chip.remove(); if(d&&d.el) d.el.classList.remove('dragging'); return d; };
+    window.removeEventListener('touchmove',noScroll,{passive:false}); window.removeEventListener('contextmenu',noCtx,true);
+    cancelAnimationFrame(rafId); rafId=0; stopScroll(); const d=tbDrag; tbDrag=null; hideGhost(); document.body.classList.remove('tbdragging');
+    if(d){ clearTimeout(d.hold); if(d.chip) d.chip.remove(); if(d.el) d.el.classList.remove('dragging','armed'); if(d.src) d.src.classList.remove('armed'); }
+    return d; };
   const cancel=()=>{ cleanup(); };
   const onKey=e=>{ if(e.key==='Escape'){ e.preventDefault(); cleanup(); } };
   // Am Rand der scrollenden Flaeche mitscrollen (schmal: Bibliothek steht ueber dem Raster)
@@ -4126,20 +4212,20 @@ function tbBindDrag(p, libOnly){
     return document.scrollingElement; };
   const stopScroll=()=>{ cancelAnimationFrame(scrollT); scrollT=0; };
   const autoScroll=()=>{ scrollT=0; if(!tbDrag||!lastEv) return; const sc=scroller(), r=(sc===document.scrollingElement)?{top:0,bottom:innerHeight}:sc.getBoundingClientRect();
-    const top=Math.max(r.top,0), bot=Math.min(r.bottom,innerHeight), y=lastEv.clientY, edge=56;
-    const dy=y<top+edge?-Math.ceil((top+edge-y)/4):(y>bot-edge?Math.ceil((y-(bot-edge))/4):0);
+    const top=Math.max(r.top,0), bot=Math.min(r.bottom,innerHeight), y=lastEv.clientY, edge=tbDrag.touch?72:56, dv=tbDrag.touch?3:4;
+    const dy=y<top+edge?-Math.ceil((top+edge-y)/dv):(y>bot-edge?Math.ceil((y-(bot-edge))/dv):0);
     if(dy){ sc.scrollTop+=dy; lastKey=''; frame(); scrollT=requestAnimationFrame(autoScroll); } };
   const target=(ev,d)=>{ const c=cellAt(ev.clientX,ev.clientY);
     if(d.kind==='resize'){ const it=items[d.i]; if(!c.inside) return null;
-      const b=bandXY(c), ww=Math.max(1,b.x-it.x+1), hh=Math.max(1,b.y-it.y+1);
+      const b=(tbTab===DK||Math.floor(it.y/g)%2===0)?bandXY(c):c, ww=Math.max(1,b.x-it.x+1), hh=Math.max(1,b.y-it.y+1);
       const opts=gridSizes(it.type,g,tbTabF()).filter(([w,h])=>tbFree(items,it.x,it.y,w,h,d.i,rows,g))
         .sort((a,b)=>(Math.abs(a[0]-ww)+Math.abs(a[1]-hh))-(Math.abs(b[0]-ww)+Math.abs(b[1]-hh)));
       return opts.length?{x:it.x,y:it.y,w:opts[0][0],h:opts[0][1],ok:true}:null; }
     if(d.kind==='move'){   // auf eine andere Kachel gezogen -> Plaetze tauschen (wenn beide passen)
       const o=hitItem(ev.clientX,ev.clientY,d.i);
       if(o>=0){ const a=items[d.i], b=items[o];
-        const aOk=tbFree(items.filter((_,n)=>n!==d.i&&n!==o),b.x,b.y,a.w,a.h,-1,rows,g),
-              bOk=tbFree(items.filter((_,n)=>n!==d.i&&n!==o),a.x,a.y,b.w,b.h,-1,rows,g);
+        const rest=items.filter((_,n)=>n!==d.i&&n!==o), aOk=tbFree(rest,b.x,b.y,a.w,a.h,-1,rows,g),
+              bOk=tbFree(rest.concat([{x:b.x,y:b.y,w:a.w,h:a.h}]),a.x,a.y,b.w,b.h,-1,rows,g);
         if(aOk&&bOk) return {x:b.x,y:b.y,w:a.w,h:a.h,ok:true,swap:o}; } }
     if(!c.inside) return null;
     if(tbTab===DK){ const w=d.w, h=d.h, cols=tbDashPages(p)*g;
@@ -4153,22 +4239,23 @@ function tbBindDrag(p, libOnly){
     return {x,y,w,h,ok:tbFree(items,x,y,w,h,d.kind==='move'?d.i:-1,rows,g)}; };
   // Vorschau hoechstens einmal je Bildschirm-Frame und nur bei Zellwechsel neu berechnen
   const frame=()=>{ rafId=0; const d=tbDrag, ev=lastEv; if(!d||!ev) return;
-    if(d.chip){ d.chip.style.left=ev.clientX+'px'; d.chip.style.top=ev.clientY+'px'; }
+    if(d.chip){ d.chip.style.left=ev.clientX+'px'; d.chip.style.top=(ev.clientY-(d.touch?56:0))+'px'; }
     const els=document.elementsFromPoint(ev.clientX,ev.clientY), bg=els.find(e=>e.classList&&e.classList.contains('bg')&&grid.contains(e)),
           ew=els.find(e=>e.classList&&e.classList.contains('ew')&&grid.contains(e));
     const key=(bg?bg.dataset.x+','+bg.dataset.y:'-')+'|'+(ew?ew.dataset.i:'-');
     if(key===lastKey) return; lastKey=key;
     const t=target(ev,d); if(t) showGhost(t.x,t.y,t.w,t.h,t.ok,t.swap!==undefined); else hideGhost(); };
   const move=(ev)=>{ const d=tbDrag; if(!d) return;
-    if(!d.moved && Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)<6) return;
-    if(!d.moved){ d.moved=true; if(d.el) d.el.classList.add('dragging');
+    if(!d.moved && Math.hypot(ev.clientX-d.sx,ev.clientY-d.sy)<(d.touch?10:6)) return;
+    if(!d.armed){ cleanup(); return; }     // Touch ohne Halten: Wischen = Scrollen
+    if(!d.moved){ d.moved=true; if(d.el) d.el.classList.add('dragging'); document.body.classList.add('tbdragging');
       if(d.src){ d.chip=d.src.cloneNode(true); d.chip.classList.add('dragchip'); document.body.appendChild(d.chip); } }
     lastEv=ev; if(!rafId) rafId=requestAnimationFrame(frame);
     if(!scrollT) scrollT=requestAnimationFrame(autoScroll); };
   const up=(ev)=>{ const d=cleanup();
     if(!d) return;
-    if(!d.moved){ if(d.kind==='move'||d.kind==='resize'){ tbSel=d.i; renderTabEditor(); } return; }
-    const t=target(ev,d); if(!t||!t.ok) return;
+    if(!d.moved){ if(d.kind==='move'||d.kind==='resize'){ tbSel=d.i; tbBindDrag.selT=Date.now(); renderTabEditor(); tbShowSide(); } return; }
+    const t=target(ev,d); if(!t||!t.ok){ if(t&&!t.ok) snack(T('Hier ist kein Platz.'),null,2500); return; }
     if(d.kind==='new'){ const it={type:d.type,x:t.x,y:t.y,w:t.w,h:t.h};
       if(d.uuid) it.uuid=d.uuid;
       if(d.type==='clock'){ it.align='center'; it.date='short'; }
@@ -4192,10 +4279,15 @@ function tbBindDrag(p, libOnly){
     const c=cellAt(ev.clientX,ev.clientY);
     const bc=(it.w>g&&c.inside)?bandXY(c):c;
     start(ev,{kind:'move',i,el,w:it.w,h:it.h,ox:c.inside?bc.x-it.x:0,oy:c.inside?(bc.y-it.y):0}); }));
-  const del=grid.querySelector('[data-edel]'); if(del) del.onclick=ev=>{ ev.stopPropagation(); tbDelete(p); };
+  // Touch: der Klick des Antippens landet sonst auf dem gerade erschienenen ✕ und loescht die Kachel
+  const del=grid.querySelector('[data-edel]'); if(del) del.onclick=ev=>{ ev.stopPropagation(); if(Date.now()-(tbBindDrag.selT||0)<500) return; tbDelete(p); };
+  grid.querySelectorAll('.ew').forEach(el=>el.addEventListener('keydown',ev=>{ if(ev.target!==el||(ev.key!=='Enter'&&ev.key!==' ')) return;
+    ev.preventDefault(); tbSel=+el.dataset.i; renderTabEditor(); tbShowSide(); }));
 }
 // Gewaehlte Kachel entfernen (✕ oder Entf) - entfernte Bausteine der Vorbefuellung merken
 function tbDelete(p){ const items=tbEff[tbTab]||[], it=items[tbSel]; if(!it) return;
+  if((it.type==='room'||it.type==='cat')&&it.uuid&&tbFolder(tbTab)===it.type&&!tbSelected(p,tbTab).filter(u=>u!==it.uuid).length){
+    alert(T('Mindestens ein Eintrag muss in der Übersicht bleiben.')); return; }
   if(!tbDelete.inner){ tbDelete.inner=true; try{ undoable(p, T('Entfernt'), ()=>tbDelete(p)); }finally{ tbDelete.inner=false; } return; }
   if(it.type==='tile'&&it.uuid){ const lay=tbLay(p,tbTab); lay.removed=lay.removed||[]; if(lay.removed.indexOf(it.uuid)<0) lay.removed.push(it.uuid); }
   if((it.type==='room'||it.type==='cat')&&it.uuid&&tbFolder(tbTab)===it.type){ const rest=tbSelected(p,tbTab).filter(u=>u!==it.uuid);
@@ -4206,15 +4298,27 @@ function tbDelete(p){ const items=tbEff[tbTab]||[], it=items[tbSel]; if(!it) ret
 document.addEventListener('keydown',ev=>{
   const ed=$('#tbGridEd'); if(!ed||!ed.offsetParent||rubric!=='pconf') return;
   const tg=ev.target, typing=tg&&(tg.tagName==='INPUT'||tg.tagName==='SELECT'||tg.tagName==='TEXTAREA'||tg.isContentEditable);
-  const p=PANELS[cur]; if(!p||typing) return;
-  if((ev.ctrlKey||ev.metaKey)&&ev.key.toLowerCase()==='z'){ ev.preventDefault(); tbUndo(p); return; }
+  const p=PANELS[cur]; if(!p||typing||tbDrag||ev.defaultPrevented||ev.altKey) return;
+  // offener Dialog/Assistent: Tasten gehoeren dem Dialog
+  if([...document.querySelectorAll('.wzov')].some(o=>o.getClientRects().length)) return;
+  if((ev.ctrlKey||ev.metaKey)&&!ev.shiftKey&&ev.key.toLowerCase()==='z'){ ev.preventDefault(); tbUndo(p); return; }
+  if(ev.ctrlKey||ev.metaKey||ev.shiftKey) return;
+  // fokussierte Kachel gilt als gewaehlt; auf anderen Knoepfen loescht Backspace nichts
+  const onEw=tg&&tg.classList&&tg.classList.contains('ew')&&ed.contains(tg);
+  if(onEw) tbSel=+tg.dataset.i;
   const items=tbEff[tbTab]||[], it=items[tbSel]; if(!it) return;
-  if(ev.key==='Delete'||ev.key==='Backspace'){ ev.preventDefault(); tbDelete(p); return; }
+  if(ev.key==='Delete'||(ev.key==='Backspace'&&(onEw||tg===document.body))){ ev.preventDefault(); tbDelete(p); return; }
   if(ev.key==='Escape'){ tbSel=-1; renderTabEditor(); return; }
   const dir={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[ev.key]; if(!dir) return;
-  ev.preventDefault();
-  const g=tbGrid(p,tbTab), rows=tbRows(items,g), nx=it.x+dir[0], ny=it.y+dir[1];
-  if(tbFree(items,nx,ny,it.w,it.h,tbSel,rows+(tbTab===DK?0:g),g)){ it.x=nx; it.y=ny; delete it.auto; tbCommit(p); renderTabEditor(); }
+  if(tg&&tg.tagName==='BUTTON'&&!onEw) return;       // Pfeile in Knopfgruppen nicht abfangen
+  const g=tbGrid(p,tbTab), rows=tbRows(items,g);
+  let nx=it.x+dir[0], ny=it.y+dir[1];
+  // zwei Panels: Pfeile folgen dem Bild (links/rechts zwischen den Haelften, hoch/runter zwischen den Seiten)
+  if(tbTab!==DK&&tbTwo()&&it.x+it.w<=g){ const pg=Math.floor(it.y/g), vx=(pg%2)*g+it.x+dir[0], vy=Math.floor(pg/2)*g+it.y%g+dir[1];
+    if(vx<0||vy<0||vx+it.w>2*g||Math.floor(vx/g)!==Math.floor((vx+it.w-1)/g)){ nx=-1; }
+    else { nx=vx%g; ny=(Math.floor(vy/g)*2+Math.floor(vx/g))*g+vy%g; } }
+  if(nx>=0&&tbFree(items,nx,ny,it.w,it.h,tbSel,rows+(tbTab===DK?0:g),g)){ ev.preventDefault(); it.x=nx; it.y=ny; delete it.auto; tbCommit(p,true); renderTabEditor(); }
+  else if(onEw) ev.preventDefault();
 });
 function sizeField(label,key,ui){
   const v=(ui||{})[key];
@@ -4227,7 +4331,8 @@ function statControls(){
 }
 function defaultTabs(){ return (META.tabs||[]).filter(t=>!t.cat&&!t.room).slice(0,4).map(t=>t.tab); }
 let dirtyN=0;
-function markDirty(){ dirty=true; dirtyN++; const t=$('#toast'); if(t){ t.className='toast'; t.textContent=''; } renderList(); saveInfo(); }
+function markDirty(){ dirty=true; dirtyN++; { const sn=$('#snack'); if(sn&&sn.classList.contains('hasundo')&&!undoable.busy) sn.classList.remove('show'); }
+  const t=$('#toast'); if(t){ t.className='toast'; t.textContent=''; } renderList(); saveInfo(); }
 // Speicherleiste: Anzahl Aenderungen + Verwerfen
 // Zuletzt gespeicherter Stand (nach Laden/Speichern) -> Liste der Aenderungen fuer die Speicherleiste
 let SAVED_SNAP=null;
@@ -4284,14 +4389,14 @@ function snack(msg, undo, ms){
   let el=$('#snack'); if(!el){ el=document.createElement('div'); el.id='snack'; el.className='snack'; el.setAttribute('role','status'); document.body.appendChild(el); }
   clearTimeout(snack.t);
   el.innerHTML='<span>'+esc(msg)+'</span>'+(undo?'<button type="button">'+T('Rückgängig')+'</button>':'')+'<button type="button" class="sx" aria-label="'+T('Schließen')+'">✕</button>';
-  el.classList.add('show');
+  el.classList.add('show'); el.classList.toggle('hasundo',!!undo);
   const b=el.querySelector('button:not(.sx)'); if(b) b.onclick=()=>{ el.classList.remove('show'); undo(); };
   el.querySelector('.sx').onclick=()=>el.classList.remove('show');
   snack.t=setTimeout(()=>el.classList.remove('show'), ms||7000);
 }
 // Aenderung am Panel-Profil mit Rueckgaengig: Schnappschuss vorher, bei Bedarf zuruecksetzen
 function undoable(p, msg, fn){
-  const snap=JSON.stringify(p), tab=tbTab; fn();
+  const snap=JSON.stringify(p), tab=tbTab; undoable.busy=true; try{ fn(); }finally{ undoable.busy=false; }
   snack(msg, ()=>{ for(const k of Object.keys(p)) delete p[k]; Object.assign(p, JSON.parse(snap));
     tbReset(); tbTab=tab; markDirty(); if(rubric==='pconf'){ renderTabList(p); } });
 }

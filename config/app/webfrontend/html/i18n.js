@@ -293,7 +293,7 @@
       '0 = aus': '0 = off',
       '0 = nie': '0 = never',
       '1 Änderung': '1 change',
-      '<b>✕</b> oder <b>Entf</b> entfernt, <b>Strg+Z</b> macht rückgängig.': '<b>✕</b> or <b>Del</b> removes, <b>Ctrl+Z</b> undoes.',
+      '<b>✕</b> oder <b>Entf</b> entfernt, <b>Strg+Z</b> macht rückgängig.': '<b>✕</b> or <b>Del</b> removes a tile, <b>Ctrl+Z</b> undoes.',
       'Abmelden': 'Log out',
       'Adresse am Gerät:': 'Address on the device:',
       'Adresse kopieren': 'Copy address',
@@ -322,7 +322,6 @@
       'Automatisch': 'Automatic',
       'Automatisch erkannt': 'Detected automatically',
       'Baustein': 'Block',
-      'Baustein oder Widget links suchen und <b>ins Raster ziehen</b>.': 'Search for a block or widget on the left and <b>drag it into the grid</b>.',
       'Baustein suchen…': 'Search blocks…',
       'Baustein wählen': 'Choose block',
       'Baustein-Kachel': 'Block tile',
@@ -344,7 +343,7 @@
       'Datum': 'Date',
       'Derzeit Standard:': 'Currently default:',
       'Design': 'Design',
-      'Detailansicht beim Antippen eines Tages': 'Detail view when tapping a day',
+      'Detailansicht beim Antippen eines Tages': 'Show details when tapping a day',
       'Die Konfiguration ist nur mit Passwort erreichbar.': 'The configuration is only reachable with a password.',
       'Display': 'Display',
       'Display &amp; Nacht': 'Display &amp; night',
@@ -378,7 +377,7 @@
       'Getrennt seit': 'Disconnected since',
       'GitHub öffnen': 'Open GitHub',
       'Größe': 'Size',
-      'Größe ändern': 'Change size',
+      'Größe ändern': 'Resize',
       'Handy': 'Phone',
       'Herunterladen': 'Download',
       'Hilfe': 'Help',
@@ -398,7 +397,6 @@
       'Kartenfarbe': 'Map color',
       'Kategorie': 'Category',
       'Kategorie-Farben': 'Category colors',
-      'Kein Platz für': 'No room for',
       'Keine': 'None',
       'Keine passenden Bausteine in der Anlage.': 'No matching blocks in the system.',
       'Kennung (für die Adresse)': 'ID (for the address)',
@@ -408,7 +406,7 @@
       'Klingelton': 'Ring tone',
       'Kontrast': 'Contrast',
       'Leer anlegen': 'Create empty',
-      'Leeren': 'Empty',
+      'Leeren': 'Clear',
       'Lichtszenen': 'Light scenes',
       'Loxone sendet': 'Loxone sends',
       'Löschen': 'Delete',
@@ -438,7 +436,7 @@
       'Ohne Raum': 'Without room',
       'Panel „': 'Panel “',
       'Panels': 'Panels',
-      'Passend zum Design': 'Matches the design',
+      'Passend zum Design': 'Match design',
       'Port': 'Port',
       'Quelle: System → Kalender.': 'Source: System → Calendar.',
       'Quelle: System → Loxone → Wetter.': 'Source: System → Loxone → Weather.',
@@ -465,7 +463,6 @@
       'Tab 1 · Start': 'Tab 1 · Start',
       'Tab entfernen': 'Remove tab',
       'Tab geleert': 'Tab cleared',
-      'Tab „': 'Tab “',
       'Tab-Einstellungen': 'Tab settings',
       'Tage': 'Days',
       'Tipps für': 'Tips for',
@@ -557,7 +554,6 @@
       'übernehmen': 'apply',
       '– Gerätetyp wählen –': '– choose device type –',
       '“ angelegt': '” created',
-      '“ entfernt': '” removed',
       '“ gelöscht': '” deleted',
       '“ komplett neu starten? Das dauert etwa eine Minute.': '” restart completely? This takes about one minute.',
       '„Übernehmen“ speichert das für alle gewählten Geräte.': '“Apply” saves this for all selected devices.',
@@ -592,8 +588,6 @@
       'Diagnose': 'Diagnostics',
       'Unterstützte Geräte': 'Supported devices',
       'Fehler: ': 'Error: ',
-      'Raster auf ': 'Grid on ',
-      ' umgestellt': ' switched',
       'Anwesend': 'Present',
       'Abwesend': 'Absent',
       'Gäste': 'Guests',
@@ -935,14 +929,8 @@
       'Nachts Kamerabild nur bei Präsenz zeigen': 'At night show camera image only on presence',
       'Die Reihenfolge entspricht dem Panel: <b>Dashboard</b> links, Tabs rechtsbündig, <b>Tab 1</b> ganz rechts. Zum Umsortieren Tabs ziehen.':
         'The order matches the panel: <b>dashboard</b> on the left, tabs right-aligned, <b>tab 1</b> at the far right. Drag tabs to reorder them.',
-      'Bis zu <b>4 Tabs</b>. Zum Bearbeiten Tab antippen. Typen: <b>Frei</b> (du belegst selbst), <b>Raum</b>, <b>Kategorie</b> und <b>Zentral</b> (aus Loxone vorbefüllt, danach anpassbar, neue Bausteine kommen hinten dazu) sowie <b>Übersichten</b> (alle Räume oder Kategorien wie in der Loxone-App).':
-        'Up to <b>4 tabs</b>. Tap a tab to edit it. Types: <b>Free</b> (you fill it yourself), <b>Room</b>, <b>Category</b> and <b>Central</b> (prefilled from Loxone, adjustable afterwards, new blocks are added at the end) and <b>Overviews</b> (all rooms or categories like in the Loxone app).',
-      'Auf diesem Panel überall ausgeblendet (Tabs, Räume, Kategorien). Antippen blendet sie wieder ein.':
-        'Hidden everywhere on this panel (tabs, rooms, categories). Tap to show them again.',
       'Gilt nur für dieses Panel. „Wie Standard“ übernimmt System → Alle Panels.':
         'Applies to this panel only. "Like default" takes over System → All panels.',
-      'Die Farben kommen aus dem Miniserver: Fenster offen gelb, Alarm oder Rauch ausgelöst rot, Alarm scharf blau. Statusbausteine zeigen ihre Farbe aus Loxone Config.':
-        'The colours come from the Miniserver: window open yellow, alarm or smoke triggered red, alarm armed blue. Status blocks show their colour from Loxone Config.',
       'Mehrere Haken sind möglich. Ohne Haken schließt nur ein Tipp auf eine freie Stelle das Dashboard.':
         'Several ticks are possible. Without ticks, only a tap on a free spot closes the dashboard.',
       'Tageslicht: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten vom Miniserver). Außentemperatur: kalt blau, mild grün, warm gelb, heiß orange bis rot. Ohne Wetterdaten bleiben die festen Farben.':
@@ -953,7 +941,7 @@
         'JPG, PNG or WebP, 12 MB at most. Uploaded immediately. Landscape works best.',
       'Anhaken zum Anzeigen, ziehen zum Sortieren': 'Tick to show, drag to sort',
       'Symbol je Baustein (zum Ändern antippen)': 'Icon per block (tap to change)',
-      'Mitgeliefert': 'Built in',
+      'Mitgeliefert': 'Built-in',
       'Die Symbole stehen oben und bleiben neutral, bis etwas passiert.':
         'The icons sit at the top and stay neutral until something happens.',
       'Standard-Dashboard': 'Default dashboard',
@@ -964,32 +952,41 @@
       'Dieser Tab ist schon vorhanden. Wähle einen anderen.': 'This tab already exists. Choose another one.',
       'In Loxone gibt es dafür keine Einträge. Prüfe Räume und Kategorien in Loxone Config.':
         'There are no entries for this in Loxone. Check rooms and categories in Loxone Config.',
-      'Lade Kacheln …': 'Loading tiles …',
-      'So sieht das Dashboard am Panel aus. Ohne Belegung zeigt es das klassische Dashboard (Uhr, Wetter, Termine).':
-        'This is how the dashboard looks on the panel. Without any tiles it shows the classic dashboard (clock, weather, appointments).',
-      'So sieht der Tab am Panel aus. Weitere Seiten folgen darunter, wie beim Wischen nach unten. Unten liegt immer eine leere Seite zum Ablegen.':
-        'This is how the tab looks on the panel. More pages follow below, as when swiping down. There is always an empty page at the bottom for dropping tiles.',
+      'So sieht das Dashboard am Panel aus. Ohne Belegung zeigt es das klassische Dashboard (Uhr, Wetter, Termine).': 'This is how the dashboard looks on the panel. Without tiles it shows the classic dashboard (clock, weather, events).',
       'Linke Hälfte': 'Left half',
       'Rechte Hälfte': 'Right half',
-      'Hierher ziehen: neue Seite': 'Drag here: new page',
       'Aus Loxone neu füllen': 'Refill from Loxone',
       'Aus Loxone neu gefüllt': 'Refilled from Loxone',
-      'Ziehe ein Widget ins Raster und wähle rechts Baustein oder Quelle.':
-        'Drag a widget into the grid and choose the block or source on the right.',
-      'Kachel <b>antippen</b>: Hier erscheinen Größe, Inhalt und Aussehen.':
-        '<b>Tap</b> a tile: size, content and appearance appear here.',
-      '<b>Ecke</b> ziehen: Größe ändern. Auf eine andere Kachel ziehen: <b>tauschen</b>.':
-        'Drag a <b>corner</b>: resize. Drag onto another tile: <b>swap</b>.',
+      'Erneut laden': 'Load again',
+      'Die Belegung aus Loxone konnte nicht geladen werden.': 'Could not load the layout from Loxone.',
+      'Lade Kacheln …': 'Loading tiles …',
+      'Ohne Platz entfallen: {n}.': 'Dropped for lack of room: {n}.',
+      'Auf diesem Panel überall ausgeblendet (Tabs, Räume, Kategorien). Antippen blendet eine Kachel wieder ein.': 'Hidden everywhere on this panel (tabs, rooms, categories). Tap a tile to show it again.',
+      'Hierher ziehen für neue Seite': 'Drop here for a new page',
+      'So sieht der Tab am Panel aus. Weitere Seiten folgen darunter. Unten liegt immer eine leere Seite zum Ablegen.': 'This is how the tab looks on the panel. More pages follow below. There is always an empty page at the bottom for new tiles.',
+      'Bis zu <b>4 Tabs</b>. Zum Bearbeiten antippen. <b>Frei</b>: du belegst selbst. <b>Raum</b>, <b>Kategorie</b>, <b>Zentral</b>: aus Loxone vorbefüllt und anpassbar, neue Bausteine kommen hinten dazu. <b>Übersichten</b>: alle Räume oder Kategorien wie in der Loxone-App.': 'Up to <b>4 tabs</b>. Tap to edit. <b>Free</b>: you fill it yourself. <b>Room</b>, <b>Category</b>, <b>Central</b>: prefilled from Loxone and adjustable, new blocks are added at the end. <b>Overviews</b>: all rooms or categories as in the Loxone app.',
+      'Ohne Bedienung springt das Widget zurück zu Kamera 1. 0 = aus.': 'With no interaction, the widget returns to camera 1. 0 = off.',
+      'Haken blendet eine Kamera ein, Ziehen ändert die Reihenfolge. Die erste startet zuerst, am Panel wechselst du per Zahlenknopf.': 'Check a camera to show it, drag to reorder. The first one starts first; on the panel, switch with the number buttons.',
+      'Am Touchscreen Baustein oder Kachel <b>kurz halten</b>, dann ziehen. Wischen scrollt.': 'On touch screens, <b>press and hold</b> a block or tile, then drag. Swiping scrolls.',
+      'An der <b>Ecke</b> ziehen ändert die Größe. Auf eine andere Kachel ziehen <b>tauscht</b> beide.': 'Drag the <b>corner</b> to resize. Drop onto another tile to <b>swap</b> them.',
+      'Kachel <b>antippen</b>, um Größe, Inhalt und Aussehen einzustellen.': '<b>Tap</b> a tile to set its size, content and appearance.',
+      'Baustein oder Widget in der Liste suchen und <b>ins Raster ziehen</b>.': 'Find a block or widget in the list and <b>drag it into the grid</b>.',
+      'Widget ins Raster ziehen, dann Baustein oder Quelle wählen.': 'Drag a widget into the grid, then choose its block or source.',
+      '„Passend zum Design“ übernimmt die Farben des Tabs oder Dashboards, die Ampel dient als Akzent. „Farbig“ färbt die ganze Kachel.': '"Match design" uses the tab or dashboard colors; the status light is only an accent. "Colored" tints the whole tile.',
+      'Farben vom Miniserver: Fenster offen gelb, Alarm oder Rauch rot, Alarm scharf blau. Statusbausteine nutzen ihre Farbe aus Loxone Config.': 'Colors come from the Miniserver: window open yellow, alarm or smoke red, alarm armed blue. Status blocks use their color from Loxone Config.',
+      '{n} weitere – Suche oder Filter eingrenzen.': '{n} more – narrow your search or filters.',
+      'Die Belegung aus Loxone konnte nicht geladen werden. Angezeigt wird der gespeicherte Stand.': 'Could not load the layout from Loxone. Showing the saved state.',
+      'Suche und Filter zurücksetzen': 'Reset search and filters',
+      'Noch nichts zum Rückgängigmachen': 'Nothing to undo yet',
+      'Rückgängig gemacht.': 'Undone.',
+      'Hier ist kein Platz.': 'No room here.',
+      'Raster auf {n} × {n} umgestellt.': 'Grid changed to {n} × {n}.',
+      'Kein Platz für {w} × {h}. Verkleinere oder entferne zuerst andere Kacheln.': 'No room for {w} × {h}. Shrink or remove other tiles first.',
+      'Tab „{n}“ entfernt': 'Tab "{n}" removed',
       'Kein Baustein gewählt. Ohne Baustein wird die Kachel nicht gespeichert.':
         'No block chosen. Without a block the tile is not saved.',
       'Keine vorhanden': 'None available',
       'Status (max. 4)': 'Status (max. 4)',
-      '„Passend zum Design“ übernimmt die Farben des Tabs oder Dashboards, die Ampel erscheint als Akzentfarbe. „Farbig“ färbt die ganze Kachel.':
-        '"Match design" takes over the colours of the tab or dashboard, the traffic light appears as an accent colour. "Colourful" colours the whole tile.',
-      'Haken zeigt die Kamera an, Ziehen ändert die Reihenfolge. Die erste Kamera startet zuerst; am Panel wechselst du per Zahlenknopf.':
-        'A tick shows the camera, dragging changes the order. The first camera starts first; on the panel you switch with the number buttons.',
-      'Ohne Bedienung wechselt das Widget zurück zu Kamera 1. 0 = aus.':
-        'Without interaction the widget switches back to camera 1. 0 = off.',
       'Noch keine Kamera mit Video-Adresse. Trage sie unter System → Kameras ein.':
         'No camera with a video address yet. Enter one under System → Cameras.',
       'Abgewählte Bausteine zeigt dieses Panel nirgends an, auch nicht in anderen Räumen oder Kategorien.':
@@ -1125,7 +1122,6 @@
       'Raster ': 'Grid ',
       ' auch für alle bestehenden Tabs und das Dashboard übernehmen? OK: ja, alle. Abbrechen: nur für neue Tabs.':
         ' for all existing tabs and the dashboard as well? OK: yes, all of them. Cancel: new tabs only.',
-      'Verkleinere oder entferne zuerst andere Widgets.': 'Shrink or remove other widgets first.',
       'Folgt später': 'Coming later',
       'Farbschema der Konfiguration': 'Colour scheme of the configuration',
       // P3 Kopf/Seitenleiste, Start, Suche
@@ -1287,7 +1283,7 @@
       'Statusleiste: Anzeige je Baustein': 'Status bar: display per block',
       'Aus (feste Größe)': 'Off (fixed size)',
       'Automatisch (Bildschirm füllen)': 'Automatic (fill screen)',
-      'Verlauf (ab 2 × 2)': 'History (from 2 × 2)',
+      'Verlauf (ab 2 × 2)': 'History (min. 2 × 2)',
       'Popup breit': 'Popup wide',
       'Popup quadratisch': 'Popup square',
       'Widget 2 × 1': 'Widget 2 × 1',
