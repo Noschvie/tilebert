@@ -207,7 +207,6 @@ async def test_stream_task() -> None:
         saved = webvisu.MS_RETRY, webvisu.MS_RETRY_AUTH
         webvisu.MS_RETRY, webvisu.MS_RETRY_AUTH = (0.2,), (3,)   # Test-Zeiten
         task = asyncio.create_task(app.stream_task())
-        t0 = time.monotonic()
         await asyncio.sleep(0.15)               # 1. Versuch laeuft/ist durch
         if wake:
             app._retry_now.set()                # = reconnect() mit neuen Zugangsdaten

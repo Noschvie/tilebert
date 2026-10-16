@@ -13,7 +13,6 @@
   var CAT = {
     en: {
       // Panel-Assistent (3 Schritte)
-      'Wie das Standard-Panel': 'Like the default panel',
       'Uhr, Wetter und Kalender': 'Clock, weather and calendar',
       'Uhr und Wetter': 'Clock and weather',
       'Uhr, Wetter und Kamera': 'Clock, weather and camera',
@@ -26,7 +25,6 @@
       'Weiter bearbeiten': 'Keep editing',
       'Schritt {n} von 3': 'Step {n} of 3',
       'z. B. Flur': 'e.g. Hallway',
-      'Adresse ändern': 'Change address',
       'Kleinbuchstaben, Ziffern und Bindestrich. Leer lassen für die automatische Adresse.': 'Lowercase letters, digits and hyphens. Leave empty for the automatic address.',
       'Welches Gerät zeigt das Panel?': 'Which device shows the panel?',
       'Dashboard wie das Standard-Panel': 'Dashboard like the default panel',
@@ -58,7 +56,6 @@
       'Raum wählen …': 'Choose a room …',
       'Wird gespeichert …': 'Saving …',
       'Adresse:': 'Address:',
-      'Die Adresse braucht Buchstaben oder Ziffern.': 'The address needs letters or digits.',
       'Diese Adresse ist schon vergeben.': 'This address is already taken.',
       'Gib dem Panel einen Namen.': 'Give the panel a name.',
       'Der Name braucht mindestens einen Buchstaben oder eine Ziffer.': 'The name needs at least one letter or digit.',
@@ -70,10 +67,6 @@
       'Panel „{n}“ gespeichert. Die Zuordnung zu „{d}“ hat nicht geklappt. Ordne es unter Geräte zu.': 'Panel “{n}” saved. Assigning it to “{d}” did not work. Assign it under Devices.',
       'Name und Gerät': 'Name and device',
       'Zusammenfassung': 'Summary',
-      '960 × 480, zwei Hälften': '960 × 480, two halves',
-      'Tablet oder 4″-Display': 'Tablet or 4″ display',
-      '480 × 480, eine Hälfte': '480 × 480, one half',
-      'hochkant, Tabs unten': 'portrait, tabs at the bottom',
       'Zentral': 'Central',
       'Wie die anderen Panels': 'Like the other panels',
       // Gerätemodelle, Nachtquelle, Neues Gerät (Kritik-Umbau)
@@ -90,7 +83,7 @@
       'Anderes Gerät / PC-Browser': 'Other device / PC browser',
       'TbViewer per ADB (Gerät hinzufügen).': 'TbViewer via ADB (Add device).',
       'Display und Neustart übernimmt der Agent.': 'The agent handles the display and restarts.',
-      'Die Seite hält den Schirm wach bis zur Leerlaufzeit (Display & Nacht); danach greift die iOS-Sperre.': 'The page keeps the screen awake until the idle time (Display & Night); after that the iOS lock applies.',
+      'Die Seite hält den Schirm wach bis zur Leerlaufzeit (Panel → Aussehen); danach greift die iOS-Sperre.': 'The page keeps the screen awake until the idle time (Panel → Appearance); after that the iOS lock applies.',
       'Für Wandbetrieb: Einstellungen → Bedienungshilfen → Geführter Zugriff (App fixieren), Automatische Sperre nach Wunsch.': 'For wall mounting: Settings → Accessibility → Guided Access (pin the app); set Auto-Lock as you like.',
       'Als App installieren: iPhone Safari → Teilen → „Zum Home-Bildschirm“, Android Chrome → Menü → „App installieren“.': 'Install as an app: iPhone Safari → Share → “Add to Home Screen”, Android Chrome → Menu → “Install app”.',
       'Nacht ab und Nacht bis sind gleich. Dann ist nie Nacht.': '“Night from” and “Night until” are the same. Then it is never night.',
@@ -262,7 +255,6 @@
       'Steuerung': 'Controls',
       'Wartung': 'Maintenance',
       'Nichts tun': 'Do nothing',
-      'Automatisch (Lichtsensor)': 'Automatic (light sensor)',
       'Systemeinstellung': 'System setting',
       'Sensoren': 'Sensors',
       'Präsenzerkennung': 'Presence detection',
@@ -314,7 +306,6 @@
       'An (hochzoomen)': 'On (zoom in)',
       'Animation': 'Animation',
       'Animierte Symbole': 'Animated icons',
-      'Anlegen': 'Create',
       'Auf diesem Panel überall ausblenden': 'Hide everywhere on this panel',
       'Aus': 'Off',
       'Ausgeblendete Kacheln': 'Hidden tiles',
@@ -346,7 +337,6 @@
       'Detailansicht beim Antippen eines Tages': 'Show details when tapping a day',
       'Die Konfiguration ist nur mit Passwort erreichbar.': 'The configuration is only reachable with a password.',
       'Display': 'Display',
-      'Display &amp; Nacht': 'Display &amp; night',
       'Effekte': 'Effects',
       'Eigene Datei': 'Own file',
       'Eigene Farben zurücksetzen': 'Reset custom colors',
@@ -384,7 +374,6 @@
       'Hintergrundbild entfernt': 'Background image removed',
       'Hintergrundbild gespeichert': 'Background image saved',
       'Höchstens': 'At most',
-      'Höchstens 4 Tabs': 'At most 4 tabs',
       'In diesem Tab': 'In this tab',
       'Inhalt': 'Content',
       'Kachel': 'Tile',
@@ -399,13 +388,11 @@
       'Kategorie-Farben': 'Category colors',
       'Keine': 'None',
       'Keine passenden Bausteine in der Anlage.': 'No matching blocks in the system.',
-      'Kennung (für die Adresse)': 'ID (for the address)',
       'Kennung:': 'ID:',
       'Kerne': 'Cores',
       'Klingeln testen': 'Test doorbell',
       'Klingelton': 'Ring tone',
       'Kontrast': 'Contrast',
-      'Leer anlegen': 'Create empty',
       'Leeren': 'Clear',
       'Lichtszenen': 'Light scenes',
       'Loxone sendet': 'Loxone sends',
@@ -418,7 +405,6 @@
       'Miniserver': 'Miniserver',
       'Miniserver verbinden': 'Connect Miniserver',
       'Minuten': 'Minutes',
-      'Mit Assistent': 'With wizard',
       'Nach Außentemperatur': 'By outside temperature',
       'Nach Tageslicht': 'By daylight',
       'Nacht': 'Night',
@@ -448,7 +434,6 @@
       'Schließen': 'Close',
       'Schrift & Größen': 'Font & sizes',
       'Schritt': 'Step',
-      'So sieht die Tab-Leiste aus': 'This is what the tab bar looks like',
       'Speicher': 'Memory',
       'Standard (Mitte)': 'Default (center)',
       'Standardraster': 'Default grid',
@@ -483,13 +468,9 @@
       'Weiter': 'Next',
       'Weitere Kameras': 'Further cameras',
       'Welche Betriebsmodi?': 'Which operating modes?',
-      'Welches Design?': 'Which design?',
       'Welches Gerät ist das?': 'Which device is this?',
       'Widgets': 'Widgets',
       'Wie Gerätetyp': 'Like device type',
-      'Wie alle Panels': 'Like all panels',
-      'Wie heißt das Panel?': 'What is the panel called?',
-      'Wie möchtest du anfangen?': 'How would you like to start?',
       'Ziehen zum Umsortieren': 'Drag to reorder',
       'Zoom': 'Zoom',
       'tilebert – Übersicht': 'tilebert – Overview',
@@ -512,7 +493,6 @@
       'gerade eben': 'just now',
       'heruntergeladen': 'downloaded',
       'hoch': 'high',
-      'hochkant · Tabs unten · als App': 'portrait · tabs at bottom · as app',
       'installiert': 'installed',
       'kein Panel': 'no panel',
       'kein Verlauf': 'no history',
@@ -543,7 +523,6 @@
       'wählen': 'choose',
       'z. B. Garten': 'e.g. garden',
       'z. B. Kino': 'e.g. cinema',
-      'z. B. Küche': 'e.g. kitchen',
       'z. B. Shelly Wall Display X2': 'e.g. Shelly Wall Display X2',
       'zuletzt': 'last',
       'zuletzt geladen': 'last loaded',
@@ -626,8 +605,8 @@
       'Video-Streams (MJPEG) von Loxone-Türstationen und eigenen Überwachungskameras. Alle erscheinen im Widget „Kamera“.':
         'Video streams (MJPEG) from Loxone door stations and your own surveillance cameras. All of them appear in the "Camera" widget.',
       'Türstationen aus Loxone': 'Door stations from Loxone',
-      'Überwachungskameras mit MJPEG-Stream, z. B. http://192.168.1.60/mjpg/video.mjpg. Der Server holt das Bild einmal ab und gibt es an alle Panels weiter.':
-        'Surveillance cameras with an MJPEG stream, e.g. http://192.168.1.60/mjpg/video.mjpg. The server fetches the image once and passes it on to all panels.',
+      'Überwachungskameras mit MJPEG-Stream, z. B. <code>http://192.168.1.60/mjpg/video.mjpg</code>. Der Server holt das Bild einmal ab und gibt es an alle Panels weiter.':
+        'Surveillance cameras with an MJPEG stream, e.g. <code>http://192.168.1.60/mjpg/video.mjpg</code>. The server fetches the image once and passes it on to all panels.',
       'Kamera hinzufügen': 'Add camera',
       'Geräte suchen …': 'Searching for devices …',
       'Bis es einen Namen hat, steht es unter „Alle Geräte“ → „Ohne Namen“. Dort vergibst du ihn.':
@@ -680,8 +659,6 @@
         'Please choose an operating mode.',
       'Bitte Uhrzeit von und bis angeben.':
         'Please enter a start and end time.',
-      'Display & Nacht':
-        'Display & night',
       'Abdunkeln, Präsenzerkennung, Helligkeit, Töne und Effekte stellst du je Gerät ein: Geräte → Alle Geräte.':
         'Dimming, presence detection, brightness, sounds and effects are set per device: Devices → All devices.',
       'Nacht-Kamera':
@@ -831,10 +808,6 @@
       'Gerätename': 'Device name',
       'Danke! Ein Kaffee geht auch, aber Tokens schmecken besser.': 'Thanks! Coffee works too, but tokens taste better.',
       'Spendier mir Claude-Code-Tokens': 'Buy me Claude Code tokens',
-      'Löst ein gewählter Baustein aus, zeigt dieses Panel ein rotes Vollbild mit <b>Stumm</b> und <b>Quittieren</b> (Rauchmelder) bzw. <b>Quittieren</b> und <b>Unscharf</b> (Alarmanlage). Die Tasten schalten sofort, abgesicherte Bausteine fragen den PIN ab.':
-        'If a selected block triggers, this panel shows a red full screen with <b>Mute</b> and <b>Acknowledge</b> (smoke detector) or <b>Acknowledge</b> and <b>Disarm</b> (alarm system). The buttons act immediately, protected blocks ask for the PIN.',
-      'Vorgewählt sind alle Alarm- und Rauchmelder-Bausteine aus den Räumen dieses Panels, außer ausgeblendeten.':
-        'Preselected are all alarm and smoke detector blocks from the rooms of this panel, except hidden ones.',
       '1 Baustein': '1 block',
       '{n} Bausteine': '{n} blocks',
       'Piepton an': 'Beep on',
@@ -1001,27 +974,11 @@
       'Keine Loxone-Symbole gefunden. Ist das Plugin „LoxoneIcons“ installiert?':
         'No Loxone icons found. Is the "LoxoneIcons" plugin installed?',
       'Weitere Treffer. Suche eingrenzen.': 'More results. Narrow down the search.',
-      'In 6 Schritten: Format, Tabs, Dashboard, Design, Name, Gerät.':
-        'In 6 steps: format, tabs, dashboard, design, name, device.',
-      'Ohne Assistent. Das neue Panel ist leer und öffnet sich direkt zum Bearbeiten.':
-        'Without the wizard. The new panel is empty and opens right away for editing.',
-      'Welches Format hat das Display?': 'Which format does the display have?',
-      'z. B. 4″-Display': 'e.g. 4″ display',
-      'hochkant, Tabs unten, als App auf dem Home-Bildschirm':
-        'portrait, tabs at the bottom, as an app on the home screen',
       'Raster': 'Grid',
       '4 große Kacheln, leicht zu treffen': '4 large tiles, easy to hit',
-      'Welche Tabs? (höchstens 4)': 'Which tabs? (at most 4)',
-      'Die Tabs stehen in der Reihenfolge deiner Auswahl. Später lässt sie sich per Ziehen ändern.':
-        'The tabs follow the order of your selection. You can change it later by dragging.',
-      'Was zeigt das Dashboard?': 'What does the dashboard show?',
       'System → Alle Panels': 'System → All panels',
-      'Diese Kennung ist schon vergeben.': 'This ID is already taken.',
-      'Trage diese Start-Adresse in der App oder im Browser des Geräts ein. Mit „&device=Name“ erscheint das Gerät unter „Alle Geräte“.':
-        'Enter this start address in the app or in the browser of the device. With "&device=Name" the device appears under "All devices".',
       'Shelly Wall Display und andere Android-Geräte richtest du nach dem Anlegen per adb ein: Geräte → Gerät hinzufügen.':
         'You set up Shelly Wall Display and other Android devices via adb after creating the panel: Devices → Add device.',
-      'Weiter zu „Gerät hinzufügen“': 'Continue to "Add device"',
       'Panel anlegen': 'Create panel',
       'verfügbar. Installation in der LoxBerry-Pluginverwaltung.':
         'available. Install it in the LoxBerry plugin management.',
@@ -1118,7 +1075,6 @@
       'Karte Detailansicht': 'Card detail view',
       'Dashboard nach Leerlauf': 'Dashboard after idle',
       'An': 'On',
-      '/ (Standard-Panel)': '/ (default panel)',
       'Raster ': 'Grid ',
       ' auch für alle bestehenden Tabs und das Dashboard übernehmen? OK: ja, alle. Abbrechen: nur für neue Tabs.':
         ' for all existing tabs and the dashboard as well? OK: yes, all of them. Cancel: new tabs only.',

@@ -282,14 +282,6 @@ _bl_on_values = {}      # pro Device der zuletzt bekannte "helle" Wert
 _bl_off = False         # True = wir haben die Backlights abgeschaltet
 
 
-def _bl_read(path):
-    try:
-        with open(path, encoding="ascii") as fh:
-            return int(fh.read().strip())
-    except Exception:
-        return None
-
-
 def _bl_write(path, val):
     try:
         with open(path, "w", encoding="ascii") as fh:

@@ -186,3 +186,4 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - Version 5.10 (versionCode 15): HOME-Filter wieder auch auf `.Home`, beide HOME-Komponenten standardmäßig aktiv, neues LAUNCHER-Symbol `.App`, Abschalten auf Nicht-Shelly. Signatur unverändert (SHA-256 `80ee7b07…`).
 - Version 5.11 (versionCode 16): nur Texte der Info- und Einrichtungsseite überarbeitet (Linguisten-Prüfung). Signatur unverändert.
 - Version 5.12 (versionCode 17): Infoseite: Zeile wieder „Standard-Launcher“. Signatur unverändert.
+- Version 5.14 (versionCode 19, 0.20.28; 5.13 nur intern): weniger Grafiklast – kein Hardware-Layer an der WebView, kein eigener Hintergrund, Fenster deckend (`setBackgroundDrawable(null)`, `PixelFormat.OPAQUE`). Shelly: Helligkeit unter 4 % wird auf 4 % angehoben (`SHELLY_MIN_BRIGHT`), da die Firmware Werte 0–2 % als Backlight 169/255 umsetzt (4 % → 11). Signatur unverändert (SHA-256 `80ee7b07…`).

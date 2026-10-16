@@ -1,6 +1,6 @@
 # tilebert – Architektur-Übersicht (Nachschlagewerk)
 
-Stand: Version 0.20.24 (Dateigrößen 2026-10-13; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
+Stand: Version 0.20.28 (Dateigrößen 2026-10-16; einzelne Zeilennummern stammen aus 0.19.114 und driften). Zeilennummern = Anhaltspunkt;
 bei Zweifel `grep -n`. Pfade relativ zu `/home/dietpi/projekte/loxohnepanel`. Kürzel: `W` = `config/app/bin/webvisu.py`,
 `P` = `config/app/webfrontend/html/panel.html`, `C` = `.../config.html`.
 
@@ -37,9 +37,9 @@ Android-Panel: TbView/Kiosk.java (WebView) lädt P; Server installiert APK per a
 - Testserver: Docker `lpdev` Port 8099 mit eingebundenem Quellcode (siehe CLAUDE.md).
 
 ### Android-Launcher / TbView (`android/panel-launcher/`, Java ohne Gradle)
-- `build.sh` (aapt/javac/r8/apksigner/zipalign) → schreibt `config/app/android/LoxPanel-Launcher.apk`; `launcher.keystore` nie ersetzen; bei Änderungen `versionCode`/`versionName` im `AndroidManifest.xml` (aktuell 6 / 5.1).
-- `src/de/loxpanel/launcher/`: `Main.java` (Moduswahl tbview|fully), `Kiosk.java` (495 Z., WebView + JS-Brücke, Näherung/Licht/Helligkeit; `@JavascriptInterface` ab Z.347), `Fully.java`, `Home.java`/`StockHome.java` (HOME-Launcher-Altbestand).
-- JS-Brücke `window.TbView` (Kiosk.java:347-403): `turnScreenOn/Off`, `isScreenOn`, `getDeviceId`, `setDisplayOff`, `setSaver`, `setDisplayBrightness(%)`→bool, `setAutoBrightness(on,min,max)`, `setProximityWake`, `getProximity`, `getLightLevel`, `getDeviceInfo`, `reload`. App→Panel: `window.lpHost._ev('prox'|'light'|'screen', wert)`.
+- `build.sh` (aapt/javac/r8/apksigner/zipalign) → schreibt `config/app/android/LoxPanel-Launcher.apk`; `launcher.keystore` nie ersetzen; bei Änderungen `versionCode`/`versionName` im `AndroidManifest.xml` (aktuell 19 / 5.14).
+- `src/de/loxpanel/launcher/`: `Main.java` (Moduswahl tbview|fully), `Kiosk.java` (810 Z., WebView + JS-Brücke, Näherung/Licht/Helligkeit; `@JavascriptInterface` ab Z.487), `Fully.java`, `Home.java`/`StockHome.java` (HOME-Launcher-Altbestand).
+- JS-Brücke `window.TbView` (Kiosk.java:487-550): `turnScreenOn/Off`, `isScreenOn`, `getDeviceId`, `setDisplayOff`, `setSaver`, `setDisplayBrightness(%)`→bool, `setAutoBrightness(on,min,max)`, `setProximityWake`, `getProximity`, `getLightLevel`, `getDeviceInfo`, `reload`. App→Panel: `window.lpHost._ev('prox'|'light'|'screen', wert)`.
 - Details/Gerätetests: `docs/TBVIEW.md`. Panel-Seite: `lpHost` (P:4141), `applySensors` (P:5913), `applyNight` (P:5875).
 
 ## 2. Server `config/app/bin/webvisu.py` (11 391 Z.)
@@ -179,8 +179,11 @@ Quelle (`_night_now`, `_night_source`): `night.source` = `loxone` (`night.contro
 ### Wetter / Kalender
 `front_task` (W:8575) holt alle `FRONT_INTERVAL`=900 s Kalender+Open-Meteo (`front_info.load_front`), Wetter bevorzugt vom Miniserver (`_loxone_weather` W:8028, Push via `_on_weather`); Ausgabe `{t:'front'}`; Cache `_front`, Delta-Push nur Wetter (W:8287). Lat/Lon notfalls vom Miniserver (`ms_lat/ms_lon`, W:8591).
 
+### Auslieferung der Oberfläche (ab 0.20.27)
+`_web_file` (W:9706): Dateien je Stand (mtime/Größe) einmal gelesen und mit gzip vorkomprimiert (`_WEB_CACHE`, Komprimieren im Thread). Panel: `Cache-Control: no-cache, must-revalidate` + ETag (je Kodierung eigener Validator) → bei unverändertem Stand nur `304`; Admin-Seiten (`/config`, `/settings`) bleiben `no-store`, nur komprimiert. Live-Nachrichten werden einmal serialisiert und an alle Panels verteilt (`_memo_json`, `_send_or_drop(raw=)`).
+
 ### Kameras / MJPEG
-Config: `loxpanel.cfg intercom`. `mjpeg_handler` (W:10539) → `CamHub` (W:10393), `?fps=` begrenzt je Betrachter (Widget `WIDGET_CAM_FPS`=5). `camera_list` (W:2943), `cam_crops` (W:2890), `_cam_reconnect_h` (W:3133). Panel: `camStream` (P:5290) mit Reconnect-Intervall, `camNightGate/camNightOpen` (P:5366/5373) Nachtsperre.
+Config: `loxpanel.cfg intercom`. `mjpeg_handler` (W:10539) → `CamHub` (W:10393), `?fps=` begrenzt je Betrachter (Widget `WIDGET_CAM_FPS`=5; Türstations-Widget bekommt `&fps` ebenfalls, Klingel-Vollansicht ungebremst). Einzelbild-Modus `?single=1` (LITE-Panels, `camFetch`): Antwort trägt `X-Seq`; mit `&after=<Seq>` wartet der Server bis `SINGLE_WAIT_S`=1,5 s auf ein neues Bild, sonst `204` (Panel behält das Bild, kein doppeltes Dekodieren). `camera_list` (W:2943), `cam_crops` (W:2890), `_cam_reconnect_h` (W:3133). Panel: `camStream` (P:5290) mit Reconnect-Intervall, `camNightGate/camNightOpen` (P:5366/5373) Nachtsperre.
 
 ### adb / Kiosk
 `_adb` (W:10158) mit `HOME=config/adb`. `api_panel_launcher` (W:10203): connect → get-state → dumpsys-Version → `install -r` APK → appops (`GET_USAGE_STATS`, `WRITE_SETTINGS`) → Fully ermitteln/Home setzen → URL eintragen. Weitere: `kiosk_restart`, `device_brightness`, `device_touch_sound`, `device_adblog`, `fully_install`, `_nightly_restarts` (3:05, Android+Fully, `nrestart`). Display-Treiber ohne adb: `DISPLAY_DRIVERS` {fully:2323, wallpanel:2971} (W:191).
