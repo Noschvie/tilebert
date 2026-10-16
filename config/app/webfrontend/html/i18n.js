@@ -1472,12 +1472,17 @@
     raf(function () { _pending = false; applyChrome(document); });
   }
 
+  // Ein einziger Beobachter fuer die ganze Seite (vorher je Aufruf ein neuer, nie getrennt:
+  // jeder Reiter-/Panelwechsel haengte einen weiteren an). Deutsch: T() aendert nichts -> gar keiner.
+  var _obs = null;
   function autoChrome(selectors) {
     _sel = selectors;
+    if (LANG === 'de') return;
     applyChrome(document);
+    if (_obs) return;
     try {
-      new MutationObserver(_schedule).observe(document.body,
-        { childList: true, subtree: true, characterData: true });
+      _obs = new MutationObserver(_schedule);
+      _obs.observe(document.body, { childList: true, subtree: true, characterData: true });
     } catch (e) {}
   }
 

@@ -49,10 +49,6 @@
   .rub.active{color:var(--fg);border-bottom-color:var(--accent);}
   #phead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0 14px;}
   #phead h2{margin:0;font-size:22px;font-weight:600;}
-  #phead .badge{font-family:ui-monospace,monospace;font-size:12px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);padding:2px 8px;border-radius:var(--r-s);}
-  #phead .kurl{color:var(--muted);font-size:12px;}
-  #phead .kurl code{color:var(--fg);}
-  #phead .phcur{border-color:var(--accent);color:var(--accent);background:rgba(224,162,77,.12);background:color-mix(in srgb,var(--accent) 12%,transparent);}
   .subtabs{display:flex;gap:2px;padding:0 30px;border-bottom:1px solid var(--line);background:var(--bg);overflow-x:auto;}
   .stab{padding:11px 15px;background:none;border:none;border-bottom:2px solid transparent;
     color:var(--muted);font:inherit;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;}
@@ -320,7 +316,6 @@
   .ovw .row{display:flex;flex-wrap:wrap;gap:18px 16px;}
   .ovw figure{margin:0;width:120px;} .ovw figcaption{margin-top:8px;font-size:12px;color:var(--muted);}
   .ovw figcaption b{color:var(--fg);font-weight:600;display:block;font-size:12px;} .ovw figcaption .badge{display:inline-block;margin-top:3px;font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(224,162,77,.45);border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:999px;padding:1px 6px;}
-  .ovw .dev{display:flex;gap:26px;flex-wrap:wrap;} .ovw .dev .panes{display:flex;gap:6px;}
   /* Setting-Boxen zweispaltig */
 
   /* ---------- Rubrik „unterstützte Geräte" (Geräte-Katalog) ---------- */
@@ -633,7 +628,6 @@
   details.card>summary::-webkit-details-marker{display:none;}
   /* Aufklapp-Zeichen nur rechts (details>summary::after), kein zweites links */
   details.card>summary h3{margin:0;display:inline;}
-  details.card.dimmed>summary h3{color:var(--muted);}
   .dashprops .field{width:auto;margin:0;min-width:0;}
   .dashprops .lbl{margin-bottom:5px;}
   .dashprops .hint{font-size:11px;margin-top:4px;line-height:1.35;}
@@ -661,63 +655,12 @@
   .ddwrap{margin:8px 0 2px;} .ddwrap summary{cursor:pointer;font-size:13px;color:var(--muted);}
 
   /* Meine Geraete: ein Block je Geraet (Status + Knoepfe oben, Einstellungen darunter) */
-  #dev_list .dev{border:1px solid var(--line);border-radius:var(--r-m);padding:0;margin:0 0 10px;background:var(--panel);box-shadow:var(--shadow);overflow:hidden;}
-  #dev_list .dev.isnew{border-color:var(--accent);animation:devpop .45s ease;}
   @keyframes devpop{0%{opacity:0;transform:translateY(-8px) scale(.98)}100%{opacity:1;transform:none}}
-  .devtg{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;color:var(--fg);font:inherit;cursor:pointer;padding:12px 14px;text-align:left;}
-  .devtg:hover{background:var(--panel2);}
-  .devtg b{font-size:15px;} .devtg small{color:var(--muted);font-size:12px;margin-left:2px;}
-  .devtg .sdot{width:9px;height:9px;}
-  .devtg .newb{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--sel-ink);background:var(--sel);border-radius:var(--r-l);padding:2px 7px;}
-  .devtg .chev{margin-left:auto;}
-  .dev.open .devtg .chev{transform:rotate(90deg);}
-  .dev .devbody{display:none;padding:2px 14px 12px;border-top:1px solid var(--line);}
-  .dev.open .devbody{display:block;padding-top:12px;}
   #ag_list .devanon{border:1px solid var(--accent);border-radius:var(--r-m);padding:12px 14px;margin:0 0 10px;background:var(--panel);box-shadow:var(--shadow);animation:devpop .45s ease;}
   .devcards>.actions{margin-top:4px;}
-  .devx{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:8px 0 0;}
-  .dbri{display:flex;align-items:center;gap:8px;flex:1 1 260px;min-width:0;font-size:13px;}
-  .dbri input[type=range]{flex:1;min-width:80px;} .dbri b{min-width:44px;text-align:right;font-variant-numeric:tabular-nums;}
-  .devx .dsnd{margin:0;white-space:nowrap;font-size:13px;}
-  .dbri .dbri_a{margin:0;white-space:nowrap;font-size:13px;} .dbri.auto input[type=range]{opacity:.35;}
-  #dev_list .dev .ag>.dot,#dev_list .dev .ag>.agn{display:none;}   /* Name/Status stehen im Kachelkopf */
   /* Geraetekachel: Abschnitte mit kleiner Ueberschrift, Kurzhinweis darunter */
-  #dev_list .dev .ag{display:block;border:0;padding:0;margin:0;background:transparent;}
-  .dev .dinfo{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 4px;}
-  .dev .dsec{padding:10px 0;border-top:1px solid var(--line);}
-  .dev .dsh{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:8px;}
-  .dev .dsi{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:var(--r-s);background:var(--panel2);color:var(--fg);flex:none;}
-  .dev .dsi svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-  .dev .devlive:empty{display:none;}
-  .dev .drow{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
-  .dev .drow+.drow{margin-top:8px;}
-  .dev .tbv_st{font-size:13px;font-weight:600;margin:2px 0 8px;line-height:1.35;}
-  .dev .tbv_active{color:var(--good);}
-  .dev .tbv_main{background:var(--sel);border-color:var(--sel);color:var(--sel-ink);}
-  .dev .tbv_main:disabled,.dev .tbv_side:disabled{opacity:.55;}
-  .dev .tbv .drow .btn{min-height:44px;}
-  .devprune .btn,#np_back,#np_copy,#np_go,#np_flow input[type=text],#np_flow select{min-height:44px;}
-  .dev .tbv_msg:empty{display:none;} .dev .tbv_msg.bad{color:var(--crit-txt);}
-  .dev .dhint{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.35;}
-  .dev .dhint.dlver{color:var(--accent);font-weight:600;}
-  .dev .dhint.dlver:empty{display:none;}
-  #dev_list .dev.inactive>.devtg{opacity:.55;} #dev_list .dev.inactive.open>.devtg{opacity:.8;}
+  #np_back,#np_copy,#np_go,#np_flow input[type=text],#np_flow select{min-height:44px;}
  
-  .dev .ddelrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);}
-  .dev .ddelrow .dhint{margin:0;}
-  .dev .ddetbox{margin-top:10px;padding:10px 12px;border-radius:var(--r-s);background:color-mix(in srgb,var(--good) 10%,transparent);background:color-mix(in srgb,var(--good) 8%,var(--panel2));border:1px solid color-mix(in srgb,var(--good) 30%,transparent);border:1px solid color-mix(in srgb,var(--good) 30%,var(--line));font-size:12px;}
-  .dev .ddeth{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;}
-  .dev .ddeth small{color:var(--muted);}
-  .dev .ddetchips{display:flex;flex-wrap:wrap;gap:4px;}
-  .dev .ddetchips span{padding:2px 8px;border-radius:var(--r-s);background:var(--panel);border:1px solid var(--line);white-space:nowrap;}
-  .dev .ddetid{margin-top:6px;color:var(--muted);font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-all;}
-  .dev .ddetuse{margin-top:8px;}
-  .dev .dtip{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel2);font-size:12px;line-height:1.45;}
-  .dev .dtip b{display:block;margin-bottom:4px;font-size:12px;}
-  .dev .dtip ul{margin:0;padding-left:18px;color:var(--muted);} .dev .dtip li+li{margin-top:3px;}
-  .dev .dtip .dwarn{margin:0 0 6px;color:var(--accent);}
-  .dev .dmrows{margin-top:6px;}
-  .dev .ddwrap{padding-top:10px;border-top:1px solid var(--line);}
   .devanon{margin-top:4px;} .devanon .note{margin:2px 0 8px;}
   .devhelp summary{cursor:pointer;list-style:none;} .devhelp summary h3{display:inline;margin:0;}
 
@@ -832,7 +775,6 @@
   .qhelp:hover,.qhelp.on{background:var(--prim);border-color:var(--prim);color:var(--prim-ink);}
   .qpop{background:var(--panel2);border-radius:var(--r-m);padding:10px 14px;margin:0 0 12px;animation:qin .18s ease-out;}
   .qpop .note{margin:4px 0;}
-  .lblq{display:flex;align-items:center;gap:8px;} .lblq .lbl{margin:0;}   /* Label mit ?-Hilfe am Feld (qField) */
   @keyframes qin{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
   /* Startseite */
   .ovstat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:0 0 22px;align-items:start;}
@@ -893,7 +835,7 @@
   .palit small{color:var(--muted);font-size:12px;white-space:nowrap;}
   .palnone{padding:18px;color:var(--muted);text-align:center;}
   .palft{border-top:1px solid var(--line);padding:8px 14px;font-size:11px;color:var(--muted);}
-  #dev_list .dev.flash,#scroll .flash{box-shadow:0 0 0 3px var(--dot);transition:box-shadow .3s;}
+  #scroll .flash{box-shadow:0 0 0 3px var(--dot);transition:box-shadow .3s;}
   /* Weitere Kameras */
   /* Jede Kamera als Box wie die Tuerstationen: Kopf Name + Host, aufgeklappt Felder, unten Entfernen */
   .camcard #cam_list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(380px,100%),1fr));gap:10px;align-items:start;}
@@ -921,7 +863,6 @@
   .xdet>summary small{color:var(--muted);font-weight:400;}
   .xdetb{display:flex;flex-wrap:wrap;gap:12px 14px;align-items:flex-end;padding-top:4px;}
   /* Intercoms: je Tuerstation eine Box wie bei den Geraeten */
-  .icwrap .sech{margin:0 0 10px;font-size:15px;}
   .icwrap #ic_list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(380px,100%),1fr));gap:10px;align-items:start;}
   .icbox{border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel);box-shadow:var(--shadow);overflow:hidden;}
   .icbox .xhd{padding:0 14px;} .icbox .xtg{padding:12px 0;}
@@ -1149,11 +1090,10 @@
   .sved .seg button.on,.tedit .seg button.on,.g2ed .libtabs button.on{background:var(--prim);color:var(--prim-ink);}
   .themesw button{min-height:30px;border-radius:var(--r-pill);}
   /* Badge: kleine Pille ohne Tippfunktion, 11 px/600, keine Versalien-Mono */
-  #phead .badge,.ag .tag,.ovw .devcat .badge,.ovw figcaption .badge,.ovsec .secst{display:inline-flex;align-items:center;height:22px;
+  .ag .tag,.ovw .devcat .badge,.ovw figcaption .badge,.ovsec .secst{display:inline-flex;align-items:center;height:22px;
     padding:0 9px;border:0;border-radius:var(--r-pill);background:var(--panel2);color:var(--muted);
     font-family:var(--font);font-size:11px;font-weight:600;letter-spacing:0;text-transform:none;white-space:nowrap;box-sizing:border-box;}
   .ovw .devcat .badge.ref,.ovsec .secst.on{background:rgba(43,128,85,.14);color:var(--good);}
-  #phead .badge{background:var(--bezel-tint);color:var(--bezel-muted);}
 
   /* Kamera "ganzes Bild": Wahl der Randfuellung mit Mini-Vorschau */
   .crpbg{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
@@ -1201,18 +1141,12 @@
   details>summary::after{content:'›';}
   details>summary::after,.chev{margin-left:auto;font-size:18px;line-height:1;opacity:.55;transition:transform .2s ease;flex:none;}
   details[open]>summary::after{transform:rotate(90deg);}
-  .dev.open .devtg .chev{transform:rotate(90deg);}
   details>summary small{color:var(--muted);font-weight:400;}
   /* Entfernen: ein Stil (rot umrandet, Beschriftung "Entfernen") */
   .minibtn.del{background:transparent;color:var(--crit);border-color:color-mix(in srgb,var(--crit) 35%,transparent);}
   .minibtn.del:hover{background:color-mix(in srgb,var(--crit) 7%,transparent);border-color:var(--crit);}
   /* Meine Geräte: Gruppen Status · Anzeige · Steuerung · Wartung (einklappbar, siehe unten) */
-  .dev .btn.disabled,.dev a.btn[aria-disabled=true]{opacity:.45;pointer-events:none;}
   /* Auswahlfelder in der Gerätekachel: volle Breite, nichts abgeschnitten */
-  .dev select{max-width:100%;min-width:0;}
-  .dev .dev_model,.dev .dev_scale,.dev .dd_drv{width:100%;max-width:none;flex:1 1 100%;}
-  .dev .drow .agsel{flex:1 1 220px;width:auto;}
-  .dev .dm_prof{flex:1 1 140px;}
   /* Gerät hinzufügen: große Auswahlkacheln */
   .nptiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-top:6px;}
   .nptile{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:16px;border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel2);}
@@ -1277,28 +1211,6 @@
   .sved .tbsech::after,.dphd::after,.dashprops .dbarhd::after{content:'›';margin-left:auto;font-size:18px;line-height:1;opacity:.55;transition:transform .2s ease;flex:none;color:var(--fg);}
   .sved .tbsec.open .tbsech::after,.dpwrap.open .dphd::after,.dashprops .dbarbox.open .dbarhd::after{transform:rotate(90deg);}
   /* 4) Geräte-Karte: Kopf mit Status, danach Abschnitte ohne Akkordeon (Panel, Display live, TbViewer, Einstellungen, Wartung) */
-  .dev .dsec{border-top:0;border-bottom:1px solid var(--line);padding:12px 0;}
-  .dev .dsec.dwart{border-bottom:0;}
-  .dev.open .devbody{padding-top:0;}
-  .devhd{display:flex;align-items:stretch;}
-  .devhd .devtg{flex:1;min-width:0;min-height:44px;flex-wrap:wrap;row-gap:2px;}
-  .devtg .devpan{font-size:12px;color:var(--muted);}
-  .devtg .devtp{font-size:11px;font-weight:600;padding:2px 8px;border:1px solid var(--line);border-radius:var(--r-l);color:var(--muted);}
-  .devtg .devst{font-size:12px;}
-  .devren{all:unset;box-sizing:border-box;cursor:pointer;width:48px;min-height:44px;display:grid;place-items:center;color:var(--muted);}
-  .devren svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
-  .devren:hover{background:var(--panel2);color:var(--fg);}
-  .devren:focus-visible{outline:2px solid var(--prim);outline-offset:-2px;}
-  .devrn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 14px;border-top:1px solid var(--line);background:var(--panel2);}
-  .devrn[hidden]{display:none;}
-  .devrn .dren_in{flex:1 1 200px;min-width:0;max-width:320px;}
-  .dev .dset .lbl{display:block;margin:14px 0 4px;} .dev .dset .lblq{margin:14px 0 4px;} .dev .dset .lblq .lbl{margin:0;}
-  .dev .dset .dsh+.lbl{margin-top:0;}
-  .dev .dsave{margin-top:10px;}
-  .dev .dzoom[hidden],.dev .ddhost[hidden]{display:none;}
-  .dev .devctl:empty,.dev .devmaint:empty,.dev .devwart:empty,.dev .devlive:empty{display:none;}
-  .dev .dwart .ddelrow{margin-top:10px;padding-top:0;border-top:0;}
-  .dev .dwart .devwart:not(:empty)+.ddelrow{margin-top:12px;}
   /* Geraeteliste: eine Zeile je Geraet (Geraet, Typ, Panel, Status) */
   .gdhd,.gdrow{display:grid;grid-template-columns:22px minmax(120px,2fr) minmax(90px,1.4fr) minmax(90px,1.2fr) minmax(110px,1.4fr) 36px;align-items:center;gap:0 12px;}
   .gdhd{padding:0 18px 8px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;}
@@ -1336,7 +1248,7 @@
   .gdreach.bad{color:var(--crit);}
   .gdacts{display:flex;flex-direction:column;gap:10px;} .gdacts .btn{width:100%;}
   .gdside .ddel{width:100%;margin-top:6px;}
-  .gd .tbv .drow .btn{min-height:44px;} .gd .tbv_st{font-size:13px;font-weight:600;margin:2px 0 8px;} .gd .tbv_active{color:var(--good);} .gd .dhint{font-size:12px;color:var(--muted);margin-top:6px;}
+  .gd .tbv .drow .btn{min-height:44px;} .gd .tbv_st{font-size:13px;font-weight:600;margin:2px 0 8px;} .gd .dhint{font-size:12px;color:var(--muted);margin-top:6px;}
   .gd .tbv_msg:empty{display:none;} .gd .tbv_msg.bad{color:var(--crit);} .gd .drow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
   .gd .ddetbox{margin-top:10px;padding:10px 12px;border-radius:var(--r-s);background:var(--panel2);border:1px solid var(--line);font-size:12px;}
   .gd .ddeth{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:6px;} .gd .ddeth small{color:var(--muted);}
@@ -1362,17 +1274,7 @@
   .npstep .row2{margin-bottom:12px;}
   .npwarn{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-left:3px solid var(--sel);border-radius:var(--r-s);background:var(--panel2);font-size:13px;line-height:1.4;}
   .npwarn[hidden]{display:none;}
-  .dev .dsh{font-size:13px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--fg);}
-  .dev .devctl:empty,.dev .devmaint:empty{display:none;}
-  .dev .devmaint:empty+.dsec{border-top:0;padding-top:2px;}
-  .dev .doff{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);}
   button.ovcard .sdot:not(.on):not(.wait){background:var(--crit);opacity:1;}   /* Miniserver nicht verbunden = echte Stoerung */
-  .dev .doff::before{content:"";width:8px;height:8px;border-radius:var(--r-round,32%);background:var(--crit);flex:none;}
-  .dev select,.dev input[type=text],.dev input[type=password],.dev input[type=number]{max-width:360px;}
-  .dev .dev_scale,.dev .dd_drv{width:100%;max-width:360px;flex:1 1 100%;}
-  .dev .drow .agsel{flex:1 1 220px;max-width:360px;}
-  .dev .ddelrow{margin-top:6px;padding-top:14px;border-top:1px solid var(--line);}
-  .dev .ddelrow .ddel{margin-left:auto;order:2;}
   .devtools{margin:0 0 14px;}
   .devtools .dhint{font-size:12px;color:var(--muted);}
   /* 5) Raster-Editor: Bausteinliste bleibt bis ca. 900 px Fensterbreite NEBEN dem Raster (sticky) */
@@ -1457,7 +1359,7 @@
   .apit>span{flex:1;} .apit small{opacity:1;color:var(--muted);}
   .camopt label{min-height:32px;}
   /* 4) Schrift mindestens 11 px */
-  .sved .ew .sz,.g2ed .ew .sz,.g2ed .ew .erm,.msmon .mm span,.devtg .newb{font-size:11px;}
+  .sved .ew .sz,.g2ed .ew .sz,.g2ed .ew .erm,.msmon .mm span{font-size:11px;}
   .ovw .p2h,.ovw .fpmm,.ovw .devcat .badge,.ovw figcaption .badge{font-size:11px;}
   .ovw .devcat .spec{font-size:12px;color:var(--muted);}
   .ovw .p2{color:var(--mock-ink);}
@@ -1472,7 +1374,6 @@
   .tbchip .tbx,.g2ed .edel,.pitem .pdel:hover{color:var(--on-crit);}
   /* 6) Offline = neutral grau, nur Stoerung rot */
   .sdot:not(.on):not(.wait){background:var(--muted);opacity:.5;}
-  .dev .doff::before{background:var(--muted);opacity:.6;}
   /* 7) Klickziele: sichtbar mind. 24-32 px, Trefferflaeche per Pseudo-Element bis ca. 44 px */
   .qhelp{width:26px;height:26px;position:relative;}
   .qhelp::after,.tbchip .tbx::after,.g2ed .edel::after{content:'';position:absolute;inset:-9px;}
@@ -1521,12 +1422,8 @@
   #phead .phtxt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 auto;}
   #phead .pheyebrow{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
   #phead h2{margin:0;font-size:22px;font-weight:600;color:var(--fg);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  #phead .phbtn{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 14px;border:1px solid var(--line);border-radius:var(--pill);
-    background:var(--field);color:var(--fg);font:inherit;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer;}
-  #phead .phbtn:hover{background:var(--panel2);text-decoration:none;}
   .pstart{max-width:none;grid-column:1/-1;} .pstartrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0;}
   .pstartrow code{background:var(--panel2);border-radius:var(--r-s);padding:6px 10px;font-size:13px;overflow-wrap:anywhere;min-width:0;}
-  #phead .phbtn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
   /* Seitenleiste: Panel-Liste scrollt, die Fusszeile bleibt unten sichtbar.
      Reicht die Hoehe auch mit der kleinsten Liste nicht (Handy quer), scrollt die ganze Leiste. */
   @media (min-width:761px){
@@ -1580,7 +1477,6 @@
     .wrap.slim .sidefoot .themesw button span{display:inline;} .wrap.slim .sidefoot .themesw button svg{display:none;}
   }
   @media (pointer:coarse){ .rub{min-height:44px;} .palbtn{min-height:44px;}
-    #phead .phbtn{min-height:44px;min-width:44px;justify-content:center;}
     .wrap .donate,.wrap.slim .donate{min-width:44px;min-height:44px;}
     .sidefoot .themesw button,.wrap .sidefoot .themesw button{min-width:44px;min-height:44px;}
   }
@@ -1643,7 +1539,7 @@
   .palbtn,.donate{min-height:40px;}
   .iopt{height:40px;}
   .tgl{height:32px;}
-  #phead .phbtn{min-height:32px;} .wzx{width:32px;height:32px;}
+  .wzx{width:32px;height:32px;}
   .sved .seg,.tedit .seg,.g2ed .libtabs,.dbseg,.themesw{padding:2px;}
   .sved .seg button,.tedit .seg button,.g2ed .libtabs button,.dbseg button,.themesw button{min-height:28px;height:28px;padding:0 10px;}
   .sidefoot .themesw button,.wrap .sidefoot .themesw button{height:28px;min-height:28px;}
@@ -1652,11 +1548,11 @@
   .gdseg button{min-height:32px;}
   .gd select,.gd input[type=text],.gd input[type=password]{min-height:40px;}
   .gd .gdback,.gd .gdlink{min-height:32px;}
-  .gd .btn,.dev .tbv .drow .btn,.gd .tbv .drow .btn{min-height:40px;}
-  .devprune .btn,#np_back,#np_copy,#np_go,#np_flow input[type=text],#np_flow select{min-height:40px;}
+  .gd .btn,.gd .tbv .drow .btn{min-height:40px;}
+  #np_back,#np_copy,#np_go,#np_flow input[type=text],#np_flow select{min-height:40px;}
   @media (pointer:coarse),(max-width:760px){
-    .btn,.btn.sm,.minibtn,.minibtn.pick,.stab,.chip,.itab,.mzchip,.addbtn,.palbtn,.donate,.tgl,.iopt,#phead .phbtn,.gdseg button,.gd .btn,.gd .gdback,.gd .gdlink,
-    .devprune .btn,#np_back,#np_copy,#np_go,.dev .tbv .drow .btn,.gd .tbv .drow .btn{min-height:44px;}
+    .btn,.btn.sm,.minibtn,.minibtn.pick,.stab,.chip,.itab,.mzchip,.addbtn,.palbtn,.donate,.tgl,.iopt,.gdseg button,.gd .btn,.gd .gdback,.gd .gdlink,
+    #np_back,#np_copy,#np_go,.gd .tbv .drow .btn{min-height:44px;}
     .tgl,.iopt{height:44px;}
     input[type=text],input[type=number],input[type=password],input[type=search],select,.sidefoot .langsel,
     .sved .side select,.sved .side input[type=text],.sved .side input[type=number],.libfilt select,.g2ed .libq,.gd select,.gd input[type=text],.gd input[type=password]{height:44px;min-height:44px;}
@@ -1670,16 +1566,16 @@
   .gd .gdback:focus-visible,.gdlink:focus-visible,.gdreset:focus-visible,.gdseg button:focus-visible{outline:2px solid var(--prim);outline-offset:2px;border-radius:var(--r-s);}
   .crpopt:has(input:focus-visible),.apit:has(input:focus-visible){outline:2px solid var(--prim);outline-offset:2px;}
   /* 4) Eine Innenbox für Listenzeilen in Karten: --panel2, 1 px --line, r-m 14, kein Schatten */
-  .icbox,.icwrap .icbox,.tbchip,.ovp,.dev .ddetbox,.dev .dtip,.devanon,#ag_list .devanon,.sizepick button,.nptile,.card .gdtone{
+  .icbox,.icwrap .icbox,.tbchip,.ovp,.devanon,#ag_list .devanon,.sizepick button,.nptile,.card .gdtone{
     background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
   /* dieselbe Box auf der Seitenfläche (Geräteliste/-detail stehen nicht in einer Karte): --panel statt --panel2 */
-  .gdrow,#dev_list .dev,.gdtone{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
+  .gdrow,.gdtone{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
   .gdrow:hover,.tbchip:hover,.ovp:hover,.nptile:hover{background:var(--field);border-color:var(--muted);box-shadow:none;outline:0;}
   .gdrow:hover{background:var(--panel2);}
   .tbchip.add{background:transparent;border-style:dashed;}
   .tbstrip{background:transparent;padding:0;}
   /* 5) Typografie: Größen 10-11-12-13-14-15-18-20-22-26-30, Gewichte 400/600, Versalien-Label eine Laufweite */
-  .sectlbl,.sflbl,.brand small,.grph,.dcols .dgh,.g2ed .libgrp,.wzq,.ovcard .ovk,.ovoptrow .ovk,.gdhd,.gds h3,.dev .dsh,.ovw .p2h{letter-spacing:.06em;}
+  .sectlbl,.sflbl,.brand small,.grph,.dcols .dgh,.g2ed .libgrp,.wzq,.ovcard .ovk,.ovoptrow .ovk,.gdhd,.gds h3,.ovw .p2h{letter-spacing:.06em;}
   /* Suche: Symbole aus dem Linien-Satz */
   .palit .pic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 
@@ -1702,7 +1598,7 @@
   .gdlistcard .gdhd+.gdoffh,.gdlistcard>.gdoffh:first-child{margin-top:0;}
   .gdoff{margin-top:0;}
   /* Innenboxen in Karten: --panel2, Haarlinie, r-m, kein Schatten */
-  .gdrow,.gdtone,#dev_list .dev{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
+  .gdrow,.gdtone{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
   .gdrow:hover{background:var(--field);border-color:var(--muted);}
   .gdoffh{margin:4px 0 8px;}
   @media (max-width:760px){ .gds,.gdadv,.gdlistcard{padding:16px;} .gdgrid{gap:0;} }
@@ -2346,7 +2242,6 @@ function esc(s){return (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;'
 
 // Alarm-Vollbild je Panel: Alarmanlagen und Rauchmelder. Standard = an (kein Raumfilter mehr);
 // nur Ausnahmen landen in p.alarmPop {uuid: false}.
-function apDefault(p,u){ return true; }
 function alList(){ return (META.controls||[]).filter(c=>c.type==='Alarm'||c.type==='SmokeAlarm'); }
 function alOff(){ const g=PANELS.__global__; return ((g&&g.ui)||{}).alarmOff||[]; }
 // Karte "Alarmbausteine" (System -> Loxone): je Baustein ein Schalter; gespeichert werden nur die abgeschalteten
@@ -2600,12 +2495,6 @@ function helpify(root){
     b.onclick=e=>{ e.stopPropagation(); if(qOpen&&qOpen.b===b){ qClose(); return; } qClose(); qOpen={b,pop}; pop.hidden=false; b.classList.add('on'); b.setAttribute('aria-expanded','true'); qPlace(); };
   });
 }
-// ?-Hilfe an einem einzelnen Feld: qField(text) neben das Label setzen (Text als HTML, schon uebersetzt)
-function qField(html){ return '<button type="button" class="qhelp qf" title="'+T('Hilfe')+'" aria-label="'+T('Hilfe')+'" aria-expanded="false">?</button>'+
-  '<div class="qpop" hidden role="dialog"><p class="note keep">'+html+'</p></div>'; }
-document.addEventListener('click',e=>{ const b=e.target.closest('.qhelp.qf'); if(!b) return; e.preventDefault(); e.stopPropagation();
-  const pop=b.nextElementSibling; if(!pop||!pop.classList.contains('qpop')) return;
-  if(qOpen&&qOpen.b===b){ qClose(); return; } qClose(); qOpen={b,pop}; pop.hidden=false; b.classList.add('on'); b.setAttribute('aria-expanded','true'); qPlace(); });
 // Sofort wirkende Aktionen (nicht ueber "Speichern" unten): Nebenaktion mit kleinem Blitz (CSS .now) + title
 const NOW_SEL='#at_send,#dg_dl,#np_go,#secSet,#secOff,#secOut,.dren_go,[data-dglog],[data-act],.dbri_get,.ddel,.ic_soundrm,.ic_soundtest,#dBgDel,.ddetuse';
 function markNow(root){ (root||document).querySelectorAll(NOW_SEL).forEach(el=>{ if(el.classList.contains('now')) return;
@@ -2653,7 +2542,7 @@ function renderOverview(){
     setup='<div class="ovoptrow" id="ovOpt"><span class="ovk">'+T('Optional')+'</span>'+
       optOpen.map(([ok,l,g])=>'<button class="ovlnk" data-goto="'+g+'">'+esc(l)+'</button>').join('<span class="ovsep" aria-hidden="true">·</span>')+
       '<button type="button" class="ovx" id="ovOptX" title="'+T('Ausblenden')+'" aria-label="'+T('Ausblenden')+'">✕</button></div>';
-  box.innerHTML='<div class="ovwarn" id="ovWarn" role="status"></div>'+setup+
+  const html='<div class="ovwarn" id="ovWarn" role="status"></div>'+setup+
     '<button class="ovcard" data-goto="system:loxone"><span class="ovk">'+T('Miniserver')+'</span>'+
       '<b>'+dot(ms)+(SET?(ms?T('verbunden'):T('nicht verbunden')):'…')+'</b>'+
       '<small>'+(ms?(SET.nControls+' '+T('Bausteine')):T('Adresse und Zugangsdaten prüfen'))+'</small>'+
@@ -2665,6 +2554,9 @@ function renderOverview(){
       (devs.length?devSort(devs).map(d=>'<button class="ovp" data-goto="devices:list"><b class="ovpd">'+(devReconnecting(d)?'<i class="sdot wait"></i>':dot(d.online))+esc(d.name)+'</b>'+
         '<small>'+(d.online?(d.profile?esc(d.profile):T('kein Panel')):devReconnecting(d)?T('verbindet …'):T('offline'))+'</small></button>').join('')
         :'<button class="ovp" data-goto="devices:add"><b>'+T('Noch kein Gerät verbunden')+'</b><small>'+T('Gerät hinzufügen')+' ›</small></button>')+'</div>';
+  // Abfrage alle 6 s: unveraendert (und noch im Dokument) -> kein Neuaufbau, Hover/Fokus bleiben
+  if(box._h===html && box.querySelector('#ovWarn')){ ovWarnSync(); return; }
+  box._h=html; box.innerHTML=html;
   ovWarnSync();
   const x=$('#ovOptX'); if(x) x.onclick=()=>{ OV_OPT_GONE=true; ovOptHide(); const r=$('#ovOpt'); if(r) r.remove(); };
 }
@@ -2975,7 +2867,7 @@ function sectDirty(k){ SECT_GEN[k]=(SECT_GEN[k]||0)+1; if(!SECT_DIRTY.has(k)){ S
 function sectBind(){
   SECTS.forEach(sc=>{ const b=$(sc.btn); if(!b) return; b.hidden=true; b.classList.add('sectsave');
     (sc.root?[...document.querySelectorAll(sc.root)]:[b.closest('.card')]).forEach(root=>{ if(!root||root._sect) return; root._sect=sc.k;
-    const live=e=>e.target.closest('.devlive,.devctl,.devmaint,.devx,[data-live],input[type=file]');
+    const live=e=>e.target.closest('[data-live],input[type=file]');
     const on=e=>{ if(!live(e)) sectDirty(sc.k); };
     root.addEventListener('input',on); root.addEventListener('change',on);
     // Zeilen hinzufuegen/entfernen und Bildausschnitt ziehen sind auch Aenderungen
@@ -3637,8 +3529,6 @@ function stPickBind(box, onIds, rerender, max){
 }
 // Panel, dessen Dashboard globale Standardansicht ist (Vorlage fuer neue Panels)
 function dashStdId(){ return Object.keys(PANELS).find(id=>id!=='__global__'&&PANELS[id]&&PANELS[id].saver&&PANELS[id].saver.std&&(PANELS[id].saver.items||[]).length)||''; }
-function dashStdSaver(){ const id=dashStdId(); if(!id) return null;
-  const sv=JSON.parse(JSON.stringify(PANELS[id].saver)); delete sv.std; return sv; }
 // Dashboard-Eigenschaften (statt Typ/Name/Symbol): Raster, Schliessen, Standardansicht
 let dBarIcoFor='';   // Statusleiste: Baustein, dessen Symbol gerade gewaehlt wird
 // Vorschau des Symbols eines Statusleisten-Bausteins (eigenes oder Loxone-Standard)
@@ -5512,9 +5402,11 @@ async function devLogDownload(name, ip, toast){
 function renderDiagDevices(){
   const box=$('#dg_devs'); if(!box) return;
   const devs=((LAST_DEVS&&LAST_DEVS.devices)||[]).filter(d=>(d.caps||[]).indexOf('reboot')>=0);
-  box.innerHTML=devs.length ? devSort(devs).map(d=>'<div class="dgdev"><i class="sdot'+(d.online?' on':devReconnecting(d)?' wait':'')+'"></i><b>'+esc(d.name)+'</b>'+
+  const html=devs.length ? devSort(devs).map(d=>'<div class="dgdev"><i class="sdot'+(d.online?' on':devReconnecting(d)?' wait':'')+'"></i><b>'+esc(d.name)+'</b>'+
       '<small>'+esc((d.detected&&d.detected.ip)||d.ip||'')+'</small><button class="btn sm ghost" data-dglog="'+esc(d.name)+'">'+T('Protokoll holen')+'</button></div>').join('')
     : '<p class="hint">'+T('Kein Gerät mit adb gefunden. Android-Geräte erscheinen hier, sobald der Gerätetyp gesetzt ist (Geräte → Alle Geräte) und adb über WLAN läuft.')+'</p>';
+  if(box._h===html) return;   // Abfrage alle 6 s: unveraendert -> kein Neuaufbau/Neubinden
+  box._h=html; box.innerHTML=html;
   box.querySelectorAll('[data-dglog]').forEach(b=>b.onclick=()=>{ const d=devs.find(x=>x.name===b.dataset.dglog)||{};
     devLogDownload(d.name, (d.detected&&d.detected.ip)||d.ip||'', $('#dg_devtoast')); });
 }
@@ -5871,7 +5763,6 @@ function devNames(){ return Array.from(new Set(KNOWN_NAMES.concat(Object.keys(DE
 // zuletzt gesehen (Sekunden) oder 0, wenn unbekannt
 function devLastSeen(n){ const d=devLive(n); return d?Math.max(d.lastSeen||0,(d.detected&&d.detected.last)||0):0; }
 // ganze Tage seit dem letzten Mal, nur für Geräte, die nicht online sind und deren Zeitpunkt bekannt ist; sonst -1
-function devOfflineDays(n){ const d=devLive(n); if(!d||d.online) return -1; const l=devLastSeen(n); return l?Math.floor((Date.now()/1000-l)/86400):-1; }
 // Auto-Erkennung: Steckbrief, den das Geraet beim Verbinden gemeldet hat
 function devDetHTML(name,model){
   const live=((LAST_DEVS||{}).devices||[]).find(x=>x.name===name), d=live&&live.detected;

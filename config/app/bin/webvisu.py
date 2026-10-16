@@ -19,6 +19,7 @@ import asyncio
 import calendar
 import contextlib
 import copy
+import gzip
 import hashlib
 import hmac
 import ipaddress
@@ -77,7 +78,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.26"
+APP_VERSION = "0.20.27"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -3336,15 +3337,23 @@ class App:
         """Trockenlauf fuer die Anzeige am Geraet: welche Bausteine erreichen es?
         {ring: [Namen], wake: [Namen], alarm: Anzahl}. Nur Anzeige."""
         memo = memo if memo is not None else {}
-        ctl = self.controls
+        # Bausteine einmal je memo nach Typ vorsortieren (Geraeteliste: sonst je Geraet 4x alle Controls)
+        by = memo.get(("_typ",))
+        if by is None:
+            by = memo[("_typ",)] = {"Intercom": [], "AlarmClock": [], "sec": []}
+            for u, c in self.controls.items():
+                t = c.get("type")
+                if t in ("Intercom", "AlarmClock"):
+                    by[t].append((u, c))
+                if t in SEC_ALARM_TYPES:
+                    by["sec"].append((u, c))
 
         def names(typ, kind):
-            return sorted(_clean(c.get("name")) for u, c in ctl.items()
-                          if c.get("type") == typ and self._wants(kind, dev, prof, u, memo))
-        n_al = sum(1 for u, c in ctl.items() if c.get("type") in SEC_ALARM_TYPES
-                   and self._wants("alarm", dev, prof, u, memo))
+            return sorted(_clean(c.get("name")) for u, c in by[typ]
+                          if self._wants(kind, dev, prof, u, memo))
+        n_al = sum(1 for u, c in by["sec"] if self._wants("alarm", dev, prof, u, memo))
         return {"ring": names("Intercom", "ring"), "wake": names("AlarmClock", "wake"), "alarm": n_al,
-                "intercoms": sum(1 for c in ctl.values() if c.get("type") == "Intercom")}
+                "intercoms": len(by["Intercom"])}
 
     def sec_alarm_msg(self, uuid: str, on: bool) -> dict:
         c = self.controls.get(uuid) or {}
@@ -4042,8 +4051,10 @@ class App:
             if name in devs and not devs[name]["online"]:
                 devs[name]["lastSeen"] = max(devs[name]["lastSeen"], t)
         memo: dict = {}
+        idx = self._devinfo_index(devs)                # devinfo einmal statt je Geraet zweimal durchlaufen
+        profs: dict = {}                               # aufgeloeste Profile je pid (gleich fuer alle Geraete)
         for e in devs.values():
-            e["detected"] = self.device_summary(e["name"])
+            e["detected"] = self.device_summary(e["name"], idx)
             cfg = self.devices.get(e["name"]) if isinstance(self.devices.get(e["name"]), dict) else {}
             model = cfg.get("model") or ""
             e["kiosk_last"] = self.kiosk_last.get(e["name"], "")
@@ -4051,7 +4062,7 @@ class App:
             # Fully-Neustart nur, wenn das Geraet wirklich mit Fully laeuft
             fully_run = e["kiosk"] == "fully" or (e["kiosk"] != "tbview" and e["kiosk_last"] == "fully")
             e["model"] = model
-            tbver = str(self._tb_info(e["name"]).get("ver") or "")
+            tbver = str(self._tb_info(e["name"], idx).get("ver") or "")
             e["tbver"] = tbver                             # gemeldete TbViewer-Version (versionName)
             e["tbold"] = bool(tbver) and _ver_tuple(tbver) < _ver_tuple(_launcher_bundled_name())
             tbv = e["kiosk"] == "tbview" or (not e["kiosk"] and e["kiosk_last"] == "tbview")   # offline: zuletzt TbViewer
@@ -4066,7 +4077,10 @@ class App:
                 e["profile"] = e["agent"]["panel"]
             pid = e["profile"] or cfg.get("prefs", {}).get("panel") if isinstance(cfg.get("prefs"), dict) else e["profile"]
             try:
-                e["reach"] = self.device_reach(e["name"], self.resolve_profile(pid or None), memo)
+                prof = profs.get(pid or None)
+                if prof is None:
+                    prof = profs[pid or None] = self.resolve_profile(pid or None)
+                e["reach"] = self.device_reach(e["name"], prof, memo)
             except Exception:
                 log.exception("Reichweite fuer Geraet %s fehlgeschlagen", e["name"])
                 e["reach"] = {"ring": [], "wake": [], "alarm": 0}
@@ -4953,7 +4967,8 @@ class App:
 
     def _save_devinfo(self) -> None:
         try:
-            _atomic_write(DEVINFO_FILE, json.dumps(self.devinfo, indent=1, ensure_ascii=False) + "\n")
+            # ohne indent: der C-Encoder ist ~4x schneller (266 KB blockierten sonst ~40 ms den Event-Loop)
+            _atomic_write(DEVINFO_FILE, json.dumps(self.devinfo, ensure_ascii=False) + "\n")
         except OSError as err:
             log.warning("devinfo.json nicht geschrieben: %s", err)
 
@@ -5073,12 +5088,26 @@ class App:
         log.info("Geraet geloescht: '%s' (%d Steckbrief(e), %d verbunden)", name, len(uids), n)
         return {"ok": had or bool(uids) or n > 0, "online": n}
 
-    def device_summary(self, name: str) -> dict | None:
-        """Erkannte Eigenschaften eines Geraets fuer die Geraeteliste."""
-        best = None
+    def _devinfo_index(self, names) -> dict:
+        """name -> (uid, juengster devinfo-Eintrag) fuer die angefragten Namen; gleiche Auswahl
+        wie device_summary/_tb_info, aber EIN Durchlauf (Geraeteliste: sonst Geraete x devinfo)."""
+        idx: dict = {}
         for uid, e in self.devinfo.items():
-            if isinstance(e, dict) and e.get("name") == name and (best is None or e.get("last", 0) > best[1].get("last", 0)):
-                best = (uid, e)
+            if isinstance(e, dict) and isinstance(e.get("name"), str) and e["name"] in names:
+                b = idx.get(e["name"])
+                if b is None or e.get("last", 0) > b[1].get("last", 0):
+                    idx[e.get("name")] = (uid, e)
+        return idx
+
+    def device_summary(self, name: str, idx: dict | None = None) -> dict | None:
+        """Erkannte Eigenschaften eines Geraets fuer die Geraeteliste (idx: _devinfo_index)."""
+        best = None
+        if idx is not None:
+            best = idx.get(name)
+        else:
+            for uid, e in self.devinfo.items():
+                if isinstance(e, dict) and e.get("name") == name and (best is None or e.get("last", 0) > best[1].get("last", 0)):
+                    best = (uid, e)
         if not best:
             return None
         uid, e = best
@@ -5106,9 +5135,12 @@ class App:
             return sc
         return (DEVICE_MODELS.get(d.get("model") or "") or {}).get("scale", "off")
 
-    def _tb_info(self, name: str) -> dict:
+    def _tb_info(self, name: str, idx: dict | None = None) -> dict:
         """Zuletzt gemeldete TbViewer-Angaben (getDeviceInfo) eines Geraets."""
         best = None
+        if idx is not None:
+            best = (idx.get(name) or (None, None))[1]
+            return ((best or {}).get("info") or {}).get("tbview") or {}
         for e in self.devinfo.values():
             if isinstance(e, dict) and e.get("name") == name and (best is None or e.get("last", 0) > best.get("last", 0)):
                 best = e
@@ -8893,22 +8925,6 @@ class App:
         self._lox_wx[uuid] = entries
         self._front_refresh.set()
 
-    def _ms_sun_hhmm(self) -> tuple[str | None, str | None]:
-        """Sonnenauf-/-untergang des Miniservers als "HH:MM".
-
-        Quelle sind die globalen States (Minuten seit Mitternacht) — dieselbe,
-        an der auch der Nachtmodus haengt. Ohne Werte (None, None)."""
-        gs = self.global_states or {}
-        out: list[str | None] = []
-        for key in ("sunrise", "sunset"):
-            u = gs.get(key)
-            v = self.states.get(u) if isinstance(u, str) else None
-            if isinstance(v, (int, float)) and 0 <= v < 1440:
-                out.append(f"{int(v) // 60:02d}:{int(v) % 60:02d}")
-            else:
-                out.append(None)
-        return out[0], out[1]
-
     def _wx_om_active(self, cal: dict | None = None) -> bool:
         """Open-Meteo abfragen? Nur, wenn die Option bewusst eingeschaltet ist
         (calendar.weather_om) UND die Anlage keinen Loxone-Wetterdienst hat.
@@ -9061,7 +9077,7 @@ class App:
                 # ginge ohne jede Pause im Kreis.
                 self._retry_now.clear()
 
-    async def _send_or_drop(self, ws, payload) -> bool:
+    async def _send_or_drop(self, ws, payload, raw: str | None = None) -> bool:
         """Sendet an ein Panel; bei JEDEM Fehler ODER Haenger (Timeout) wird die
         Verbindung getrennt (nicht nur bei ConnectionError — aiohttp wirft bei
         sterbenden Sockets auch RuntimeError, oder send blockiert bei half-open).
@@ -9078,7 +9094,7 @@ class App:
 
         async def _do():
             async with lock:
-                await ws.send_str(_json_sicher(payload))
+                await ws.send_str(raw if raw is not None else _json_sicher(payload))
         try:
             # Zeitlimit gilt fuer Warten auf die Sperre UND das Senden
             await asyncio.wait_for(_do(), timeout=5)
@@ -9102,7 +9118,11 @@ class App:
         targets = list(targets)
         if not targets:
             return 0
-        res = await asyncio.gather(*(self._send_or_drop(ws, payload) for ws in targets))
+        try:
+            raw = _json_sicher(payload)               # einmal serialisieren statt je Panel
+        except Exception:
+            raw = None                                # Fehlerfall wie bisher je Verbindung
+        res = await asyncio.gather(*(self._send_or_drop(ws, payload, raw) for ws in targets))
         return sum(1 for r in res if r)
 
     async def ms_sysinfo(self) -> dict:
@@ -9244,6 +9264,20 @@ class App:
             # ein haengendes Panel verzoegert nur sich selbst, nicht das ganze Haus.
             await asyncio.gather(*(self._push_conn(ws, route) for ws, route in list(self.conn_route.items())))
 
+    @staticmethod
+    def _memo_json(memo: dict, key: tuple, obj) -> str | None:
+        """JSON einer im Tick-Memo geteilten Nachricht nur einmal je Tick erzeugen
+        (alle Panels mit gleicher Ansicht bekommen denselben Text)."""
+        jk = ("json",) + key
+        raw = memo.get(jk)
+        if raw is None or memo.get(("obj",) + key) is not obj:
+            try:
+                raw = _json_sicher(obj)
+            except Exception:
+                return None                           # Fehlerfall wie bisher in _send_or_drop
+            memo[jk], memo[("obj",) + key] = raw, obj
+        return raw
+
     async def _push_conn(self, ws, route) -> None:
         """Aktuelle Ansicht (plus Panes, Dashboard) an EIN Panel - nur was sich
         seit der letzten Zustellung an dieses Panel geaendert hat."""
@@ -9324,7 +9358,7 @@ class App:
             return       # Panel hat inzwischen navigiert - die neue Ansicht kam schon per nav
         last = self._last_sent.setdefault(ws, {})
         if msg != last.get("view"):
-            if not await self._send_or_drop(ws, msg):
+            if not await self._send_or_drop(ws, msg, self._memo_json(memo, rk, msg)):
                 return
             last["view"] = msg
         if player_msg is not None and player_msg != last.get("player"):
@@ -9341,7 +9375,7 @@ class App:
                 return
             last["sec"] = sec_msg
         if saver_msg is not None and saver_msg != last.get("saver"):
-            if not await self._send_or_drop(ws, saver_msg):
+            if not await self._send_or_drop(ws, saver_msg, self._memo_json(memo, sk, saver_msg)):
                 return
             last["saver"] = saver_msg
         if chart_msg is not None and chart_msg != last.get("chart"):
@@ -9641,20 +9675,59 @@ class App:
 _NOCACHE = {"Cache-Control": "no-cache, no-store, must-revalidate"}
 
 
-def _web_file(path: Path, ctype: str) -> web.Response:
+# Oberflaechen-Dateien je Dateistand (mtime/Groesse) einmal lesen und vorkomprimieren.
+# Statt no-store: no-cache + ETag -> der Browser fragt bei JEDEM Laden nach (Updates
+# greifen sofort wie bisher), bekommt bei unveraendertem Stand aber nur 304 ohne Inhalt.
+_WEB_CACHE: dict = {}   # path -> (stand, roh, gzip, etag)
+_WEB_HDR = {"Cache-Control": "no-cache, must-revalidate", "Vary": "Accept-Encoding"}
+
+
+def _web_load(path: Path, key: tuple) -> tuple:
+    raw = path.read_bytes()
+    raw.decode("utf-8")                                   # kaputte Datei -> 404 wie bisher
+    return (key, raw, gzip.compress(raw, 6, mtime=0), '"' + hashlib.sha1(raw).hexdigest()[:24] + '"')
+
+
+def _accepts_gzip(request: web.Request) -> bool:
+    """gzip im Accept-Encoding angeboten (q=0 = ausdruecklich abgelehnt)?"""
+    for part in request.headers.get("Accept-Encoding", "").lower().split(","):
+        tok, _, prm = part.strip().partition(";")
+        if tok.strip() == "gzip":
+            q = prm.strip()
+            return not (q.startswith("q=") and q[2:].strip() in ("0", "0.0", "0.00", "0.000"))
+    return False
+
+
+async def _web_file(request: web.Request, path: Path, ctype: str, store: bool = True) -> web.Response:
     """Eine der Oberflaechen-Dateien ausliefern. Fehlt sie (kaputtes Image,
     falsch gemountetes Volume), gibt es einen 404 mit Dateinamen statt eines
     Stacktrace als 500."""
     try:
-        text = path.read_text(encoding="utf-8")
+        st = path.stat()
+        key = (st.st_mtime_ns, st.st_size)
+        c = _WEB_CACHE.get(path)
+        if not c or c[0] != key:
+            c = _WEB_CACHE[path] = await asyncio.to_thread(_web_load, path, key)   # Komprimieren nicht im Event-Loop
     except (OSError, UnicodeDecodeError) as err:
         log.error("%s nicht lesbar: %s", path, err)
         return web.Response(status=404, text=f"{path.name} fehlt im tilebert-Image")
-    return web.Response(text=text, content_type=ctype, headers=_NOCACHE)
+    gz = _accepts_gzip(request)
+    if not store:
+        # Admin-Seiten (/config, /settings) wie bisher no-store: nicht aus dem Back/Forward-
+        # Cache mit altem Stand (oder nach dem Abmelden) wieder anzeigen. Nur komprimiert.
+        hdr = {**_NOCACHE, "Vary": "Accept-Encoding"}
+    else:
+        etag = c[3][:-1] + '-gz"' if gz else c[3]           # je Kodierung eigener Validator
+        hdr = {**_WEB_HDR, "ETag": etag}
+        if etag in [x.strip() for x in request.headers.get("If-None-Match", "").split(",")]:
+            return web.Response(status=304, headers=hdr)
+    if gz:
+        hdr["Content-Encoding"] = "gzip"
+    return web.Response(body=c[2] if gz else c[1], content_type=ctype, charset="utf-8", headers=hdr)
 
 
 async def index(request: web.Request) -> web.Response:
-    return _web_file(HTML, "text/html")
+    return await _web_file(request, HTML, "text/html")
 
 
 # Update-Pruefung fuer die Config-Anzeige: dieselbe release.cfg, die LoxBerrys
@@ -9707,12 +9780,12 @@ async def version_handler(request: web.Request) -> web.Response:
 
 
 async def config_index(request: web.Request) -> web.Response:
-    return _web_file(CONFIG_HTML, "text/html")
+    return await _web_file(request, CONFIG_HTML, "text/html", store=False)
 
 
 async def i18n_js(request: web.Request) -> web.Response:
     """Gemeinsamer Uebersetzungs-Katalog fuer /settings und /config."""
-    return _web_file(I18N_JS, "application/javascript")
+    return await _web_file(request, I18N_JS, "application/javascript")
 
 
 async def api_meta(request: web.Request) -> web.Response:
@@ -9831,7 +9904,7 @@ async def api_save_theme(request: web.Request) -> web.Response:
 
 
 async def settings_index(request: web.Request) -> web.Response:
-    return _web_file(SETTINGS_HTML, "text/html")
+    return await _web_file(request, SETTINGS_HTML, "text/html", store=False)
 
 
 async def install_script(request: web.Request) -> web.Response:
@@ -10430,6 +10503,18 @@ def _wx_fields(w) -> dict:
     }
 
 
+def _coord(v, lim):
+    """Koordinate aus der Config: leer = nicht gesetzt; deutsches Komma erlauben;
+    ausserhalb des Bereichs = ungueltig (None)."""
+    if v in (None, ""):
+        return None
+    try:
+        f = float(str(v).replace(",", "."))
+    except (TypeError, ValueError):
+        return None
+    return f if -lim <= f <= lim else None
+
+
 async def api_settings_weather(request: web.Request) -> web.Response:
     """Wetter (System -> Loxone): {om: bool, lat, lon}. om = Option Open-Meteo
     (wirkt nur ohne Loxone-Wetterdienst), lat/lon = eingetragener Standort
@@ -10440,15 +10525,6 @@ async def api_settings_weather(request: web.Request) -> web.Response:
         data = await request.json()
     except (ValueError, aiohttp.ContentTypeError):
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
-
-    def _coord(v, lim):
-        if v in (None, ""):
-            return None
-        try:
-            f = float(str(v).replace(",", "."))
-        except (TypeError, ValueError):
-            return None
-        return f if -lim <= f <= lim else None
 
     cfg = _load_cfg()
     cal = dict(cfg.get("calendar") or {}) if isinstance(cfg.get("calendar"), dict) else {}
@@ -10480,16 +10556,6 @@ async def api_settings_calendar(request: web.Request) -> web.Response:
         data = await request.json()
     except (ValueError, aiohttp.ContentTypeError):
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
-
-    def _coord(v, lim):
-        # leer = nicht gesetzt; deutsches Komma erlauben; ausserhalb des Bereichs = ungueltig
-        if v in (None, ""):
-            return None
-        try:
-            f = float(str(v).replace(",", "."))
-        except (TypeError, ValueError):
-            return None
-        return f if -lim <= f <= lim else None
 
     def _int(v, default, lo, hi):
         try:
@@ -11346,10 +11412,6 @@ async def _adb(*args: str, timeout: float = 30) -> tuple[int, str]:
     return proc.returncode or 0, out.decode("utf-8", "replace").strip()
 
 
-def _ver_tuple(v: str) -> tuple:
-    return tuple(int(x) for x in re.findall(r"\d+", v or "")[:4])
-
-
 def _launcher_bundled_name() -> str:
     """versionName der mitgelieferten Launcher-APK ("" = unbekannt, dann nie "veraltet")."""
     try:
@@ -12141,6 +12203,9 @@ def _pw_hash(pw: str, salt: bytes | None = None) -> str:
     return f"pbkdf2_sha256$200000${salt.hex()}${dk.hex()}"
 
 
+_PW_LOCK = asyncio.Lock()
+
+
 def _pw_ok(pw: str, stored: str) -> bool:
     try:
         _, it, salt, dk = stored.split("$")
@@ -12307,6 +12372,12 @@ async def security_mw(request: web.Request, handler):
     if path in _ADMIN_PAGES:
         resp.headers["X-Frame-Options"] = "SAMEORIGIN"       # Konfiguration nicht in fremde Rahmen
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+    # Grosse JSON-Antworten (/api/devices alle 6 s, /api/meta) gzip-komprimieren, wenn der
+    # Client es anbietet (aiohttp verhandelt Accept-Encoding; ohne Angebot unveraendert).
+    if (type(resp) is web.Response and resp.content_type == "application/json"
+            and isinstance(resp.body, bytes) and len(resp.body) > 4096):
+        resp.enable_compression()
+        resp.headers.setdefault("Vary", "Accept-Encoding")
     return resp
 
 
@@ -12322,7 +12393,9 @@ async def api_admin_login(request: web.Request) -> web.Response:
     h = _admin_hash()
     if not h:
         return web.json_response({"ok": True})
-    if not _pw_ok(str(d.get("password") or ""), h):
+    async with _PW_LOCK:                          # nacheinander wie bisher (Raten nicht parallel)
+        ok = await asyncio.to_thread(_pw_ok, str(d.get("password") or ""), h)   # pbkdf2 (~0,3 s) nicht im Event-Loop
+    if not ok:
         await asyncio.sleep(1.0)                  # Raten bremsen
         return web.json_response({"ok": False, "error": "Passwort falsch"}, status=403)
     now = time.time()
@@ -12351,14 +12424,16 @@ async def api_admin_password(request: web.Request) -> web.Response:
         return web.json_response({"ok": False, "error": "kein gültiges JSON"}, status=400)
     cfg = _load_cfg()
     old = (cfg.get("admin") or {}).get("hash", "") if isinstance(cfg.get("admin"), dict) else ""
-    if old and not _pw_ok(str(d.get("current") or ""), old):
+    if old and not await asyncio.to_thread(_pw_ok, str(d.get("current") or ""), old):   # pbkdf2 im Thread
         await asyncio.sleep(1.0)
         return web.json_response({"ok": False, "error": "Aktuelles Passwort falsch"}, status=403)
     new = str(d.get("new") or "")
     if new and len(new) < 6:
         return web.json_response({"ok": False, "error": "Mindestens 6 Zeichen"}, status=400)
+    nh = await asyncio.to_thread(_pw_hash, new) if new else ""
+    cfg = _load_cfg()                             # nach dem Warten frisch lesen (keine fremde Aenderung ueberschreiben)
     if new:
-        cfg["admin"] = {"hash": _pw_hash(new)}
+        cfg["admin"] = {"hash": nh}
     else:
         cfg.pop("admin", None)
     try:

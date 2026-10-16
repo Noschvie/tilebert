@@ -2960,7 +2960,7 @@ function bindAlarmEdit(g,blocks){
   // + / -: Stunde in 1er-, Minute in 5er-Schritten; gedrueckt halten wiederholt
   g.querySelectorAll('[data-ae]').forEach(n=>{ const k=n.dataset.ae[0], dir=n.dataset.ae[1]==='+'?1:-1; let t=null, r=null;
     const step=()=>{ st.secs=((st.secs+(k==='h'?3600:300)*dir)%86400+86400)%86400; paint(); };
-    n.addEventListener('pointerdown',e=>{ e.preventDefault(); step(); t=setTimeout(()=>{ r=setInterval(step,120); },450); });
+    n.addEventListener('pointerdown',e=>{ e.preventDefault(); stop(); step(); t=setTimeout(()=>{ r=setInterval(step,120); },450); });   // stop(): zweiter Druck vor dem Loslassen liesse sonst ein Intervall laufen
     const stop=()=>{ clearTimeout(t); clearInterval(r); }; n.addEventListener('pointerup',stop); n.addEventListener('pointerleave',stop); n.addEventListener('pointercancel',stop); });
   g.querySelectorAll('[data-ad]').forEach(n=>n.addEventListener('click',()=>{ const d=st.days[+n.dataset.ad]; if(!d.mode) return; d.on=!d.on; paint(); }));
   g.querySelectorAll('[data-aa]').forEach(n=>n.addEventListener('click',()=>{ st.active=n.dataset.aa==='1'; paint(); }));
@@ -3659,8 +3659,8 @@ function updatePanel(blocks){
   paintCharts(g,blocks);   // Verlauf nachgeladen oder Fenster vorgerueckt: neu zeichnen, Knoepfe bleiben
   rowBlocks.forEach((b,ri)=>{ const rowEl=rows[ri]; if(!rowEl)return;
     b.cells.forEach((c,ci)=>{ const btn=rowEl.querySelector('[data-c="'+ci+'"]'); if(!btn)return;
-      if(c.icon){ const h=cellIco(c.icon); if(btn.innerHTML!==h) btn.innerHTML=h; btn.className='btn icon'+(c.big?' big':'')+(isChartCell(c)?' cht':'')+(c.on?' on':''); }
-      else { btn.textContent=c.label; btn.className='btn'+(c.menu?' toggler':'')+(c.on?' on':''); }
+      if(c.icon){ const h=cellIco(c.icon); if(btn._ih!==h){ btn._ih=h; btn.innerHTML=h; } btn.className='btn icon'+(c.big?' big':'')+(isChartCell(c)?' cht':'')+(c.on?' on':''); }
+      else { btn._ih=null; btn.textContent=c.label; btn.className='btn'+(c.menu?' toggler':'')+(c.on?' on':''); }
       bindCell(btn,c);
     });
   });
@@ -3909,13 +3909,15 @@ function updateGrid(items){
   }
   const _pg=(view.layout==='list'?4:gridCols*gridRows);
   let ok=true;
+  // Erst alles schreiben, dann gesammelt messen (sonst erzwingt jede Wert-/Verlaufskachel ein eigenes Layout)
+  const fitEls=[], sparks=[], pops=[], vals=[];
   items.forEach((it,i)=>{
     const n=nodes[i];
     const prev=n._it;
     n._it=it;
     // Animierte Symbole: Einschalten -> Symbol ploppt kurz; neuer Wert -> Statuszeile tickt
-    if(prev&&!prev.on&&it.on) animOnce(n.querySelector('.head>:first-child'),'an-pop');
-    else if(prev&&prev.sublabel&&it.sublabel&&prev.sublabel!==it.sublabel) setTimeout(()=>animOnce(n.querySelector('.body .sub'),'an-val'),0);
+    if(prev&&!prev.on&&it.on) pops.push([n.querySelector('.head>:first-child'),'an-pop']);
+    else if(prev&&prev.sublabel&&it.sublabel&&prev.sublabel!==it.sublabel) vals.push(n);
     const cls='tile'+tileTone(it)+(it.big?' tbig':'')+(it.anim?' an-'+it.anim:'')+(i%_pg===0?' snap':'')+[...n.classList].filter(c=>c.startsWith('spark')).map(c=>' '+c).join('');
     if(n.className!==cls) n.className=cls;
     const stStr=tileVarStyle(it);
@@ -3923,7 +3925,7 @@ function updateGrid(items){
     if(it.big){ const bn=n.querySelector('.bigv .bn'), bu=n.querySelector('.bigv .bu');
       if(bn&&(bn.textContent!==it.big.v||(bu?bu.textContent:'')!==(it.big.u||''))){
         if(!!bu!==!!it.big.u) ok=false;
-        else { bn.textContent=it.big.v; if(bu) bu.textContent=it.big.u; fitBigVals(n); } } }
+        else { bn.textContent=it.big.v; if(bu) bu.textContent=it.big.u; fitEls.push(...n.querySelectorAll('.tile.tbig .bigv')); } } }
     const body=n.querySelector('.body');
     if(body){ let subEl=body.querySelector('.sub');
       if(it.sublabel&&!it.big){ if(!subEl){ subEl=document.createElement('div'); subEl.className='sub'; body.appendChild(subEl); }
@@ -3932,7 +3934,7 @@ function updateGrid(items){
     if(it.controls){ const tbs=n.querySelectorAll('.tctrls .tb');
       if(tbs.length===it.controls.length) it.controls.forEach((c,ci)=>{ const b=tbs[ci]; if(!b) return;
         b._cmd=c.cmd; b._secured=it.secured;
-        const nh=svgF(ICONS[c.icon]||ICONS.info); if(b.innerHTML!==nh) b.innerHTML=nh; }); }
+        const nh=svgF(ICONS[c.icon]||ICONS.info); if(b._ih!==nh){ b._ih=nh; b.innerHTML=nh; } }); }   // _ih: zurueckgelesenes SVG-innerHTML weicht immer ab
     if(it.toggle){ const sw=n.querySelector('.tswitch');
       if(sw) sw.classList.toggle('on', !!it.toggle.on); }   // Zustand live nachziehen (z.B. von woanders geschaltet)
     if(typeof it.blind === 'number'){ const sh=n.querySelector('.blindico .sh');
@@ -3948,10 +3950,14 @@ function updateGrid(items){
     // Mini-Verlauf: dazu oder weg -> neu aufbauen, sonst nur bei Aenderung neu zeichnen
     const spEl=n.querySelector('.tspark'), bdEl=n.querySelector('.tsbadge'), bd=it.spark&&it.spark.badge;
     if(!!it.spark!==!!spEl || !!bd!==!!bdEl) ok=false;
-    else if(spEl){ const sk=JSON.stringify(it.spark)+'|'+n.clientWidth+'x'+n.clientHeight;   // unveraenderter Verlauf und Kachelgroesse: kein Ausmessen/Neuzeichnen
-      if(spEl._sp!==sk){ spEl._sp=sk; paintSpark(spEl,it.spark); }
+    else if(spEl){ sparks.push([spEl,it.spark,n]);
       n.querySelectorAll('.tsbadge,.tsline').forEach(e=>{ if(e.textContent!==bd) e.textContent=bd; }); }
   });
+  if(fitEls.length) fitBigVals(null, fitEls);
+  animBatch(pops);
+  if(vals.length) setTimeout(()=>animBatch(vals.map(n=>[n.querySelector('.body .sub'),'an-val'])),0);
+  sparks.forEach(([spEl,sp,n])=>{ const sk=JSON.stringify(sp)+'|'+n.clientWidth+'x'+n.clientHeight;   // unveraenderter Verlauf und Kachelgroesse: kein Ausmessen/Neuzeichnen
+    if(spEl._sp!==sk){ spEl._sp=sk; paintSpark(spEl,sp); } });
   return ok;
 }
 // Doppeltipp-Fenster: 350 ms - lang genug fuer traege Touchscreens (Shelly
@@ -3970,12 +3976,13 @@ function bigValHtml(b){
 }
 // Notfall: passt ein Wert trotz gemeinsamer Schriftgroesse nicht (sehr lange Zahl),
 // schrumpft NUR diese Kachel (--bigk); alle anderen behalten die gemeinsame Groesse.
-function fitBigVals(root){
-  (root||document).querySelectorAll('.tile.tbig .bigv').forEach(b=>{
-    b.style.removeProperty('--bigk');
-    const cw=b.clientWidth, sw=b.scrollWidth;
-    if(cw>0 && sw>cw+0.5) b.style.setProperty('--bigk', Math.max(.4, cw/sw*.97).toFixed(3));
-  });
+// In drei Durchgaengen (zuruecksetzen, messen, setzen): ein Layout statt eines je Kachel.
+function fitBigVals(root, list){
+  const bs=list||[...(root||document).querySelectorAll('.tile.tbig .bigv')];
+  bs.forEach(b=>b.style.removeProperty('--bigk'));
+  const m=bs.map(b=>[b.clientWidth, b.scrollWidth]);
+  bs.forEach((b,i)=>{ const cw=m[i][0], sw=m[i][1];
+    if(cw>0 && sw>cw+0.5) b.style.setProperty('--bigk', Math.max(.4, cw/sw*.97).toFixed(3)); });
 }
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>fitBigVals());
 // Eine Kachel als HTML - gemeinsam fuer das Raster und den Screensaver.
@@ -5126,10 +5133,12 @@ function svPaintPlayer(cell, d){
   cell.querySelector('.spt').textContent=title?(title.text||''):'';
   cell.querySelector('.sps').textContent=title?(title.sub||''):'';
   const tr=cell.querySelector('.sptr'), cells=(row&&row.cells)||[];
-  tr.innerHTML=cells.map((c,i)=>'<div class="btn'+(c.icon?' icon':'')+(c.big?' big':'')+'" data-c="'+i+'">'+
+  // Knoepfe nur bei geaendertem Aufbau neu (Lautstaerke/Titel aendern sich oft); Befehl haengt am Knoten (_c)
+  const th=cells.map((c,i)=>'<div class="btn'+(c.icon?' icon':'')+(c.big?' big':'')+'" data-c="'+i+'">'+
     (c.icon?svgF(ICONS[c.icon]||ICONS.info):esc(c.label||''))+'</div>').join('');
-  tr.querySelectorAll('[data-c]').forEach(n=>{ const c=cells[+n.dataset.c];
-    n.addEventListener('pointerdown',ev=>{ ev.preventDefault(); if(c&&c.cmd) sendCmdQ(c.cmd.uuid,c.cmd.cmd); }); });
+  if(tr._h!==th){ tr._h=th; tr.innerHTML=th;
+    tr.querySelectorAll('[data-c]').forEach(n=>n.addEventListener('pointerdown',ev=>{ ev.preventDefault(); const c=n._c; if(c&&c.cmd) sendCmdQ(c.cmd.uuid,c.cmd.cmd); })); }
+  tr.querySelectorAll('[data-c]').forEach(n=>{ n._c=cells[+n.dataset.c]; });
   const v=cell.querySelector('.spv'); if(!v) return;
   v.style.display=(sl&&sl.cmd)?'':'none';
   v.querySelector('span').textContent=sl?String(sl.value):'';
@@ -5300,8 +5309,14 @@ document.addEventListener('click', e=>{ const b=e.target.closest&&e.target.close
 // ---- Animierte Symbole ----
 // Einmal-Animation neu starten (Klasse ab, Reflow, wieder dran). Ob sie
 // ueberhaupt laeuft, entscheidet das CSS (html.ianim + Animationsstufe).
-function animOnce(e,cls){ if(!e) return; e.classList.remove(cls); void e.offsetWidth; e.classList.add(cls);
-  clearTimeout(e['_t'+cls]); e['_t'+cls]=setTimeout(()=>e.classList.remove(cls),1200); }
+function animOnce(e,cls){ if(e) animBatch([[e,cls]]); }
+// Mehrere Einmal-Animationen mit EINEM erzwungenen Neuberechnen neu starten (statt je Element);
+// ohne aktive Symbol-Animation (CSS greift nur bei html.ianim, nicht motion=off) gar keins.
+function animBatch(list){ list=list.filter(x=>x[0]); if(!list.length) return;
+  const de=document.documentElement;
+  list.forEach(([e,c])=>e.classList.remove(c));
+  if(de.classList.contains('ianim') && de.dataset.motion!=='off') void de.offsetWidth;
+  list.forEach(([e,c])=>{ e.classList.add(c); clearTimeout(e['_t'+c]); e['_t'+c]=setTimeout(()=>e.classList.remove(c),1200); }); }
 const VBELL='<span class="vbico">'+svg('<path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/>')+'</span>Es klingelt';
 const _stPrev={};   // letzter Stand je Ampel (Gesamtstufe + Stufe je Chip)
 // ---- Status-Widget (Ampel) ----
