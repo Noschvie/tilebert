@@ -733,6 +733,7 @@
         'Sound off – the full screen stays.',
       'auf {n} %': 'to {n} %',
       'Nicht ausgewählt': 'Not selected',
+      '+{n} weitere': '+{n} more',
       'Kein Melder erreicht': 'No detector reached',
       'Ausschalten':
         'Turn off',

@@ -78,7 +78,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.28"
+APP_VERSION = "0.20.29"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -3336,7 +3336,7 @@ class App:
 
     def device_reach(self, dev: str, prof: dict | None, memo: dict | None = None) -> dict:
         """Trockenlauf fuer die Anzeige am Geraet: welche Bausteine erreichen es?
-        {ring: [Namen], wake: [Namen], alarm: Anzahl}. Nur Anzeige."""
+        {ring: [Namen], wake: [Namen], alarm: Anzahl, alarmNames: [Namen]}. Nur Anzeige."""
         memo = memo if memo is not None else {}
         # Bausteine einmal je memo nach Typ vorsortieren (Geraeteliste: sonst je Geraet 4x alle Controls)
         by = memo.get(("_typ",))
@@ -3352,9 +3352,9 @@ class App:
         def names(typ, kind):
             return sorted(_clean(c.get("name")) for u, c in by[typ]
                           if self._wants(kind, dev, prof, u, memo))
-        n_al = sum(1 for u, c in by["sec"] if self._wants("alarm", dev, prof, u, memo))
-        return {"ring": names("Intercom", "ring"), "wake": names("AlarmClock", "wake"), "alarm": n_al,
-                "intercoms": len(by["Intercom"])}
+        al = sorted(_clean(c.get("name")) for u, c in by["sec"] if self._wants("alarm", dev, prof, u, memo))
+        return {"ring": names("Intercom", "ring"), "wake": names("AlarmClock", "wake"), "alarm": len(al),
+                "alarmNames": al, "intercoms": len(by["Intercom"])}
 
     def sec_alarm_msg(self, uuid: str, on: bool) -> dict:
         c = self.controls.get(uuid) or {}

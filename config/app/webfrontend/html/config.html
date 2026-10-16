@@ -1236,9 +1236,6 @@
   .grl{display:flex;flex-direction:column;gap:2px;min-width:0;} .grl small{font-size:12px;color:var(--muted);line-height:1.35;}
   .grc{display:flex;align-items:center;gap:8px;flex:none;flex-wrap:wrap;justify-content:flex-end;}
   .gchg{color:var(--sel,var(--accent));} .gdreset{all:unset;cursor:pointer;color:var(--sel,var(--accent));font-size:15px;min-width:44px;min-height:44px;display:inline-flex;align-items:center;justify-content:center;}
-  .gdtones{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:10px;}
-  .gdtone{border:1px solid var(--line);border-radius:var(--r-m);background:var(--panel);padding:10px 12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start;font-size:13px;}
-  .gdtone b{font-size:14px;} .gdtone .gchg{font-size:11px;}
   .gdseg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-m);overflow:hidden;}
   .gdseg button{all:unset;cursor:pointer;display:inline-flex;align-items:center;min-height:44px;box-sizing:border-box;padding:0 16px;font-size:13px;color:var(--muted);} .gdseg button.on{background:var(--prim);color:var(--prim-ink);font-weight:600;}
   .gdadv{margin-top:6px;border-top:1px solid var(--line);padding-top:12px;} .gdadv>summary{cursor:pointer;color:var(--muted);font-size:14px;margin-bottom:8px;}
@@ -1246,6 +1243,7 @@
   .gd .gdback,.gd .gdlink{display:inline-flex;align-items:center;min-height:44px;}
   .gd .btn{min-height:44px;}
   .gdreach.bad{color:var(--crit);}
+  .gdmore{color:var(--prim);cursor:pointer;white-space:nowrap;text-decoration:underline dotted;text-underline-offset:2px;padding:6px 0;margin:-6px 0;} .gdmore:focus-visible{outline:2px solid var(--prim);outline-offset:2px;border-radius:4px;}
   .gdacts{display:flex;flex-direction:column;gap:10px;} .gdacts .btn{width:100%;}
   .gdside .ddel{width:100%;margin-top:6px;}
   .gd .tbv .drow .btn{min-height:44px;} .gd .tbv_st{font-size:13px;font-weight:600;margin:2px 0 8px;} .gd .dhint{font-size:12px;color:var(--muted);margin-top:6px;}
@@ -1566,10 +1564,10 @@
   .gd .gdback:focus-visible,.gdlink:focus-visible,.gdreset:focus-visible,.gdseg button:focus-visible{outline:2px solid var(--prim);outline-offset:2px;border-radius:var(--r-s);}
   .crpopt:has(input:focus-visible),.apit:has(input:focus-visible){outline:2px solid var(--prim);outline-offset:2px;}
   /* 4) Eine Innenbox für Listenzeilen in Karten: --panel2, 1 px --line, r-m 14, kein Schatten */
-  .icbox,.icwrap .icbox,.tbchip,.ovp,.devanon,#ag_list .devanon,.sizepick button,.nptile,.card .gdtone{
+  .icbox,.icwrap .icbox,.tbchip,.ovp,.devanon,#ag_list .devanon,.sizepick button,.nptile{
     background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
   /* dieselbe Box auf der Seitenfläche (Geräteliste/-detail stehen nicht in einer Karte): --panel statt --panel2 */
-  .gdrow,.gdtone{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
+  .gdrow{background:var(--panel);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
   .gdrow:hover,.tbchip:hover,.ovp:hover,.nptile:hover{background:var(--field);border-color:var(--muted);box-shadow:none;outline:0;}
   .gdrow:hover{background:var(--panel2);}
   .tbchip.add{background:transparent;border-style:dashed;}
@@ -1586,7 +1584,6 @@
   .gds h3{font-family:var(--font-head);font-size:15px;font-weight:600;letter-spacing:-.01em;text-transform:none;color:var(--fg);
     display:flex;align-items:center;gap:8px;min-height:26px;margin:0 0 12px;padding:0;border:0;}
   .gds .gr:first-of-type{padding-top:0;} .gds .gr:last-child{border-bottom:0;padding-bottom:0;}
-  .gds .gdtones{margin-top:0;}
   .gds.gdplain{background:none;box-shadow:none;padding:0;} .gds.gdplain .ddel{margin-top:0;}
   .gdadv{margin-top:0;}
   .gdadv>summary{display:flex;align-items:center;min-height:26px;font-family:var(--font-head);font-size:15px;font-weight:600;letter-spacing:-.01em;color:var(--fg);margin:0;}
@@ -1598,7 +1595,7 @@
   .gdlistcard .gdhd+.gdoffh,.gdlistcard>.gdoffh:first-child{margin-top:0;}
   .gdoff{margin-top:0;}
   /* Innenboxen in Karten: --panel2, Haarlinie, r-m, kein Schatten */
-  .gdrow,.gdtone{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
+  .gdrow{background:var(--panel2);border:1px solid var(--line);border-radius:var(--r-m);box-shadow:none;}
   .gdrow:hover{background:var(--field);border-color:var(--muted);}
   .gdoffh{margin:4px 0 8px;}
   @media (max-width:760px){ .gds,.gdadv,.gdlistcard{padding:16px;} .gdgrid{gap:0;} }
@@ -5916,8 +5913,9 @@ function gdHTML(n){
     gr(T('Panel'),'','<select data-gk="panel" data-gt="str">'+(pcur?'':'<option value="" selected>'+T('(Standard)')+'</option>')+
       ids.map(id=>'<option value="'+esc(id)+'"'+(id===pcur?' selected':'')+'>'+esc(gdPanelTitle(id))+'</option>').join('')+'</select>')+'</div>';
   // Toene
-  h+='<div class="gds"><h3>'+T('Töne')+'</h3><div class="gdtones">'+GD_SOUNDS.filter(s=>(s[0]!=='touch'||tb)&&(s[0]!=='ring'||!l.reach||l.reach.intercoms!==0||gdChg(n,'sound.ring'))).map(([k,lb])=>{ const key='sound.'+k;
-    return '<div class="gdtone"><b>'+T(lb)+'</b>'+sw(key,gdVal(n,key)!==false,'bool',T(lb))+(gdChg(n,key)?'<span class="gchg">'+T('geändert')+' '+rst(key)+'</span>':'')+gdReach(l,k,n)+'</div>'; }).join('')+'</div></div>';
+  // Zeilen wie bei Effekte: Name, darunter Standard/geaendert und Reichweite, Schalter rechts
+  h+='<div class="gds"><h3>'+T('Töne')+'</h3>'+GD_SOUNDS.filter(s=>(s[0]!=='touch'||tb)&&(s[0]!=='ring'||!l.reach||l.reach.intercoms!==0||gdChg(n,'sound.ring'))).map(([k,lb])=>{ const key='sound.'+k;
+    return '<div class="gr gdtone"><div class="grl"><span>'+T(lb)+'</span><small>'+stdSub(key)+gdReach(l,k,n)+'</small></div><div class="grc">'+sw(key,gdVal(n,key)!==false,'bool',T(lb))+'</div></div>'; }).join('')+'</div>';
   // Nachts
   const nd=gdVal(n,'nightDim')||0;
   if(!phone||pres){ h+='<div class="gds"><h3>'+T('Nachts')+'</h3>';
@@ -5981,14 +5979,21 @@ function gdRender(){
 function has_fi(n){ return (gdLive(n).caps||[]).indexOf('fullyinstall')>=0; }
 function gdDetSig(n){ const l=gdLive(n), P=DEVP[n]||{}; return JSON.stringify([!!l.online,l.profile,!!l.tbold,l.tbver,l.connections,l.caps,l.ip,P.caps,!!P.ok,!!DEV_LV[n],l.reach]); }
 // Graue Zeile unter dem Ton-Schalter: welche Bausteine dieses Geraet erreichen (nur Anzeige, der Server rechnet)
+// Quellen ausgeschrieben; ab 4 Namen: 2 zeigen, Rest hinter "+n weitere" (Hover/Tippen)
+function gdNames(a){ if(a.length<=3) return esc(a.join(', '));
+  const rest=a.slice(2).join(', ');
+  return esc(a.slice(0,2).join(', '))+' <span class="gdmore" tabindex="0" role="button" title="'+esc(a.join(', '))+'" data-rest="'+esc(rest)+'">'+esc(T('+{n} weitere').replace('{n}',a.length-2))+'</span>'; }
 function gdReach(l,k,n){ const r=(l||{}).reach; if(!r) return '';
-  let t='';
-  if(k==='ring') t=(r.ring||[]).length?r.ring.join(', '):r.intercoms?T('Nicht ausgewählt'):T('Keine Türstation');
-  else if(k==='wake') t=(r.wake||[]).length?r.wake.join(', '):T('Kein Wecker');
+  let h='';
+  if(k==='ring') h=(r.ring||[]).length?gdNames(r.ring):esc(r.intercoms?T('Nicht ausgewählt'):T('Keine Türstation'));
+  else if(k==='wake') h=(r.wake||[]).length?gdNames(r.wake):esc(T('Kein Wecker'));
   else if(k==='alarm'){ if(n&&gdAlarmOff(n)) return '<small class="gdreach bad">'+esc(T('Kein Melder erreicht'))+'</small>';
-    t=r.alarm===1?T('1 Melder'):T('{n} Melder').replace('{n}',r.alarm); }
-  else if(k==='notify') t=T('Alle Hinweise');
-  return t?'<small class="gdreach">'+esc(t)+'</small>':''; }
+    h=(r.alarmNames||[]).length?gdNames(r.alarmNames):esc(r.alarm===1?T('1 Melder'):T('{n} Melder').replace('{n}',r.alarm)); }
+  else if(k==='notify') h=esc(T('Alle Hinweise'));
+  return h?'<small class="gdreach">'+h+'</small>':''; }
+document.addEventListener('click',e=>{ const m=e.target.closest&&e.target.closest('.gdmore'); if(!m) return;
+  e.preventDefault(); e.stopPropagation(); const pv=m.previousSibling; if(pv&&pv.nodeType===3) pv.data=pv.data.replace(/\s+$/,''); m.replaceWith(document.createTextNode(', '+m.dataset.rest)); },true);
+document.addEventListener('keydown',e=>{ if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('gdmore')){ e.preventDefault(); e.target.click(); } });
 async function gdFetch(n){ try{ const j=await (await fetch('/api/device/prefs?device='+encodeURIComponent(n))).json(); DEVP[n]=j.ok?j:{ok:false}; }catch(e){ DEVP[n]={ok:false}; } }
 function gdOpen(n){
   gdReadDom(); DEV_CUR=n; GD_TRY.delete(n);
