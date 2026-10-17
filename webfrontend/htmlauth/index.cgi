@@ -3,7 +3,8 @@
 # lbfooter) und LoxBerry-Design (Bootstrap-Klassen).
 #  - zeigt den Container-Status
 #  - Miniserver-Zugang -> wird an den laufenden Container weitergereicht
-#    (POST http://localhost:8098/api/settings/miniserver)
+#    (POST http://localhost:<port>/api/settings/miniserver)
+#  - Host-Port (Standard 8098) in loxpanelfav.cfg, Stopp-/Port-Konflikt-Anzeige
 #  - Buttons zur vollen Oberflaeche (/config, /settings) und Container-Steuerung
 use strict;
 use warnings;
@@ -16,7 +17,10 @@ use LoxBerry::Web;
 
 my $cgi     = CGI->new;
 my $version = LoxBerry::System::pluginversion() // "";
-my $api     = "http://localhost:8098";
+my $cfgdir  = "REPLACELBPCONFIGDIR";
+my $pcfg    = "$cfgdir/loxpanelfav.cfg";               # Plugin-Einstellungen (LOXPANEL_PORT=...)
+my $port    = read_port();                             # Host-Port des Containers
+my $api     = "http://localhost:$port";
 my $ctl     = "REPLACELBPBINDIR/loxpanel-ctl.sh";
 my $log     = "REPLACELBPDATADIR/last_action.log";   # Verlauf der letzten Container-Aktion
 my $bdir    = "REPLACELBPDATADIR/backups";           # Konfig-Sicherungen (ueberleben Plugin-Updates)
@@ -26,6 +30,16 @@ my $lbhost  = LoxBerry::System::get_localip() // "localhost";
 my $tok = '';
 if (open(my $tfh, '<', "REPLACELBPDATADIR/config/.cgi_token")) { local $/; $tok = <$tfh> // ''; close($tfh); }
 $tok =~ s/\s+//g;
+
+# Host-Port aus loxpanelfav.cfg (gleiches Format wie loxpanel-ctl.sh), sonst 8098
+sub read_port {
+    my $p = 8098;
+    if (open(my $fh, '<', $pcfg)) {
+        while (my $l = <$fh>) { $p = $1 if $l =~ /^\s*LOXPANEL_PORT=\s*(\d{1,5})\s*$/ && $1 >= 1 && $1 <= 65535; }
+        close($fh);
+    }
+    return $p + 0;
+}
 
 # HTML-escapen. Texte aus decode_json sind Perl-Zeichenketten (Unicode) - als
 # UTF-8-Bytes ausgeben, sonst erscheinen Umlaute (z. B. "Küche") als Zeichensalat.
@@ -82,7 +96,7 @@ sub setup_panel {
     my ($ip, $panel, $device, $name) = @_;
     my $ua = LWP::UserAgent->new(timeout => 180);   # Installation per WLAN kann dauern
     my $r  = $ua->post("$api/api/panel/launcher", 'X-LoxPanel-Token' => $tok, 'Content-Type' => 'application/json',
-        Content => encode_json({ ip => $ip, panel => $panel, device => $device, name => $name, display => 'tbview', server => "$lbhost:8098" }));
+        Content => encode_json({ ip => $ip, panel => $panel, device => $device, name => $name, display => 'tbview', server => "$lbhost:$port" }));
     return "<div class='alert alert-danger'>Container nicht erreichbar &ndash; l&auml;uft er?</div>"
         unless $r->is_success || $r->code == 400;
     my $j = eval { decode_json($r->decoded_content) };
@@ -124,6 +138,7 @@ if ($action eq 'miniserver') {
         user       => scalar($cgi->param('user')) // '',
         pass       => scalar($cgi->param('pass')) // '',
         port       => int((scalar($cgi->param('port')) || 443)),
+        https      => ((scalar($cgi->param('scheme')) // '') eq 'http' ? JSON::false : JSON::true),
         verify_tls => ($cgi->param('tls') ? JSON::true : JSON::false),
         force      => ($cgi->param('force') ? JSON::true : JSON::false),
     });
@@ -131,16 +146,19 @@ if ($action eq 'miniserver') {
 elsif ($action eq 'fromlox') {
     # Miniserver-Zugang aus der zentralen LoxBerry-Konfiguration uebernehmen
     # (erster/niedrigster Miniserver). Admin_RAW/Pass_RAW sind die dekodierten
-    # Zugangsdaten.
+    # Zugangsdaten. Schema wie LoxBerry: PreferHttps -> PortHttps, sonst Port
+    # (get_miniservers setzt fehlende Ports auf 80/443).
     my %ms = LoxBerry::System::get_miniservers();
     my $m;
     for my $k (sort { $a <=> $b } keys %ms) { $m = $ms{$k}; last; }
     if ($m && ($m->{IPAddress} // '') ne '') {
+        my $tls = (($m->{PreferHttps} // '') =~ /^\s*(true|yes|on|enabled?|1|check)\s*$/i) ? 1 : 0;
         $msg = apply_miniserver({
             host       => $m->{IPAddress},
             user       => _lox_cred($m->{Admin_RAW}, $m->{Admin}),
             pass       => _lox_cred($m->{Pass_RAW},  $m->{Pass}),
-            port       => int($m->{Port} || 443),   # LoxBerry-Port spiegeln (80=Gen1/HTTP, 443=Gen2/HTTPS)
+            port       => int(($tls ? $m->{PortHttps} : $m->{Port}) || ($tls ? 443 : 80)),
+            https      => ($tls ? JSON::true : JSON::false),
             verify_tls => JSON::false,
         }, 1);
     } else {
@@ -155,6 +173,36 @@ elsif ($action eq 'panelsetup') {
     $ip =~ s/^\s+|\s+$//g;
     $pname =~ s/^\s+|\s+$//g;
     $msg = setup_panel($ip, $panel, $dev, $pname);
+}
+elsif ($action eq 'port') {
+    # Host-Port speichern und Container neu starten. Vorher pruefen, ob der Port
+    # frei ist (sonst bliebe das Panel nach dem Neustart aus).
+    my $np = scalar($cgi->param('hostport')) // '';
+    $np =~ s/^\s+|\s+$//g;
+    if ($np !~ /^\d{1,5}$/ || $np < 1 || $np > 65535) {
+        $msg = "<div class='alert alert-danger'>Ung&uuml;ltiger Port &ndash; erlaubt ist 1&ndash;65535.</div>";
+    } elsif ($np == $port) {
+        $msg = "<div class='alert alert-info'>Port $port ist bereits eingestellt.</div>";
+    } else {
+        my $by = `'$ctl' portcheck '$np' 2>&1`;
+        my $busy = $? != 0;
+        $by =~ s/\s+$//;
+        if ($busy) {
+            $msg = "<div class='alert alert-danger'>Port $np ist belegt" . ($by ne '' && $by ne 'unbekannt' ? " (von " . h($by) . ")" : "")
+                 . ". W&auml;hle einen anderen Port.</div>";
+        } elsif (open(my $out, '>', $pcfg)) {
+            print $out "# tilebert Plugin-Einstellungen (loxpanel-ctl.sh, index.cgi)\nLOXPANEL_PORT=$np\n";
+            close $out;
+            $port = $np + 0;
+            $api  = "http://localhost:$port";
+            launch_bg("Port $port, Neustart", $ctl, "restart");
+            $msg = "<div class='alert alert-success'>Port $port gespeichert, der Container startet neu. "
+                 . "Panels und Ger&auml;te brauchen jetzt die neue Adresse <b>http://" . h($lbhost) . ":$port/</b> (siehe Hinweis unter &bdquo;Container&ldquo;).</div>";
+            $refresh = 1;
+        } else {
+            $msg = "<div class='alert alert-danger'>Speichern fehlgeschlagen ($pcfg).</div>";
+        }
+    }
 }
 elsif ($action =~ /^(start|stop|restart)$/) {
     my $act = $1;   # durch Regex begrenzt -> shell-sicher
@@ -231,7 +279,7 @@ elsif ($action eq 'delete_backup') {
 }
 
 # ---- Status vom Container holen ----
-my ($running, $conn, $mhost, $muser, $mport, $haspass) = (0, 0, '', '', 443, 0);
+my ($running, $conn, $mhost, $muser, $mport, $haspass, $mhttps) = (0, 0, '', '', 443, 0, 1);
 my $sr = LWP::UserAgent->new(timeout => 5)->get("$api/api/settings", 'X-LoxPanel-Token' => $tok);
 if ($sr->is_success) {
     $running = 1;
@@ -241,6 +289,8 @@ if ($sr->is_success) {
         my $m = $j->{miniserver} // {};
         $mhost = $m->{host} // ''; $muser = $m->{user} // '';
         $mport = $m->{port} // 443; $haspass = $m->{hasPass} ? 1 : 0;
+        # Schema: Feld vom Server, aeltere Server ohne Feld -> alt aus dem Port
+        $mhttps = defined $m->{https} ? ($m->{https} ? 1 : 0) : ($mport == 80 ? 0 : 1);
     }
 }
 # Laufender Code-Stand (Version/Commit) fuer die Statuskachel
@@ -270,6 +320,7 @@ my $stat = !$running ? "<span style='color:#a94442'>Container l&auml;uft nicht</
     : "<span style='color:#8a6d3b'>l&auml;uft &middot; noch kein Miniserver</span>";
 
 my ($hh, $hu, $hp) = (h($mhost), h($muser), h($mport));
+my ($sel_https, $sel_http) = $mhttps ? (" selected", "") : ("", " selected");
 my $passph = $haspass ? "unver&auml;ndert lassen" : "Passwort eingeben";
 
 # ---- Verlauf der letzten Aktion (Tail) ----
@@ -289,6 +340,28 @@ my $poll = ($refresh || $busy) ? 1 : 0;
 my $refresh_html = $poll
     ? "<script>setTimeout(function(){location.replace(location.pathname);},4000);</script>"
     : "";
+
+# ---- Warum laeuft der Container nicht? (bewusst gestoppt / Port belegt / unerwartet) ----
+my $stopped = -f "$cfgdir/loxpanelfav_stopped.cfg";
+my ($pbport, $pbby) = ('', '');
+if (open(my $pf, '<', "$cfgdir/loxpanelfav_portbelegt.cfg")) {
+    while (my $l = <$pf>) { $pbport = $1 if $l =~ /^PORT=(\d+)/; $pbby = $1 if $l =~ /^BY=(.*?)\s*$/; }
+    close($pf);
+}
+my $state_html = "";
+if (!$running && !$poll) {
+    if ($stopped) {
+        $state_html = "<div class='alert alert-warning'><b>Bewusst gestoppt</b> &ndash; startet nicht automatisch. Mit &bdquo;Starten&ldquo; wieder einschalten.</div>";
+    } elsif ($pbport ne '') {
+        $state_html = "<div class='alert alert-danger'><b>Port $pbport ist belegt</b>"
+            . ($pbby ne '' && $pbby ne 'unbekannt' ? " (von " . h($pbby) . ")" : "")
+            . ". W&auml;hle unter &bdquo;Container&ldquo; einen anderen Port.</div>";
+    } else {
+        $state_html = "<div class='alert alert-danger'><b>Container ist unerwartet nicht gestartet.</b> "
+            . "Er wird alle 5&nbsp;Minuten automatisch neu versucht. Mit &bdquo;Starten&ldquo; sofort starten"
+            . ($logtail ne '' ? "; Meldungen unter &bdquo;Letzte Aktion&ldquo;." : ".") . "</div>";
+    }
+}
 
 my $log_html = "";
 if ($logtail ne "") {
@@ -341,7 +414,10 @@ my $backups_html = $blist
 LoxBerry::Web::lbheader("tilebert V$version", $repo, "");
 
 # Status-Kacheln (Punkte als viereckige Pillen, Farben wie im Panel)
-my ($cst, $ccl) = $running ? ("l&auml;uft", "ok") : ("gestoppt", "bad");
+my ($cst, $ccl) = $running ? ("l&auml;uft", "ok")
+    : $stopped ? ("gestoppt", "off")
+    : $pbport ne '' ? ("Port belegt", "bad")
+    : ("l&auml;uft nicht", "bad");
 my ($mst, $mcl) = !$running ? ("&ndash;", "off") : $conn ? ("verbunden", "ok") : ("nicht verbunden", "warn");
 my $msub = ($running && $mhost ne '') ? $hh : "noch nicht eingerichtet";
 my $ver_html = h($av) . ($ac ne '' ? " <small>&middot; $ac</small>" : "");
@@ -389,6 +465,9 @@ print <<"HTML";
   .lpx-msg .alert-success{background:#e3f6ec;border-color:#b9e3cd;color:#1c5a3b;}
   .lpx-msg .alert-danger{background:#fdeceb;border-color:#f3c5c1;color:#8f2b23;}
   .lpx-msg .alert-info{background:#eaf2ff;border-color:#c4dbfb;color:#1f2440;}
+  .lpx-msg .alert-warning{background:#fff6e0;border-color:#f1dca2;color:#5c4300;}
+  .lpx-msg .alert+.alert{margin-top:10px;}
+  .lpx-warn{background:#fff6e0;border:1px solid #f1dca2;color:#5c4300;border-radius:14px;padding:10px 14px;font-size:13px;line-height:1.5;margin-top:12px;}
   .lpx-msg .alert small{color:inherit !important;opacity:.85;}
   .lpx-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start;}
   .lpx-card{background:#fff;border:1px solid var(--line);border-radius:22px;padding:20px 22px;box-shadow:0 1px 2px rgba(31,36,64,.05),0 8px 24px rgba(31,36,64,.06);}
@@ -397,10 +476,11 @@ print <<"HTML";
   .lpx-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
   .lpx-h small{color:var(--mut);font-weight:400;font-size:13px;font-family:"Manrope","Segoe UI",system-ui,sans-serif;}
   .lpx-note{color:var(--mut);font-size:13px;line-height:1.55;margin:0 0 12px;}
-  .lpx-f{display:grid;grid-template-columns:minmax(0,2fr) minmax(70px,.7fr);gap:10px;}
+  .lpx-f{display:grid;grid-template-columns:minmax(0,2fr) minmax(90px,.9fr) minmax(70px,.7fr);gap:10px;}
   .lpx-f2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
   .lpx label.l{display:block;font-size:12px;font-weight:600;color:var(--mut);margin:0 0 4px;}
   .lpx input.i{width:100%;height:44px;border:1px solid var(--line);border-radius:14px;padding:0 14px;font:inherit;font-size:14px;background:var(--bg);color:var(--ink);box-shadow:none;margin:0;}
+  .lpx select.i{width:100%;height:44px !important;border:1px solid var(--line) !important;border-radius:14px !important;padding:0 10px !important;font:inherit;font-size:14px !important;background:var(--bg) !important;color:var(--ink) !important;box-shadow:none !important;margin:0 !important;}
   .lpx input.i:focus{outline:none;border-color:var(--ink);box-shadow:0 0 0 3px rgba(255,193,69,.5);background:#fff;}
   .lpx .lpx-chk{display:flex !important;align-items:center;gap:8px;font-size:13px !important;line-height:1.4 !important;margin:12px 0 2px !important;padding:0 !important;color:var(--ink) !important;font-weight:400 !important;text-shadow:none;cursor:pointer;}
   .lpx .lpx-chk input{position:static !important;opacity:1 !important;flex:none;width:18px !important;height:18px !important;accent-color:var(--ink);margin:0 !important;}
@@ -436,21 +516,21 @@ print <<"HTML";
       <a class="lpx-ver" href="$repo" target="_blank" rel="noopener" title="GitHub-Repository &ouml;ffnen">V $ver_html</a>
     </div>
     <div class="lpx-stats">
-      <div class="lpx-stat"><div class="k">Container</div><div class="v"><i class="lpx-dot $ccl"></i>$cst</div><div class="s">Port 8098</div></div>
+      <div class="lpx-stat"><div class="k">Container</div><div class="v"><i class="lpx-dot $ccl"></i>$cst</div><div class="s">Port $port</div></div>
       <div class="lpx-stat"><div class="k">Miniserver</div><div class="v"><i class="lpx-dot $mcl"></i>$mst</div><div class="s">$msub</div></div>
       <div class="lpx-stat"><div class="k">Sicherungen</div><div class="v"><i class="lpx-dot $bcl"></i>$nb</div><div class="s">$bsub</div></div>
     </div>
     <div class="lpx-go">
-      <a class="lpx-btn lpx-acc" href="http://$lbhost:8098/config" target="_blank" rel="noopener" data-role="none">Konfiguration &ouml;ffnen</a>
+      <a class="lpx-btn lpx-acc" href="http://$lbhost:$port/config" target="_blank" rel="noopener" data-role="none">Konfiguration &ouml;ffnen</a>
       <span class="lpx-open">
         <select id="lpx_panel" class="lpx-sel" data-role="none" aria-label="Panel">$popts</select>
-        <a class="lpx-btn lpx-ghost" href="http://$lbhost:8098/" target="_blank" rel="noopener" data-role="none"
-           onclick="var v=document.getElementById('lpx_panel').value;this.href='http://$lbhost:8098/'+(v?'?panel='+encodeURIComponent(v):'');">Web-App &ouml;ffnen</a>
+        <a class="lpx-btn lpx-ghost" href="http://$lbhost:$port/" target="_blank" rel="noopener" data-role="none"
+           onclick="var v=document.getElementById('lpx_panel').value;this.href='http://$lbhost:$port/'+(v?'?panel='+encodeURIComponent(v):'');">Web-App &ouml;ffnen</a>
       </span>
     </div>
   </section>
 
-  <div class="lpx-msg">$msg</div>
+  <div class="lpx-msg">$state_html$msg</div>
 
   <div class="lpx-grid">
     <section class="lpx-card">
@@ -459,6 +539,9 @@ print <<"HTML";
         <input type="hidden" name="action" value="miniserver">
         <div class="lpx-f">
           <div><label class="l">Host / IP</label><input class="i" data-role="none" name="host" value="$hh" placeholder="192.168.1.50"></div>
+          <div><label class="l">Protokoll</label><select class="i" data-role="none" name="scheme"
+            onchange="var p=this.form.port;if(p.value==='80'||p.value==='443'||p.value==='')p.value=this.value==='http'?'80':'443';">
+            <option value="https"$sel_https>HTTPS</option><option value="http"$sel_http>HTTP</option></select></div>
           <div><label class="l">Port</label><input class="i" data-role="none" name="port" value="$hp"></div>
         </div>
         <div class="lpx-f2">
@@ -467,7 +550,7 @@ print <<"HTML";
         </div>
         <label class="lpx-chk"><input type="checkbox" data-role="none" name="tls"> Zertifikat pr&uuml;fen (Gen2 selbstsigniert: aus)</label>
         <label class="lpx-chk"><input type="checkbox" data-role="none" name="force"> Auch bei fehlgeschlagener Pr&uuml;fung speichern</label>
-        <p class="lpx-note" style="margin:6px 0 0">Port 443 = HTTPS (Gen2), Port 80 = HTTP (Gen1).</p>
+        <p class="lpx-note" style="margin:6px 0 0">HTTPS f&uuml;r Gen2 (meist Port 443), HTTP f&uuml;r Gen1 (Port 80).</p>
       </form>
       <div class="lpx-row">
         <button class="lpx-btn lpx-pri" data-role="none" type="submit" form="msform">Verbinden &amp; Speichern</button>
@@ -483,6 +566,17 @@ print <<"HTML";
         <form method="post" data-ajax="false"><input type="hidden" name="action" value="start"><button class="lpx-btn lpx-sec" data-role="none" type="submit">Starten</button></form>
         <form method="post" data-ajax="false"><input type="hidden" name="action" value="stop"><button class="lpx-btn lpx-sec" data-role="none" type="submit">Stoppen</button></form>
       </div>
+      <div class="lpx-sep"></div>
+      <div class="lpx-h" style="margin-bottom:6px"><h3>Port <small>&middot; Standard 8098</small></h3></div>
+      <form method="post" data-ajax="false" class="lpx-row" style="align-items:flex-end;margin-top:0"
+            onsubmit="return confirm('Port speichern und Container neu starten? Panels und Ger&#228;te brauchen danach die neue Adresse.')">
+        <input type="hidden" name="action" value="port">
+        <div><label class="l" for="lpx_hp">Host-Port</label><input class="i" id="lpx_hp" data-role="none" name="hostport" value="$port" placeholder="8098" inputmode="numeric" style="width:110px"></div>
+        <button class="lpx-btn lpx-sec" data-role="none" type="submit">Speichern &amp; neu starten</button>
+      </form>
+      <div class="lpx-warn"><b>Nach einer Port&auml;nderung</b> brauchen Panels und Ger&auml;te die neue Adresse <code>http://$lbhost:$port/</code>.
+        TbViewer-Ger&auml;te: Konfiguration &uuml;ber die neue Adresse &ouml;ffnen, unter &bdquo;Ger&auml;te&ldquo; TbViewer neu einrichten (&bdquo;Erneut installieren&ldquo;, per ADB) &ndash; das tr&auml;gt die Adresse ein.
+        Browser-Lesezeichen, Linux-Agent und andere Ger&auml;te stellst du von Hand um.</div>
       <div class="lpx-sep"></div>
       <div class="lpx-h" style="margin-bottom:6px"><h3>Passwort vergessen?</h3></div>
       <p class="lpx-note">Entfernt den Passwortschutz der Konfiguration &ndash; danach dort ein neues setzen.</p>

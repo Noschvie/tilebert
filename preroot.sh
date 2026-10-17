@@ -34,13 +34,21 @@ else
 	echo "<OK> Docker ist bereits installiert."
 fi
 
-# Laufenden Container vor dem (Neu-)Installieren stoppen (belegt sonst Port 8098).
+# Laufenden Container vor dem (Neu-)Installieren stoppen (belegt sonst seinen Port).
 CONFIGDIR="$ARGV5/config/plugins/$ARGV3"
 if [ -f "$CONFIGDIR/docker-compose.yml" ]; then
 	echo "<INFO> Stoppe laufendes tilebert (Favoriten-Fork)..."
 	sudo docker compose -f "$CONFIGDIR/docker-compose.yml" down 2>/dev/null
 fi
 sudo docker rm -f loxpanelfav > /dev/null 2>&1
+
+# Plugin-Einstellungen (Host-Port, loxpanelfav.cfg) retten - LoxBerry leert
+# beim Update den Config-Ordner; postroot.sh legt die Datei zurueck.
+LPCFG="/tmp/loxpanelfav-upgrade-plugin.cfg"
+rm -f "$LPCFG"
+if [ -f "$CONFIGDIR/loxpanelfav.cfg" ] && cp -a "$CONFIGDIR/loxpanelfav.cfg" "$LPCFG" 2>/dev/null; then
+	echo "<INFO> Plugin-Einstellungen gesichert (Port $(sed -n 's/^LOXPANEL_PORT=//p' "$LPCFG" | tail -1))."
+fi
 
 # Panel-Konfiguration (panels.json/theme.json/loxpanel.cfg) VOR dem Update
 # sichern – als root, damit die root-eigenen Volume-Dateien lesbar sind.

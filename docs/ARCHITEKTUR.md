@@ -7,7 +7,7 @@ bei Zweifel `grep -n`. Pfade relativ zu `/home/dietpi/projekte/loxohnepanel`. K�
 ## 1. Gesamtbild
 
 ```
-Browser/Kiosk (P) <--WebSocket /ws + HTTP--> webvisu.py (aiohttp, Port 8099 im Container, 8098 am Host)
+Browser/Kiosk (P) <--WebSocket /ws + HTTP--> webvisu.py (aiohttp, Port 8099 im Container, 8098 am Host, einstellbar)
 Config-Browser (C) <--HTTP /api/*-----------> webvisu.py <--WS/HTTP--> Loxone Miniserver (loxone_ws.py, loxone-api)
                                                         <--WS 7091--> Audioserver (audioserver*.py)
                                                         <-- iCal / Open-Meteo (front_info.py)
@@ -24,8 +24,8 @@ Android-Panel: TbView/Kiosk.java (WebView) lädt P; Server installiert APK per a
 | `preupgrade.sh`/`postupgrade.sh` | No-ops (Logik liegt in pre/postroot) |
 | `daemon/daemon` | Boot: `loxpanel-ctl.sh check` |
 | `cron/cron.05min` | alle 5 min `loxpanel-ctl.sh check` (Neustart, wenn Container unerwartet weg; bewusst gestoppt bleibt aus) |
-| `bin/loxpanel-ctl.sh` | start/stop/restart/check/backup/restore; `REPLACELBP*`-Platzhalter werden beim Install ersetzt |
-| `config/docker-compose.yml` | Service `loxpanelfav`, `build: ./app`, Port `8098:8099`, Volume `REPLACELBPDATADIR/config:/app/config`, Healthcheck `/api/version` |
+| `bin/loxpanel-ctl.sh` | start/stop/restart/check/portcheck/backup/restore; Host-Port aus `loxpanelfav.cfg` (`LOXPANEL_PORT`, per `--env-file`, weil sudo die Umgebung verwirft); Start nur, wenn der Port frei ist, sonst Grund in `loxpanelfav_portbelegt.cfg`; `REPLACELBP*`-Platzhalter werden beim Install ersetzt |
+| `config/docker-compose.yml` | Service `loxpanelfav`, `build: ./app`, Port `${LOXPANEL_PORT:-8098}:8099`, Volume `REPLACELBPDATADIR/config:/app/config`, Healthcheck `/api/version` |
 | `webfrontend/htmlauth/index.cgi` | Perl-LoxBerry-Seite: Status, Miniserver übernehmen, Panel einrichten (Android/Shelly), Backups/Log; spricht den Container per `.cgi_token` an (W:10924) |
 | `sudoers/`, `uninstall/` | sudo-Rechte für docker, Aufräumen |
 | `icons/icon.svg`, `design-system/` | Plugin-Icon bzw. Design-Tokens/Komponenten-Doku (nicht Laufzeit) |

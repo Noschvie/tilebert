@@ -48,20 +48,23 @@ from loxone_api.client import LoxoneAuthError  # noqa: E402
 from loxone_ws import LoxoneWS, WS_CLOSE_NO_HAMMER, describe_close  # noqa: E402
 
 
-def _ms_https(port) -> bool:
-    """Schema-Wahl fuer den Miniserver: Loxone Gen1 spricht nur HTTP (Port 80),
-    Gen2+ nutzt HTTPS/TLS (443, …). Port 80 -> HTTP/ws, sonst HTTPS/wss."""
+def _ms_https(port, https=None) -> bool:
+    """Schema-Wahl fuer den Miniserver. Explizites Feld `https` (true/false) aus
+    der Miniserver-Konfiguration gewinnt. Fehlt es (alte Konfigurationen), wie
+    bisher aus dem Port: 80 -> HTTP/ws, sonst HTTPS/wss."""
+    if isinstance(https, bool):
+        return https
     try:
         return int(port) != 80
     except (TypeError, ValueError):
         return True
 
 
-def _make_client(host, user, password, port, verify_tls) -> LoxoneClient:
-    """LoxoneClient bauen und bei Gen1 (Port 80) auf HTTP umstellen – die
-    loxone_api setzt die Basis-URL sonst fest auf https://…"""
+def _make_client(host, user, password, port, verify_tls, https=None) -> LoxoneClient:
+    """LoxoneClient bauen und bei HTTP (Gen1, Port 80 oder https=false) umstellen –
+    die loxone_api setzt die Basis-URL sonst fest auf https://…"""
     c = LoxoneClient(host=host, user=user, password=password, port=port, verify_tls=verify_tls)
-    if not _ms_https(port):
+    if not _ms_https(port, https):
         c.base_url = f"http://{host}:{port}/"
     return c
 from adapters import JalousieAdapter, LightControllerV2Adapter  # noqa: E402
@@ -78,7 +81,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.29"
+APP_VERSION = "0.20.30"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -1828,6 +1831,7 @@ class App:
         # ms kann leer sein (noch kein Miniserver konfiguriert) -> Server startet
         # trotzdem, /settings bleibt bedienbar; verbunden wird erst mit host.
         self.host, self.port = ms.get("host", ""), ms.get("port", 443)
+        self.https = ms.get("https")          # None = alt, Schema aus dem Port
         self.user, self.password = ms.get("user", ""), ms.get("pass", "")
         self.verify_tls = ms.get("verify_tls", False)
 
@@ -2274,7 +2278,7 @@ class App:
     async def start(self) -> None:
         try:
             self.client = _make_client(self.host, self.user, self.password,
-                                       self.port, self.verify_tls)
+                                       self.port, self.verify_tls, self.https)
             await self.client.__aenter__()
             self.alg = (await self.client.getkey2()).hashAlg
             self._set_token(await self.client.authenticate())
@@ -2312,7 +2316,7 @@ class App:
                 + ", ".join(missing) + "). Bitte unter Einstellungen -> "
                 "Miniserver Host, Benutzer und Passwort eintragen.")
         newc = _make_client(ms["host"], ms["user"], ms["pass"],
-                            ms.get("port", 443), ms.get("verify_tls", False))
+                            ms.get("port", 443), ms.get("verify_tls", False), ms.get("https"))
         try:
             await newc.__aenter__()
             alg = (await newc.getkey2()).hashAlg
@@ -2326,6 +2330,7 @@ class App:
             raise
         # Erfolg -> uebernehmen
         self.host, self.port = ms["host"], ms.get("port", 443)
+        self.https = ms.get("https")
         self.user, self.password = ms["user"], ms["pass"]
         self.verify_tls = ms.get("verify_tls", False)
         old_client, self.client = self.client, newc
@@ -2356,7 +2361,7 @@ class App:
     async def _connect_ws(self) -> None:
         self.ws = LoxoneWS(host=self.host, port=self.port, user=self.user, jwt=self.jwt,
                            hash_alg=self.alg, verify_tls=self.verify_tls,
-                           secure=_ms_https(self.port))
+                           secure=_ms_https(self.port, self.https))
         await self.ws.connect()
 
     def _set_token(self, jwt: str) -> None:
@@ -2395,7 +2400,7 @@ class App:
         async def once() -> tuple[int, bytes, str]:
             if self.icon_session is None:
                 raise ConnectionError("keine Verbindung zum Miniserver")
-            scheme = "https" if _ms_https(self.port) else "http"
+            scheme = "https" if _ms_https(self.port, self.https) else "http"
             headers = {"Authorization": f"Bearer {self.jwt}"} if self.jwt else {}
             async with self.icon_session.get(f"{scheme}://{self.host}:{self.port}/{path.lstrip('/')}",
                                              headers=headers,
@@ -9958,6 +9963,8 @@ async def api_settings(request: web.Request) -> web.Response:
             "host": ms.get("host") or os.environ.get("LOXPANEL_MS_HOST", ""),
             "user": ms.get("user") or os.environ.get("LOXPANEL_MS_USER", ""),
             "port": ms.get("port", 443),
+            # wirksames Schema (gespeichert oder alt aus dem Port)
+            "https": _ms_https(ms.get("port", 443), ms.get("https")),
             "verify_tls": bool(ms.get("verify_tls", False)),
             "hasPass": bool(ms.get("pass")) or env_ms,
         },
@@ -10076,10 +10083,17 @@ async def api_settings_ms(request: web.Request) -> web.Response:
         ms.pop("pass", None)
     ms["host"] = host
     ms["user"] = user
+    alt_port = ms.get("port")
     try:
         ms["port"] = int(data.get("port") or 443)
     except (TypeError, ValueError):
         ms["port"] = 443
+    # Schema explizit (true/false). Ohne Angabe: gespeichertes Feld nur bei
+    # gleichem Port behalten, sonst wieder aus dem Port ableiten.
+    if isinstance(data.get("https"), bool):
+        ms["https"] = data["https"]
+    elif ms["port"] != alt_port:
+        ms.pop("https", None)
     ms["verify_tls"] = bool(data.get("verify_tls"))
     if data.get("pass"):                       # leer = altes Passwort behalten
         ms["pass"] = str(data["pass"])
@@ -10127,7 +10141,8 @@ async def _ms_token_frei(c, jwt: str, user: str, alg: str) -> None:
 async def _ms_pruefen(ms: dict) -> tuple[str, str] | None:
     """Miniserver-Zugang probeweise anmelden (eigener Client, App-Zustand unberuehrt).
     None = ok, sonst (Art, Meldung): auth | cert | unreachable | other."""
-    c = _make_client(ms["host"], ms["user"], ms["pass"], ms.get("port", 443), ms.get("verify_tls", False))
+    c = _make_client(ms["host"], ms["user"], ms["pass"], ms.get("port", 443), ms.get("verify_tls", False),
+                     ms.get("https"))
     try:
         async with asyncio.timeout(20):
             await c.__aenter__()

@@ -18,6 +18,17 @@ if [ -d "$LPBK" ] && [ -n "$(ls -A "$LPBK" 2>/dev/null)" ]; then
 	echo "<OK> Panel-Konfiguration wiederhergestellt (Update-sicher)."
 fi
 
+# Plugin-Einstellungen (Host-Port) zurueck, bevor der Container startet
+LPCFG="/tmp/loxpanelfav-upgrade-plugin.cfg"
+CFGFILE="$ARGV5/config/plugins/$ARGV3/loxpanelfav.cfg"
+if [ -f "$LPCFG" ]; then
+	cp -a "$LPCFG" "$CFGFILE" 2>/dev/null && chown loxberry:loxberry "$CFGFILE" 2>/dev/null
+	rm -f "$LPCFG"
+	echo "<OK> Plugin-Einstellungen wiederhergestellt."
+fi
+PORT=$(sed -n 's/^[[:space:]]*LOXPANEL_PORT=[[:space:]]*\([0-9]\{1,5\}\)[[:space:]]*$/\1/p' "$CFGFILE" 2>/dev/null | tail -1)
+PORT=${PORT:-8098}
+
 # Sicherungen zurueck (siehe preroot.sh), Besitzer loxberry -> auf der
 # Plugin-Seite loeschbar und herunterladbar
 LPBB="/tmp/loxpanelfav-upgrade-backups"
@@ -38,8 +49,11 @@ docker rm -f loxpanelfav > /dev/null 2>&1
 # fehlgeschlagen sein sollte.
 if which docker > /dev/null 2>&1; then
 	echo "<INFO> Starte tilebert (Favoriten-Fork)..."
-	su -s /bin/bash loxberry -c "$BINDIR/loxpanel-ctl.sh start"
-	echo "<OK> tilebert laeuft – Oberflaeche: http://<LoxBerry-IP>:8098/config"
+	if su -s /bin/bash loxberry -c "$BINDIR/loxpanel-ctl.sh start" && [ ! -f "$ARGV5/config/plugins/$ARGV3/loxpanelfav_portbelegt.cfg" ]; then
+		echo "<OK> tilebert laeuft – Oberflaeche: http://<LoxBerry-IP>:$PORT/config"
+	else
+		echo "<WARN> tilebert nicht gestartet (Port $PORT belegt?) - Details auf der Plugin-Seite."
+	fi
 else
 	echo "<WARN> Docker ist nicht verfuegbar - tilebert konnte nicht gestartet werden. Bitte preroot.sh-Log pruefen."
 fi

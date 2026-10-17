@@ -21,7 +21,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 - eigene Plugin-Identitaet (`FOLDER=loxpanelfav`, eigener Autor-Schluessel)
 - eigener Container-/Hostname (`loxpanelfav` statt `loxpanel`)
-- eigener Host-Port (**8098** statt 8099)
+- eigener Host-Port (Standard **8098** statt 8099, auf der Plugin-Seite einstellbar)
 - eigenes Image, **lokal aus dem mitgelieferten Quellcode gebaut**
   (`config/app/`) statt aus der GitHub Container Registry gezogen – dadurch
   laufen die Aenderungen dieses Forks auch wirklich im Container, nicht der
@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Port einstellbar, HTTPS-Übernahme, Stopp-Hinweis (0.20.30)** — Port der Weboberfläche auf der Plugin-Seite einstellbar (Standard 8098, bleibt bei Updates erhalten); vor jedem Start Prüfung, ob der Port belegt ist, mit Anzeige wer ihn belegt. „Aus LoxBerry übernehmen“ nutzt bei „HTTPS bevorzugen“ den HTTPS-Port; Protokoll HTTP/HTTPS wird gespeichert statt aus dem Port geraten (Auswahl auch im Formular). Plugin-Seite zeigt klar, ob tilebert bewusst gestoppt, durch einen belegten Port blockiert oder unerwartet nicht gestartet ist.
 - **Töne am Gerät aufgeräumt (0.20.29)** — Töne in den Gerätedetails als Zeilen wie die Effekte (Name, Standard/geändert, Schalter rechts); alle Quellen ausgeschrieben, auch die Alarm-Melder; ab vier Namen „+n weitere“ mit Hover bzw. Tippen zum Aufklappen. Dazu Housekeeping: Doku, verwaiste Übersetzungen, toter Code.
 - **Weniger Last auf Wandpanels, TbViewer 5.14 (0.20.28)** — Anti-Einbrenn-Drift ohne Dauer-Neuzeichnen (Kachelseite und Nacht am Shelly ~1 % statt ~15 % CPU); Kamera-Einzelbilder nur noch bei neuem Bild (keine Duplikate), ein Decode je Bild; Türstations-Widget höchstens 2 Bilder/s (Klingel-Vollansicht ungebremst); TbViewer 5.14: schlankere WebView-Ebenen, Shelly-Schoner wirklich dunkel (Backlight 11 statt 169). Optik unverändert.
 - **Schneller und schlanker (0.20.27)** — Config und Panel werden komprimiert und mit Zwischenspeicher ausgeliefert (Config ~70 % weniger Daten, Panel beim erneuten Laden fast nichts); weniger Rechenaufwand bei Live-Updates im Panel; Config im Leerlauf mit halber CPU-Last, Speicherleck bei Reiterwechseln behoben; Geräteliste vom Server ~5× schneller; Live-Nachrichten einmal für alle Panels erzeugt; toter Code entfernt. Fix: Wecker – schneller Doppeldruck konnte ein endloses Intervall hinterlassen. Optik unverändert.
@@ -670,7 +671,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 | `plugin.cfg`, `release.cfg`, `*.sh`, `daemon/`, `cron/`, `sudoers/`, `uninstall/` | LoxBerry-Plugin-Rahmen (Installation, Start, Update) |
 | `bin/loxpanel-ctl.sh` | Docker-Steuerung (start/stop/check/backup/restore) |
 | `webfrontend/htmlauth/index.cgi` | Plugin-Seite in der LoxBerry-Oberfläche |
-| `config/docker-compose.yml` | Container-Definition (Port 8098) |
+| `config/docker-compose.yml` | Container-Definition (Host-Port `${LOXPANEL_PORT:-8098}`) |
 | `config/app/bin/` | Server (`webvisu.py`) und seine Module – das läuft im Container |
 | `config/app/webfrontend/` | Panel, Config-Editor, Settings (HTML/JS) |
 | `config/app/android/` | Fertig gebaute App TbViewer (APK), wird per ADB installiert |
@@ -690,7 +691,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
   ~90 MB Docker-Pakete sonst bei *jeder* Installation/jedem Update erneut
   herunterladen und reinstallieren, siehe „Installationsdauer" unten)
 - **baut** das Image lokal aus `config/app/` und startet es per `docker compose`
-  (Port **8098**)
+  (Port **8098**, auf der Plugin-Seite änderbar; belegter Port wird erkannt, der Start unterbleibt dann)
 - startet das Panel beim **Boot** (`daemon`) und prüft alle **5 Minuten**, ob der
   Container läuft (`cron.05min` → `loxpanel-ctl.sh check`)
 - sichert die Nutzerdaten bei Updates (`pre-/postroot.sh`)
@@ -704,6 +705,7 @@ Image-Builds ein paar Minuten, kein Reboot nötig):
 - **Konfiguration:** `http://<LoxBerry-IP>:8098/config` (Panels, Räume, Kacheln,
   Reiter **„Favoriten"**)
 - **Einstellungen:** `http://<LoxBerry-IP>:8098/settings` (Miniserver-Zugang, Intercom, Displays)
+- Anderer Port: Plugin-Seite → „Container“ → „Port“. Danach brauchen Panels und Geräte die neue Adresse.
 - Das LoxBerry-Plugin-Widget leitet direkt auf `/config` weiter.
 
 Der Miniserver-Zugang wird **nicht** im Plugin gesetzt, sondern über die

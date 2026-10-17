@@ -2,7 +2,7 @@
 
 > **Veraltet / nur Entwickler-Notiz.** Stand aus der Zeit vor dem LoxBerry-Plugin
 > (damals „LoxPanel“). Das Plugin **tilebert** baut und startet den Container selbst
-> (`config/docker-compose.yml`, `bin/loxpanel-ctl.sh`): Host-Port **8098**, im
+> (`config/docker-compose.yml`, `bin/loxpanel-ctl.sh`): Host-Port **8098** (einstellbar), im
 > Container 8099; Config-Volume `REPLACELBPDATADIR/config` (wird bei der
 > Installation ersetzt). `.env.example` gibt es nicht mehr; die Env-Variablen
 > `LOXPANEL_MS_HOST/USER/PASS/PORT/VERIFY_TLS` liest der Server weiterhin, sonst

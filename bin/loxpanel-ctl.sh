@@ -8,6 +8,7 @@
 #   check   startet den Container, falls er (unerwartet) nicht laeuft
 #           (fuer Boot-daemon und 5-Minuten-Cron; ein bewusst gestopptes
 #            Panel wird NICHT wieder gestartet)
+#   portcheck <port>  meldet, wer den Port belegt (Exit 1), frei/eigener Container = Exit 0
 #   backup  sichert die Konfiguration (Panels/Theme/Miniserver) als tar.gz
 #   restore <datei>  spielt ein Backup zurueck (sichert vorher den Ist-Stand)
 #
@@ -18,6 +19,13 @@
 
 COMPOSE="REPLACELBPCONFIGDIR/docker-compose.yml"
 STOPPED="REPLACELBPCONFIGDIR/loxpanelfav_stopped.cfg"
+# Plugin-Einstellungen (Zeile LOXPANEL_PORT=<Host-Port>), Standard-Port 8098.
+# Pre-/postroot.sh retten die Datei ueber Updates (LoxBerry leert den Config-Ordner).
+CFG="REPLACELBPCONFIGDIR/loxpanelfav.cfg"
+# Variablen fuer docker compose: sudo verwirft die Umgebung, daher per --env-file
+ENVF="REPLACELBPCONFIGDIR/.compose.env"
+# Grund, warum der Start unterblieb (Port belegt) - fuer die Plugin-Seite
+PORTBUSY="REPLACELBPCONFIGDIR/loxpanelfav_portbelegt.cfg"
 # Konfig-Daten liegen im gemounteten Volume (panels.json, theme.json,
 # loxpanel.cfg) und gehoeren root (der Container schreibt als root). Backup/
 # Restore laufen deshalb als root IM Container (sonst darf der Widget-Benutzer
@@ -43,6 +51,41 @@ _img() {
 # gemountet -> config=/data/config, backups=/data/backups.
 _indocker() {
 	sudo docker run --rm -v "$DATADIR":/data "$(_img)" sh -c "$1"
+}
+
+# Host-Port aus loxpanelfav.cfg, sonst 8098
+_port() {
+	local p
+	p=$(sed -n 's/^[[:space:]]*LOXPANEL_PORT=[[:space:]]*\([0-9]\{1,5\}\)[[:space:]]*$/\1/p' "$CFG" 2>/dev/null | tail -1)
+	if [ -n "$p" ] && [ "$p" -ge 1 ] && [ "$p" -le 65535 ]; then echo "$p"; else echo 8098; fi
+}
+
+# docker compose mit LOXPANEL_PORT (docker-compose.yml: "${LOXPANEL_PORT:-8098}:8099")
+_compose() {
+	LOXPANEL_PORT=$(_port)
+	export LOXPANEL_PORT
+	printf 'LOXPANEL_PORT=%s\n' "$LOXPANEL_PORT" > "$ENVF"
+	sudo docker compose --env-file "$ENVF" -f "$COMPOSE" "$@"
+}
+
+# Wer belegt Port $1? Ausgabe leer = frei oder von unserem eigenen Container.
+# Sonst "Container <name>", der Prozessname (nur sichtbar, wenn er loxberry
+# gehoert) oder "unbekannt".
+_port_owner() {
+	local p=$1 c l
+	c=$(sudo docker ps --filter "publish=$p" --format '{{.Names}}' 2>/dev/null | head -5)
+	if [ -n "$c" ]; then
+		printf '%s\n' "$c" | grep -qx loxpanelfav && return 0
+		echo "Container $(printf '%s\n' "$c" | head -1)"; return 0
+	fi
+	if command -v ss > /dev/null 2>&1; then
+		l=$(ss -ltnp "sport = :$p" 2>/dev/null | tail -n +2 | head -1)
+		[ -z "$l" ] && return 0
+		c=$(printf '%s' "$l" | sed -n 's/.*users:(("\([^"]*\)".*/\1/p')
+		echo "${c:-unbekannt}"
+	elif (exec 3<> "/dev/tcp/127.0.0.1/$p") 2> /dev/null; then
+		echo "unbekannt"
+	fi
 }
 
 running() {
@@ -184,6 +227,17 @@ restore() {
 
 start() {
 	rm -f "$STOPPED"
+	# Port vorher pruefen: belegt (nicht von uns) -> nicht starten, Grund ablegen.
+	# Der 5-Minuten-Cron versucht es weiter und startet, sobald der Port frei ist.
+	local p by
+	p=$(_port)
+	by=$(_port_owner "$p")
+	if [ -n "$by" ]; then
+		printf 'PORT=%s\nBY=%s\n' "$p" "$by" > "$PORTBUSY"
+		echo "Port $p ist belegt ($by) - tilebert startet nicht. Anderen Port auf der Plugin-Seite waehlen."
+		return 1
+	fi
+	rm -f "$PORTBUSY"
 	# Lokal bauen (nutzt den Build-Cache -> nur beim ersten Mal bzw. nach
 	# Quellcode-Aenderungen dauert es laenger), danach starten. Kein 'pull':
 	# es gibt kein Registry-Image, der Code kommt aus config/app/.
@@ -191,8 +245,8 @@ start() {
 	# (Lieferketten-Metadaten) beim Export - bei einem rein lokal gebauten und
 	# gestarteten Image (nie in eine Registry gepusht, nie von dort geprueft)
 	# ungenutzt, kostet aber bei jedem Build ein, zwei Sekunden.
-	sudo docker compose -f "$COMPOSE" build --provenance=false --sbom=false 2>&1
-	sudo docker compose -f "$COMPOSE" up -d 2>&1
+	_compose build --provenance=false --sbom=false 2>&1
+	_compose up -d 2>&1
 	# Vorgaengerversion des Images (nach dem Neubau namenlos, ~200 MB) entfernen -
 	# nur verwaiste Images mit unserem Label, sonst sammeln sie sich je Update an.
 	sudo docker image prune -f --filter "label=de.loxpanelfav.image=1" > /dev/null 2>&1 || true
@@ -203,7 +257,8 @@ start() {
 
 stop() {
 	touch "$STOPPED"
-	sudo docker compose -f "$COMPOSE" down 2>&1
+	rm -f "$PORTBUSY"
+	_compose down 2>&1
 }
 
 case "$1" in
@@ -219,10 +274,15 @@ case "$1" in
 			sudo docker restart loxpanelfav 2>&1
 		fi
 		;;
+	portcheck)
+		case "$2" in ''|*[!0-9]*) echo "Ungueltiger Port"; exit 2 ;; esac
+		by=$(_port_owner "$2")
+		[ -n "$by" ] && { echo "$by"; exit 1; }
+		;;
 	backup)  backup ;;
 	restore) restore "$2" ;;
 	verify)  verify "$2"; exit $? ;;
 	resetpw) resetpw ;;
-	*) echo "Nutzung: $0 start|stop|restart|check|backup|restore <datei>|resetpw"; exit 1 ;;
+	*) echo "Nutzung: $0 start|stop|restart|check|portcheck <port>|backup|restore <datei>|resetpw"; exit 1 ;;
 esac
 exit 0
