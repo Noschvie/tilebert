@@ -107,6 +107,10 @@ class AudioEventClient:
                 "cover": e.get("coverurl") or "",
                 "playing": (e.get("mode") == "play"),
                 "volume": e.get("volume"),
+                # Zufall/Wiederholen/Ein (fuer die Bedienung in der Zone; None = nicht gemeldet)
+                "shuffle": e.get("plshuffle"),
+                "repeat": e.get("plrepeat"),
+                "power": e.get("power"),
             }
             if self.now.get(pid) != np:
                 self.now[pid] = np
@@ -206,6 +210,17 @@ class AudioEventClient:
             log.warning("Audioserver %s: Raumfavorit %s fuer Zone %s nicht gesendet (Verbindung weg)",
                         self.host, favid, playerid)
         return ok
+
+    def can_send(self) -> bool:
+        """Darf auf diesem Kanal ein Befehl gehen? Nachbau (nicht gekoppelt) oder angemeldet."""
+        return self.paired is False or bool(self.authed)
+
+    async def player_cmd(self, playerid: int, cmd: str) -> bool:
+        """Zonen-Befehl ueber den Audioserver (audio/<zone>/<cmd>), z. B. shuffle/1, repeat/3,
+        on, off - die der Miniserver fuer AudioZoneV2 nicht anbietet. -> gesendet?"""
+        if playerid is None or not self.can_send():
+            return False
+        return await self._send(f"audio/{int(playerid)}/{cmd}")
 
     def _kopplung_unklar(self, grund: str) -> None:
         """Pruefung ohne Ergebnis, der bisherige Wert bleibt. Ist die Kopplung

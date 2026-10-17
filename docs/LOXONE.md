@@ -133,34 +133,34 @@ Zeilen: K = Kachel (`_control_item_build`, W:5079-5566), D = Detail (`_view_cont
 |---|---:|---|---|
 | InfoOnlyAnalog | 80 | voll | Luftfeuchte, Temperatur, Helligkeit |
 | Switch | 55 | voll | BWM aus Terrasse, Spots per Schaltuhr |
-| LightControllerV2 | 26 | voll (aber ohne Kreise/Farbe, s. u.) | Lichtsteuerung Garagenweg/Terrasse |
+| LightControllerV2 | 26 | voll (Szenen + Lichtkreise) | Lichtsteuerung Garagenweg/Terrasse |
 | Meter | 21 | voll (reduziert) | E-Heizung Bad, Pool |
 | TextState | 20 | voll | Status, Luftqualität |
 | InfoOnlyDigital | 18 | voll | Sonnenschein, Türfenster |
-| Jalousie | 16 | voll (ohne Position/Lamelle/Auto) | Tür, Essbereich Fenster |
+| Jalousie | 16 | voll (Lamellen, Automatik; ohne Positionsregler) | Tür, Essbereich Fenster |
 | Pushbutton | 14 | voll | Emmi Szene Nacht, Bewässerung abbrechen |
 | Slider | 7 | voll | WW aufheizen Dauer |
 | Tracker | 7 | voll | Gartenpumpe, Doorbird Online Status |
-| AlarmClock | 7 | teilw. | Wecker, Wecker Bewässerung |
+| AlarmClock | 7 | voll (schalten/stellen; ohne Anlegen/Löschen) | Wecker, Wecker Bewässerung |
 | TimedSwitch | 6 | voll | Beete manuell |
 | PresenceDetector | 5 | voll (nur Anzeige) | EG Wohnzimmer, Präsenz Bad |
 | Alarm | 3 | voll | Alarmanlage, Außenhüllen-, Regenüberwachung |
 | SmokeAlarm | 3 | voll | Brandmelde-, Wassermeldezentrale |
-| PulseAt | 3 | **fehlt (tote Kachel)** | Fassadenspot an/aus, Haus geht automatisch schlafen |
+| PulseAt | 3 | voll | Fassadenspot an/aus, Haus geht automatisch schlafen |
 | Daytimer | 2 | voll (nur Override) | Schaltuhr, Stoßlüften Timer |
 | Radio | 2 | voll | Licht Betriebsmodus, Sonnenschutz Steuerung |
-| Intercom | 2 | teilw. | Coodeknacker, Doorbird |
-| Irrigation | 2 | teilw. (nur Start/Stopp) | Bewässerung Beete/Rasen |
-| AalEmergency | 1 | **fehlt (tote Kachel)** | Panikalarm |
-| NfcCodeTouch | 1 | **fehlt (tote Kachel)** | NFC Code Touch |
-| AudioZone / AudioZoneV2 | 1 / 1 | teilw. / voll | Zentral |
+| Intercom | 2 | teilw. (Klingelhistorie, kein Gegensprechen) | Coodeknacker, Doorbird |
+| Irrigation | 2 | voll (Einzelzone mit Dauer) | Bewässerung Beete/Rasen |
+| AalEmergency | 1 | voll | Panikalarm |
+| NfcCodeTouch | 1 | voll | NFC Code Touch |
+| AudioZone / AudioZoneV2 | 1 / 1 | voll (Zufall/Wiederholen/Ein, Gruppe) | Zentral |
 | CentralAlarm / CentralAudioZone / CentralJalousie / CentralLightController | je 1 | voll | Alarm Zentral, Audio Zentral, Rolläden zentral, Licht Zentral |
 | EFM / EnergyManager2 / Fronius | je 1 | voll | Energieflussmonitor, Energiemanager, Energiemonitor |
 | Gate | 1 | voll | Tor |
-| Hourcounter | 1 | voll (Einheit prüfen!) | Heizung Heizstab mit PV Überschuss |
+| Hourcounter | 1 | voll (Sekunden umgerechnet, kein Reset) | Heizung Heizstab mit PV Überschuss |
 | IRoomControllerV2 | 1 | voll (reduziert) | OG Bad |
-| MailBox | 1 | voll (nur Anzeige) | Briefkasten |
-| Ventilation | 1 | teilw. (nur Anzeige) | Raumlüftungssteuerung |
+| MailBox | 1 | voll (Quittieren) | Briefkasten |
+| Ventilation | 1 | voll (Timer/Profile/Modus wie Loxone-App) | Raumlüftungssteuerung |
 | Webpage | 1 | voll | Cams Eingangsbereich |
 | WindowMonitor | 1 | voll | Fenster- und Türüberwachung |
 
@@ -180,9 +180,11 @@ Stand `jLocked`/`jLockable` kommt in **allen** Typen der Anlage vor (States/Deta
 - **App-Darstellung:** Kachel = Name + aktive Stimmung(en); Detail = Stimmungsliste (Favoriten oben, „Weitere“ getrennt), Mischen mehrerer Stimmungen, Lichtkreise mit
   Schalter/Dimmer/Farbwähler, Master-Regler [KB lichtsteuerung-v2: Master skaliert relativ; Kreis-Bezeichnungen aus Config; Verlauf max. 100 Einträge] (Aufbau im Detail: Beobachtung nötig).
 - **Fallstricke:** Mehrere aktive Stimmungen möglich (Mischung, pro Ausgang höchste Helligkeit); `moodList`-Reihenfolge = Listenreihenfolge; Subcontrols nur lesbar über `subControls`.
-- **LoxPanel: teilweise.** K W:5101-5137 (Glühbirne gelb, Mini-Prev/Next, Doppeltipp = Aus); D W:6612-6651 (Stimmungsliste, Aus-Knopf, heller/dunkler über
-  `__dimall` für alle Kreise). **Fehlt:** einzelne Lichtkreise schalten/dimmen, Master-Regler, Farbwähler (ColorPickerV2-Subcontrols), Favoriten-/Zusatz-Trennung,
-  Mischen (`addMood/removeMood`), Präsenz-Schalter, Verlauf (`gethistory`).
+- **tilebert: voll (Runde 1, 10/2026).** Kachel wie bisher; Detail mit Reiter „Szenen | Lichtkreise“ (Route `tab=circ`, Wechsel ersetzt die Seite).
+  Lichtkreise (`_light_circuits`): alle Subcontrols außer `details.masterValue/masterColor`, Name aus `circuitNames` (Schlüssel `AI1` bzw. `<uuid>/AI1`), sonst Strukturname.
+  Dimmer/EIBDimmer: Regler `<wert>` (Senden beim Loslassen) + Schalter `on`/`off`; Switch: `on`/`off`; ColorPickerV2/Colorpicker: Farbpunkt + Pfeil zur Farbwahl des
+  Kreises (Detailseite eines Unterbausteins, erbt `isSecured` der Lichtsteuerung). `__dimall` lässt die Master-Helligkeit aus. **Bewusst nicht:** Szenen lernen/umbenennen/löschen,
+  Favoriten-/Zusatz-Trennung, Mischen (`addMood/removeMood`), Präsenz, Verlauf.
 
 ### LightController (alt), LightsceneRGB [SF S.94-99]
 - LightController: States `activeScene`, `sceneList`; Befehle `<n>`, `off`, `on`, `plus`, `minus`, `<n>/learn/<name>`. **LoxPanel voll** (K W:5379, D W:6668).
@@ -193,8 +195,10 @@ States `position, min, max, step`; Befehle `on`, `off`, `<pos>`. LoxPanel voll (
 
 ### ColorPickerV2 / ColorPicker (nur Subcontrol) [SF S.54-56]
 States `color` (Text `hsv(h,s,v)` bzw. `temp(helligkeit,kelvin)`), `sequence`, `sequenceColorIdx`; Details `pickerType (Rgb|Lumitech|TunableWhite)`, `TWMin/TWMax`;
-Befehle `hsv(h,s,v)`, `temp(b,k)`, `daylight(b)`, `setFav/<idx>/<farbe>`, `setSequence/...`, `setBrightness`. LoxPanel: nur eigenständig (K W:5284, D W:7296), aus
-LightControllerV2 wird nur die Live-Farbe fürs Icon gelesen (W:5107-5116).
+Befehle `hsv(h,s,v)`, `temp(b,k)`, `daylight(b)`, `setFav/<idx>/<farbe>`, `setSequence/...`, `setBrightness`. **tilebert: voll (Runde 2, 10/2026)** (`_color_blocks`), eigenständig und aus LightControllerV2 als Lichtkreis (Reiter „Lichtkreise“):
+Farbfeld + Helligkeit, Segment Farbe/Weiß/Aus (TunableWhite nur Weiß, V1 `Colorpicker` mit `lumitech(b,k)`; „ColorPicker“ wird beim Laden vereinheitlicht),
+Farbe: Farbton-Leiste (Name statt Grad), Sättigung, Helligkeit → `hsv(h,s,v)`; Weiß: Weißton (`minKelvin/maxKelvin` bzw. `TWMin/TWMax`, sonst 2700–6500) + Helligkeit
+→ `temp(b,k)`, Voreinstellungen Warm/Neutral/Kalt. Regler senden beim Loslassen. **Bewusst nicht:** Favoriten, Sequenzen, `daylight`.
 
 ## B2. Beschattung / Öffnungen
 
@@ -210,9 +214,11 @@ LightControllerV2 wird nur die Live-Farbe fürs Icon gelesen (W:5107-5116).
   als Statuszeile (Beobachtung nötig für Details).
 - **Fallstricke:** Position 0..1 vs. Befehl 0..100; „Auf“ = Position 0; bei `locked`/`safetyActive` verweigert der Baustein Fahrten; `Up`/`Down` laufen bis `…Off`
   (LoxPanel nutzt `Up`/`Down`/`Stop`, funktioniert – Stop als Groß-S).
-- **LoxPanel: teilweise.** K W:5138-5176 (Fahrtanimation, Auf/Ab, Piktogramm-Position), D W:6722-6751 (Auf/Ab, Ganz auf/Beschatten/Ganz ab, Statuszeile `_jal_status` W:2489).
-  **Fehlt:** Position-/Lamellenregler (`manualPosition/manualLamelle` 0 Treffer), Automatik ein/aus (`auto/NoAuto` 0 Treffer), Anzeige `safetyActive/locked/infoText`,
-  Lamellenwinkel, `deviceState` offline, Verlauf.
+- **tilebert: voll (Runde 1, 10/2026).** Kachel: Unterzeile „· Auto“ bei `isAutomatic` + `autoActive`. Detail: Stellung nur EINMAL als großer Wert mit Auf/Ab
+  (Tipp in Fahrt = `Stop`); Zeile darunter ohne Prozent: in Fahrt Richtung + Ziel aus `targetPosition`, sonst `autoInfoText`/`infoText`, „Gesperrt“ (`locked`),
+  „Sicherheitsfahrt aktiv“ (`safetyActive`, roter Punkt); Chip „Automatik“ (`auto`/`NoAuto`, Zustand `autoActive`) bei `details.isAutomatic`; Lamellen-Regler
+  `manualLamelle/<0-100>` nur bei `details.animation == 0` (Senden beim Loslassen); Ganz auf/Beschatten/Ganz ab.
+  **Bewusst nicht:** Positionsregler (`manualPosition`) – Nutzerentscheidung, Position nicht dreifach; Grenzwerte/Parameter der Beschattung, Endlagen, Verlauf.
 
 ### Gate (1) [SF S.68-69]
 States `position` (1 = offen), `active` (-1 schließt, 0, 1 öffnet), `preventOpen`, `preventClose`; Details `animation` (0 Garagentor ... 5), `hasHistory`;
@@ -225,8 +231,12 @@ und `preventOpen/Close`-Anzeige fehlen.
   Details `windows[{uuid,name,room,installPlace}]`. **LoxPanel voll** (K W:5394, D W:6686). Hinweis: Code testet Bit 32 = offline (W:6694) – laut Doku ist „offline“ *kein Bit*, sondern ein fehlender Wert (Prüfen).
 
 ### CentralJalousie / CentralLightController / CentralAlarm / CentralAudioZone / CentralGate / CentralWindow / CentralPresence (je 1 der ersten vier) [SF S.42-43]
-Details `controls[{uuid,id}]`; Befehle über `selectedcontrols/...` (siehe A4); `CentralJalousie` hat zusätzlich State `safetyActive`. **LoxPanel voll** (K W:5521-5543, D W:6377-6460), implementiert
-eigene Auflösung statt `selectedcontrols`. Nicht umgesetzt: CentralPresence (kein Handler).
+Details `controls[{uuid,id}]`; Befehle über `selectedcontrols/...` (siehe A4); `CentralJalousie` hat zusätzlich State `safetyActive`.
+**tilebert:** Zentral Licht/Jalousie wie bisher (je Mitglied über `__central/...`). **Runde 2 (10/2026), `_central_list`:** Zentral Audio, Alarm, Tor, Fenster als Liste
+(Zustand rechts, Zeile/Pfeil öffnet das Mitglied), Zusammenfassung auf Kachel und Seite gleich (`_central_sum`). Sammelbefehle direkt an den Zentralbaustein:
+CentralAudio `play`/`pause`/`voldown`/`volup` (relativ) + „Alle aus“ je Mitglied (`off`; Gen. 2 über den Audioserver); CentralAlarm `on`/`off`; CentralGate `open`/`stop`/`close`;
+CentralWindow `fullopen`/`stop`/`fullclose`. Hat ein Mitglied `isSecured`, ist der Zentralbaustein gesichert (PIN, `sec_uuids`), `__central` reicht die PIN an
+gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht umgesetzt: CentralPresence.
 
 ## B3. Klima / Heizung / Lüftung
 
@@ -246,7 +256,10 @@ eigene Auflösung statt `selectedcontrols`. Nicht umgesetzt: CentralPresence (ke
 - **LoxPanel: teilweise.** K W:5184-5197 (Ist → Soll, heizt/kühlt, Fenster); D W:6915-6957 (Ist groß, Komfort ± 0,5 K, Zeitleiste `_irc_schedule`, Modi als 1-h-Override + Auto).
   **Fehlt:** Betriebsart wählen (`setOperatingMode`, Heizen/Kühlen/Auto), Präsenz-Taste, manuelle Solltemperatur (`override/3/...` + Temp), Eco-/Schutz-Temperaturen, Kühl-Komfort, Quellen,
   Timer mit frei wählbarer Dauer, Verlauf, Feuchte/CO2.
-- IRoomController (v1) [SF S.79-81] voll in LoxPanel (K gemeinsam, D W:6958). ClimateController/ClimateControllerUS [SF S.45-53]: nur US-Variante (K W:5429, D W:7404); ClimateController (nicht US) **fehlt**.
+- IRoomController (v1) [SF S.79-81] voll in LoxPanel (K gemeinsam, D W:6958). ClimateController/ClimateControllerUS [SF S.45-53]: nur US-Variante; ClimateController (nicht US) **fehlt**.
+  **ClimateControllerUS – tilebert Runde 3 (`_ccus_view`):** Ist (Mittel der Räume), Zustand Heizt/Kühlt/Bereit, Modus `setMode/<2 Heizen|3 Kühlen|1 Auto|0 Aus>`
+  (nur wenn `connectedInputs` Bit 1 nicht verdrahtet); Sollwerte je angeschlossener Raumregelung (`states.controls`) −/+ 0,5 °C mit `setComfortTemperature` bzw.
+  `setComfortTemperatureCool` an die IRCv2. Bewusst nicht: Außentemperatur-Sperren, Modus-Timer, Notheizung.
 
 ### Ventilation (1: „Raumlüftungssteuerung“) [SF S.136-141]
 - **States:** `speed` (%), `mode`, `activeMode`, `ventReason` (0 Grund, 1 erhöht, 4 Stop, 5 Fenster offen, 6 Turbo, 7 Manuell, 8 Abluft, 9 Einschlaf, 10 Frostschutz), `temperatureSupport`, `activeTimerProfile`
@@ -254,9 +267,12 @@ eigene Auflösung statt `selectedcontrols`. Nicht umgesetzt: CentralPresence (ke
   `presenceMin/Max`, `absenceMin/Max`, `humidityIndoor/Max`, `airQualityIndoor/Max`, `temperatureIndoor/Outdoor/Target`, `frostTemp`, `heatExchanger`.
 - **Details:** `modes[{id,name}]`, `timerProfiles[{name,useCase,interval,speed{value,enabled},modes[],defaultMode}]`, `type` (0 generic, 1 Leaf), `has*`-Flags.
 - **Befehle:** `setTimer/<interval>/<speed>/<modeId>/<profilIdx>` (-1 = manuell), `setTimer/0` (stoppt), `setAbsenceMin/Max`, `setPresenceMin/Max`, `ackFilterChange`.
-- **LoxPanel: nur Anzeige.** K W:5269, D W:7234-7253 (Stufe als read-only-Fläche; Kommentar: Stellbefehle nicht an echter Anlage geprüft). Fehlt: Timer/Modi/Profile, `controlInfo`-Meldungen (Filterwechsel!), Min/Max.
+- **tilebert Runde 3 (`_vent_view`), am Loxone-Standard:** Leistung in % groß, Zeile Lüftungsgrund (`ventReason`) · Feuchte · CO₂, bei laufendem Timer Profil · Restzeit
+  (`overwriteUntil`, Unix oder Loxone-Zeit) · Modus. Es gibt keinen reinen Stufen-/Modusbefehl: −/+ und „Modus ▾“ starten einen manuellen Timer
+  `setTimer/3600/<speed±10>/<modeId>/-1` (1 h); Profile aus `details.timerProfiles` (z. B. „Stoßlüften“) als Segmentwahl `setTimer/<interval>/<speed>/<defaultMode>/<idx>`;
+  „Auto“ = `setTimer/0`; `controlInfo` (Filterwechsel …) als Hinweis + Aktionsknopf. **Bewusst nicht:** Presence-/Absence-Min/Max. **Ungeprüft:** `overwriteUntil`-Format, Wert von `mode` vs. `activeMode`.
 
-### AcControl [SF S.150-154]
+### ACControl (Doku-Schreibweise; „AcControl“ wird beim Laden darauf vereinheitlicht) [SF S.165-167]
 States `status, mode (1-5), fan, ventMode, targetTemperature, temperature, minTemp/maxTemp, pauseUntil/Reason, Override, silentMode`; Befehle `on/off/toggle, setTarget, setMode, setFan, setAirDir, setoverride/..., startpause/<s>`. LoxPanel K W:5422, D W:7331 (nicht in Anlage).
 
 ## B4. Schalten, Taster, Eingaben
@@ -273,7 +289,9 @@ States `deactivationDelay` (>0 Rest-Sek., 0 aus, -1 dauerhaft an), `deactivation
 **LoxPanel voll** (K W:5218, D W:6874). Detail-„Ein“ sendet `pulse` (Zeitlauf), kein dauerhaftes `on`.
 
 ### Slider (7), UpDownAnalog, ValueSelector, TextInput [SF S.120, 135-136, 132]
-Slider: States `value, error`; Details `min,max,step,format`; Befehl `<zahl>`. LoxPanel Slider voll (K W:5357, D W:7028); ValueSelector/UpDownAnalog/TextInput **teilweise** (`PARTIAL_TYPES`, W:598).
+Slider: States `value, error`; Details `min,max,step,format`; Befehl `<zahl>`. LoxPanel Slider voll (K W:5357, D W:7028); ValueSelector voll.
+**Runde 3:** UpDownAnalog/LeftRightAnalog: Wert ± `step` in `min..max` (Pfeile bei Links/Rechts). TextInput: aktueller Text; Freitext senden (Text URL-kodiert,
+ohne `/ ? # \`) nur auf Handy/Tablet/PC – auf 480er- und 960×480-Panels nur Anzeige.
 
 ### Radio (2) [SF S.112-113]
 States `activeOutput` (0 = aus); Details `outputs{1..16: Name}`, `allOff` (Name für „aus“); Befehle `<id>`, `reset`, `next`, `prev`. **LoxPanel voll** (K W:5370, D W:6652; `next/prev` ungenutzt).
@@ -287,7 +305,12 @@ States `activeOutput` (0 = aus); Details `outputs{1..16: Name}`, `allOff` (Name 
 State `entries` (Zeilen durch `|` getrennt, `\x14` = Zeilenumbruch), Details `maxEntries`. **LoxPanel voll:** K W:5444, D W:7009 (Zeitstempel getrennt, `_TS_RE` W:612).
 
 ### Sauna, SteakThermo, Remote, UpDownLeftRight, Sequential
-Siehe B8. LoxPanel: Sauna (K W:5491, D W:7574), SteakThermo (K W:5509, D W:7644), UpDownDigital (K W:5281, D W:7282); Remote/Sequential **fehlen**.
+Siehe B8. Remote/Sequential **fehlen**. **Runde 3:**
+- Sauna (`_sauna_view`): Ist groß, Soll −/+ (`temp/<t>`), Kennzahlen Feuchte/Bank/Timer, Pillen Ein (`on`/`off`), Programm (`mode/<n>`, nur mit Verdampfer), Timer (`starttimer`),
+  Lüften (`fanon`/`fanoff`). Ein „Aufguss“-Befehl existiert in der Doku nicht. Hinweis: `SAUNA_MODES[0]` heißt „Manuell“, die Doku nennt 0 = Aus (nicht geändert, an Anlage prüfen).
+- SteakThermo (`_steak_view`): je Fühler Ist/Ziel aus `sensorInfo`, Ziel ±1 `setSensor/<i>/<t>/<name>`, Timer ±1 min `setTimerDuration/<s>`, `startTimer`/`stopTimer`, `quitAlarm`.
+- UpDownDigital/LeftRightDigital: ein Pfeil-Paar, gedrückt halten (`UpOn/UpOff`, `DownOn/DownOff`; Links/Rechts: links = Down, rechts = Up); Loslassen wird auch bei
+  Fokus-/Tabverlust gesendet.
 
 ## B5. Zeit/Automatik
 
@@ -299,17 +322,21 @@ Siehe B8. LoxPanel: Sauna (K W:5491, D W:7574), SteakThermo (K W:5509, D W:7644)
 
 ### PulseAt (3) [SF S.114]
 States `isActive`, `startTime` (Sek. seit Mitternacht), `oneTimePulseDate`, `pulseDuration`, `type`; Befehle `setTime/<s>`, `setOneTimePulse/<datum>` (0 = täglich), `setPulseDuration/<s>`, `pulse`, `setType/<id>`.
-**LoxPanel: fehlt auf der Kachel (tote Kachel, /api/types.unsupportedControls)** – obwohl ein Detail existiert (W:7091-7098, nur „Nächster Impuls“, keine Befehle). Es fehlt `nav` in `_control_item_build`.
+**tilebert: Kachel mit Detail** (`_pulse_view`): Zeitpunkt (täglich/einmalig), Impulsdauer, Ausgang; Befehl `pulse`. Zeit/Dauer/Typ setzen bewusst nicht (konfiguriert).
 
 ### AlarmClock (7) [SF S.30-33]
 States `isEnabled`, `isAlarmActive`, `entryList` (JSON `{id:{name,isActive,alarmTime(Sek. seit 0:00),modes[],nightLight,daily}}`), `currentEntry`, `nextEntry`, `nextEntryTime` (seit 2009), `nextEntryMode`, `ringingTime`,
 `ringDuration`, `snoozeTime`, `snoozeDuration`, `prepareDuration`, `confirmationNeeded`, `deviceState`/`deviceSettings` (Touch Nightlight), `wakeAlarmSoundSettings`; Befehle `snooze`, `dismiss`, `entryList/put/<id>/<name>/<zeit>/<aktiv>/<modi|daily>`,
 `entryList/delete/<id>`, `setPrepDuration`, `setRingDuration`, `setSnoozeDuration` (≥ 60), `setBeepOn`, `setBrightnessActive/Inactive`, `setWakeAlarmSound/Volume/SlopingOn`.
-**LoxPanel: teilweise.** K W:5409, D W:7131 (Weckzeit-Liste, Schlummern/Aus beim Klingeln, Bearbeiten von Einträgen über Alarm-Helfer W:4820-4945). Fehlt: Dauern/Sounds/Nachtlicht-Einstellungen.
+**tilebert: voll (Runde 1, 10/2026).** Liste je Wecker mit Schalter (`entryList/put` mit umgeschaltetem `isActive`, Rohname unverändert) und Pfeil zu „Weckzeit stellen“
+(−/+ Stunde/5 min, Wochentage umschaltbar, Aktiv, Übernehmen = `entryList/put`); Nachtlicht-Einträge senden `daily` (Einmal/Täglich) statt Betriebsarten;
+Klingeln: Schlummern/Aus, Zeile = laufender Eintrag (`currentEntry`). Namen mit `/ ? # \ ..` sind nicht als Befehl übertragbar → Zeile nur Anzeige.
+Prozentkodierung im Befehl erlaubt (`%XX`, ohne Pfad-/Steuerzeichen). **Bewusst nicht:** Anlegen/Löschen, Dauern, Weckton/Lautstärke, Nachtlicht-Einstellungen.
 
 ### Hourcounter (1) [SF S.69-70]
 States `total` (**Sekunden**), `remaining`, `overdue`, `overdueSince`, `maintenanceInterval`, `lastActivation`, `active`, `stateUnit` (0 Sek., 1 Min., 2 Std., 3 Tage = gewünschte Anzeigeeinheit); Befehle `reset`, `resetAll`.
-**LoxPanel: voll, aber Verdacht auf Einheitenfehler:** K W:5441 und D W:7426 formatieren `total` mit `"%.0f h"` ohne Umrechnung/`stateUnit`. Per Doku liefert der Baustein Sekunden → mit Live-Wert prüfen. Kein `reset`.
+**tilebert Runde 3 (`_hours_view`, `_hc_fmt`):** Sekunden werden in die Einheit von `stateUnit` (Standard h) umgerechnet (Kachel + Seite); „Wartung in …“ bzw.
+„Wartung fällig seit …“ (rot), Kennzahlen Läuft/Zuletzt an/Intervall. **Kein Reset** (Nutzerentscheidung). **Am echten Miniserver prüfen:** Sekunden-Einheit von `total`.
 
 ## B6. Sicherheit / Zutritt
 
@@ -325,23 +352,26 @@ States `level` (1 Voralarm, 2 Hauptalarm), `nextLevel(+Delay)`, `alarmCause` (Bi
 
 ### AalEmergency (1: „Panikalarm“) [SF S.26]
 States `status` (0 normal, 1 Alarm, 2 Reset aktiv, 3 App-deaktiviert), `disableEndTime`, `resetActive`; Befehle `trigger`, `quit`, `disable/<s>`.
-**LoxPanel: fehlt auf der Kachel (tote Kachel).** Detail nur Anzeige (W:7080-7083); kein `trigger/quit`.
+**tilebert: Kachel mit Detail** (`_aal_view`): Bereit/Notruf/Gesperrt/Pausiert; `trigger` (über Menü mit Rückfrage), `quit`, bei Pause `disable/0`.
 
 ### NfcCodeTouch (1) [SF S.90-94]
 States `lastuser, lasttag, lastcode, codeDate, historyDate, deviceState, nfcLearnResult, keyPadAuthType`; Details `accessOutputs{q1..q6}`, `place`; Befehle `output/<1-6>` (Impuls; 423 = Nutzer nicht berechtigt), `history`, `codes`, `code/create|update|activate|deactivate|delete`, `nfc/startlearn|stoplearn`.
-**LoxPanel: fehlt auf der Kachel.** Detail zeigt nur „letzter Zutritt“ (W:7084). Türöffner-Ausgänge (`output/<n>`, nur mit Visu-Passwort/Recht) fehlen.
+**tilebert: Kachel mit Detail** (`_nfc_view`): letzter Zutritt, Ort, offline; Ausgänge `output/<n>`; Zutrittsverlauf über `history` (nur lesend, neu geladen bei `historyDate`). Codes/Tags verwalten bewusst nicht.
 
 ### Intercom (2) / IntercomV2 [SF S.81-85]
 Intercom: States `bell`, `lastBellEvents` (`YYYYMMDDHHMMSS|…`), `lastBellTimestamp`, `version`; Details `deviceType`, `lastBellEventImages`, `showBellImage`, `videoInfo/audioInfo` (leer – Inhalt in **securedDetails**: `streamUrl`, `alertImage`, user, pass, SIP-host);
 Befehl `answer`; Subcontrols: 0-3 Ausgänge (Pushbutton, `pulse`). Bilder `camimage/<uuid>/<ts>`. IntercomV2: `answers`, `muted`, `deviceState`, Video-Einstellungen, `playTts/<idx>`, `mute`, `setAnswers`.
-**LoxPanel teilweise:** K W:5198 (klingelt-Zustand), D W:6992 (Livebild nur über **manuell konfigurierte URL**, `/mjpeg?id`; Türtaster = Subcontrol-`pulse`). Nicht genutzt: securedDetails-Stream, Klingel-Verlauf/-Bilder, `answer`. IntercomV2 fehlt.
+**tilebert teilweise:** Kachel „zuletzt …“; Livebild über manuell konfigurierte URL, Türtaster = Subcontrol-`pulse` (sofort, PIN nur wenn gesichert).
+**Runde 3:** Klingelhistorie (Nebenaktion im Kopf, Route `tab=hist`) aus `lastBellEvents` (Loxone führt nur unbeantwortete Klingeln), Platzhalter statt Bild.
+Nicht genutzt: `camimage/<uuid>/<ts>`-Bilder, securedDetails-Stream, `answer`, Gegensprechen. IntercomV2 fehlt.
 
 ### PresenceDetector (5) [SF S.113-114]
 States `active`, `activeSince`, `activeUntil`, `locked`, `lockedUntil`, `infoText`, `time` (Nachlaufzeit), `events`; Befehle `<wert>`, `time/<v>`, `presence/<s>`, `deactivate/<s>`; Subcontrol Tracker.
 **LoxPanel: nur Anzeige** (K W:5386, D W:7099 „Anwesend/Abwesend“); keine Befehle (`presence/deactivate/time`).
 
 ### MailBox (1: „Briefkasten“) [SF S.101]
-States `mailReceived`, `packetReceived`, `notificationsDisabledInput`, `disableEndTime`; Befehle `confirmMail`, `confirmPacket`, `disableNotifications/<s>`; Subcontrol Tracker. **LoxPanel: nur Anzeige** (K W:5486, D W:7569) – Quittieren fehlt (0 Treffer).
+States `mailReceived`, `packetReceived`, `notificationsDisabledInput`, `disableEndTime`; Befehle `confirmMail`, `confirmPacket`, `disableNotifications/<s>`; Subcontrol Tracker.
+**tilebert Runde 3 (`_mail_view`):** „Post da/Paket da/Leer“, Quittieren (`confirmMail`/`confirmPacket`), Kachel grün getönt. Zeitpunkt gibt es nicht als State (nur Tracker). Bewusst nicht: Benachrichtigungen.
 
 ## B7. Energie / Zähler
 
@@ -352,7 +382,8 @@ States `actual`, `total`, `totalNeg` (nur bidirectional/storage), `storage` (nur
 
 ### EFM (1) / EnergyManager2 (1) / Fronius (1) / PvProductionForecast / LoadManager / PowerUnit / Wallbox2 / WallboxManager / CarCharger
 - EFM [SF S.63-66]: States `Ppwr, Gpwr, Spwr, Pre, Pri, CO2, actual0…N`; Details `nodes` (Baum mit `nodeType Grid|Storage|Production|Load|Wallbox|Group`, `actualEfmState`, `ctrlUuid`), `actualFormat`, `totalFormat`, `storageFormat`, `rest`; Befehle `getNodeValue/<viewType>/<uuids;>`, `get/<viewType>` (actual|day|week|month|year|lifetime). StatisticV2. **LoxPanel voll:** K W:5449, D W:7430 (Radialdiagramm `energy_blocks`, Kennzahlen); keine Tages-/Monatsansicht (`get/<viewType>`).
-- EnergyManager2 [SF S.61-63]: States `Gpwr, Spwr, Ppwr, Ssoc, MinSoc, MaxSpwr, loads` (JSON je Last: prio, id, name, uuid, icon, pwr, ppwr, hasActual, active, activatedManually, deactivatedManually, minimumActiveUntil, activeDueToDailyRuntime); Befehle `manage`, `setMinSoc/<v>`, `setMaxSpwr/<v>`, `<lastUuid>/activate|deactivate|automatic`, `order/<uuids,>`. **LoxPanel voll (K W:5462, D W:7475) als Anzeige;** Lasten übersteuern (`activate/deactivate/automatic`) und `setMinSoc/setMaxSpwr` fehlen.
+- EnergyManager2 [SF S.61-63]: States `Gpwr, Spwr, Ppwr, Ssoc, MinSoc, MaxSpwr, loads` (JSON je Last: prio, id, name, uuid, icon, pwr, ppwr, hasActual, active, activatedManually, deactivatedManually, minimumActiveUntil, activeDueToDailyRuntime); Befehle `manage`, `setMinSoc/<v>`, `setMaxSpwr/<v>`, `<lastUuid>/activate|deactivate|automatic`, `order/<uuids,>`. **tilebert Runde 3 (`_em2_view`):** Kennzahlen PV/Netz/Speicher, Lasten nach `prio` mit Schalter wie in der Loxone-App: `<lastUuid>/activate` bzw. `deactivate`
+(gilt bis Mitternacht), „Auto“ = `automatic`, wenn manuell übersteuert. Ohne Lasten wie bisher (Radial). **Bewusst nicht:** `order`, `setMinSoc`, `setMaxSpwr`.
 - Fronius [SF S.66-68]: `prodCurr, consCurr, gridCurr, batteryCurr, stateOfCharge, earnings*, prod*Day/Month/Year, …`. LoxPanel voll (K W:5256, D W:7260).
 - PvProductionForecast, LoadManager, PowerUnit, Wallbox2/WallboxManager/CarCharger, SpotPriceOptimizer: nicht in Anlage. LoxPanel: nur PvProductionForecast (K W:5472, D W:7509). Übrige **fehlen**.
 
@@ -362,14 +393,21 @@ States `actual`, `total`, `totalNeg` (nur bidirectional/storage), `storage` (nur
 - AudioZone (Music Server Gen 1): States `playState` (0 Stop, 1 Pause, 2 Play), `power`, `volume`, `maxVolume`, `songName/artist/album/station/genre/cover`, `duration`, `progress`, `shuffle`, `repeat`, `sourceList` (Zonenfavoriten-JSON), `source`, `queueIndex`, `serverState`, `clientState`, EQ-/Volume-Sonderlautstärken;
   Befehle `play/pause/next/prev`, `volume/<n>`, `volstep/<n>`, `progress/<s>`, `shuffle`, `repeat/<0|1|3>`, `on/off`, `source/<1-8>`, `…volume/<0-100>`, `equalizersettings/<csv>`, `mastervolume`.
 - AudioZoneV2 (Audioserver Gen 2): schlanker – States `playState, power, volume (ab 14.0), maxVolume, serverState, clientState, bluetooth, presence, isLocked`; Befehle `volUp/volDown/volume/<v>`, `play/pause/prev/next`, `playZoneFav/<id>`, `tts/<text>/<vol>`, `bluetooth/<0|1>`, `presence/on|off`. Titel/Cover/Quelle bei V2 liefert nicht der Miniserver, sondern der **Audioserver-Websocket 7091** (`audioserver*.py`).
-- **LoxPanel:** AudioZone teilweise (K W:5292, D W:6752), AudioZoneV2 voll (K W:5305, D W:6780: Cover, Titel, Prev/Play/Next, Lautstärke, Quellen/Favoriten über Audioserver bzw. Sonn-API).
+- **tilebert: voll (Runde 2, 10/2026).** Cover, Titel, Prev/Play/Next, Lautstärke, Quellen; neu (`_audio_extras`): Zufall, Wiederholen (aus → alle → Titel), Ein/Aus als schmale
+  Pillen, „Gruppe mit …“ (`details.groupObjects`, nur Anzeige). Gen. 1: States `shuffle/repeat/power`, Befehle `shuffle`, `repeat/<0|1|3>`, `on/off` über den Miniserver.
+  Gen. 2: Werte `plshuffle/plrepeat/power` aus den Audioserver-Ereignissen; Befehle `audio/<zone>/shuffle/<0|1>`, `repeat/<n>`, `on|off` über den Audioserver-Kanal
+  (nur angemeldet bzw. Nachbau; gesicherte Zone: keine Extras). **Ungeprüft an echter Hardware:** Gen.-2-Befehle/Werte. **Bewusst nicht:** Gruppen bilden/lösen, Warteschlange.
 
 ### Webpage (1: Kamera) [SF S.141]
 Details `url`, `urlHd`, `image`, `iconColor`. **LoxPanel voll** (K W:5273, D W:7275, iframe `k:"web"`).
 
 ### Irrigation (2) [SF S.85-87]
 States `currentZone` (-1 aus, 0.. Zone, 8 alle), `zones` (JSON `[{id,name,duration,setByLogic}]`), `rainActive`, `rainTime`, `expectedPrecipitation`, `maxExpectedPrecipitation`; Befehle `start` (nur wenn zu trocken), `startForce`, `stop`, `setDuration/<zone>=<s>`, `setDurations/...`, `select/<zone>` (0 = aus, 9 = alle).
-**LoxPanel teilweise** (K W:5478, D W:7529): Start/Erzwingen/Stopp; Zonen reine Anzeige. Fehlt: Zone manuell starten (`select`), Dauer ändern (`setDuration`).
+**tilebert Runde 3 (`_irr_view`, `_irr_run`):** Läuft-Zustand aus `currentZone` (vorher fälschlich State `active`), Zonen mit ▶ (Standarddauer der Zone) und Dauer-Wahl
+5/10/15/30 min: `__irrig/<id>/<s>` → `select/<id+1>`; das Ende steht in `config/irrigation_timer.json` (übersteht Neustarts), `_irr_check` sendet danach `stop`
+(alle 5 s erneut, bis die Zone aus ist; Eintrag entfällt, sobald die Zone nicht mehr läuft); laufende Zone ■ = `stop`; „Alle starten“ = `start`
+(bei Regen „Trotz Regen starten“ = `startForce`), „Alle stoppen“ = `stop`. **Bewusst nicht:** `setDuration(s)`. **Am echten Miniserver prüfen:** Basis von `select` (1..8),
+ob `select` von selbst endet. **Restrisiko:** Ist tilebert länger aus, stoppt die Zone erst, wenn tilebert wieder läuft.
 
 ### Weitere Typen der Doku, die in der Anlage nicht vorkommen
 | Typ | Kern | LoxPanel |
@@ -417,6 +455,6 @@ Priorität = Nutzen für die vorhandene Anlage × Aufwand-Nutzen-Verhältnis. Be
 14. **Intercom: Video nur per manueller URL.** W:6992-7006 holt Stream/Zugangsdaten nicht aus `securedDetails`; kein Klingelverlauf (`lastBellEvents`, `camimage/…`), kein `answer`. In der Anlage 2 Intercoms (Doorbird, Coodeknacker). Aufwand hoch (verschlüsselte Abfrage, [SF S.24]).
 15. **Strukturmetadaten ungenutzt:** `defaultRating`/`sortByRating` (App-Sortierung nach Sternen), `cats.type`/`colorShade`, `msInfo.tempUnit` (°F), `msInfo.currency`, `hasControlNotes`, `links`, `preset`, `currentUser.userRights` (Bedien- vs. Leserechte; `restrictions` Bit1 = read-only) – 0 Treffer in W. Relevant für „sieht aus wie die App“ (Sortierung) und Rechtetreue.
 
-**Kleinere Funde:** Gate `PartiallyOpen/forceOpen` und `preventOpen/Close` fehlen; Radio `next/prev` ungenutzt; WindowMonitor testet Offline als Bit 32 (W:6694), Doku kennt kein Bit (kein Wert = offline); AlarmClock: Dauern/Sounds/Nachtlicht nicht einstellbar; Switch `lockedOn` nicht beachtet; Zentralbausteine ohne `selectedcontrols` (nutzt Einzelbefehle – funktioniert, ist aber nicht atomar und umgeht die Berechtigungsprüfung des Miniservers pro Control); `CentralPresence`/`CentralGate/Window` ohne Detailansicht.
+**Kleinere Funde:** Gate `PartiallyOpen/forceOpen` und `preventOpen/Close` fehlen; Radio `next/prev` ungenutzt; WindowMonitor testet Offline als Bit 32 (W:6694), Doku kennt kein Bit (kein Wert = offline); AlarmClock: Dauern/Sounds/Nachtlicht nicht einstellbar; Switch `lockedOn` nicht beachtet; Zentralbausteine ohne `selectedcontrols` (nutzt Einzelbefehle – funktioniert, ist aber nicht atomar und umgeht die Berechtigungsprüfung des Miniservers pro Control); `CentralPresence` ohne Detailansicht (CentralGate/Window: seit Runde 2 mit Liste und Sammelbefehlen).
 
 **Chancen (kein Muss):** `loxone://`-Deep-Links für Support; Tageslicht-/Wecker-Stimmungen (IDs 98/99) als Sonderfälle der Stimmungsliste kennzeichnen; `statisticV2`-Verlauf für Meter/EFM bereits vorhanden – Tages-/Monatsbalken (`getStatistic/.../diff/...`) ergänzen; `links[]` für „Verknüpfte Bausteine“ (W:7685 deckt das teilweise ab).
