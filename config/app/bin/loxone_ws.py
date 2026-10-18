@@ -8,10 +8,15 @@ Protokoll (Kurzfassung, siehe "Communicating with the Miniserver"):
   - Jede Nachricht wird von einem 8-Byte-Header eingeleitet (Byte0=0x03,
     Byte1=Identifier, Byte4..7=Laenge, little-endian).
   - Identifier: 0=Text, 2=Value-States, 3=Text-States, 6=Keepalive,
-    7=Weather-States (nur wenn die Anlage den Loxone-Wetterdienst hat).
+    4=Daytimer-States, 7=Weather-States (nur wenn die Anlage den Loxone-Wetterdienst hat).
   - Value-State-Eintrag: 16-Byte-UUID + 8-Byte-double (LE).
   - Text-State-Eintrag: 16-Byte-UUID + 16-Byte-Icon-UUID + 4-Byte-Laenge +
     Text + Padding auf 4-Byte-Grenze.
+  - Daytimer-Eintrag ("EvDataDaytimer"): 16-Byte-UUID + 8-Byte-double
+    Vorgabewert + 4-Byte nrEntries (int32), danach nrEntries Bloecke a 24 Byte:
+    4 * int32 (mode, from, to, needActivate; Zeiten in Minuten ab Mitternacht)
+    + double value. Weitergereicht als Text "vorgabe,anzahl,mode,von,bis,akt,wert,..."
+    (so liest ihn _irc_schedule in webvisu.py).
   - Weather-Eintrag ("EvDataWeather"): 16-Byte-UUID + 4-Byte lastUpdate
     (uint32) + 4-Byte nrEntries (int32), danach nrEntries Bloecke a 68 Byte
     ("EvDataWeatherEntry"): 5 * int32 (timestamp, weatherType, windDirection,
@@ -90,6 +95,9 @@ def describe_close(code: int | None) -> str:
 _WX_ENTRY = struct.Struct("<5i6d")
 _WX_FIELDS = ("ts", "type", "wind_dir", "radiation", "humidity",
               "temp", "feels", "dew", "precip", "wind", "pressure")
+# Daytimer: Kopf (Vorgabewert, Anzahl) nach der UUID, je Eintrag 4 * int32 + double.
+_DT_HEAD = struct.Struct("<di")
+_DT_ENTRY = struct.Struct("<4id")
 
 
 def format_uuid(b: bytes) -> str:
@@ -243,7 +251,7 @@ class LoxoneWS:
                     pending_ident = None if data[1] == 6 else data[1]
                     continue
                 ident, pending_ident = pending_ident, None
-                if ident in (2, 3, 7):
+                if ident in (2, 3, 4, 7):
                     # Ein kaputtes/unerwartetes Paket oder ein Fehler im Callback darf
                     # nicht die ganze Verbindung samt Voll-Dump kippen: Tabelle
                     # verwerfen, melden, weiterlesen (vgl. PyLoxone #517).
@@ -252,6 +260,8 @@ class LoxoneWS:
                             self._parse_values(data, on_value)
                         elif ident == 3:
                             self._parse_texts(data, on_value)
+                        elif ident == 4:
+                            self._parse_daytimer(data, on_value)
                         elif on_weather is not None:
                             self._parse_weather(data, on_weather)
                     except Exception as err:
@@ -308,6 +318,31 @@ class LoxoneWS:
                 entries.append(dict(zip(_WX_FIELDS, _WX_ENTRY.unpack_from(data, off))))
                 off += _WX_ENTRY.size
             on_weather(uuid, entries)
+
+    @staticmethod
+    def _parse_daytimer(data: bytes, on_value: ValueCallback) -> None:
+        """Daytimer-Tabelle (Kennung 4) -> on_value(uuid, "vorgabe,anzahl,mode,von,bis,akt,wert,...").
+        Laengen werden vor jedem Zugriff geprueft; ein unplausibles Paket wird verworfen."""
+        def num(v: float) -> str:
+            return str(int(v)) if float(v).is_integer() else repr(float(v))
+        off = 0
+        while off + 16 + _DT_HEAD.size <= len(data):
+            uuid = format_uuid(data[off:off + 16])
+            dflt, count = _DT_HEAD.unpack_from(data, off + 16)
+            off += 16 + _DT_HEAD.size
+            if count < 0 or off + count * _DT_ENTRY.size > len(data):
+                log.warning("Daytimer-Tabelle unplausibel (%s Eintraege, %d Byte Rest) — verworfen",
+                            count, len(data) - off)
+                return
+            parts = [num(dflt), str(count)]
+            for _ in range(count):
+                mode, frm, to, need, val = _DT_ENTRY.unpack_from(data, off)
+                off += _DT_ENTRY.size
+                parts += [str(mode), str(frm), str(to), str(need), num(val)]
+            try:
+                on_value(uuid, ",".join(parts))
+            except Exception:
+                _log_cb_error("Daytimer", uuid)
 
     @staticmethod
     def _parse_texts(data: bytes, on_value: ValueCallback) -> None:

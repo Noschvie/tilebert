@@ -93,8 +93,9 @@ UUID-Binär: `Data1` (4 B LE) `Data2` (2 B) `Data3` (2 B) `Data4` (8 B) → Stri
 **Wertetypen in der Praxis:** *Wert* = Double (digital 0/1, analog Zahl, Position 0..1), *Text* = String (oft JSON, z. B. `moodList`, `zones`, `jLocked`, `entryList`),
 *Daytimer* = Ereignistabelle, *Wetter* = Tabelle (Wettertyp-Texte in `weatherServer.weatherTypeTexts`). Sentinels wie 2147483.647 = „kein Wert“.
 
-**LoxPanel (WS):** Kennung 2/3/7 werden gelesen (WS:249-257), 5 und 6 behandelt (WS:231-242), **Kennung 4 (Daytimer) wird nicht geparst**, nur einmal als
-„unbekannte Kennung“ geloggt (WS:258-263). Ob `entriesAndDefaultValue` der Anlage trotzdem über Kennung 3 kommt, ist unverifiziert (siehe C-12).
+**LoxPanel (WS):** Kennung 2/3/4/7 werden gelesen, 5 und 6 behandelt. Kennung 4 (Daytimer) wird seit dem loxsim-Volltest (17.10.2026) geparst
+und als Text `vorgabe,anzahl,mode,von,bis,akt,wert,…` unter der State-UUID abgelegt; `_irc_schedule` zeigt davon nur die Einträge des laufenden
+Modus (State `mode` des Daytimers). Vorher kam `entriesAndDefaultValue` nie an (Doku: Daytimer-Event, nicht Kennung 3).
 
 ## A4. Befehle (Steuerung)
 - Control-Befehl: `jdev/sps/io/<uuidAction>/<befehl>` (Parameter mit `/` getrennt, z. B. `changeTo/3`, `volume/40`). Antwort: Text-Message mit `Code`
@@ -249,6 +250,9 @@ gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht
 - **Befehle:** `override/<modeId>/[<bis>]/[<temp>]`, `stopOverride`, `setComfortTemperature/<t>`, `setComfortTemperatureCool`, `setManualTemperature/<t>`, `setOperatingMode/<m>`,
   `setComfortModeTemp`, `setAbsentMin/MaxTemperature`, `setComfortTolerance`, `setshadingtemperatureheat/cool`, `setHeatingBoundary/setCoolingBoundary`, `activatePresenceSchedule`,
   `increasetemperature/decreasetemperature/<delta=0.5>`, `setFan`, `setAirDir`.
+  **tilebert (18.10.2026):** Eco/Komfort-Knopf = `override/<id>/<bis>` mit `bis` = jetzt + 1 h in Sekunden seit 1.1.2009, Ortszeit des Miniservers
+  (wie `nextEntryTime`; Container braucht die lokale Zeitzone, LoxBerry bindet `/etc/localtime` ein). Ohne `bis` liefe der Override laut Doku bis `stopOverride`
+  (so senden es PyLoxone und der ioBroker-Adapter; die Loxone-App fragt eine Endzeit ab).
 - **Untersteuerung:** Daytimer (Zeitplan). Einträge codieren Temperatur: `nVal = (uint32)dVal; Modus = nVal & 0xFF; ab Bit 5 benutzerdefinierte Temperatur: Bit6 Heizen, Bit7 Kühlen; Temp×10 = (int16)(nVal >> 8)`.
 - **App-Darstellung:** [KB] aktueller Temperaturmodus (Aus/Eco/Komfort/Gebäudeschutz/Manuell/Manuell-Kalender), Heizt/Kühlt-Zustand, „Boost“-Anzeige in der Vorbereitungsphase oder bei
   Abweichung > 1,5 °C, Präsenz-Taste (Komfort bis nächster Zeitplaneintrag, max. 48 h), Timer (Komfort/Eco verlängern), Fenster-offen-Hinweis, Quellen-Dialog, Verlauf; Zeitplan-Anzeige nicht beschrieben.
@@ -307,7 +311,7 @@ State `entries` (Zeilen durch `|` getrennt, `\x14` = Zeilenumbruch), Details `ma
 ### Sauna, SteakThermo, Remote, UpDownLeftRight, Sequential
 Siehe B8. Remote/Sequential **fehlen**. **Runde 3:**
 - Sauna (`_sauna_view`): Ist groß, Soll −/+ (`temp/<t>`), Kennzahlen Feuchte/Bank/Timer, Pillen Ein (`on`/`off`), Programm (`mode/<n>`, nur mit Verdampfer), Timer (`starttimer`),
-  Lüften (`fanon`/`fanoff`). Ein „Aufguss“-Befehl existiert in der Doku nicht. Hinweis: `SAUNA_MODES[0]` heißt „Manuell“, die Doku nennt 0 = Aus (nicht geändert, an Anlage prüfen).
+  Lüften (`fanon`/`fanoff`). Ein „Aufguss“-Befehl existiert in der Doku nicht. `SAUNA_MODES[0]` = „Aus“ (Doku 16.0: 0 = Off; bis 0.20.31 fälschlich „Manuell“).
 - SteakThermo (`_steak_view`): je Fühler Ist/Ziel aus `sensorInfo`, Ziel ±1 `setSensor/<i>/<t>/<name>`, Timer ±1 min `setTimerDuration/<s>`, `startTimer`/`stopTimer`, `quitAlarm`.
 - UpDownDigital/LeftRightDigital: ein Pfeil-Paar, gedrückt halten (`UpOn/UpOff`, `DownOn/DownOff`; Links/Rechts: links = Down, rechts = Up); Loslassen wird auch bei
   Fokus-/Tabverlust gesendet.
@@ -317,6 +321,8 @@ Siehe B8. Remote/Sequential **fehlen**. **Runde 3:**
 ### Daytimer (2) [SF S.57-59]
 - States `value`, `mode`, `modeList`, `override` (Rest-Zeit), `entriesAndDefaultValue` (Daytimer-Event), `needsActivation`, `resetActive`; Details `analog`, `text{on,off}`, `format`.
 - Befehle `pulse` (Eintrag aktivieren, wenn `needActivate`), `default/<wert>`, `startOverride/<wert>/<sekunden>`, `stopOverride`, `set/<n>/<modus;von;bis;needAct;wert>/...`, `modeslist/<...>`.
+  **tilebert (18.10.2026):** Timer-Knöpfe senden `startOverride/<wert>/<s>`; digital Wert 1, analog Wert wählbar (−/+ um den aktuellen Wert, Schritt aus `format`;
+  die Doku nennt keinen Vorgabewert für den Timer).
 - Varianten: IRC-Daytimer v2 (Wert codiert Temperatur, s. B3), IRC-Daytimer (`setc`/`modeslistc`), Pool-Daytimer.
 - **LoxPanel: teilweise.** K W:5237, D W:7161 (Wert, Modus, Override-Dauern 15/30/60/90 min, Timer beenden). **Fehlt:** Einträge anzeigen/bearbeiten (`set`), `default`, `pulse` bei `needsActivation`. Kennung-4-Events werden nicht geparst (s. A3).
 
@@ -450,7 +456,7 @@ Priorität = Nutzen für die vorhandene Anlage × Aufwand-Nutzen-Verhältnis. Be
 9. **Alarm nutzt veraltete States:** `armedDelay` (W:7110) ist seit 13.0 deprecated → `armedAt`/`armedDelayTotal` [SF S.28]; Level-Texte (1 still … 6 Fernalarm), `nextLevelAt`-Countdown und die Melderliste (`sensors` → Subcontrols) fehlen. SmokeAlarm: `alarmCause` ist Bitmaske (Rauch/Wasser/Temperatur/Lichtbogen), wird aber als Text ausgegeben (W:7073).
 10. **Hourcounter-Einheit verdächtig:** `total` wird als „h“ formatiert (W:5442, 7428), Doku: Sekunden, Anzeigeeinheit steuert `stateUnit` [SF S.70]. Mit Live-Wert prüfen; evtl. falsche Betriebsstundenanzeige (1 Baustein: Heizstab).
 11. **Benachrichtigungen und Systemstatus fehlen.** `globalStates.notifications` (`lvl` Info/Fehler/Systemfehler) und `messageCenter` (Herz/Balken in der App, „Warnung/Kritisch“, Lösungshinweise) kommen im Code 0× vor; die Anlage liefert `notifications`, `pastTasks`, `plannedTasks`. → Meldungsleiste/-liste (Panel hat nur eigene `lpnotify`-Toasts, P:664). Größte Funktionslücke gegenüber der App bei Alarm/Störungen.
-12. **Daytimer-Events (Kennung 4) werden nicht geparst** (WS:249-263, nur Log „unbekannte Kennung“). Daytimer (2) zeigen daher Wert/Override, aber keine Einträge; Bearbeiten (`set`, `default`, `pulse`) fehlt ganz. Zu prüfen: wird `entriesAndDefaultValue` der Anlage überhaupt befüllt (der Code liest es als Text, W:2253-2264)?
+12. **Daytimer-Events (Kennung 4):** seit 17.10.2026 geparst (IRC-Zeitleiste zeigt den Plan des laufenden Modus). Offen: Daytimer-Einträge anzeigen/bearbeiten (`set`, `default`, `pulse`).
 13. **Verlauf („Control History“) fehlt.** `hasHistory` kommt bei Jalousie, LightControllerV2, IRoomControllerV2, Gate vor; `gethistory` wird nie aufgerufen (0 Treffer). Die App zeigt damit „Warum fährt die Jalousie/geht das Licht an?“.
 14. **Intercom: Video nur per manueller URL.** W:6992-7006 holt Stream/Zugangsdaten nicht aus `securedDetails`; kein Klingelverlauf (`lastBellEvents`, `camimage/…`), kein `answer`. In der Anlage 2 Intercoms (Doorbird, Coodeknacker). Aufwand hoch (verschlüsselte Abfrage, [SF S.24]).
 15. **Strukturmetadaten ungenutzt:** `defaultRating`/`sortByRating` (App-Sortierung nach Sternen), `cats.type`/`colorShade`, `msInfo.tempUnit` (°F), `msInfo.currency`, `hasControlNotes`, `links`, `preset`, `currentUser.userRights` (Bedien- vs. Leserechte; `restrictions` Bit1 = read-only) – 0 Treffer in W. Relevant für „sieht aus wie die App“ (Sortierung) und Rechtetreue.

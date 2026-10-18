@@ -48,6 +48,17 @@ from loxone_api.client import LoxoneAuthError  # noqa: E402
 from loxone_ws import LoxoneWS, WS_CLOSE_NO_HAMMER, describe_close  # noqa: E402
 
 
+# Raumregelung (IRCv2): Dauer eines Eco/Komfort-Overrides aus dem Panel (override/<modus>/<bis>)
+IRC_OVERRIDE_S = 3600
+
+
+def _s2009_local(ts: float | None = None) -> int:
+    """Unix-Zeit -> Loxone-Zeit: Sekunden seit 1.1.2009 in Ortszeit des Miniservers
+    (Wanduhr, wie nextEntryTime/oneTimePulseDate; Doku: binstatisticdata "local Miniserver-time")."""
+    dt = datetime.fromtimestamp(time.time() if ts is None else ts)
+    return int((dt - datetime(2009, 1, 1)).total_seconds())
+
+
 def _ms_https(port, https=None) -> bool:
     """Schema-Wahl fuer den Miniserver. Explizites Feld `https` (true/false) aus
     der Miniserver-Konfiguration gewinnt. Fehlt es (alte Konfigurationen), wie
@@ -81,7 +92,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.31"
+APP_VERSION = "0.20.32"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -708,8 +719,8 @@ FRONT_INTERVAL = 900     # s: Kalender + Open-Meteo so oft neu holen; Wetter-Pus
 _ANALOG = {"InfoOnlyAnalog", "Slider", "Meter", "TextState", "InfoOnlyText", "Hourcounter",
            "EFM", "EnergyManager2", "PvProductionForecast", "SteakThermo"}
 # Betriebsarten des Sauna-Bausteins (State "mode", 0..6), Zuordnung aus der
-# offiziellen Loxone-Sauna-Dokumentation. Als Klartext auf Kachel und Detailseite.
-SAUNA_MODES = {0: "Manuell", 1: "Finnisch manuell", 2: "Feuchte manuell",
+# offiziellen Loxone-Sauna-Dokumentation (Structure File 16.0: 0 = Aus). Als Klartext auf Kachel und Detailseite.
+SAUNA_MODES = {0: "Aus", 1: "Finnisch manuell", 2: "Feuchte manuell",
                3: "Finnische Sauna", 4: "Kräutersauna", 5: "Sanftdampfbad", 6: "Warmluftbad"}
 # Alte Raumregelung (IRoomController, v1) laut Loxone-Strukturdoku: Nummern der
 # Temperaturen fuer settemp/starttimer und currHeatTempIx/currCoolTempIx. Die
@@ -2003,6 +2014,7 @@ class App:
         self._front_dirty = False
         self._tick_memo: dict = {}
         self._pin_fail: dict = {}                            # uuid -> (Fehlversuche, gesperrt bis)
+        self._dt_val: dict = {}                              # analoge Schaltuhr: gewaehlter Timer-Wert je uuid
         self._diag_cpu: tuple | None = None                 # (process_time, monotonic) der letzten Diagnose-Zeile
         self._rt_sum, self._rt_n, self._rt_max = 0.0, 0, 0.0   # Renderzeit (Diagnose)
         self._front_sent: dict | None = None    # zuletzt an alle verteilter Stand (fuer Nur-Wetter-Nachrichten)
@@ -2702,9 +2714,16 @@ class App:
             nm = modes.get(int(v)) or ""
             low = nm.lower()
             return ("comfort" if "komfort" in low else ("eco" if "eco" in low else "other")), nm
+        # Daytimer-Event (Kennung 4, je Eintrag Modus,von,bis,Aktivierung,Wert): Eintraege
+        # aller Betriebsmodi (Wochentage, Feiertag ...) - nur der laufende Modus (State
+        # "mode" des Daytimers) ist der heutige Plan.
+        cur = self._state(src, "mode") if sz == 5 else None
+        cur = int(cur) if isinstance(cur, (int, float)) and not isinstance(cur, bool) else None
         segs = []
         for i in range(n):
             e = rest[i * sz:(i + 1) * sz]
+            if cur is not None and int(e[0]) != cur:
+                continue
             v = e[-1]
             a, b = (e[0], e[1]) if sz == 3 else (e[1], e[2])
             if not (0 <= a <= 1440 and 0 <= b <= 1440):
@@ -3420,12 +3439,23 @@ class App:
         return {"ring": names("Intercom", "ring"), "wake": names("AlarmClock", "wake"), "alarm": len(al),
                 "alarmNames": al, "intercoms": len(by["Intercom"])}
 
+    def _smoke_cause(self, c: dict) -> str:
+        """Ausloeser eines Brand-/Wassermelders. alarmCause ist laut Structure File 16.0
+        eine Bitmaske (1 Rauch, 2 Wasser, 4 Temperatur, 8 Lichtbogen); Text bleibt Text."""
+        v = self._state(c, "alarmCause")
+        if isinstance(v, str) and v.strip().isdigit():
+            v = int(v.strip())
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            n = int(v)
+            return " · ".join(txt for bit, txt in ((1, "Rauch"), (2, "Wasser"), (4, "Temperatur"), (8, "Lichtbogen")) if n & bit)
+        return self._text(c, "alarmCause")
+
     def sec_alarm_msg(self, uuid: str, on: bool) -> dict:
         c = self.controls.get(uuid) or {}
         t = c.get("type") or ""
         ua = c.get("uuidAction") or uuid
         if t == "SmokeAlarm":
-            kind, sub = "smoke", self._text(c, "alarmCause") or "Melder ausgelöst"
+            kind, sub = "smoke", self._smoke_cause(c) or "Melder ausgelöst"
             acts = [{"label": "Stumm", "cmd": "mute"}, {"label": "Quittieren", "cmd": "confirm"}]
         else:
             kind, sub = "alarm", "Alarmanlage ausgelöst"
@@ -6117,8 +6147,8 @@ class App:
             # feuert nur, wenn kein Scroll/Wisch dazwischenkam - kein
             # Risiko mehr, die Jalousie beim Blättern aus Versehen loszufahren.
             # Gleiche "Tipp waehrend Fahrt = Stop"-Logik wie in der Detailansicht.
-            it_updown = {"up": {"cmd": {"uuid": c.get("uuidAction"), "cmd": "Stop" if up_move else "Up"}},
-                         "down": {"cmd": {"uuid": c.get("uuidAction"), "cmd": "Stop" if down_move else "Down"}}}
+            it_updown = {"up": {"cmd": {"uuid": c.get("uuidAction"), "cmd": "stop" if up_move else "up"}},
+                         "down": {"cmd": {"uuid": c.get("uuidAction"), "cmd": "stop" if down_move else "down"}}}
             it.update(on=r["on"], sublabel=sub, icon="blind",
                       nav={"view": "control", "id": uuid}, updown=it_updown)
             if up_move or down_move:
@@ -6250,7 +6280,7 @@ class App:
         elif t == "AudioZone":
             playing = self._state(c, "playState") == 2
             ua = c.get("uuidAction")
-            it.update(on=playing, sublabel=(self._song(c) or ("Spielt" if playing else "Aus")),
+            it.update(on=playing, sublabel=(self._song(c) or ("Spielt" if playing else ("Pause" if self._state(c, "playState") == 1 else "Aus"))),
                       icon="music", nav={"view": "control", "id": uuid},
                       controls=[
                           {"icon": "prev", "cmd": {"uuid": ua, "cmd": "queueminus"}},
@@ -6270,7 +6300,7 @@ class App:
                 playing = playing or bool(sm.get("playing"))
                 song = song or sm.get("title") or ""
             ua = c.get("uuidAction")
-            it.update(on=playing, sublabel=(song or ("Spielt" if playing else "Aus")),
+            it.update(on=playing, sublabel=(song or ("Spielt" if playing else ("Pause" if self._state(c, "playState") == 1 else "Aus"))),
                       icon="music", nav={"view": "control", "id": uuid},
                       controls=[
                           {"icon": "prev", "cmd": {"uuid": ua, "cmd": "prev"}},
@@ -6477,7 +6507,7 @@ class App:
                 if tt is not None:
                     sub += f" → {self._fmt_num(tt, '%.0f')} °C"
                 md = self._state(c, "mode")
-                if isinstance(md, (int, float)) and int(md) in SAUNA_MODES:
+                if isinstance(md, (int, float)) and int(md) in SAUNA_MODES and int(md) != 0:
                     sub += f" · {SAUNA_MODES[int(md)]}"
             if (c.get("details") or {}).get("hasVaporizer") and self._state(c, "lessWater"):
                 it["tone"] = "warn"
@@ -7673,7 +7703,7 @@ class App:
         bits = []
         if tt is not None:
             bits.append(f"Soll {self._fmt_num(tt, '%.0f')}°")
-        if isinstance(md, (int, float)) and int(md) in SAUNA_MODES and det.get("hasVaporizer"):
+        if isinstance(md, (int, float)) and int(md) in SAUNA_MODES and int(md) != 0 and det.get("hasVaporizer"):
             bits.append(SAUNA_MODES[int(md)])
         bits.append("Störung" if err else ("heizt auf" if self._state(c, "power") else
                                            ("Trocknung" if self._state(c, "drying") else
@@ -8874,8 +8904,8 @@ class App:
                 line = self._jal_reason(c)
             # Wie Original-Visu: kein Stop-Button. Tipp auf die Richtung waehrend der
             # Fahrt sendet Stop (haelt an); im Stand startet er die Fahrt.
-            auf = {"label": "Auf", "on": up_move, "cmd": {"uuid": ua, "cmd": "Stop" if moving else "Up"}}
-            ab = {"label": "Ab", "on": down_move, "cmd": {"uuid": ua, "cmd": "Stop" if moving else "Down"}}
+            auf = {"label": "Auf", "on": up_move, "cmd": {"uuid": ua, "cmd": "stop" if moving else "up"}}
+            ab = {"label": "Ab", "on": down_move, "cmd": {"uuid": ua, "cmd": "stop" if moving else "down"}}
             # Detail-Schema: grosse Stellung (Auf/Ab als runde Knoepfe daneben),
             # Loxone-Text darunter, Aktionspillen unten.
             blocks = [{"k": "shade", "pct": pct, "up": auf, "down": ab}]
@@ -8970,7 +9000,7 @@ class App:
             else:
                 blocks_cover_dyn = None
             if not title:
-                title = "Spielt" if playing else "Aus"
+                title = "Spielt" if playing else ("Pause" if self._state(c, "playState") == 1 else "Aus")
             blocks = []
             if blocks_cover_dyn:
                 blocks.append({"k": "cover", "src": blocks_cover_dyn})
@@ -9105,7 +9135,7 @@ class App:
             # (details.timerModes). Gebaeudeschutz wird ausgelassen (aufgeraeumt).
             if modes:
                 cells = [{"label": _kurz_modus(nm), "on": (mid == am),
-                          "cmd": {"uuid": ua, "cmd": f"override/{mid}"}}
+                          "cmd": {"uuid": ua, "cmd": f"__ircov/{mid}/{IRC_OVERRIDE_S}"}}
                          for mid, nm in sorted(modes.items())
                          if "schutz" not in (nm or "").lower()]
                 cells.append({"label": "Auto",
@@ -9216,7 +9246,7 @@ class App:
             if ok:
                 return self._big_view(uuid, "alarm", "Kein Alarm", tone="good")
             ua = c.get("uuidAction")
-            cause = self._text(c, "alarmCause")
+            cause = self._smoke_cause(c)
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": [
                 {"k": "state", "icon": "alarm", "tone": "crit", "text": "Alarm", "sub": cause or "Melder ausgelöst"},
                 {"k": "row", "act": True, "cells": [
@@ -9311,17 +9341,33 @@ class App:
             blocks = [hero, {"k": "astat", "text": self._daytimer_value(c), "sub": sub}]
             # Laeuft ein manueller Timer (override), kann er beendet werden
             # (stopOverride). Sonst 4 feste Dauern zum Starten: startOverride/
-            # {value}/{sekunden} — value=1 (einschalten) fuer die gewaehlte Zeit.
+            # {value}/{sekunden} (Doku: "starts the timer with a new value").
+            # Digital: value=1 (ein). Analog: die Doku nennt keinen Vorgabewert ->
+            # Wert waehlen wie bei analogen Bausteinen (-/+ um den aktuellen Wert,
+            # Schritt aus details.format), Timer startet mit dem gewaehlten Wert.
             if ov:
                 blocks.append({"k": "row", "cells": [
                     {"label": "Timer beenden", "cmd": {"uuid": ua, "cmd": "stopOverride"}}]})
             else:
+                det = c.get("details") or {}
+                val = 1
+                if det.get("analog"):
+                    fmt = det.get("format") or "%.1f"
+                    m = re.search(r"%\.(\d+)f", fmt)
+                    stp = 0.5 if (m and int(m.group(1)) > 0) else 1
+                    cur = self._num(self._state(c, "value"), 0)
+                    val = self._dt_val.get(ua)
+                    val = cur if val is None else val
+                    val = round(round(val / stp) * stp, 2)
+                    g = lambda x: f"{x:g}"
+                    blocks.append({"k": "status", "text": "Wert für den Timer"})
+                    blocks.append({"k": "ist", "text": self._fmt_num(val, fmt),
+                                   "minus": {"uuid": ua, "cmd": f"__dtval/{g(round(val - stp, 2))}"},
+                                   "plus": {"uuid": ua, "cmd": f"__dtval/{g(round(val + stp, 2))}"}})
+                    val = g(val)
                 blocks.append({"k": "row", "wrap": True, "cells": [
-                    {"label": "15 min", "cmd": {"uuid": ua, "cmd": "startOverride/1/900"}},
-                    {"label": "30 min", "cmd": {"uuid": ua, "cmd": "startOverride/1/1800"}},
-                    {"label": "60 min", "cmd": {"uuid": ua, "cmd": "startOverride/1/3600"}},
-                    {"label": "90 min", "cmd": {"uuid": ua, "cmd": "startOverride/1/5400"}},
-                ]})
+                    {"label": f"{m_} min", "cmd": {"uuid": ua, "cmd": f"startOverride/{val}/{m_ * 60}"}}
+                    for m_ in (15, 30, 60, 90)]})
             return {"t": "view", "title": _clean(c.get("name")), "route": route,
                     "anchor": "bottom", "blocks": blocks}
         if t in ("Dimmer", "EIBDimmer"):
@@ -9768,7 +9814,7 @@ class App:
 
     def needs_pin(self, uuid: str, cmd: str) -> bool:
         """Befehl ohne PIN an einen gesicherten Baustein: nicht ausfuehren, PIN verlangen."""
-        if not uuid or (cmd.startswith(("__", "roomfav/get")) and not cmd.startswith("__irrig/")):
+        if not uuid or (cmd.startswith(("__", "roomfav/get")) and not cmd.startswith(("__irrig/", "__ircov/"))):
             return False
         return uuid in self.sec_uuids()
 
@@ -9794,6 +9840,26 @@ class App:
             if not (0 <= zid <= 7 and 60 <= secs <= 4 * 3600):
                 return None
             return await self._irr_run(uuid, zid, secs, pin)
+        if cmd.startswith("__ircov/"):   # IRCv2-Modus fuer eine Dauer: Endzeit erst jetzt (frisch) rechnen
+            try:
+                _, mid, secs = cmd.split("/")
+                mid, secs = int(mid), int(secs)
+            except ValueError:
+                return None
+            if not (0 <= mid <= 9 and 60 <= secs <= 48 * 3600):
+                return None
+            real = f"override/{mid}/{_s2009_local(time.time() + secs)}"
+            return await self.command(uuid, real, pin)
+        if cmd.startswith("__dtval/"):   # analoge Schaltuhr: Wert fuer den Timer waehlen (nur tilebert)
+            try:
+                v = float(cmd.split("/", 1)[1])
+            except ValueError:
+                return None
+            if not math.isfinite(v):
+                return None
+            self._dt_val[uuid] = v
+            self._dirty = True
+            return "200"
         if cmd.startswith("__dimall/"):
             try:
                 await self._dim_all(uuid, int(cmd.split("/", 1)[1]))
