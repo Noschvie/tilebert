@@ -4860,7 +4860,7 @@ function fmtCached(k){ const id=LANG+'|'+k; return _FMT[id]||(_FMT[id]=new Intl.
 // Pong), ist die Verbindung tot (z.B. WLAN weg ohne sauberes Schliessen) ->
 // sofort neu verbinden. Ausfaelle (Server > 5 s, Miniserver laut Server)
 // zeigt ein Hinweisbalken; Bedienung bleibt frei, Werte werden blass.
-let wsRx=0, srvOk=true, srvDownT=null, msOk=true, msSince=0;
+let wsRx=0, srvOk=true, srvDownT=null, msOk=true, msSince=0, msWhy="";
 function wsLost(){ el('conn').classList.remove('ok');
   if(!srvDownT && srvOk) srvDownT=setTimeout(()=>{ srvOk=false; linkBanner(); },5000); }
 // Diagnose (Config -> System -> Diagnose-Log): Ereignisse dieses Panels an den
@@ -4918,7 +4918,7 @@ function wsWake(ev){
 }
 function linkBanner(){
   const txt = !srvOk ? 'Keine Verbindung zum tilebert-Server'
-    : !msOk ? 'Miniserver nicht erreichbar'+(msSince?' seit '+new Date(msSince).toLocaleTimeString(LANG||undefined,{hour:'2-digit',minute:'2-digit'}):'')+' – Werte evtl. veraltet'
+    : !msOk ? (msWhy==='update'?'Miniserver startet neu':'Miniserver nicht erreichbar')+(msSince?' seit '+new Date(msSince).toLocaleTimeString(LANG||undefined,{hour:'2-digit',minute:'2-digit'}):'')+' – Werte evtl. veraltet'
     : '';
   document.documentElement.classList.toggle('stale', !!txt);
   const b=document.getElementById('linkbar');
@@ -5036,7 +5036,7 @@ function connect(){
     if(msg.t==='cmdack'){ cmdAck(msg); return; }
     if(msg.t==='diag'){ DIAG=!!msg.on; if(DIAG){ clog('Diagnose an · '+innerWidth+'x'+innerHeight+' · '+navigator.userAgent.slice(0,120)); clogFlush(); } return; }
     if(msg.t==='cmdwatch'){ cmdWatch=!!msg.on; if(!cmdWatch){ cmdPend.forEach(e=>clearTimeout(e.t)); cmdPend.clear(); } return; }
-    if(msg.t==='ms'){ msOk=!!msg.ok; msSince=msg.since||0; linkBanner(); return; }
+    if(msg.t==='ms'){ msOk=!!msg.ok; msSince=msg.since||0; msWhy=msg.why||''; linkBanner(); return; }
     if(msg.t==='notify'){ wake(); showNotify(msg.text, msg.level, msg.secs); if(sndOn('notify')) notifyBeep(); return; }  // Nachricht einblenden
     if(msg.t==='display'){ if(msg.on) wake(); else screenOff(); return; }   // Server schaltet Display (Kiosk-App)
     if(msg.t==='forget'){ try{ localStorage.removeItem('lp_device'); }catch(e){}   // in der Config geloescht -> neu anmelden
@@ -5045,7 +5045,8 @@ function connect(){
         DEVICE_ID=msg.name; ws.close(); } return; }   // in den Einstellungen benannt -> mit Kennung neu verbinden
     if(msg.t==='sec'){ SEC=new Set(msg.u||[]); return; }
     if(msg.t==='cmdresult'&&msg.needPin){ if(!document.querySelector('.pinov')&&msg.uuid&&msg.cmd) doSecure(msg.uuid,msg.cmd,''); return; }   // Server verlangt PIN (Weg ohne PIN-Abfrage)
-    if(msg.t==='cmdresult'){ if(msg.ok===false && pendingSecure){ const p=pendingSecure; pendingSecure=null; doSecure(p.uuid,p.cmd,'PIN falsch – nochmal',p.rel); } else pendingSecure=null; return; }
+    if(msg.t==='cmdresult'){ if(msg.np){ pendingSecure=null; return; }   // 423: PIN stimmte, gerade nicht berechtigt (Meldung kommt als notify)
+      if(msg.ok===false && pendingSecure){ const p=pendingSecure; pendingSecure=null; doSecure(p.uuid,p.cmd,'PIN falsch – nochmal',p.rel); } else pendingSecure=null; return; }
     if(msg.t!=='view') return;
     clearSent();
     if(!booted){ booted=true; bootDone(); if(msg.route&&msg.route.view==='tab') stack=[msg.route]; }

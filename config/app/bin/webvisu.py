@@ -45,18 +45,76 @@ from aiohttp import WSMsgType, web
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from loxone_api import LoxoneClient  # noqa: E402
 from loxone_api.client import LoxoneAuthError  # noqa: E402
-from loxone_ws import LoxoneWS, WS_CLOSE_NO_HAMMER, describe_close  # noqa: E402
+from loxone_ws import (LoxoneWS, WS_CLOSE_NO_HAMMER, TokenRejected, describe_close,  # noqa: E402
+                       lock_seconds, ll_code, ll_obj, ll_part)
 
 
 # Raumregelung (IRCv2): Dauer eines Eco/Komfort-Overrides aus dem Panel (override/<modus>/<bis>)
 IRC_OVERRIDE_S = 3600
 
 
+# Zeitbasis des Miniservers. Loxone-Zeiten "Sekunden seit 2009" sind je nach Feld
+# Ortszeit des Miniservers (Doku: Statistik "local Miniserver-time") oder UTC. Die
+# Ortszeit kommt NICHT aus der Container-Uhr, sondern aus dem UTC-Abstand im globalen
+# State miniserverTime ("2017-07-03 13:01:36 +02:00:00", aktualisiert bei
+# Sommerzeitwechsel). Solange er fehlt: Container-Zeitzone wie bisher.
+_EPOCH_2009 = 1230768000          # 1.1.2009 00:00 als Unix-Zeit (Wanduhr-Basis)
+_MS_OFF: int | None = None        # UTC-Abstand des Miniservers in s (None = unbekannt)
+# Basis fuer IRCv2 override/<modus>/<until>: "local" (Ortszeit) oder "utc". Die Doku
+# nennt keine Zone; korrigiert wird per Selbstkalibrierung an overrideEntries.start.
+_IRC_BASE = "local"
+_MSTIME_RE = re.compile(r"([+-])(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$")
+
+
+def _ms_set_time(text) -> int | None:
+    """miniserverTime auswerten -> UTC-Abstand in s (merkt ihn), None wenn unlesbar."""
+    global _MS_OFF
+    m = _MSTIME_RE.search(str(text or ""))
+    if not m:
+        return None
+    off = (int(m.group(2)) * 3600 + int(m.group(3)) * 60 + int(m.group(4) or 0)) * (-1 if m.group(1) == "-" else 1)
+    if not -14 * 3600 <= off <= 14 * 3600:
+        return None
+    if off != _MS_OFF:
+        log.info("Miniserver-Zeitzone: UTC%+.2g h (Container: UTC%+.2g h)", off / 3600, _container_off() / 3600)
+    _MS_OFF = off
+    return off
+
+
+def _container_off(ts: float | None = None) -> int:
+    t = time.time() if ts is None else ts
+    return calendar.timegm(time.localtime(t)) - int(t)
+
+
+def _ms_wall(ts: float | None = None) -> int:
+    """Unix-Zeit -> Wanduhr-Sekunden des Miniservers (timegm-Form, wie die Statistik).
+    Gleiche Zone wie der Container (Normalfall LoxBerry): Container-Umrechnung, die
+    kennt die Sommerzeit auch fuer vergangene Zeitpunkte. Sonst fester Abstand."""
+    t = time.time() if ts is None else ts
+    if _MS_OFF is None or _container_off() == _MS_OFF:
+        return calendar.timegm(time.localtime(t))
+    return int(t) + _MS_OFF
+
+
+def _ms_now_dt() -> datetime:
+    """Jetzt als naive Wanduhr-Zeit des Miniservers."""
+    return datetime(1970, 1, 1) + timedelta(seconds=_ms_wall())
+
+
+def _ms_dt(ts: float) -> datetime:
+    """Unix-Zeit -> naive Wanduhr-Zeit des Miniservers."""
+    return datetime(1970, 1, 1) + timedelta(seconds=_ms_wall(ts))
+
+
 def _s2009_local(ts: float | None = None) -> int:
     """Unix-Zeit -> Loxone-Zeit: Sekunden seit 1.1.2009 in Ortszeit des Miniservers
     (Wanduhr, wie nextEntryTime/oneTimePulseDate; Doku: binstatisticdata "local Miniserver-time")."""
-    dt = datetime.fromtimestamp(time.time() if ts is None else ts)
-    return int((dt - datetime(2009, 1, 1)).total_seconds())
+    return _ms_wall(ts) - _EPOCH_2009
+
+
+def _s2009_irc(ts: float) -> int:
+    """Endzeit fuer IRCv2 override in der (kalibrierten) Basis."""
+    return int(ts) - _EPOCH_2009 if _IRC_BASE == "utc" else _s2009_local(ts)
 
 
 def _ms_https(port, https=None) -> bool:
@@ -71,10 +129,38 @@ def _ms_https(port, https=None) -> bool:
         return True
 
 
+class _LoxClient(LoxoneClient):
+    """loxone_api-Client, der Objekt-Werte auch als JSON-Text annimmt (getkey2, getjwt):
+    manche Firmware liefert LL.value als Text, teils mit \\" (wie lxcommunicator)."""
+
+    @staticmethod
+    def _extract_ll_value(payload):
+        return ll_obj(ll_part(payload).get("value"))
+
+
+# Kennung dieses Clients fuer getjwt: die Doku verlangt eine feste UUID je Client
+# (der Miniserver ordnet ihr alle Tokens zu) und einen lesbaren Namen.
+TOKEN_INFO = "tilebert"
+TOKEN_PERM = 2          # Web-Recht (kurzlebig) wie bisher (loxone_api-Vorgabe)
+
+
+def _client_uuid(host, user) -> str:
+    """Stabile Client-UUID im Loxone-Format (8-4-4-16) aus Miniserver und Benutzer."""
+    h = hashlib.sha1(f"tilebert|{host}|{user}".encode()).hexdigest()
+    return f"{h[:8]}-{h[8:12]}-{h[12:16]}-{h[16:32]}"
+
+
+async def _getjwt(c, probe: bool = False) -> str:
+    """Neues Token holen (getkey2 -> getjwt) mit fester Client-UUID (Probe-Anmeldung
+    beim Speichern mit eigener UUID, damit sie die laufende Verbindung nicht beruehrt)."""
+    return await c.authenticate(permission=TOKEN_PERM, uuid=_client_uuid(c.host, c.user + ("|probe" if probe else "")),
+                                info=TOKEN_INFO + (" Probe" if probe else ""))
+
+
 def _make_client(host, user, password, port, verify_tls, https=None) -> LoxoneClient:
     """LoxoneClient bauen und bei HTTP (Gen1, Port 80 oder https=false) umstellen –
     die loxone_api setzt die Basis-URL sonst fest auf https://…"""
-    c = LoxoneClient(host=host, user=user, password=password, port=port, verify_tls=verify_tls)
+    c = _LoxClient(host=host, user=user, password=password, port=port, verify_tls=verify_tls)
     if not _ms_https(port, https):
         c.base_url = f"http://{host}:{port}/"
     return c
@@ -92,7 +178,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.32"
+APP_VERSION = "0.20.33"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -675,6 +761,7 @@ MS_CMD_TIMEOUT = 10      # s: ein Befehl blockiert solange die Nachrichten seine
 TOKEN_RENEW_MIN = 60     # s: nicht oefter neu anmelden (401 kann auch fehlende Rechte heissen)
 MS_OFFLINE_GRACE = 10   # s: so lange darf der Miniserver weg sein, bevor die Panels es anzeigen
 MS_RETRY = (5, 10, 20, 40, 60)   # s: Wartezeiten zwischen Verbindungsversuchen zum Miniserver
+MS_RETRY_OOS = 20                # s: erste Pause nach Out-of-Service/Close 4007 (Neustart, Update)
 # Wartezeiten, wenn der Miniserver die ANMELDUNG ablehnt (401/403/423, WS-Close 4003/4006).
 # Ein Minutentakt waere dauerhaftes Passwort-Raten: der Miniserver sperrt nach zu vielen
 # Fehlversuchen (Close-Code 4003) - und das trifft dann auch die Loxone-App. Neue
@@ -686,7 +773,7 @@ _AUTH_REJECT_RE = re.compile(r"\b(?:status|HTTP|code=)\s*(401|403|423)\b")
 def _auth_rejected(err: BaseException | None) -> bool:
     """True, wenn der Miniserver die Zugangsdaten/den Benutzer abgelehnt hat.
     Bewusst nur die Fehlerklassen der loxone_api (kein WS-'authwithtoken 401':
-    das ist ein normal abgelaufenes Token, das _reauth ohnehin erneuert) und nur
+    das ist ein normal abgelaufenes Token, das _connect_ws ohnehin erneuert) und nur
     echte Ablehnungs-Codes - 5xx/503 beim Miniserver-Neustart gehoeren NICHT dazu."""
     if err is None or type(err).__name__ not in ("LoxoneAuthError", "LoxoneRequestError"):
         return False
@@ -1280,7 +1367,7 @@ def _parse_stat2_bin(body: bytes, nvals: int = 1) -> list | None:
     Binaer, je Eintrag 4 Byte Zeitstempel (uint32, Unix-UTC) und je Wert 8 Byte
     (float64), little-endian - an der Anlage so gemessen (PV 7,42 kW, Netz
     -6,26 kW, Eintraege im Abstand der Gruppe). Die Zeit wird wie bei den
-    Monatsdateien in Wanduhr-Sekunden der Container-Zeitzone umgerechnet.
+    Monatsdateien in Wanduhr-Sekunden des Miniservers umgerechnet (_ms_wall).
     Passt die Laenge nicht zum Eintragsformat -> None (unbekannte Antwort)."""
     size = 4 + 8 * nvals
     if len(body) % size:
@@ -1289,7 +1376,7 @@ def _parse_stat2_bin(body: bytes, nvals: int = 1) -> list | None:
     for off in range(0, len(body), size):
         ts, *vals = struct.unpack_from("<I" + "d" * nvals, body, off)
         vals = [v if math.isfinite(v) else None for v in vals]
-        out.append((calendar.timegm(time.localtime(ts)), vals))
+        out.append((_ms_wall(ts), vals))
     out.sort(key=lambda r: r[0])
     return out
 
@@ -1956,7 +2043,12 @@ class App:
         self._ws_locks: dict = {}
         self._nr_day = time.localtime().tm_yday   # naechtlicher Fully-Neustart: erst ab der naechsten Nacht
         self._dev_gone: dict[str, float] = {}     # Geraetename -> Zeitpunkt der letzten Trennung
+        self._mstime_uuid = ""            # State-UUID von miniserverTime (globaler State)
+        self._irc_cal: dict = {}          # overrideEntries-State -> laufende Kalibrierung
         self.jwt: str | None = None
+        self._jwt_user: str | None = None   # Benutzer, fuer den self.jwt ausgestellt ist
+        self._stale_jwt: list = []          # ersetzte Tokens, freizugeben nach dem naechsten WS-Aufbau
+        self._last_close: tuple = (None, "", False)   # Close-Info eines WS, der in start() scheiterte
         self.alg: str = "SHA1"
         self._auth_gen = 0               # zaehlt jede Anmeldung (-> _renew_token)
         self._auth_at = 0.0              # monotonic der letzten Anmeldung
@@ -1968,6 +2060,8 @@ class App:
         # Abruf schon vorbei war, aendert sich nicht mehr.
         self.stat_cache: dict[tuple[str, str], tuple[float, str, list | None]] = {}
         self.stat_pending: set[tuple] = set()
+        self._stat_doc_path = False    # True: dokumentierten Statistik-Pfad zuerst versuchen
+        self._stat_doc_path_tried = False   # True: ein Pfad lieferte schon Daten -> 404 heisst "leerer Monat"
         # statisticV2 (Energie-Zaehler): (uuidAction, Gruppe, Ausgang, Zeitraum) ->
         # (monotonic, [(sekunden, [wert])] oder None nach Abruffehler). Hoechstens
         # zwei Abrufe gleichzeitig; die Loxone-App erlaubt 4 (Gen 2) bzw. 1 (Gen 1).
@@ -2247,6 +2341,8 @@ class App:
         # die aktiven Betriebsmodi. Die Werte kommen ueber den WS-Stream in
         # self.states. Roh uebernehmen, die Belegung ist je Anlage verschieden.
         self.global_states = dict(st.get("globalStates") or {})
+        # UTC-Abstand des Miniservers (Zeitbasis fuer Loxone-Zeiten, siehe _ms_wall)
+        self._mstime_uuid = str(self.global_states.get("miniserverTime") or "")
         # Loxone-Wetterdienst: nur vorhanden, wenn die Anlage ihn gebucht hat.
         # Enthaelt die State-UUIDs (actual/forecast), die Wetterlage-Texte und
         # die Formatstrings mit den Einheiten. Der Wetterpuffer gehoert zu diesen
@@ -2320,7 +2416,17 @@ class App:
         Fehler werden vom Aufrufer isoliert, damit die Verbindungs-Schleife lebt."""
         if self.client is None:
             return False
-        st = await self.client.load_structure()
+        try:
+            st = await self.client.load_structure()
+        except Exception as err:
+            if "401" not in str(err):
+                raise
+            # Token inzwischen abgelaufen (die Trennung kam evtl. genau deshalb): neues holen,
+            # das alte freigeben (falls es doch noch gilt), Struktur einmal erneut laden
+            log.info("Miniserver-Token beim Struktur-Abgleich abgelehnt -> neues Token")
+            async with self._auth_lock:
+                await self._replace_token(self.client, kill_old=True)
+            st = await self.client.load_structure()
         if not self._adopt_structure(st):
             return False                      # unveraendert -> nichts tun (kein Panel-Reload)
         self.states = {}                      # nach Struktur-Wechsel States frisch (MS sendet neu)
@@ -2333,8 +2439,21 @@ class App:
                                        self.port, self.verify_tls, self.https)
             await self.client.__aenter__()
             self.alg = (await self.client.getkey2()).hashAlg
-            self._set_token(await self.client.authenticate())
-            st = await self.client.load_structure()
+            st = None
+            if self.jwt and self._jwt_user == self.user:
+                # Neustart der Verbindung (harter Reset): vorhandenes Token weiterverwenden,
+                # statt bei jedem Versuch ein neues anzulegen (Token-Leichen am Miniserver).
+                self.client._jwt = self.jwt
+                try:
+                    st = await self.client.load_structure()
+                except Exception as err:
+                    if "401" not in str(err):
+                        raise
+                    log.info("Vorhandenes Miniserver-Token abgelehnt -> neues Token")
+                    self.client._jwt = None
+            if st is None:
+                await self._replace_token(self.client, kill_old=False)
+                st = await self.client.load_structure()
             # Reconnect nach Miniserver-Reboot (z.B. Loxone-Config hochgeladen):
             # hat sich die Struktur geaendert, Panels neu laden lassen. Beim
             # allerersten Start ist _struct_sig None -> kein Reload.
@@ -2344,6 +2463,8 @@ class App:
             await self._connect_ws()
             log.info("Mit Miniserver verbunden (%s).", self.host)
         except Exception:
+            if self.ws is not None:
+                self._last_close = (self.ws.close_code, self.ws.close_reason, self.ws.out_of_service)
             await self._close_conn()   # sauber zuruecksetzen, damit Retry neu aufbaut
             raise
 
@@ -2372,7 +2493,7 @@ class App:
         try:
             await newc.__aenter__()
             alg = (await newc.getkey2()).hashAlg
-            jwt = await newc.authenticate()
+            jwt = await _getjwt(newc)
             st = await newc.load_structure()
         except Exception:
             try:
@@ -2386,8 +2507,14 @@ class App:
         self.user, self.password = ms["user"], ms["pass"]
         self.verify_tls = ms.get("verify_tls", False)
         old_client, self.client = self.client, newc
+        old_jwt, old_user, old_alg = self.jwt, self._jwt_user, self.alg
         self.alg = alg
         self._set_token(jwt)
+        stale, self._stale_jwt = self._stale_jwt, []
+        if old_client is not None:
+            # Tokens der alten Verbindung freigeben (alter Client = alter Miniserver/Benutzer)
+            for j, u, a in ([(old_jwt, old_user, old_alg)] if old_jwt and old_jwt != jwt else []) + stale:
+                await self._kill_token(old_client, j, u, a)
         # Anderer/geaenderter Miniserver -> Struktur evtl. anders, dann Panels neu laden.
         if self._adopt_structure(st):
             self._pending_reload = True
@@ -2411,20 +2538,75 @@ class App:
         return len(self.controls)
 
     async def _connect_ws(self) -> None:
+        """WS aufbauen und mit dem VORHANDENEN Token anmelden (authwithtoken). Nur wenn
+        der Miniserver es ablehnt (abgelaufen/entwertet), ein neues holen und einmal neu
+        verbinden. So entsteht nicht bei jeder Trennung ein weiteres Token."""
+        await self._open_ws()
+        try:
+            await self.ws.connect()
+            await self._free_stale()
+            return
+        except TokenRejected as err:
+            log.info("Miniserver-Token fuer WS abgelehnt (Code %s) -> neues Token", err.code)
+            with contextlib.suppress(Exception):
+                await self.ws.close()
+        if not self.client:
+            raise ConnectionError("keine Verbindung zum Miniserver")
+        async with self._auth_lock:
+            await self._replace_token(self.client, kill_old=False)   # abgelehntes Token ist schon ungueltig
+        await self._open_ws()
+        try:
+            await self.ws.connect()
+        except TokenRejected as err:
+            # Auch das frische Token abgelehnt: kein Netzfehler, sondern Ablehnung -> langer
+            # Abstand (MS_RETRY_AUTH) statt alle 5-60 s ein weiteres Token; frisches freigeben
+            err.fresh = True
+            await self._kill_token(self.client, self.jwt, self._jwt_user, self.alg)
+            raise
+        await self._free_stale()
+
+    async def _free_stale(self) -> None:
+        """Ersetzte, evtl. noch gueltige Tokens freigeben, sobald der WS mit dem neuen
+        Token laeuft (killtoken auf das Token des laufenden WS wuerde ihn trennen)."""
+        while self._stale_jwt:
+            jwt, user, alg = self._stale_jwt.pop()
+            if self.client and jwt != self.jwt:
+                await self._kill_token(self.client, jwt, user, alg)
+
+    async def _open_ws(self) -> None:
+        if self.ws is not None:
+            with contextlib.suppress(Exception):
+                await self.ws.close()
         self.ws = LoxoneWS(host=self.host, port=self.port, user=self.user, jwt=self.jwt,
                            hash_alg=self.alg, verify_tls=self.verify_tls,
                            secure=_ms_https(self.port, self.https))
-        await self.ws.connect()
 
     def _set_token(self, jwt: str) -> None:
         self.jwt = jwt
+        self._jwt_user = self.user
         self._auth_gen += 1
         self._auth_at = time.monotonic()
 
-    async def _reauth(self) -> None:
-        # Token erneuern (kann nach langer Laufzeit ablaufen)
-        if self.client:
-            self._set_token(await self.client.authenticate())
+    async def _replace_token(self, client, kill_old: bool) -> None:
+        """Neues Token holen; das bisherige (falls noch gueltig) freigeben (killtoken),
+        damit sich am Miniserver keine Tokens ansammeln (Doku: token storage clean)."""
+        old, old_user = self.jwt, self._jwt_user
+        self._set_token(await _getjwt(client))
+        if kill_old and old and old != self.jwt:
+            if self.ws is not None and not getattr(getattr(self.ws, "_ws", None), "closed", True):
+                # Der laufende WS ist mit dem alten Token angemeldet: erst nach dem naechsten
+                # WS-Aufbau (bzw. beim Stoppen) freigeben, sonst schliesst der Miniserver ihn
+                self._stale_jwt.append((old, old_user, self.alg))
+                del self._stale_jwt[:-3]
+            else:
+                await self._kill_token(client, old, old_user, self.alg)
+
+    async def _kill_token(self, client, jwt: str, user: str | None, alg: str) -> None:
+        """Token am Miniserver freigeben (best effort, hoechstens 5 s)."""
+        try:
+            await asyncio.wait_for(_ms_token_frei(client, jwt, user or self.user, alg), 5)
+        except Exception as err:
+            log.debug("Token nicht freigegeben: %s", type(err).__name__)
 
     async def _renew_token(self, seen_gen: int) -> bool:
         """Nach einem 401 neu anmelden. Hat eine parallele Anfrage das schon
@@ -2438,7 +2620,8 @@ class App:
                 return False
             self._auth_at = time.monotonic()     # auch ein Fehlversuch sperrt fuer TOKEN_RENEW_MIN
             try:
-                self._set_token(await self.client.authenticate())
+                # 401 kann auch fehlende Rechte heissen: dann ist das alte Token noch gueltig -> freigeben
+                await self._replace_token(self.client, kill_old=True)
             except Exception as err:            # z. B. Passwort geaendert, Miniserver startet neu
                 log.warning("Neuanmeldung am Miniserver fehlgeschlagen: %s", err or type(err).__name__)
                 return False
@@ -2470,11 +2653,11 @@ class App:
         LL-Code der Antwort, ohne lesbares JSON der HTTP-Status."""
         status, body, _ = await self._ms_http("jdev/" + path.lstrip("/"), timeout, renew)
         try:
-            ll = json.loads(body.decode("utf-8", "replace").lstrip("\ufeff").strip("\x00")).get("LL") or {}
-        except (ValueError, AttributeError):
-            ll = {}
-        code = ll.get("Code") or ll.get("code")
-        return (str(code) if code is not None else str(status)), ll.get("value")
+            payload = json.loads(body.decode("utf-8", "replace").lstrip("\ufeff").strip("\x00"))
+        except ValueError:
+            payload = None
+        code = ll_code(payload)        # "Code": "200" oder "code": 200
+        return (code or str(status)), ll_part(payload).get("value")
 
     def _win_counts(self, c: dict) -> tuple[int, int]:
         """(offen, gekippt) einer Fensterueberwachung. Massgeblich ist die
@@ -5704,8 +5887,28 @@ class App:
         key = (ua, ym)
         rows: list | None = None
         try:
-            status, body, _ = await self._ms_http(f"stats/{ua}.{ym}.xml", 20)
-            if status == 404:
+            # Dateiname <uuid>.<JJJJMM>.xml ist beobachtet, dokumentiert ist
+            # stats/statisticdata.xml/<uuid>/<JJJJMM> (Structure File 16.0). Klappt der eine
+            # Weg nicht, den anderen versuchen; was funktioniert, kommt kuenftig zuerst.
+            paths = [f"stats/{ua}.{ym}.xml", f"stats/statisticdata.xml/{ua}/{ym}"]
+            if self._stat_doc_path:
+                paths.reverse()
+            status, body, seen404 = 0, b"", False
+            for i, path in enumerate(paths):
+                status, body, _ = await self._ms_http(path, 20)
+                if status == 200:
+                    self._stat_doc_path_tried = True   # ein funktionierender Weg ist bekannt
+                    if i:
+                        self._stat_doc_path = not self._stat_doc_path
+                        log.info("Statistik: Abruf ueber %s", path.split("/")[1])
+                    break
+                if status == 404:
+                    seen404 = True
+                    if not self._stat_doc_path_tried:
+                        continue            # einmal je Lauf pruefen, ob der andere Weg Daten hat
+                    break                   # Monat ohne Aufzeichnung
+            if status != 200 and seen404:
+                status = 404
                 rows = []
             elif status == 200:
                 # Monatsdatei kann MB gross sein: im Hilfsthread zerlegen, Live-Updates laufen weiter
@@ -5718,7 +5921,7 @@ class App:
         finally:
             self.stat_pending.discard(key)
         self.stat_cache.pop(key, None)          # neu einsortieren = zuletzt benutzt
-        self.stat_cache[key] = (time.monotonic(), datetime.now().strftime("%Y%m"), rows)
+        self.stat_cache[key] = (time.monotonic(), _ms_now_dt().strftime("%Y%m"), rows)
         while len(self.stat_cache) > STAT_CACHE_MAX or (
                 len(self.stat_cache) > 1 and _rows_total(self.stat_cache.values(), 2) > STAT_ROWS_MAX):
             self.stat_cache.pop(next(iter(self.stat_cache)))
@@ -5806,7 +6009,7 @@ class App:
             return ""
         # Wert als Wanduhr behandeln (TZ-neutral): 2009-Basis + Sekunden.
         dt = datetime(2009, 1, 1) + timedelta(seconds=ts)
-        today = datetime.now().date()
+        today = _ms_now_dt().date()
         d = (dt.date() - today).days
         hm = dt.strftime("%H:%M")
         if d == 0:
@@ -6860,7 +7063,7 @@ class App:
         ua = c.get("uuidAction")
         if not (ua and defs):
             return []
-        now = calendar.timegm(datetime.now().timetuple())
+        now = _ms_wall()                       # Wanduhr des Miniservers (wie die Statistik)
         t1 = now - now % 60                    # Fenster rueckt je Minute vor
         mkey = (ua, rng, t1, self.stat_gen)
         if mkey in self.stat_memo:
@@ -6960,7 +7163,7 @@ class App:
         name, kind, dec, unit, src = d
         if style == "span" and kind != "line":
             style = "trend"
-        now = calendar.timegm(datetime.now().timetuple())
+        now = _ms_wall()
         t1 = now - now % 60
         mkey = ("spark", ua, rng, style, t1, self.stat_gen)
         if mkey in self.stat_memo:
@@ -7425,7 +7628,7 @@ class App:
         if f <= 0:
             return None
         try:
-            return datetime.fromtimestamp(f) if f > 1.0e9 else datetime(2009, 1, 1) + timedelta(seconds=f)
+            return _ms_dt(f) if f > 1.0e9 else datetime(2009, 1, 1) + timedelta(seconds=f)
         except (OverflowError, OSError, ValueError):
             return None
 
@@ -7433,7 +7636,7 @@ class App:
     def _when(dt: datetime | None) -> str:
         if not dt:
             return ""
-        d = (dt.date() - date.today()).days
+        d = (dt.date() - _ms_now_dt().date()).days
         hm = dt.strftime("%H:%M")
         return ("Heute " + hm) if d == 0 else (("Gestern " + hm) if d == -1 else dt.strftime("%d.%m. ") + hm)
 
@@ -7487,12 +7690,12 @@ class App:
         except (TypeError, ValueError):
             atp = -2
         until = self._ts_any(self._state(c, "overwriteUntil"))
-        timer_on = atp != -2 and until is not None and until > datetime.now()
+        timer_on = atp != -2 and until is not None and until > _ms_now_dt()
         blocks = [{"k": "ist", "text": f"{spd} %", "minus": man(spd - 10), "plus": man(spd + 10)}]
         line = " · ".join(bits)
         if timer_on:
             pn = "Manuell" if atp == -1 else _clean((profs[atp] if 0 <= atp < len(profs) else {}).get("name")) or "Timer"
-            rest = int((until - datetime.now()).total_seconds())
+            rest = int((until - _ms_now_dt()).total_seconds())
             line = " · ".join(x for x in (pn, "noch " + self._dur(rest), mname) if x)
         ml = {"k": "mline", "text": line}
         info = self._json_state(c, "controlInfo")
@@ -8263,6 +8466,29 @@ class App:
     # (Doku "Central Objects": CentralAudio play/pause/volup/voldown, CentralAlarm
     # on/off, CentralGate open/close/stop, CentralWindow fullopen/fullclose/stop)
     _CENTRAL_DIRECT = ("CentralAudioZone", "CentralAlarm", "CentralGate", "CentralWindow")
+    # Dokumentierter Weg fuer Sammelbefehle an Zentralbausteine (Structure File 16.0,
+    # "Central Objects"): selectedcontrols/<ids>/<befehl>, ids aus details.controls[].id.
+    # Erlaubte <befehl> je Typ laut Doku; Kurzformen ohne selectedcontrols kennt die Doku nicht.
+    _CENTRAL_CMDS = {
+        "CentralAlarm": re.compile(r"(on|off|quit|delayedon)"),
+        "CentralAudioZone": re.compile(r"(play|pause|volup|voldown)"),
+        "CentralGate": re.compile(r"(open|close|stop)"),
+        "CentralJalousie": re.compile(r"(FullUp|FullDown|shade|auto|NoAuto|stop)"),
+        "CentralLightController": re.compile(r"(on|reset)"),
+        "CentralWindow": re.compile(r"(toggle|fullopen|fullclose|moveToPosition/\d+(\.\d+)?|open/(on|off)"
+                                    r"|close/(on|off)|slightlyOpen|protection|stop)"),
+    }
+
+    def _central_cmd(self, uuid: str, cmd: str) -> str:
+        """Befehl an einen Zentralbaustein auf selectedcontrols/<alle ids>/<befehl> umstellen.
+        Andere Bausteine, schon vollstaendige oder nicht dokumentierte Befehle bleiben."""
+        c = self._resolve_control_by_action(uuid) or {}
+        rx = self._CENTRAL_CMDS.get(c.get("type"))
+        if rx is None or not rx.fullmatch(cmd):
+            return cmd
+        ids = [str(m.get("id")) for m in ((c.get("details") or {}).get("controls") or [])
+               if isinstance(m, dict) and str(m.get("id", "")).isdigit()]
+        return f"selectedcontrols/{','.join(ids)}/{cmd}" if ids else cmd
 
     def _central_view(self, gid: str, c: dict, uuids: list, prof, route: dict) -> dict | None:
         """Zentralbaustein als Seite: Zusammenfassung gross, Mitglieder als
@@ -8536,10 +8762,10 @@ class App:
             ts = float(ts)
             if ts <= 0:
                 return ""
-            dt = datetime.fromtimestamp(ts)
+            dt = _ms_dt(ts)
         except (TypeError, ValueError, OverflowError, OSError):
             return ""
-        return dt.strftime("%H:%M") if dt.date() == date.today() else dt.strftime("%d.%m. %H:%M")
+        return dt.strftime("%H:%M") if dt.date() == _ms_now_dt().date() else dt.strftime("%d.%m. %H:%M")
 
     def _aal_status(self, c: dict) -> int:
         try:
@@ -9848,8 +10074,13 @@ class App:
                 return None
             if not (0 <= mid <= 9 and 60 <= secs <= 48 * 3600):
                 return None
-            real = f"override/{mid}/{_s2009_local(time.time() + secs)}"
-            return await self.command(uuid, real, pin)
+            now = time.time()
+            real = f"override/{mid}/{_s2009_irc(now + secs)}"
+            su = self._irc_cal_arm(uuid, mid, secs, now, pin is not None)   # vor dem Senden: WS-Update kann vor der Antwort kommen
+            res = await self.command(uuid, real, pin)
+            if su and res != "200":
+                self._irc_cal.pop(su, None)
+            return res
         if cmd.startswith("__dtval/"):   # analoge Schaltuhr: Wert fuer den Timer waehlen (nur tilebert)
             try:
                 v = float(cmd.split("/", 1)[1])
@@ -9866,6 +10097,7 @@ class App:
             except ValueError:
                 pass
             return "200"
+        cmd = self._central_cmd(uuid, cmd)
         try:
             if pin is not None:
                 return await self._secured_command(uuid, cmd, pin)
@@ -9923,6 +10155,14 @@ class App:
             log.warning("cmd %s/%s fehlgeschlagen: %s", uuid, cmd, err or type(err).__name__)
             return None
 
+    def not_permitted(self, uuid: str, cmd: str) -> bool:
+        """True, wenn ein Code 423 vom Miniserver 'gerade nicht berechtigt' heisst
+        (NFC Code Touch output/<n>) und nicht die eigene PIN-Sperre ist."""
+        c = self._resolve_control_by_action(uuid) or self.controls.get(uuid) or {}
+        if c.get("type") != "NfcCodeTouch" or not cmd.startswith("output/"):
+            return False
+        return time.monotonic() >= self._pin_fail.get(uuid, (0, 0.0))[1]
+
     async def _secured_command(self, uuid: str, cmd: str, pin: str) -> str | None:
         """Loxone secured-command: getvisusalt -> Hash(visuPw:salt) -> HMAC(key) -> ios."""
         # PIN-Raten bremsen: nach 5 Fehlversuchen je Baustein wachsende Sperre (1-16 min)
@@ -9932,9 +10172,14 @@ class App:
             return "423"
         # Ein abgelaufenes Token faellt hier auf (und wird erneuert), nicht erst
         # beim ios-Aufruf: dort hiesse ein Fehler "Visu-Passwort falsch".
-        _, val = await self._ms_jdev(f"sys/getvisusalt/{quote(self.user)}")
+        _, val = await self._ms_jdev(f"sys/getvisusalt/{quote(self.user, safe='')}")
+        val = ll_obj(val)              # Objekt, oder JSON-Text (Firmware-Eigenheit)
         val = val if isinstance(val, dict) else {}
         key, salt = val.get("key", ""), val.get("salt", "")
+        if not key or not salt:
+            # Ohne Schluessel waere jeder Hash falsch und wuerde als falsche PIN zaehlen
+            log.warning("getvisusalt ohne Schluessel/Salt - gesicherter Befehl %s nicht gesendet", uuid)
+            return None
         alg = (val.get("hashAlg") or "SHA1").upper()
         digest = hashlib.sha256 if alg == "SHA256" else hashlib.sha1
         pwhash = digest(f"{pin}:{salt}".encode()).hexdigest().upper()
@@ -9945,15 +10190,71 @@ class App:
         log.info("secured cmd %s/%s -> Code %s", uuid, cmd, code)
         if str(code) == "200":
             self._pin_fail.pop(uuid, None)
+        elif str(code) == "423" and self.not_permitted(uuid, cmd):
+            pass        # PIN stimmte, Benutzer gerade nicht berechtigt (NFC output/<n>): kein Fehlversuch
         else:
             fails += 1
             self._pin_fail[uuid] = (fails, time.monotonic() + (60 * 2 ** min(fails - 5, 4) if fails >= 5 else 0))
         return code
 
+    # ---- Zeitbasis IRCv2 (Selbstkalibrierung) ----------------------------------
+    # Die Doku nennt fuer override/<modus>/<until> und overrideEntries.start/end nur
+    # "Seconds since 2009" ohne Zone. Nach einem eigenen Override setzt der Miniserver
+    # overrideEntries[0].start auf "jetzt" - daran laesst sich ablesen, ob er Ortszeit
+    # oder UTC meint. Die Basis wird gemerkt; passte sie beim ersten Mal nicht, wird
+    # der Override einmal mit korrigierter Endzeit wiederholt (nicht bei PIN-Bausteinen).
+    def _irc_cal_arm(self, uuid: str, mid: int, secs: int, sent_at: float, secured: bool) -> str | None:
+        if _MS_OFF is None and _container_off() == 0:
+            return None         # beide Basen gleich (UTC): nichts zu lernen
+        c = self._resolve_control_by_action(uuid) or {}
+        su = (c.get("states") or {}).get("overrideEntries")
+        if not isinstance(su, str):
+            return None
+        self._irc_cal[su] = (uuid, mid, secs, sent_at, secured)
+        return su
+
+    def _irc_cal_check(self, su: str, value: object) -> None:
+        global _IRC_BASE
+        uuid, mid, secs, sent_at, secured = self._irc_cal.get(su) or (None, 0, 0, 0.0, True)
+        if uuid is None:
+            return
+        if time.time() - sent_at > 120:
+            self._irc_cal.pop(su, None)
+            return
+        ents = ll_obj(value) if isinstance(value, str) else value
+        try:
+            start = int(float(ents[0]["start"]))
+        except (TypeError, ValueError, KeyError, IndexError):
+            return              # (noch) kein Eintrag: auf das naechste Update warten
+        if start < _s2009_local(sent_at) - 900 and start < int(sent_at) - _EPOCH_2009 - 900:
+            return              # alter Eintrag (Override von vorher): auf den neuen warten
+        self._irc_cal.pop(su, None)
+        loc, utc = _s2009_local(sent_at), int(sent_at) - _EPOCH_2009
+        if loc == utc:
+            return
+        base = "local" if abs(start - loc) <= abs(start - utc) else "utc"
+        if min(abs(start - loc), abs(start - utc)) > 600:
+            log.info("IRCv2-Zeitbasis: overrideEntries.start=%s passt zu keiner Basis - unveraendert", start)
+            return
+        if base != _IRC_BASE:
+            log.info("IRCv2-Zeitbasis: Miniserver rechnet in %s (bisher %s)", base, _IRC_BASE)
+            _IRC_BASE = base
+            if not secured:
+                rest = int(sent_at + secs - time.time())
+                if rest >= 60:
+                    self._spawn(self.command(uuid, f"__ircov/{mid}/{rest}"))
+            else:
+                log.warning("IRCv2-Zeitbasis korrigiert: Endzeit des eben gesetzten Overrides (PIN-Baustein) "
+                            "um %d min verschoben, folgende stimmen", abs(utc - loc) // 60)
+
     def _on_value(self, uuid: str, value: object) -> None:
         self.states[uuid] = value
         self._diag_vals += 1
         self._dirty = True
+        if uuid == self._mstime_uuid:
+            _ms_set_time(value)
+        if uuid in self._irc_cal:
+            self._irc_cal_check(uuid, value)
         if uuid in self.bell_map:
             now = bool(value)
             if now != bool(self._bell_prev.get(uuid)):
@@ -10134,6 +10435,8 @@ class App:
                         if await self._refresh_structure():
                             self._pending_reload = True   # Panels neu laden lassen
                             log.info("Loxone-Struktur geaendert -> uebernommen, Panels werden neu geladen")
+                    except LoxoneAuthError:
+                        raise                     # Neuanmeldung abgelehnt: nicht gleich noch einmal per WS
                     except Exception:
                         log.exception("Struktur-Refresh beim Reconnect uebersprungen")
                     await self._connect_ws()    # WS neu (Settings-Reconnect / nach Abriss)
@@ -10159,6 +10462,7 @@ class App:
                     retry = 0
                 connected_at = None
                 close_code = getattr(self.ws, "close_code", None) if self.ws else None
+                close_reason = str(getattr(self.ws, "close_reason", "") or "") if self.ws else ""
                 oos = bool(getattr(self.ws, "out_of_service", False)) if self.ws else False
                 try:
                     if self.ws:
@@ -10166,19 +10470,34 @@ class App:
                 except Exception:
                     pass
                 self.ws = None
-                rejected = _auth_rejected(err) or close_code in WS_CLOSE_NO_HAMMER
-                try:
-                    if self.client:
-                        await self._reauth()    # Token erneuern, Client behalten
-                except Exception as err2:
-                    rejected = rejected or _auth_rejected(err2)
-                    await self._close_conn()    # Client kaputt -> harter Reset (start() baut neu)
-                if rejected:
+                if self.ws is None and (self._last_close[0] is not None or self._last_close[2]):
+                    close_code, close_reason, oos = self._last_close   # WS scheiterte schon in start()
+                self._last_close = (None, "", False)
+                rejected = _auth_rejected(err) or close_code in WS_CLOSE_NO_HAMMER or bool(getattr(err, "fresh", False))
+                # Kein Neuanmelden auf Verdacht: der naechste WS-Aufbau versucht zuerst das
+                # vorhandene Token (authwithtoken) und holt nur bei Ablehnung ein neues.
+                # Fehler des HTTP-Clients (getkey2/getjwt/Struktur) -> harter Reset wie bisher.
+                if type(err).__name__ in ("LoxoneAuthError", "LoxoneRequestError"):
+                    await self._close_conn()
+                lock = lock_seconds(close_reason) if close_code == 4003 else None
+                if close_code == 4003 and lock is not None:
+                    # Restsperre aus dem Close-Grund (lxcommunicator): genau so lange warten
+                    wait = min(max(lock + 5, 30), 24 * 3600)
+                    auth_retry += 1
+                    log.warning("Miniserver-Anmeldung gesperrt (zu viele Fehlversuche) — noch %d s, "
+                                "naechster Versuch in %d s", lock, wait)
+                elif rejected:
                     wait = MS_RETRY_AUTH[min(auth_retry, len(MS_RETRY_AUTH) - 1)]
                     auth_retry += 1
                     log.warning("Miniserver lehnt die Anmeldung ab (%s) — naechster Versuch in %d min "
                                 "(Schutz vor Konto-Sperre; Zugangsdaten unter Einstellungen pruefen, "
                                 "neue Eingaben wirken sofort)", err, wait // 60)
+                elif oos or close_code == 4007:
+                    # Neustart/Update: der Miniserver liefert erst einmal 503 -> nicht sofort
+                    # anklopfen (lxcommunicator schliesst und wartet ebenfalls)
+                    wait = max(MS_RETRY_OOS, MS_RETRY[min(retry, len(MS_RETRY) - 1)])
+                    retry += 1
+                    log.warning("Miniserver startet neu/wird aktualisiert — neuer Versuch in %ss", wait)
                 else:
                     wait = MS_RETRY[min(retry, len(MS_RETRY) - 1)]
                     retry += 1
@@ -10310,7 +10629,8 @@ class App:
             self.ms_sent = ok
             if not ok:
                 log.warning("Miniserver seit %ds nicht erreichbar -> Panels melden", int(now - self.ms_down_since))
-            await self._send_all(self.conn_route, {"t": "ms", "ok": ok, "since": int(self.ms_down_since * 1000)})
+            await self._send_all(self.conn_route, {"t": "ms", "ok": ok, "since": int(self.ms_down_since * 1000),
+                                                   "why": "" if ok else (self.ms_reason or "")})
         if now >= self._sl_next:
             self._sl_next = now + 3
             self._scene_light_learn(now)
@@ -10772,8 +11092,18 @@ class App:
                 self._front_session = None
 
     async def close(self) -> None:
+        if self.client and self.jwt:
+            # Beim Stoppen (Update/Neustart) das Token freigeben (zuerst: docker stop laesst
+            # nur 10 s): der naechste Start holt ohnehin ein neues, sonst bliebe je Neustart
+            # eines am Miniserver liegen. Der Miniserver schliesst den WS dann selbst.
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(asyncio.gather(*(
+                    self._kill_token(self.client, jwt, user, alg)
+                    for jwt, user, alg in [(self.jwt, self._jwt_user, self.alg)] + self._stale_jwt)), 4)
+            self.jwt, self._stale_jwt = None, []
         if self.ws:
-            await self.ws.close()
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(self.ws.close(), 2)
         if self.icon_session:
             await self.icon_session.close()
         if self.client:
@@ -11257,7 +11587,7 @@ async def _ms_pruefen(ms: dict) -> tuple[str, str] | None:
         async with asyncio.timeout(20):
             await c.__aenter__()
             k2 = await c.getkey2()
-            jwt = await c.authenticate()
+            jwt = await _getjwt(c, probe=True)
             await _ms_token_frei(c, jwt, ms["user"], getattr(k2, "hashAlg", "SHA1"))
     except LoxoneAuthError:
         return ("auth", "Anmeldung abgelehnt: Benutzer oder Kennwort falsch.")
@@ -13130,7 +13460,9 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
         if _sv is not None:
             await app._send_or_drop(ws, _sv)
             app._last_sent.setdefault(ws, {})["saver"] = _sv
-        await app._send_or_drop(ws, {"t": "ms", "ok": app.ms_ok(), "since": int(app.ms_down_since * 1000)})
+        _mok = app.ms_ok()
+        await app._send_or_drop(ws, {"t": "ms", "ok": _mok, "since": int(app.ms_down_since * 1000),
+                                     "why": "" if _mok else (app.ms_reason or "")})
         await app._send_or_drop(ws, {"t": "cmdwatch", "on": app.cmd_watch})
         _sec = {"t": "sec", "u": app.sec_uuids()}
         await app._send_or_drop(ws, _sec)
@@ -13177,7 +13509,14 @@ async def ws_handler(request: web.Request) -> web.WebSocketResponse:
                 if data.get("id") is not None:
                     # Quittung fuer das Befehls-Monitoring des Panels
                     await app._send_or_drop(ws, {"t": "cmdack", "id": data.get("id"), "ok": code == "200"})
-                if pin is not None:
+                if code == "423" and app.not_permitted(str(data.get("uuid") or ""), str(data.get("cmd") or "")):
+                    # NFC Code Touch output/<n>: 423 = Benutzer gerade nicht berechtigt (Doku),
+                    # kein Fehler und keine falsche PIN -> klare Meldung statt Fehlerhinweis
+                    if pin is not None:
+                        await app._send_or_drop(ws, {"t": "cmdresult", "ok": False, "np": True})
+                    await app._send_or_drop(ws, {"t": "notify", "level": "warn", "secs": 4,
+                                                 "text": "Gerade nicht berechtigt"})
+                elif pin is not None:
                     await app._send_or_drop(ws, {"t": "cmdresult", "ok": code == "200"})
                 elif code != "200" and data.get("uuid") and data.get("cmd"):
                     # Sichtbar machen statt still verschlucken (Details im Log)

@@ -34,6 +34,7 @@ import hashlib
 import hmac
 import json
 import logging
+import re
 import ssl
 import struct
 import time
@@ -84,6 +85,60 @@ def _log_cb_error(what: str, uuid: str) -> None:
         log.debug("%s-Callback fuer %s fehlgeschlagen", what, uuid, exc_info=True)
 
 
+class TokenRejected(ConnectionError):
+    """authwithtoken abgelehnt: Token abgelaufen, entwertet oder unbekannt.
+    Der Aufrufer holt dann ein neues Token (getjwt) und verbindet erneut."""
+
+    def __init__(self, code: str, detail: str = ""):
+        super().__init__(f"authwithtoken abgelehnt (Code {code})" + (f": {detail}" if detail else ""))
+        self.code = code
+
+
+def ll_part(payload: Any) -> dict:
+    """LL-Teil einer Miniserver-Antwort (leer, wenn keiner da ist)."""
+    if isinstance(payload, dict):
+        part = payload.get("LL")
+        if isinstance(part, dict):
+            return part
+    return {}
+
+
+def ll_code(payload: Any) -> str:
+    """LL-Code als Text. Die Firmware liefert "Code": "200" oder "code": 200
+    (Loxone-Bibliothek lxcommunicator liest beides)."""
+    part = ll_part(payload)
+    code = part.get("Code")
+    if code is None:
+        code = part.get("code")
+    return "" if code is None else str(code).strip()
+
+
+def ll_obj(value: Any) -> Any:
+    """Objekt-Wert einer Antwort. Manche Firmware liefert ihn als JSON-Text,
+    teils mit \\" statt " (lxcommunicator getLxResponseValue: "fix for
+    Miniserver bug"). Text, der kein JSON-Objekt/-Feld ist, bleibt unveraendert."""
+    if isinstance(value, str):
+        txt = value.strip()
+        if txt[:1] in ("{", "["):
+            for cand in (txt, txt.replace('\\"', '"')):
+                try:
+                    return json.loads(cand)
+                except ValueError:
+                    continue
+    return value
+
+
+# Restzeit der Sperre steht im Close-Grund in Klammern, z. B. "... (178)"
+# (lxcommunicator WebSocket._closeHandler, Close-Code 4003).
+_LOCK_RE = re.compile(r"\((\d+)\)\s*$")
+
+
+def lock_seconds(reason: str | None) -> int | None:
+    """Restsperre in Sekunden aus dem Close-Grund, sonst None."""
+    m = _LOCK_RE.search(reason or "")
+    return int(m.group(1)) if m else None
+
+
 def describe_close(code: int | None) -> str:
     """Lesbarer Text zu einem WS-Close-Code (leer, wenn nichts Besonderes)."""
     if code is None:
@@ -122,7 +177,9 @@ class LoxoneWS:
         self._ws: aiohttp.ClientWebSocketResponse | None = None
         self._last_rx = 0.0           # monotonic: letzte Nachricht vom Miniserver
         self.close_code: int | None = None   # WS-Close-Code der letzten Trennung
+        self.close_reason = ""               # Close-Grund (Text) der letzten Trennung
         self.out_of_service = False          # Miniserver hat Kennung 5 (Neustart/Update) gemeldet
+        self.valid_until: int | None = None  # Token-Ablauf laut authwithtoken (s seit 2009)
         self._table_errors = 0               # uebersprungene Tabellen (nur fuer Log-Drosselung)
 
     def _ssl(self) -> ssl.SSLContext:
@@ -156,10 +213,17 @@ class LoxoneWS:
         key_hex = await self._cmd_value("jdev/sys/getkey")
         digestmod = hashlib.sha256 if self.hash_alg == "SHA256" else hashlib.sha1
         token_hash = hmac.new(bytes.fromhex(key_hex), self.jwt.encode(), digestmod).hexdigest()
-        auth = await self._cmd_json(f"authwithtoken/{token_hash}/{self.user}")
-        code = str((auth.get("LL") or {}).get("Code") or (auth.get("LL") or {}).get("code"))
+        auth = await self._cmd_json(f"authwithtoken/{token_hash}/{self.user}")   # roh wie lxcommunicator
+        code = ll_code(auth)
         if code != "200":
-            raise ConnectionError(f"authwithtoken fehlgeschlagen: {auth}")
+            # 401/400/403: Token gilt nicht (mehr). Kein Token-Inhalt ins Log.
+            raise TokenRejected(code or "?")
+        val = ll_obj(ll_part(auth).get("value"))
+        if isinstance(val, dict):
+            try:
+                self.valid_until = int(val.get("validUntil"))
+            except (TypeError, ValueError):
+                self.valid_until = None
         log.info("WS authentifiziert")
 
         # 2) Status-Updates einschalten (loest sofort einen Voll-Dump aus)
@@ -173,9 +237,12 @@ class LoxoneWS:
                 continue  # 8-Byte-Header ueberspringen
             if msg.type == aiohttp.WSMsgType.TEXT:
                 return msg.data
-            if msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.CLOSING,
-                            aiohttp.WSMsgType.ERROR):
-                self.close_code = self._ws.close_code
+            if msg.type in (aiohttp.WSMsgType.CLOSE, aiohttp.WSMsgType.CLOSED,
+                            aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.ERROR):
+                if msg.type == aiohttp.WSMsgType.CLOSE:
+                    self.close_reason = str(msg.extra or "")
+                self.close_code = self._ws.close_code if self._ws.close_code is not None else \
+                    (msg.data if msg.type == aiohttp.WSMsgType.CLOSE else None)
                 why = describe_close(self.close_code)
                 raise ConnectionError(
                     f"WS geschlossen im Handshake ({msg.type}, Code {self.close_code}"
@@ -188,7 +255,7 @@ class LoxoneWS:
 
     async def _cmd_value(self, command: str) -> str:
         payload = await self._cmd_json(command)
-        return str((payload.get("LL") or {}).get("value") or "")
+        return str(ll_part(payload).get("value") or "")
 
     async def stream(self, on_value: ValueCallback,
                      on_weather: WeatherCallback | None = None) -> None:
@@ -232,7 +299,14 @@ class LoxoneWS:
         assert self._ws is not None
         pending_ident: int | None = None
         seen_unknown: set[int] = set()
-        async for msg in self._ws:
+        while True:
+            # receive() statt async for: nur so kommt der Close-Grund an (Restsperre bei 4003)
+            msg = await self._ws.receive()
+            if msg.type == aiohttp.WSMsgType.CLOSE:
+                self.close_reason = str(msg.extra or "")
+                break
+            if msg.type in (aiohttp.WSMsgType.CLOSING, aiohttp.WSMsgType.CLOSED):
+                break
             self._last_rx = time.monotonic()
             if msg.type == aiohttp.WSMsgType.BINARY:
                 data = msg.data
@@ -241,13 +315,16 @@ class LoxoneWS:
                     if data[1] == 5:
                         # Out-of-Service: Miniserver startet neu / wird aktualisiert.
                         # Es folgt KEIN Payload, danach schliesst er die Verbindung
-                        # (Loxone-Doku). Nur vermerken, der Reconnect laeuft ueber
-                        # das normale Verbindungsende.
+                        # (Loxone-Doku). Wie lxcommunicator selbst sofort schliessen:
+                        # bleibt das Close aus (halb offen), liefe sonst DEAD_S ab.
                         self.out_of_service = True
                         log.info("Miniserver meldet Out-of-Service (Neustart/Update) "
-                                 "- Verbindung wird gleich getrennt")
-                        pending_ident = None
-                        continue
+                                 "- Verbindung wird getrennt, Neuaufbau mit Pause")
+                        try:
+                            await asyncio.wait_for(self._ws.close(), 5)
+                        except Exception:
+                            pass
+                        break
                     pending_ident = None if data[1] == 6 else data[1]
                     continue
                 ident, pending_ident = pending_ident, None

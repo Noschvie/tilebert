@@ -51,7 +51,7 @@ Die Online-Hilfe nennt unter `loxone.com/dede/kb/...` je Baustein Verhalten/Para
 - **Control History (ab 14.5):** `details.hasHistory:true` → `jdev/sps/io/<uuid>/gethistory` liefert `[{ts, what, trigger, impacts[], triggerType, triggerUuid}]`;
   triggerType: user | control | logic | automaticRule | scene | centralGw | device | generic [SF S.24-25].
 - **Statistik:** `statistic` (alt: `frequency`, `outputs[{id,name,format,uuid,visuType 0 Linie|1 digital|2 Balken}]`; Daten
-  `statistics.json`, `statisticdata.xml/<uuid>/<YYYYMM[DD]>`, `binstatisticdata/...`) bzw. **`statisticV2`** (Gruppen/dataPoints,
+  `statistics.json`, `statisticdata.xml/<uuid>/<YYYYMM[DD]>`, `binstatisticdata/...`; Zeitstempel „local Miniserver-time“) bzw. **`statisticV2`** (Gruppen/dataPoints,
   `jdev/sps/getStatisticInfo/<uuid>`, `getStatistic/<uuid>/raw|diff/<von>/<bis>/<all|hour|day|month|year>/<gruppe>/<output>`; Binär: Uint32 ts + Float64 je Wert).
 - **securedDetails:** sensible Daten (z. B. Intercom-Video-URL/User/Pass) nur per eigener, **verschlüsselter** Abfrage `jdev/sps/io/<uuid>/securedDetails`.
 - **Icons:** UUID-Dateien `…svg` (neu) oder `…png`/ohne Endung (alt); per Websocket/HTTP über „UUID + Endung“ abrufbar. Bei Status-Icons ist das
@@ -70,8 +70,17 @@ Die Online-Hilfe nennt unter `loxone.com/dede/kb/...` je Baustein Verhalten/Para
 6. **Status abonnieren:** `jdev/sps/enablebinstatusupdate`. Danach großer Initial-Dump aller Events, später nur Änderungen. Max. 31 gleichzeitige
    Event-Clients (`hasEventSlots`); Close-Code 4008 = keine Slots. Nur Controls, die in der Visu verwendet werden, liefern States.
 7. **Keepalive:** Client sendet `keepalive` (Miniserver trennt nach > 5 min Stille); Antwort = Header mit Kennung 6.
-8. **Fehlercodes:** 401 unautorisiert, 403 Rechte fehlen, 404 unbekannter Befehl, 423 Benutzer gesperrt, 503 Neustart, 901 max. Verbindungen; Close 4003 gesperrt
-   (zu viele Fehlversuche), 4004-4006 Benutzer geändert/deaktiviert, 4007 Update.
+8. **Fehlercodes:** 400 Befehl vor der Anmeldung, 401 unautorisiert, 403 Rechte fehlen, 404 unbekannter Befehl, 420 Anmeldefrist abgelaufen (WS wird geschlossen),
+   423 Benutzer gesperrt bzw. bei NFC `output/<n>` „gerade nicht berechtigt“, 503 Neustart, 901 max. Verbindungen; Close 4003 gesperrt
+   (zu viele Fehlversuche, Restzeit in Sekunden in Klammern am Ende des Close-Grunds, so liest es lxcommunicator), 4004-4006 Benutzer geändert/deaktiviert, 4007 Update.
+   Out-of-Service: Header Kennung 5 ohne Nutzdaten, danach Close; HTTP liefert 503. Vor dem exakten Header kann ein geschätzter kommen (Info-Byte Bit 0x80).
+9. **Antwortformen:** `LL.Code` als Text („200“) oder `LL.code` als Zahl; `control` bei Befehlen `dev/…` statt `jdev/…`; Objekt-Werte (getkey2, getjwt,
+   getvisusalt, authwithtoken) teils als JSON-**Text**, manchmal mit `\"` (lxcommunicator `getLxResponseValue` repariert das).
+10. **tilebert (ab 0.20.33):** getjwt mit fester Client-UUID (aus Miniserver + Benutzer) und Name `tilebert`, Recht 2 (Web) wie bisher. WS-Neuaufbau meldet sich
+   mit dem **vorhandenen** Token an (`authwithtoken`); nur bei Ablehnung neues `getjwt`. Ersetzte noch gültige Tokens (HTTP-401-Erneuerung, Einstellungen speichern,
+   Probe-Anmeldung) und das Token beim Stoppen werden per `jdev/sys/killtoken/<HMAC(getkey, token)>/<user>` freigegeben. Token nur im Speicher.
+   Out-of-Service/4007: Verbindung sofort selbst schließen, erste Pause 20 s, kein Neuanmelden; Panel zeigt „Miniserver startet neu“.
+   4003 mit Restzeit: genau so lange (+5 s) warten, sonst wie bisher 5/15/30 min. Kein Refresh vor Ablauf (T2), keine Befehle über den WS (T3), keine Verschlüsselung (T4).
 
 ## A3. Binärformat der Nachrichten [COM S.18-21]
 Jede Nachricht = 8-Byte-Header (`0x03`, Kennung, Info-Flags [Bit0 = Länge nur geschätzt, danach kommt ein exakter Header], reserviert, UInt32 LE Länge),
@@ -104,8 +113,12 @@ Modus (State `mode` des Daytimers). Vorher kam `entriesAndDefaultValue` nie an (
   Befehl `jdev/sps/ios/<hash>/<uuid>/<befehl>`; 200 = ok, 500 = falsches Passwort; Prüfen ohne Wirkung: `jdev/sps/checkuservisupwd/<hash>`.
   LoxPanel: `W:7891` (`_secured_command`), Kachel-Flag `secured` (W:5093).
 - Zentralbausteine: `selectedcontrols/<ids,>/<befehl>` (CentralAlarm on/off/quit/delayedon; CentralAudio play/pause/volup/voldown; CentralGate open/close/stop;
-  CentralJalousie FullUp/FullDown/shade/auto/NoAuto/stop; CentralLightController on/reset/setMoods; CentralWindow ...). Details.controls = `[{uuid,id}]`.
-  LoxPanel löst Zentralbausteine selbst auf (Befehl je Einzelcontrol, `_central_do` W:6458) statt `selectedcontrols`.
+  CentralJalousie FullUp/FullDown/shade/auto/NoAuto/stop; CentralLightController on/reset/setMoods; CentralWindow toggle/fullopen/fullclose/moveToPosition/
+  open|close/[on|off]/slightlyOpen/protection/stop). Details.controls = `[{uuid,id}]`. Eine Kurzform ohne `selectedcontrols` kennt die Doku nicht.
+  Gesichertes Mitglied → Visu-Passwort am Zentralbaustein mitgeben (`ios`).
+  **tilebert (ab 0.20.33):** Befehle an CentralGate/Window/Alarm/AudioZone werden in `command()` (`_central_cmd`) auf `selectedcontrols/<alle ids>/<befehl>`
+  umgestellt (nur Befehle aus der Doku-Liste). Zentral Jalousie (Alle auf/zu/Beschatten), Zentral Licht (Alle aus) und Zentral Audio „Alle aus“ bleiben
+  Einzelbefehle an die Mitglieder (`_central_do`, dokumentierte Mitgliederbefehle; ein Zentral-„aus“ kennt die Doku nicht).
 - Presets: `…/resettodefaultall/<presetUuid>`. Verknüpfte Controls: `links[]`.
 
 ## A5. Darstellung/Struktur in der App (soweit dokumentiert)
@@ -233,6 +246,7 @@ und `preventOpen/Close`-Anzeige fehlen.
 
 ### CentralJalousie / CentralLightController / CentralAlarm / CentralAudioZone / CentralGate / CentralWindow / CentralPresence (je 1 der ersten vier) [SF S.42-43]
 Details `controls[{uuid,id}]`; Befehle über `selectedcontrols/...` (siehe A4); `CentralJalousie` hat zusätzlich State `safetyActive`.
+**tilebert 0.20.33:** Sammelbefehle Audio/Alarm/Tor/Fenster gehen als `selectedcontrols/<alle ids>/<befehl>` an den Zentralbaustein (PIN wie bisher per `ios`).
 **tilebert:** Zentral Licht/Jalousie wie bisher (je Mitglied über `__central/...`). **Runde 2 (10/2026), `_central_list`:** Zentral Audio, Alarm, Tor, Fenster als Liste
 (Zustand rechts, Zeile/Pfeil öffnet das Mitglied), Zusammenfassung auf Kachel und Seite gleich (`_central_sum`). Sammelbefehle direkt an den Zentralbaustein:
 CentralAudio `play`/`pause`/`voldown`/`volup` (relativ) + „Alle aus“ je Mitglied (`off`; Gen. 2 über den Audioserver); CentralAlarm `on`/`off`; CentralGate `open`/`stop`/`close`;
@@ -251,7 +265,10 @@ gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht
   `setComfortModeTemp`, `setAbsentMin/MaxTemperature`, `setComfortTolerance`, `setshadingtemperatureheat/cool`, `setHeatingBoundary/setCoolingBoundary`, `activatePresenceSchedule`,
   `increasetemperature/decreasetemperature/<delta=0.5>`, `setFan`, `setAirDir`.
   **tilebert (18.10.2026):** Eco/Komfort-Knopf = `override/<id>/<bis>` mit `bis` = jetzt + 1 h in Sekunden seit 1.1.2009, Ortszeit des Miniservers
-  (wie `nextEntryTime`; Container braucht die lokale Zeitzone, LoxBerry bindet `/etc/localtime` ein). Ohne `bis` liefe der Override laut Doku bis `stopOverride`
+  (wie `nextEntryTime`). **Ab 0.20.33:** UTC-Abstand aus dem globalen State `miniserverTime` („2017-07-03 13:01:36 +02:00:00“) statt Container-Zeitzone
+  (Fallback Container). Die Doku nennt für `until` und `overrideEntries.start/end` keine Zone: tilebert vergleicht nach dem ersten eigenen Override
+  `overrideEntries[0].start` mit „jetzt“ in Ortszeit und UTC, merkt sich die passende Basis und sendet den Override einmal mit korrigierter Endzeit neu
+  (nicht bei PIN-Bausteinen). Gleiche Zeitbasis für Statistik-Diagramme, Weckzeit „Heute/Morgen“, Lüftungs-Timer und NFC-Verlauf. Ohne `bis` liefe der Override laut Doku bis `stopOverride`
   (so senden es PyLoxone und der ioBroker-Adapter; die Loxone-App fragt eine Endzeit ab).
 - **Untersteuerung:** Daytimer (Zeitplan). Einträge codieren Temperatur: `nVal = (uint32)dVal; Modus = nVal & 0xFF; ab Bit 5 benutzerdefinierte Temperatur: Bit6 Heizen, Bit7 Kühlen; Temp×10 = (int16)(nVal >> 8)`.
 - **App-Darstellung:** [KB] aktueller Temperaturmodus (Aus/Eco/Komfort/Gebäudeschutz/Manuell/Manuell-Kalender), Heizt/Kühlt-Zustand, „Boost“-Anzeige in der Vorbereitungsphase oder bei
@@ -361,7 +378,7 @@ States `status` (0 normal, 1 Alarm, 2 Reset aktiv, 3 App-deaktiviert), `disableE
 **tilebert: Kachel mit Detail** (`_aal_view`): Bereit/Notruf/Gesperrt/Pausiert; `trigger` (über Menü mit Rückfrage), `quit`, bei Pause `disable/0`.
 
 ### NfcCodeTouch (1) [SF S.90-94]
-States `lastuser, lasttag, lastcode, codeDate, historyDate, deviceState, nfcLearnResult, keyPadAuthType`; Details `accessOutputs{q1..q6}`, `place`; Befehle `output/<1-6>` (Impuls; 423 = Nutzer nicht berechtigt), `history`, `codes`, `code/create|update|activate|deactivate|delete`, `nfc/startlearn|stoplearn`.
+States `lastuser, lasttag, lastcode, codeDate, historyDate, deviceState, nfcLearnResult, keyPadAuthType`; Details `accessOutputs{q1..q6}`, `place`; Befehle `output/<1-6>` (Impuls; 423 = Nutzer gerade nicht berechtigt; tilebert ab 0.20.33: Meldung „Gerade nicht berechtigt“, zählt nicht als falsche PIN), `history`, `codes`, `code/create|update|activate|deactivate|delete`, `nfc/startlearn|stoplearn`.
 **tilebert: Kachel mit Detail** (`_nfc_view`): letzter Zutritt, Ort, offline; Ausgänge `output/<n>`; Zutrittsverlauf über `history` (nur lesend, neu geladen bei `historyDate`). Codes/Tags verwalten bewusst nicht.
 
 ### Intercom (2) / IntercomV2 [SF S.81-85]
