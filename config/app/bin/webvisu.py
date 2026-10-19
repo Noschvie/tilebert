@@ -178,7 +178,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.34"
+APP_VERSION = "0.20.35"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -3076,7 +3076,7 @@ class App:
         chips.append({"text": ovchip, "ph": 1})          # nur Handy: Zeitplan/Override als zweiter Chip
         blocks.append({"k": "chips", "items": chips})
         # Sollwert-Karte: -/+ nur, wenn sie gerade wirken (nicht bei Fenster offen,
-        # Gebaeudeschutz, Aus). Heizen: setComfortModeTemp (temporaer, Doku: Komfort +
+        # Gebaeudeschutz, Aus). Heizen: setComfortModeTemp (temporaer, Wert = Komfort-
         # Offset +- 0,5). Kuehlen: Doku kennt keinen temporaeren Befehl -> MAX nur Anzeige
         # (ausser SingleComfortTemperature). Manuell: setManualTemperature.
         adj = not z["win"] and not z["aus"] and z["am"] != 2
@@ -3087,6 +3087,22 @@ class App:
             return ({"minus": {"uuid": ua, "cmd": f"{cmd}/{v - st:.1f}"}, "plus": {"uuid": ua, "cmd": f"{cmd}/{v + st:.1f}"},
                      "b": round(v, 2), "st": st, "cmd": {"uuid": ua, "tmpl": cmd + "/{v}"}}
                     if (adj and v is not None) else {})
+        # setComfortModeTemp erwartet am echten Miniserver (17.1, geprueft 19.10.2026) den
+        # Komfort-OFFSET, nicht die Zieltemperatur: /24.5 ergab Komfort 24 + 24,5 = 48,5.
+        # Daher Offset +- 0,5 senden (Basis b = aktueller Offset).
+        off = (z["kc"] - z["comfort"]) if (z["kc"] is not None and z["comfort"] is not None) else 0.0
+
+        def pmo(v):
+            # Offset begrenzen (+-5 K): der Miniserver weist selbst nichts ab (auch 24,5 nicht)
+            if not (adj and v is not None):
+                return {}
+            r = pm("setComfortModeTemp", off)
+            r["mn"], r["mx"] = -5, 5
+            if off - st < -5:
+                r.pop("minus", None)
+            if off + st > 5:
+                r.pop("plus", None)
+            return r
         sets = []
         if z["aus"]:
             pass
@@ -3095,14 +3111,14 @@ class App:
                 sets.append({"text": deg(z["tt"]), "label": "Soll", **pm("setManualTemperature", z["tt"])})
         elif z["single"] and z["heat_ok"] and z["cool_ok"]:
             if z["kc"] is not None:
-                sets.append({"text": deg(z["kc"]), "label": "Komfort", **pm("setComfortModeTemp", z["kc"])})
+                sets.append({"text": deg(z["kc"]), "label": "Komfort", **pmo(z["kc"])})
         else:
             if z["heat_ok"] and z["lo"] is not None:
-                sets.append({"text": deg(z["lo"]), "label": "MIN", **pm("setComfortModeTemp", z["kc"])})
+                sets.append({"text": deg(z["lo"]), "label": "MIN", **pmo(z["kc"])})
             if z["cool_ok"] and z["hi"] is not None:
                 # Kuehlen: die Doku v16 kennt keinen temporaeren Befehl (setComfortTemperatureCool waere
                 # dauerhaft = Konfiguration) -> MAX nur anzeigen; bei SingleComfortTemperature wirkt der Komfort.
-                sets.append({"text": deg(z["hi"]), "label": "MAX", **(pm("setComfortModeTemp", z["kc"]) if z["single"] else {})})
+                sets.append({"text": deg(z["hi"]), "label": "MAX", **(pmo(z["kc"]) if z["single"] else {})})
         card = {"k": "setp", "card": True, "items": sets, "st": {"text": line, "dot": dot}}
         if plan and plan.get("segs"):
             card["tl"] = plan

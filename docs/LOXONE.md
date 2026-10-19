@@ -278,11 +278,15 @@ gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht
 - **Untersteuerung:** Daytimer (Zeitplan). Einträge codieren Temperatur: `nVal = (uint32)dVal; Modus = nVal & 0xFF; ab Bit 5 benutzerdefinierte Temperatur: Bit6 Heizen, Bit7 Kühlen; Temp×10 = (int16)(nVal >> 8)`.
 - **App-Darstellung:** [KB] aktueller Temperaturmodus (Aus/Eco/Komfort/Gebäudeschutz/Manuell/Manuell-Kalender), Heizt/Kühlt-Zustand, „Boost“-Anzeige in der Vorbereitungsphase oder bei
   Abweichung > 1,5 °C, Präsenz-Taste (Komfort bis nächster Zeitplaneintrag, max. 48 h), Timer (Komfort/Eco verlängern), Fenster-offen-Hinweis, Quellen-Dialog, Verlauf; Zeitplan-Anzeige nicht beschrieben.
+- **Befund echter Miniserver 17.1 (19.10.2026, Projektleiter):** `setComfortModeTemp/<x>` setzt den **Komfort-Offset**
+  (`comfortTemperatureOffset` = x), nicht die Komforttemperatur – entgegen dem Doku-Rechenweg „comfortTemperature + comfortTemperatureOffset ± 0,5“.
+  `/24.5` ergab Komfort 24 + 24,5 = 48,5 °, `/0` setzt den Offset zurück; ein Bereich wurde nicht abgewiesen. tilebert sendet daher Offset ± 0,5
+  (Basis = aktueller Offset), Anzeige weiter Komfort + Offset. Simulator wie echt (begrenzt ±10 K).
 - **Fallstricke:** Temperaturen kommen in der Miniserver-Einheit (`tempUnit`); -1000 = keine Außentemperatur; „Gebäudeschutz“ existiert separat.
 - **tilebert 0.20.34 (Loxone-App-Vorlage, `_irc2`/`_irc2_view`):** Ist groß **ohne** −/+; Chip Betriebsart kurz („Heizen“/„Kühlen“/„Heizen & Kühlen“, Menü
   `setOperatingMode`); **Sollwert-Karte** mit gültigem Sollwert „MIN“ (Heizen) bzw. „MAX“ (Kühlen), bei Heizen & Kühlen beide (Eco: `comfortTemperature − absentMinOffset`
-  bzw. `comfortTemperatureCool + absentMaxOffset`, abgeleitet; Gebäudeschutz Frost-/Hitzeschutz; nur Heizen/Kühlen: `tempTarget`, belegt). −/+ am MIN = `setComfortModeTemp/<Komfort + Offset ± 0,5>`
-  (temporär, Doku-Rechenweg); MAX nur Anzeige (kein temporärer Kühl-Befehl in v16, `setComfortTemperatureCool` wäre dauerhaft), außer bei `SingleComfortTemperature`;
+  bzw. `comfortTemperatureCool + absentMaxOffset`, abgeleitet; Gebäudeschutz Frost-/Hitzeschutz; nur Heizen/Kühlen: `tempTarget`, belegt). −/+ am MIN = `setComfortModeTemp/<Offset ± 0,5>`
+  (temporär; siehe Befund 19.10.2026); MAX nur Anzeige (kein temporärer Kühl-Befehl in v16, `setComfortTemperatureCool` wäre dauerhaft), außer bei `SingleComfortTemperature`;
   manuell `setManualTemperature`. Kein −/+ bei Fenster offen, Gebäudeschutz, Aus. Zeitleiste mit Achse an den Schaltzeiten + „So. 15:15“, Zustand „● Eco bis 17:30“
   bzw. „Komfort bis 16:45 · von Hand“ (Override aus `overrideEntries`, „von Hand“ = `isTimer`, Gründe 1 Präsenz, 2 Fenster offen, 8 Quelle), `prepareState` ±1 nur als
   „heizt auf Komfort vor“; Fußzeile „Danach Komfort 24,0° (+0,5) · Feuchte 52 %“ (`humidityActual`). Knöpfe „Komfort | Eco | Zeitplan“ (1-h-Override bzw. `stopOverride`),
