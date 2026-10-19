@@ -1336,6 +1336,10 @@
   .shade.open .sbar.pos i{top:auto;bottom:0;}
   /* Anzeige-Flaeche ohne Bedienung / Anzeige-Kacheln */
   .dimcard.ro{cursor:default;}
+  .dimpm{position:absolute;right:10px;top:10px;bottom:10px;display:flex;flex-direction:column;justify-content:space-between;z-index:1;}
+  .dimpm .sbar{cursor:pointer;touch-action:none;}
+  .shade.lbl .shb{display:flex;flex-direction:column;align-items:center;gap:4px;flex:none;}
+  .shade.lbl .shb>span{font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap;}
   .scene.ro{cursor:default;}
   .scene .stx{display:flex;flex-direction:column;gap:2px;min-width:0;}
   /* Kacheln unter einem grossen Wert (Wecker, Bewaesserung, Zentral): flach, Symbol links */
@@ -1653,6 +1657,89 @@
   .stw.tall .sthd,.stw.wide.tall .sthd{font-size:min(calc(var(--name-size,18px) * 1.3),16.5px);font-size:min(calc(var(--name-size,18px) * 1.3),11cqmin);}
   .stsbox .sthd span{font-family:var(--font-num,"Sora",var(--font,"Manrope",system-ui,sans-serif));font-weight:var(--name-weight,450);}
 
+  /* ===== Schnellstart (Widget "quick") =====
+     Zeilen mit Schnellknoepfen. .qs-line: Name+Raum/Zustand links, Knoepfe rechts (2x2, 3x3 Breite 2).
+     .qs-split: Name klein oben, Knopfpaar darunter ueber die volle Breite, Zustand in der Mitte (3x3 Breite 1).
+     Bewegung nur bei Druck (80 ms dunkler) und Zustandswechsel (160 ms); Tor: 1 s Fuellung beim Halten. */
+  .svw.svw-quick-cell{container-type:size;}
+  .qsw{flex:1;min-width:0;min-height:0;display:grid;grid-template-rows:repeat(var(--qn,4),minmax(0,1fr));
+    background:var(--tile);border:1px solid var(--line);
+    border-radius:var(--r-tile,16px);box-shadow:var(--tile-shadow,0 3px 10px rgba(0,0,0,.14));overflow:hidden;
+    padding:0 10px;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;color:var(--ink);}
+  .qsw .svw-empty{grid-row:1 / -1;}
+  .qsr{position:relative;min-width:0;min-height:0;display:flex;align-items:center;gap:6px;}
+  .qsr+.qsr{border-top:1px solid var(--line);}
+  .qsn{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:1px;align-self:stretch;}
+  .qsnm{font-size:15px;font-weight:500;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .qsr.on.k-switch .qsnm,.qsr.on.k-dimmer .qsnm{font-weight:650;}
+  .qst{display:none;}
+  .qss{font-size:12.5px;color:var(--muted);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .qss b{font-weight:600;color:var(--ink);}
+  .qsb{flex:none;position:relative;display:flex;height:36px;border-radius:var(--r-s,8px);
+    background:rgba(127,127,127,.14);background:color-mix(in srgb,var(--ink) 8%,transparent);}
+  .qsk{position:relative;flex:1 1 0;min-width:44px;border:0;margin:0;padding:0 8px;font:inherit;font-size:13.5px;font-weight:600;
+    color:var(--ink);background:transparent;display:flex;align-items:center;justify-content:center;gap:6px;
+    cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background 160ms var(--ease),color 160ms var(--ease);}
+  .qsk+.qsk{box-shadow:inset 1px 0 0 var(--line);}
+  .qsk svg{position:relative;width:18px;height:18px;flex:none;stroke-width:2;}
+  .qsk:active{background:rgba(0,0,0,.16);background:color-mix(in srgb,var(--ink) 16%,transparent);transition-duration:80ms;}
+  .qsk.on{background:var(--glow,var(--accent));color:var(--on-glow,#181008);}
+  .qsk.ok,.qsk.ok:active{background:var(--good);color:#10241a;transition-duration:0ms;}
+  .qsk.wide{min-width:64px;}
+  /* Tor: Fuellung waehrend des Haltens (1 s), danach Befehl */
+  .qsk::before{content:"";position:absolute;inset:0;border-radius:inherit;background:var(--good);transform:scaleX(0);transform-origin:left center;
+    transition:transform 120ms var(--ease);pointer-events:none;}
+  .qsk.hold::before{transform:scaleX(1);transition:transform 1000ms linear;}
+  .qsk.hold{color:#10241a;}
+  /* Positionslinie (Rollladen/Fenster/Tor faehrt): 2 px am unteren Rand der Zeile */
+  .qsp{position:absolute;left:0;bottom:0;height:2px;width:0;background:var(--glow,var(--accent));opacity:0;
+    transition:width 160ms var(--ease),opacity 160ms var(--ease);pointer-events:none;border-radius:1px;}
+  .qsr.mv .qsp{opacity:1;}
+  .qsm{display:none;}
+  /* 2x2 und Breite 2: Knopfpaar rechts, je Knopf mind. 48 px breit, Treffer ueber die ganze Zeilenhoehe */
+  .qs-line .qsb{width:88px;}
+  .qs-line .qsb.one{width:56px;}
+  .qs-line .qsk::after{content:"";position:absolute;left:0;right:0;top:-8px;bottom:-8px;}
+  .qsk:first-child{border-radius:var(--r-s,8px) 0 0 var(--r-s,8px);}
+  .qsk:last-of-type{border-radius:0 var(--r-s,8px) var(--r-s,8px) 0;} .qsk:only-of-type{border-radius:var(--r-s,8px);}
+  .qs-line .qsn{cursor:pointer;}
+  /* schmale Kachel (Handy): Name zweizeilig statt nach 4 Buchstaben abgeschnitten, Zustand zeigen die Knoepfe */
+  @container (max-width:200px){
+    .qs-line .qss{display:none;}
+    .qs-line .qsnm{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:13.5px;line-height:1.15;overflow-wrap:break-word;-webkit-hyphens:auto;hyphens:auto;}
+  }
+  /* 3x3 Breite 1: geteilte Zeile */
+  .qs-split{padding:0 10px;}
+  .qs-split .qsr{flex-direction:column;align-items:stretch;justify-content:center;gap:4px;padding:5px 0;}
+  .qs-split .qsn{flex:none;align-self:auto;}
+  .qs-split .qsnm{font-size:12.5px;font-weight:500;}
+  .qs-split .qss{display:none;}
+  .qs-split .qsb{height:auto;flex:1 1 0;min-height:30px;max-height:44px;}
+  .qs-split .qsk{justify-content:flex-start;padding:0 12px;}
+  .qs-split .qsk+.qsk{justify-content:flex-end;box-shadow:none;}
+  .qs-split .qsb.one .qsk{justify-content:center;}
+  .qs-split .qsb.lbl .qsk{justify-content:center;}
+  .qs-split .qsb.lbl .qsk+.qsk{box-shadow:inset 1px 0 0 var(--line);}
+  .qs-split .qsk::after{content:"";position:absolute;left:0;right:0;top:-8px;bottom:-6px;}
+  .qs-split .qsm{display:block;position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:46%;
+    font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;font-variant-numeric:tabular-nums;}
+  .qs-split .qsb.lbl .qsm,.qs-split .qsb.one .qsm{display:none;}
+  .qsic{position:relative;display:flex;align-items:center;justify-content:center;gap:6px;}
+  .qs-split .qsk{padding:3px;}
+  .qs-split .qsic{height:100%;min-width:40px;padding:0 8px;border-radius:6px;transition:background 160ms var(--ease),color 160ms var(--ease);}
+  .qs-split .qsb:not(.lbl) .qsk.on,.qs-split .qsb:not(.lbl) .qsk.ok{background:transparent;color:var(--ink);}
+  .qs-split .qsb:not(.lbl) .qsk.on .qsic{background:var(--glow,var(--accent));color:var(--on-glow,#181008);}
+  .qs-split .qsb:not(.lbl) .qsk.ok .qsic{background:var(--good);color:#10241a;transition-duration:0ms;}
+  /* geteilte Zeile mit Beschriftung (Aus|Ein, Auf|Zu): Zustand kurz rechts neben dem Namen statt in der Mitte */
+  .qs-split .qsn{flex-direction:row;align-items:baseline;gap:6px;}
+  .qs-split .qsnm{flex:1;min-width:0;}
+  .qs-split .qsr.lb .qst{display:block;flex:none;max-width:40%;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums;}
+  @container (max-width:125px){ .qs-split .qsm{display:none;} .qs-split .qsr .qst{display:block;flex:none;max-width:40%;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;} }
+  .grid .qsw{border-radius:var(--r-l);}
+  html[data-motion="off"] .qsk,html[data-motion="off"] .qsp,html[data-motion="off"] .qsic{transition:none;}
+  .qsr.qs-hint .qss,.qsr.qs-hint .qst{color:var(--glow,var(--accent));} .qs-split .qsr.qs-hint .qst{display:block;}
+  html[data-motion="off"] .qsk.hold::before{transition:transform 1000ms steps(4,end);}   /* Fortschritt bleibt sichtbar, ohne Gleiten */
+
   /* ===== Animierte Symbole =====
      Nur mit Haken "Animierte Symbole" (html.ianim) und nicht bei Animation
      "Keine". Dezent und nur transform/opacity/box-shadow (schwache Panels).
@@ -1835,25 +1922,67 @@
   .pchip{height:var(--pill-s,30px);padding:0 14px;border-radius:var(--r-pill);display:inline-flex;align-items:center;max-width:100%;
     font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
     background:transparent;box-shadow:inset 0 0 0 1px rgba(var(--wash,255,255,255),.14);}
-  .pchip.heat{color:var(--dot-3,#ff9e7a);} .pchip.cool{color:var(--cool,#7fb2e6);}
+  .pchip.heat{color:color-mix(in srgb,var(--heat-c,#f0643c) 70%,var(--ink));} .pchip.cool{color:color-mix(in srgb,var(--cool-c,#3f8fe0) 70%,var(--ink));}
   .pchip.tap{background:var(--tile);box-shadow:none;cursor:pointer;}
   .pchip.tap::after{content:'\25BE';margin-left:7px;opacity:.55;font-size:.82em;}
-  .psetp{flex-shrink:0;width:100%;max-width:640px;margin:0 auto;height:var(--pill-m,44px);padding:0 4px;border-radius:var(--r-pill);
-    display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:inset 0 0 0 1px rgba(var(--wash,255,255,255),.14);}
-  .psetp .sb{flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--tile);color:var(--ink);cursor:pointer;touch-action:none;}
-  .psetp .sb:active{transform:scale(.94);}
-  .psetp .sb svg{width:20px;height:20px;}
-  .psetp .spv{display:flex;align-items:baseline;justify-content:center;gap:10px;min-width:0;}
-  .psetp .spv b{font-family:var(--font-num,"Sora",var(--font,"Manrope",sans-serif));font-size:22px;font-weight:600;}
-  .psetp .spv span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  /* Sollwert-Gruppe: [-] Wert/Beschriftung [+], Knoepfe 44 px (Trefferflaeche), Wert dazwischen.
+     Als Karte (Raumregelung): Werte, Zeitleiste, Zustand, Fusszeile auf einer Flaeche. */
+  .psetp{flex-shrink:0;width:100%;max-width:640px;margin:0 auto;box-sizing:border-box;}
+  .pantop>.psetp + .kpis{margin-top:4px;}
+  .psetp.card{background:color-mix(in srgb,var(--tile) 55%,transparent);border-radius:var(--r-l,20px);padding:8px 10px 8px;display:flex;flex-direction:column;gap:4px;}
+  @supports not (color:color-mix(in srgb,red,blue)){.psetp.card{background:rgba(var(--wash,255,255,255),.06);}}
+  .psrow{display:flex;align-items:center;justify-content:center;gap:10px;}
+  .psrow.n2{justify-content:space-between;}
+  .spg{display:flex;align-items:center;gap:8px;min-width:0;}
+  .psrow.n1 .spg{gap:14px;}   /* -/+ direkt am Wert (Regel), Wert mittig */
+  .spg.ro{justify-content:center;}
+  .psetp .sb{flex:none;width:var(--pill-m,44px);height:var(--pill-m,44px);border-radius:var(--radius-control,50%);background:var(--tile);color:var(--ink);cursor:pointer;touch-action:none;}
+  .psetp .sb svg{width:22px;height:22px;}
+  .psetp .spv{display:flex;flex-direction:column;align-items:center;line-height:1;min-width:0;}
+  .psetp .spv b{font-family:var(--font-num,"Sora",var(--font,"Manrope",sans-serif));font-size:30px;font-weight:600;letter-spacing:-.02em;color:var(--ink);white-space:nowrap;}
+  .psetp .spv b small{font-size:.6em;color:var(--muted);font-weight:500;}
+  .psetp .spv span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:3px;white-space:nowrap;}
+  .psrow.n2 .spv b{font-size:26px;}
+  .psst{display:flex;align-items:center;justify-content:center;gap:7px;font-size:14px;color:var(--ink);min-width:0;text-align:center;}
+  .psst span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .psst .d{flex:none;width:9px;height:9px;border-radius:50%;background:var(--muted);opacity:.6;}
+  .psst .d.comfort{background:var(--glow);opacity:1;}
+  .pssub{font-size:12.5px;color:var(--muted);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .pchip.phonly{display:none;} html.phone .pchip.phonly{display:inline-flex;}
+  /* niedrige Panels (480 hoch): Karte kompakter, damit Kopf, Ist, Chip, Karte und Knoepfe ohne Scrollen passen */
+  @media (max-height:520px){ .psetp.card{padding:6px 10px;gap:2px;} .psetp.card .spv b{font-size:26px;} .psetp.card .psrow.n2 .spv b{font-size:24px;}
+    .psetp.card .spv span{margin-top:1px;} .ptl.incard{gap:1px;} .ptl .tlnow{height:13px;} .ptl.incard .tlax{height:12px;line-height:12px;} }
+  .ptl.incard{padding:0 2px;max-width:none;}
+  .ptl .tlnow{position:relative;height:14px;}
+  .ptl .tlnow span{position:absolute;top:0;transform:translateX(-50%);font-size:11px;line-height:14px;font-weight:600;color:var(--ink);white-space:nowrap;}
+  .ptl.incard .tlbar{height:8px;}
+  /* Gluehen: heizt/kuehlt WIRKLICH (Server: glow). Statisch = ein weicher Schein im Farbton am
+     Wert, sonst nichts (kostet im Leerlauf nichts). Nur Animationsstufe "Viel" + animierte Symbole:
+     eine eigene Ebene hinter der Zahl atmet beim Oeffnen bzw. Arbeitsbeginn zweimal (4 x 3,5 s, nur
+     opacity) und bleibt dann statisch stehen - keine Endlos-Animation (Messung 0.20.34: endlos kostete
+     am Pi ~28 % Chromium-CPU durch Kompositing). Angehalten, wenn verdeckt/ausgeblendet/Display aus. */
+  .istrow.gl{--glc:var(--heat-c,#f0643c);position:relative;isolation:isolate;}   /* feste Farbtoene: --dot-3 ist je Design verschieden (Dunkel = gruen) */
+  .istrow.gl-cool{--glc:var(--cool-c,#3f8fe0);}
+  .istrow.gl .pbig{text-shadow:0 0 .32em color-mix(in srgb,var(--glc) 42%,transparent);}   /* Ziffern bleiben Tinte (hell: kein Braun) */
+  .istrow.gl .pbig small{color:color-mix(in srgb,var(--glc) 55%,var(--muted));}
+  .istrow.gl-cool .pbig{text-shadow:0 0 .3em color-mix(in srgb,var(--glc) 60%,transparent);}
+  @supports not (color:color-mix(in srgb,red,blue)){.istrow.gl .pbig{text-shadow:0 0 .28em var(--glc);}}
+  html.ianim[data-motion="full"] .istrow.gl::before{content:"";position:absolute;z-index:-1;left:50%;top:50%;width:min(70%,320px);height:80%;
+    transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;opacity:.35;
+    background:radial-gradient(closest-side,color-mix(in srgb,var(--glc) 30%,transparent),transparent);animation:glBreath 3.5s ease-in-out 4 alternate both;}
+  @keyframes glBreath{from{opacity:.25;}to{opacity:.6;}}
+  html.svcover .istrow.gl::before,html.svhid .istrow.gl::before,html.scroff .istrow.gl::before{animation-play-state:paused !important;}
+  .istrow.gl.glq::before{animation:none !important;}
+  .tile.gl-heat .sub{color:color-mix(in srgb,var(--heat-c,#f0643c) 60%,var(--ink));}
+  .tile.gl-cool .sub{color:color-mix(in srgb,var(--cool-c,#3f8fe0) 60%,var(--ink));}
   .ptl{flex-shrink:0;width:100%;max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:3px;padding:0 6px;box-sizing:border-box;}
   .ptl .tlbar{position:relative;height:10px;border-radius:var(--r-s);box-shadow:inset 0 0 0 1px rgba(var(--wash,255,255,255),.14);}
   .ptl .tlbar i{position:absolute;top:0;bottom:0;border-radius:var(--r-s);}
   .ptl .tlbar i.comfort{background:var(--glow);} .ptl .tlbar i.other{background:rgba(var(--wash,255,255,255),.25);}
   .ptl .tlbar i.eco{background:rgba(var(--wash,255,255,255),.10);}
   .ptl .tlbar.dflt{background:var(--glow);} .ptl .tlbar.dflt i.eco{background:var(--tile);}
-  .ptl .tlbar .now{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink);}
-  .ptl .tlax{position:relative;height:13px;font-size:11px;line-height:13px;color:var(--muted);}
+  .ptl .tlbar .now{position:absolute;top:-2px;bottom:-2px;width:2px;margin-left:-1px;border-radius:1px;background:var(--ink);}
+  .ptl .tlax{position:relative;height:13px;font-size:11px;line-height:13px;color:color-mix(in srgb,var(--muted) 80%,var(--ink));}
   .ptl .tlax span{position:absolute;top:0;transform:translateX(-50%);}
   .ptl .tlax span:first-child{transform:none;} .ptl .tlax span:last-child{transform:translateX(-100%);}
   .ptl .tltx{text-align:center;font-size:14px;color:var(--muted);min-height:17px;}
@@ -2547,7 +2676,9 @@ function closeSheets(){
 const _scrollMem={}; let _scrollRestore=null;
 function memScroll(){ const t=stack[stack.length-1], g=el('grid');
   if(t && view && g && !g.classList.contains('panel') && key(t)===key(view.route)) _scrollMem[key(t)]=g.scrollTop; }
+let _navN=0;   // zaehlt Seitenaufrufe (Gluehen atmet je Aufruf einmal, nicht bei Live-Neuaufbau)
 function nav(route){
+  _navN++;
   memScroll();
   closeSheets();   // Wetter-/Status-Blatt nicht ueber der neuen Seite stehen lassen
   stack.push(route);
@@ -3022,7 +3153,13 @@ function bindLive(g,blocks){
     const at=y=>{ const r=card.getBoundingClientRect(), d=g._dim;
       let x=d.min+(1-(y-r.top)/r.height)*(d.max-d.min); const st=+d.step||1;
       return Math.round(Math.max(d.min,Math.min(d.max,x))/st)*st; };
-    card.addEventListener('pointerdown',e=>{ e.preventDefault(); drag=true; card._drag=true; card.setPointerCapture(e.pointerId); v=at(e.clientY); dimPaint(card,v,g._dim); });
+    card.addEventListener('pointerdown',e=>{ e.preventDefault(); if(e.target.closest('.dimpm')) return; drag=true; card._drag=true; card.setPointerCapture(e.pointerId); v=at(e.clientY); dimPaint(card,v,g._dim); });
+    // -/+ an der Flaeche (+ oben, - unten): ein Schritt (pm) vom angezeigten Wert, sofort senden
+    card.querySelectorAll('.dimpm [data-dpm]').forEach(n=>n.addEventListener('pointerdown',e=>{ e.preventDefault(); e.stopPropagation();
+      const d=g._dim, st=+d.step||1, cur=card._v!=null?card._v:d.value;
+      const nv=+(Math.round(Math.max(d.min,Math.min(d.max,cur+(+n.dataset.dpm)*(+d.pm||st)))/st)*st).toFixed(stellen(st));
+      if(nv===cur) return; v=nv; dimPaint(card,nv,d); const b=card.querySelector('.pbig'); if(b){ b.classList.remove('an-val'); void b.offsetWidth; b.classList.add('an-val'); }
+      _pressEl=n; sendCmdQ(d.cmd.uuid,d.cmd.tmpl.replace('{v}',nv),view&&view.secured); }));
     card.addEventListener('pointermove',e=>{ if(drag){ v=at(e.clientY); dimPaint(card,v,g._dim); } });
     const end=()=>{ if(!drag) return; drag=false; card._drag=false; const d=g._dim; sendCmdQ(d.cmd.uuid,d.cmd.tmpl.replace('{v}',v)); };
     card.addEventListener('pointerup',end); card.addEventListener('pointercancel',end); }
@@ -3047,7 +3184,7 @@ function sceneIco(it){ return (SCENE_LIGHT&&it.icon==='mood') ? sceneLightIco(it
 // die zeigt bei "Lichtszenen" schon das Symbol)
 function sceneSub(it){ return it.sub||''; }
 // Beschattung: Stellung in %; Tor: Oeffnung ("40 % offen")
-function shadeTxt(b){ return b.pct==null?'–':(b.pct+(b.dir==='open'?' % offen':' %')); }
+function shadeTxt(b){ return b.pct==null?'–':(b.pct+(b.dir==='open'&&!b.lbl?' % offen':' %')); }   // beschriftet (Tor): Zustand steht darunter
 // Audio: Lautstaerke-Balken (+ ueber, - unter, Ziehen stellt ein)
 function avPaint(g,vol){ const bar=g.querySelector('.avbar'); if(!bar||!vol) return;
   const p=vol.max>vol.min?(vol.value-vol.min)/(vol.max-vol.min)*100:0;
@@ -3112,7 +3249,12 @@ function bindAlarmEdit(g,blocks){
     else { sendCmdQ(b.uuid,cmd); go(); } });
 }
 var _aeStop=null;   // laufende Wiederholung von -/+ (Wecker); renderPanel beendet sie
+// Pfeil der Beschattung/des Tors; mit lbl darunter beschriftet ("Auf"/"Ab", "Öffnen"/"Schließen")
+function shArrow(b,k){ const c=b[k]||{}, lb=c.label||'';
+  const a='<div class="sbar'+(c.on?' on':'')+'" data-dir="'+k+'" role="button"'+(lb?' aria-label="'+esc(lb)+'"':'')+'>'+svg(ICONS[k])+'</div>';
+  return b.lbl&&lb?'<div class="shb">'+a+'<span>'+esc(lb)+'</span></div>':a; }
 function dimPaint(card,v,d){
+  card._v=v;
   const p=d.max>d.min?(v-d.min)/(d.max-d.min)*100:0;
   const f=card.querySelector('i'); if(f) f.style.height=Math.max(0,Math.min(100,p))+'%';
   const b=card.querySelector('.pbig'); const h=fmtBig(dimText(v,d)); if(b&&b.innerHTML!==h) b.innerHTML=h;
@@ -3150,7 +3292,8 @@ function patchLive(g,blocks){
     if(u) u.classList.toggle('on',!!(sh.up&&sh.up.on)); if(d) d.classList.toggle('on',!!(sh.down&&sh.down.on)); }
   const ib=blocks.find(b=>b.k==='ist');
   if(ib){ g._ist=ib; const e=g.querySelector('.istrow .pbig'), h=fmtBig(ib.text);
-    if(e){ if(e.innerHTML!==h) e.innerHTML=h; e.className='pbig'+bigTone(ib.tone); } }
+    if(e){ if(e.innerHTML!==h) e.innerHTML=h; e.className='pbig'+bigTone(ib.tone); }
+    const r=g.querySelector('.istrow'), rc=istCls(ib); if(r&&r.className.replace(' glq','')!==rc) r.className=rc; }
   const sl=blocks.find(b=>b.k==='sline');
   if(sl){ g._sline=sl; const e=g.querySelector('.sline .sltx'); if(e&&e.textContent!==(sl.text||'')) e.textContent=sl.text||'';
     const ch=g.querySelector('.sline .pchip.tap'); if(ch&&sl.chip&&ch.textContent!==(sl.chip.text||'')) ch.textContent=sl.chip.text||''; }
@@ -3287,30 +3430,51 @@ function bindDhead(g,blocks){
 // ---- Raumregelung: Zustands-Pillen, Sollwert-Zeile, Tagesplan (Bloecke chips/setp/tline) ----
 function bigTone(t){ return t==='good'?' good':(t==='crit'?' crit':(t==='heat'?' heat':(t==='cool'?' cool':''))); }
 function chipsHtml(b){ return '<div class="pchips">'+(b.items||[]).map((c,i)=>
-  (c.menu?'<span class="pchiphit">':'')+'<span class="pchip'+(c.tone?' '+esc(c.tone):'')+(c.menu?' tap':'')+'" data-ch="'+i+'">'+esc(c.text||'')+'</span>'+(c.menu?'</span>':'')).join('')+'</div>'; }
-// Heizung: Ist-Wert mit -/+ als runde Knoepfe daneben (Aufbau und Stil wie Auf/Ab der Jalousie)
+  (c.menu?'<span class="pchiphit">':'')+'<span class="pchip'+(c.tone?' '+esc(c.tone):'')+(c.menu?' tap':'')+(c.ph?' phonly':'')+'" data-ch="'+i+'">'+esc(c.text||'')+'</span>'+(c.menu?'</span>':'')).join('')+'</div>'; }
+// Ist-/Stellwert gross. -/+ daneben nur noch fuer Stellwerte (Luefter, Auf/Ab analog), nie fuer
+// Messwerte (Raumregelung: Sollwert-Karte). glow = heizt/kuehlt gerade wirklich (Server entscheidet):
+// statischer Schein am Wert; nur bei Animationsstufe "Viel" atmet eine eigene Ebene sehr langsam (opacity).
+function istCls(b){ return 'istrow'+(b.glow==='heat'||b.glow==='cool'?' gl gl-'+b.glow:''); }
 function istHtml(b){ const bt=(k,i)=>b[k]?'<div class="sbar" data-sp="'+k+'" role="button" aria-label="'+(k==='minus'?'−':'+')+'">'+svg(ICONS[i])+'</div>':'<i class="sbsp"></i>';
-  if(b.lr) return '<div class="istrow">'+bt('minus','left')+'<div class="sbar pos"><b class="pbig'+bigTone(b.tone)+'">'+fmtBig(b.text)+'</b></div>'+bt('plus','right')+'</div>';   // Links/Rechts analog
-  return '<div class="istrow">'+bt('minus','minus')+'<div class="sbar pos"><b class="pbig'+bigTone(b.tone)+'">'+fmtBig(b.text)+'</b></div>'+bt('plus','plus')+'</div>'; }
+  const mid='<div class="sbar pos"><b class="pbig'+bigTone(b.tone)+'">'+fmtBig(b.text)+'</b></div>';
+  if(!b.minus&&!b.plus) return '<div class="'+istCls(b)+'">'+mid+'</div>';
+  if(b.lr) return '<div class="'+istCls(b)+'">'+bt('minus','left')+mid+bt('plus','right')+'</div>';   // Links/Rechts analog
+  return '<div class="'+istCls(b)+'">'+bt('minus','minus')+mid+bt('plus','plus')+'</div>'; }
 // Heizung: eine ruhige Textzeile + (nur) der tippbare Betriebsart-Chip
 function slineHtml(b){ return '<div class="sline"><span class="sltx">'+esc(b.text||'')+'</span>'+
   (b.chip?'<span class="pchiphit"><span class="pchip tap">'+esc(b.chip.text||'')+'</span></span>':'')+'</div>'; }
-function setpHtml(b){ return '<div class="psetp"><div class="sb" data-sp="minus">'+cellIco('minus')+'</div>'+
-  '<div class="spv"><b>'+esc(b.text||'')+'</b><span>'+esc(b.label||'')+'</span></div>'+
-  '<div class="sb" data-sp="plus">'+cellIco('plus')+'</div></div>'; }
+// Sollwert-Gruppe (Regel: -/+ direkt am Wert, - links, + rechts, 44 px). Als Karte (card) der
+// Raumregelung mit Tageszeitleiste (tl), Zustand (st: "Eco bis 17:30") und Fusszeile (sub).
+// Bis zu zwei Werte nebeneinander (MIN | MAX); ohne -/+ steht der Wert allein (Anzeige).
+function spItem(it,i){ const bt=k=>it[k]?'<div class="sbar sb" data-si="'+i+'" data-sp="'+k+'" role="button" aria-label="'+esc((it.label||'Soll')+' '+(k==='minus'?'−':'+'))+'">'+cellIco(k)+'</div>':'';
+  return '<div class="spg'+(it.minus||it.plus?'':' ro')+'">'+bt('minus')+'<div class="spv"><b>'+fmtBig(it.text||'')+'</b>'+(it.label?'<span>'+esc(it.label)+'</span>':'')+'</div>'+bt('plus')+'</div>'; }
+function setpHtml(b){
+  const items=b.items||(b.text!=null?[{text:b.text,label:b.label,minus:b.minus,plus:b.plus}]:[]);
+  const row=items.length?'<div class="psrow n'+items.length+'">'+items.map(spItem).join('')+'</div>':'';
+  if(!b.card) return '<div class="psetp">'+row+'</div>';
+  const st=b.st&&b.st.text?'<div class="psst"><i class="d '+esc(b.st.dot||'other')+'"></i><span>'+esc(b.st.text)+'</span></div>':'';
+  return '<div class="psetp card">'+row+(b.tl?tlineHtml(b.tl,true):'')+st+(b.sub?'<div class="pssub">'+esc(b.sub)+'</div>':'')+'</div>'; }
 function hhmm(m){ m=Math.min(1440,Math.max(0,Math.round(m))); return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); }
-function tlineHtml(b){
+// Achse an den Schaltzeiten (wie die App: 00 04:30 08 17:30 21 24); zu dicht Liegendes entfaellt
+function tlAxis(b){ const ts=[0,1440]; (b.segs||[]).forEach(s=>{ ts.push(s.a,s.b); });
+  const u=[...new Set(ts.map(t=>Math.max(0,Math.min(1440,Math.round(t)))))].sort((x,y)=>x-y), out=[];
+  for(const t of u){ if(t!==1440&&out.length&&t-out[out.length-1]<120) continue;
+    if(t===1440&&out.length&&1440-out[out.length-1]<120) out.pop(); out.push(t); }
+  return out.map(t=>{ const l=t%60?hhmm(t):String(t/60).padStart(2,'0'); return '<span style="left:'+(t/14.4)+'%">'+l+'</span>'; }).join(''); }
+function tlineHtml(b,inCard){
   const segs=(b.segs||[]).map(s=>'<i class="'+esc(s.k)+'" style="left:'+(s.a/14.4)+'%;width:'+((s.b-s.a)/14.4)+'%"></i>').join('');
-  return '<div class="ptl"><div class="tlbar'+(b.dk==='comfort'?' dflt':'')+'">'+segs+'<u class="now"></u></div>'+
-    '<div class="tlax"><span style="left:0">0</span><span style="left:25%">6</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div>'+
-    '<div class="tltx"></div></div>'; }
-// Jetzt-Marke + Text aus dem Plan, den Loxone liefert (Komfort bis / ab ...)
+  return '<div class="ptl'+(inCard?' incard':'')+'">'+(inCard?'<div class="tlnow"><span></span></div>':'')+'<div class="tlbar'+(b.dk==='comfort'?' dflt':'')+'">'+segs+'<u class="now"></u></div>'+
+    '<div class="tlax">'+(inCard?tlAxis(b):'<span style="left:0">0</span><span style="left:25%">6</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span>')+'</div>'+
+    (inCard?'':'<div class="tltx"></div>')+'</div>'; }
+// Jetzt-Marke (+ in der Karte "So. 15:15" darueber; sonst Text Komfort bis / ab ...)
+const TL_WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
 function paintTline(e,b){ if(!e||!b) return; const d=new Date(), m=d.getHours()*60+d.getMinutes();
   const nw=e.querySelector('.now'); if(nw) nw.style.left=(m/14.4)+'%';
+  const tn=e.querySelector('.tlnow span'); if(tn){ tn.textContent=dsT(TL_WD[d.getDay()])+'. '+hhmm(m); tn.style.left=Math.min(88,Math.max(12,m/14.4))+'%'; }
+  const tx=e.querySelector('.tltx'); if(!tx) return;
   const cs=(b.segs||[]).filter(s=>s.k==='comfort'), nm=(cs[0]&&cs[0].name)||'Komfort';
   const in_=cs.find(s=>s.a<=m&&m<s.b), nx=cs.filter(s=>s.a>m).sort((x,y)=>x.a-y.a)[0];
-  const t=in_?nm+' bis '+hhmm(in_.b):(nx?nm+' ab '+hhmm(nx.a):(cs.length?'Heute kein '+nm+' mehr':''));
-  const tx=e.querySelector('.tltx'); if(tx) tx.textContent=t; }
+  tx.textContent=in_?nm+' bis '+hhmm(in_.b):(nx?nm+' ab '+hhmm(nx.a):(cs.length?'Heute kein '+nm+' mehr':'')); }
 function bindRegler(g,blocks){
   const cb=blocks.find(b=>b.k==='chips'), ce=g.querySelector('.pchips');
   if(cb&&ce) ce.querySelectorAll('.pchip.tap').forEach(n=>{ const c=cb.items[+n.dataset.ch]; if(!c)return;
@@ -3321,10 +3485,24 @@ function bindRegler(g,blocks){
   const sl=blocks.find(b=>b.k==='sline'); g._sline=sl||null;
   const sc_=g.querySelector('.sline .pchip.tap');
   if(sl&&sc_) (sc_.parentNode||sc_).addEventListener('pointerdown',ev=>{ ev.preventDefault(); const c=(g._sline||{}).chip; if(c&&c.menu) openMenu(sc_,c.menu); });
-  const sb=blocks.find(b=>b.k==='setp');
-  if(sb) g.querySelectorAll('.psetp .sb').forEach(n=>n.addEventListener('pointerdown',ev=>{ ev.preventDefault();
-    const c=sb[n.dataset.sp]; if(c) sendCmd(c.uuid,c.cmd,view&&view.secured); }));
-  const tb=blocks.find(b=>b.k==='tline'), te=g.querySelector('.ptl'); if(te){ te._b=tb; paintTline(te,tb); } }
+  const sb=blocks.find(b=>b.k==='setp'); g._setp=sb||null;
+  // Mit b/st/cmd.tmpl zaehlt das Panel lokal weiter: zweimal + vor dem Live-Update = zwei Schritte (sonst ginge einer verloren)
+  if(sb) g.querySelectorAll('.psetp .sb[data-sp]').forEach(n=>n.addEventListener('pointerdown',ev=>{ ev.preventDefault();
+    const S=g._setp||{}, i=+(n.dataset.si||0), it=(S.items||[S])[i], c=it&&it[n.dataset.sp]; if(!c) return;
+    if(it.cmd&&it.cmd.tmpl&&it.b!=null&&+it.st>0){ const acc=g._spAcc||(g._spAcc={}), key=g._spId+'|'+i, a=acc[key], st=+it.st, d=n.dataset.sp==='plus'?st:-st;
+      // gezaehlter Wert ueberlebt den Neuaufbau durch die Antwort auf den ersten Tipp (2 s), danach gilt wieder der Server-Wert b
+      const base=(a&&Date.now()-a.t<2000)?a.v:+it.b;
+      let v=+(base+d).toFixed(stellen(st)); if(it.mn!=null) v=Math.max(+it.mn,v); if(it.mx!=null) v=Math.min(+it.mx,v);
+      acc[key]={v,t:Date.now()}; _pressEl=n; sendCmd(it.cmd.uuid,it.cmd.tmpl.replace('{v}',String(v)),view&&view.secured); return; }
+    sendCmd(c.uuid,c.cmd,view&&view.secured); }));
+  // Einmal-Rueckmeldung: geaenderter Sollwert tickt kurz (an-val, nur mit animierten Symbolen)
+  const prev=g._spPrev||{}; g._spPrev={};
+  g.querySelectorAll('.psetp .spv b,.psetp .pssub').forEach((e,i)=>{ const t=e.textContent; g._spPrev[i]=t; if(prev[i]!=null&&prev[i]!==t&&g._spId===(view&&view.route&&view.route.id)) e.classList.add('an-val'); });
+  g._spId=view&&view.route&&view.route.id;
+  // Atmen nur beim Oeffnen bzw. Arbeitsbeginn, nicht bei jedem Neuaufbau (z. B. nach -/+)
+  const gr=g.querySelector('.istrow.gl'), gk=gr?_navN+'|'+g._spId+'|'+(gr.classList.contains('gl-cool')?'cool':'heat'):'';
+  if(gr&&g._glKey===gk) gr.classList.add('glq'); g._glKey=gk;
+  const tb=sb&&sb.tl?sb.tl:blocks.find(b=>b.k==='tline'), te=g.querySelector('.ptl'); if(te){ te._b=tb; paintTline(te,tb); } }
 setInterval(()=>{ const te=document.querySelector('.ptl'); if(te&&te._b) paintTline(te,te._b); },60000);
 function cellHtml(c,i){
   const minor=isChartCell(c);
@@ -3774,12 +3952,13 @@ function renderPanel(blocks){
     if(b.k==='scenes') return '<div class="scenes">'+(b.items||[]).map((it,i)=>'<div class="scene'+(it.on?' on':'')+((it.cmd||it.nav)?'':' ro')+(it.nav&&!it.cmd?' nav':'')+(it.val?' wv':'')+'" data-s="'+i+'">'+
       '<span class="sico">'+sceneIco(it)+'</span><span class="stx"><b>'+esc(it.label)+'</b>'+(sceneSub(it)?'<span class="ssub">'+esc(sceneSub(it))+'</span>':'<span class="ssub"></span>')+'</span>'+
       (it.val?'<span class="sv'+(it.vb?' b':'')+'">'+esc(it.val)+'</span>':'')+'</div>').join('')+'</div>';
-    if(b.k==='shade') return '<div class="shade'+(b.dir==='open'?' open':'')+'"><div class="sbar'+(b.up&&b.up.on?' on':'')+'" data-dir="up">'+svg(ICONS.up)+'</div>'+
+    if(b.k==='shade') return '<div class="shade'+(b.dir==='open'?' open':'')+(b.lbl?' lbl':'')+'">'+shArrow(b,'up')+
       '<div class="sbar pos"><i style="height:'+(b.pct==null?0:b.pct)+'%"></i><b class="pbig">'+fmtBig(shadeTxt(b))+'</b></div>'+
-      '<div class="sbar'+(b.down&&b.down.on?' on':'')+'" data-dir="down">'+svg(ICONS.down)+'</div></div>';
-    if(b.k==='dim') return '<div class="dimcard'+(b.tone?' '+esc(b.tone):'')+(b.ro?' ro':'')+'"><i></i><div class="dimtxt">'+
+      shArrow(b,'down')+'</div>';
+    if(b.k==='dim') return '<div class="dimcard'+(b.tone?' '+esc(b.tone):'')+(b.ro?' ro':'')+(b.pm&&!b.ro?' haspm':'')+'"><i></i><div class="dimtxt">'+
       (b.cap?'<span class="dcap">'+esc(b.cap)+'</span>':'')+'<b class="pbig">'+fmtBig(dimText(b.value,b))+'</b>'+
-      (b.sub?'<span class="dsub">'+esc(b.sub)+'</span>':'')+'</div></div>';
+      (b.sub?'<span class="dsub">'+esc(b.sub)+'</span>':'')+'</div>'+
+      (b.pm&&!b.ro?'<div class="dimpm"><div class="sbar" data-dpm="1" role="button" aria-label="+">'+cellIco('plus')+'</div><div class="sbar" data-dpm="-1" role="button" aria-label="−">'+cellIco('minus')+'</div></div>':'')+'</div>';
     if(b.k==='row') return '<div class="brow'+(b.act?' act'+actCls(b.cells):(b.cells.some(c=>c.icon)?' transport':''))+(b.wrap?' wraprow':'')+(b.hidden?' collapsed':'')+'"'+(b.id?' data-rowid="'+esc(b.id)+'"':'')+'>'+b.cells.map(cellHtml).join('')+'</div>';
     if(b.k==='head') return '<div class="phead">'+esc(b.text||'')+'</div>';
     if(b.k==='chart') return chartBoxHtml(b);   // Inhalt zeichnet paintChart nach dem Einfuegen
@@ -4186,7 +4365,7 @@ function updateGrid(items){
     // Animierte Symbole: Einschalten -> Symbol ploppt kurz; neuer Wert -> Statuszeile tickt
     if(prev&&!prev.on&&it.on) pops.push([n.querySelector('.head>:first-child'),'an-pop']);
     else if(prev&&prev.sublabel&&it.sublabel&&prev.sublabel!==it.sublabel) vals.push(n);
-    const cls='tile'+tileTone(it)+(it.big?' tbig':'')+(it.anim?' an-'+it.anim:'')+(i%_pg===0?' snap':'')+[...n.classList].filter(c=>c.startsWith('spark')).map(c=>' '+c).join('');
+    const cls='tile'+tileTone(it)+(it.big?' tbig':'')+(it.anim?' an-'+it.anim:'')+(it.glow?' gl-'+it.glow:'')+(i%_pg===0?' snap':'')+[...n.classList].filter(c=>c.startsWith('spark')).map(c=>' '+c).join('');
     if(n.className!==cls) n.className=cls;
     const stStr=tileVarStyle(it);
     if((n.getAttribute('style')||'')!==stStr) n.setAttribute('style',stStr);
@@ -4301,7 +4480,7 @@ function tileHtml(it, extraCls){
   if(ts.weight) nsv.push('font-weight:'+ts.weight);
   if(ts.italic) nsv.push('font-style:italic');
   const nst = nsv.length?' style="'+esc(nsv.join(';'))+'"':'';
-  return '<div class="tile'+tone+(it.big?' tbig':'')+(it.anim?' an-'+esc(it.anim):'')+(extraCls||'')+'" data-id="'+esc(it.id)+'"'+(it.catKey?' data-cat="'+esc(it.catKey)+'"':'')+st+'>'+
+  return '<div class="tile'+tone+(it.big?' tbig':'')+(it.anim?' an-'+esc(it.anim):'')+(it.glow?' gl-'+esc(it.glow):'')+(extraCls||'')+'" data-id="'+esc(it.id)+'"'+(it.catKey?' data-cat="'+esc(it.catKey)+'"':'')+st+'>'+
           '<div class="head">'+icoCell+(it.spark&&it.spark.badge?'<span class="tsbadge">'+esc(it.spark.badge)+'</span>':'')+
             chev+togg+tapb+updown+prevnext+'</div>'+
           (it.spark?'<div class="tspark"></div>':'')+   // Mini-Verlauf (gezeichnet in bindTile, erst dann ist die Groesse bekannt)
@@ -5324,6 +5503,7 @@ function svWidgetHTML(it, sd){
       '<div class="stbody"><div class="stchips">'+(st.chips||[]).slice(0,4).map(chip).join('')+'</div>'+list+'</div>'+
       '<div class="stft">'+esc(st.foot||'')+'</div></div>';
   }
+  if(it.type==='quick') return qsHTML(it, sd);
   if(it.type==='camera'){
     const cams=camList(it,sd);
     if(!cams.length) return '<div class="svw-empty">Keine Kamera eingerichtet</div>';
@@ -5414,6 +5594,125 @@ function svPaintPlayer(cell, d){
   v.querySelectorAll('[data-v]').forEach(b=>b.onpointerdown=ev=>{ ev.preventDefault(); if(!sl||!sl.cmd) return;
     const nv=Math.max(0,Math.min(100,(+sl.value||0)+(+b.dataset.v)));
     sendCmdQ(sl.cmd.uuid,sl.cmd.tmpl.replace('{v}',nv)); });
+}
+// ---- Schnellstart (Widget "quick") ----
+// Zeilen kommen vom Server (wd.quick[uuid] = {name, room, kind, state, on, move, pct, hold, secured,
+// b:[{k, cmd, on, stop}]}). Das Geruest (qsHTML) aendert sich nur mit der Belegung; Werte zeichnet
+// qsPaint bei jedem Push in die bestehenden Knoten - ein laufendes Halten (Tor) bleibt so erhalten.
+// Anzahl fest je Groesse: 2x2 -> 4 je Feldhoehe; 3x3 Breite 1 -> 2 je Feldhoehe (geteilte Zeile),
+// Breite 2 -> 2 / 5 / 8 (Zeile wie im 2x2-Raster). Mehr Gespeichertes wird nicht gezeigt.
+const QS_IC={up:'<path d="M12 19V5"/><path d="m6 11 6-6 6 6"/>', down:'<path d="M12 5v14"/><path d="m6 13 6 6 6-6"/>',
+  prev:'<path d="m15 6-6 6 6 6"/>', next:'<path d="m9 6 6 6-6 6"/>',
+  tap:'<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="1.6" fill="currentColor"/>', ok:'<path d="m5 12.5 4.5 4.5L19 7.5"/>',
+  play:'<path d="M8 5.5v13l10.5-6.5z"/>', pause:'<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>', stop:'<rect x="7" y="7" width="10" height="10" rx="1.5"/>'};
+const QS_TXT={off:'Aus',on:'Ein',open:'Auf',close:'Zu'};
+const QS_ARIA={up:'Auf',down:'Ab',prev:'Vorherige',next:'Nächste',tap:'Auslösen',play:'Abspielen',pause:'Pause',off:'Aus',on:'Ein',open:'Auf',close:'Zu'};
+const QS_HOLD_MS=1000, QS_LP_MS=550, QS_SLOP=10;
+function qsGrid(sd){ return (sd&&sd===saverData) ? saverGrid() : (view&&view.grid===2?2:3); }
+function qsCount(g,w,h){ return g===2 ? 4*h : (w>=2 ? ([0,2,5,8][h]||2) : 2*h); }
+function qsKeyHTML(b){
+  if(b.stop) return svgF(QS_IC.stop);
+  if(b.k==='play'||b.k==='pause') return svgF(QS_IC[b.k]);
+  if(QS_TXT[b.k]) return '<span>'+QS_TXT[b.k]+'</span>';
+  return svg(QS_IC[b.k]||QS_IC.tap); }
+function qsHTML(it, sd){
+  const g=qsGrid(sd), n=qsCount(g,it.w,it.h), split=g===3&&it.w===1, Q=(sd&&sd.quick)||{};
+  const cls='qsw '+(split?'qs-split':'qs-line');
+  const rows=(it.ctls||[]).filter(u=>Q[u]).slice(0,n);   // fehlende/ausgeblendete ruecken nach
+  if(!rows.length) return '<div class="'+cls+'" style="--qn:1"><div class="svw-empty">'+(!(it.ctls||[]).length?'Keine Bausteine gewählt':(sd&&sd.quick?'Bausteine nicht verfügbar':'Schnellstart lädt …'))+'</div></div>';
+  return '<div class="'+cls+'" style="--qn:'+n+'">'+rows.map(u=>{ const r=Q[u], bs=r.b||[];
+    const lb=bs.some(b=>QS_TXT[b.k]);
+    return '<div class="qsr k-'+esc(r.kind)+(lb?' lb':'')+'" data-u="'+esc(u)+'"><div class="qsn"><span class="qsnm">'+esc((it.names||{})[u]||r.name||'')+'</span><span class="qst"></span><span class="qss"></span></div>'+
+      (bs.length?'<div class="qsb'+(bs.length===1?' one':'')+(lb?' lbl':'')+'">'+
+        bs.map((b,j)=>'<button type="button" class="qsk" data-j="'+j+'"><span class="qsic"></span></button>').join('')+'<span class="qsm"></span></div>':'')+
+      '<i class="qsp"></i></div>'; }).join('')+'</div>';
+}
+function qsPaint(cell, it, sd){
+  const Q=(sd&&sd.quick)||{};
+  cell.querySelectorAll('.qsr').forEach(row=>{ const r=Q[row.dataset.u]; if(!r) return; row._r=r;
+    const st=String(r.state||''), on=!!r.on;
+    const sub = r.kind==='light' ? (on?'Szene <b>'+esc(st)+'</b>':'Aus')
+      : r.kind==='radio' ? esc(st)
+      : (r.room&&!r.move?esc(r.room)+' · ':'')+(on?'<b>'+esc(st)+'</b>':esc(st));
+    const ss=row.querySelector('.qss'); if(ss&&!ss._hint&&ss._h!==sub){ ss._h=sub; ss.innerHTML=sub; }
+    const mid=(r.move&&r.pct!=null)?r.pct+(r.kind==='shade'?' % zu':' % offen'):st;
+    const m=row.querySelector('.qsm'); if(m&&!m._hint&&m.textContent!==mid) m.textContent=mid;
+    const qt=row.querySelector('.qst'); if(qt&&!qt._hint&&qt.textContent!==mid) qt.textContent=mid;
+    row.classList.toggle('on', on); row.classList.toggle('mv', !!r.move);
+    // Linie = Oeffnungsgrad (Rollladen: pct ist der Schliessgrad)
+    const pl=row.querySelector('.qsp'); if(pl) pl.style.width=(r.move&&r.pct!=null?Math.max(2,r.kind==='shade'?100-r.pct:r.pct):0)+'%';
+    row.querySelectorAll('.qsk').forEach(k=>{ const b=(r.b||[])[+k.dataset.j]; if(!b) return;
+      k.classList.toggle('on', !!(b.on&&(b.stop||b.k==='on')));
+      k.setAttribute('aria-label', b.stop?'Stopp':(QS_ARIA[b.k]||b.k));
+      const h=qsKeyHTML(b); k._h=h;
+      if(!k._okT){ const ic=k.firstChild; if(ic._h!==h){ ic._h=h; ic.innerHTML=h; } } });
+  });
+}
+function qsGo(cell, id){ if(cell.closest('#saver')) saverNav({view:'control', id}); else { zoomFrom(cell); nav({view:'control', id}); } }
+// Rueckmeldung: sofort kurz gruen (Taster: Haken 600 ms). Bei PIN-Bausteinen erst nach der Abfrage nichts vortaeuschen.
+function qsFire(k, row){
+  const r=row._r, b=r&&(r.b||[])[+k.dataset.j]; if(!b||!b.cmd) return;
+  const sec=r.secured||isSec(b.cmd.uuid);
+  row._fired=Date.now(); _pressEl=null; sendCmd(b.cmd.uuid, b.cmd.cmd, r.secured);
+  if(sec) return;
+  const ic=k.firstChild, tap=b.k==='tap', ms=tap?600:320;
+  k.classList.add('ok'); clearTimeout(k._okT);
+  if(tap){ ic._h=''; ic.innerHTML=svg(QS_IC.ok); }
+  k._okT=setTimeout(()=>{ k._okT=0; k.classList.remove('ok'); if(ic._h!==k._h){ ic._h=k._h; ic.innerHTML=k._h; } }, ms);
+}
+// Tor ohne Halten angetippt: kurzer Hinweis statt Befehl
+function qsHint(row){
+  const ss=row.querySelector('.qss'), t=row.classList.contains('qs-hint');
+  const el2=(row.closest('.qs-split')?row.querySelector('.qst'):ss); if(!el2) return;
+  clearTimeout(row._hintT); if(!t){ el2._hint=1; el2._prev=el2.innerHTML; }
+  row.classList.add('qs-hint'); el2.textContent=el2===ss?'1 s halten':'halten';
+  row._hintT=setTimeout(()=>{ row.classList.remove('qs-hint'); el2._hint=0; el2.innerHTML=el2._prev||''; if(el2===ss) ss._h=el2._prev; }, 1400);
+}
+// Nach Halten/langem Druecken: das Loslassen darf nicht als Tipp auf das landen, was inzwischen
+// darunter liegt (PIN-Tastatur, Detailansicht). Den naechsten Klick einmalig verschlucken.
+function qsEatClick(){
+  const off=()=>{ document.removeEventListener('click',eat,true); document.removeEventListener('pointerup',up,true); clearTimeout(tm); };
+  const eat=e=>{ off(); e.stopImmediatePropagation(); e.preventDefault(); };
+  const up=()=>{ document.removeEventListener('pointerup',up,true); setTimeout(off,350); };   // Klick folgt direkt aufs Loslassen
+  const tm=setTimeout(off,10000);
+  document.addEventListener('click',eat,true); document.addEventListener('pointerup',up,true); }
+function qsBind(cell){
+  const w=cell.querySelector('.qsw'); if(!w||w._bound) return; w._bound=true;
+  const split=w.classList.contains('qs-split');
+  let P=null;   // laufende Beruehrung {x,y,k,row,ht,lt}
+  const stop=()=>{ if(!P) return; clearTimeout(P.ht); clearTimeout(P.lt); if(P.k) P.k.classList.remove('hold'); P=null; };
+  w.addEventListener('pointerdown', e=>{
+    if(e.button>0) return; stop();
+    const row=e.target.closest('.qsr'); if(!row||!row._r) return;
+    const k=e.target.closest('.qsk'), b=k&&(row._r.b||[])[+k.dataset.j];
+    P={x:e.clientX, y:e.clientY, k:null, row};
+    if(k&&b&&row._r.hold&&!b.stop){   // Tor: Fuellung laeuft, Befehl erst nach 1 s
+      P.k=k; void k.offsetWidth; k.classList.add('hold');
+      P.ht=setTimeout(()=>{ const kk=P&&P.k; if(!kk||!kk.isConnected) return; kk.classList.remove('hold'); P.fired=true;
+        qsEatClick(); if(!justLeftSaver()) qsFire(kk,row); }, QS_HOLD_MS);
+    } else if(split){                  // 3x3: Detailansicht per langem Druecken
+      P.lt=setTimeout(()=>{ if(!P) return; qsEatClick(); const id=row.dataset.u; stop(); qsGo(cell,id); }, QS_LP_MS);
+    }
+  });
+  w.addEventListener('pointermove', e=>{ if(P&&Math.hypot(e.clientX-P.x,e.clientY-P.y)>QS_SLOP) stop(); });
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>w.addEventListener(t, ()=>stop()));
+  w.addEventListener('contextmenu', e=>e.preventDefault());
+  w.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(justLeftSaver()) return;
+    const row=e.target.closest('.qsr'); if(!row||!row._r) return;
+    const k=e.target.closest('.qsk');
+    if(k){ const b=(row._r.b||[])[+k.dataset.j]; if(!b) return;
+      if(row._r.hold&&!b.stop){ qsHint(row); return; }
+      // Doppeltipp auf den Rollladen: der Knopf ist sofort Stopp - der zweite Tipp (< 600 ms) haelt ihn sonst gleich wieder an
+      if(b.stop&&(row._r.kind==='shade'||row._r.kind==='window')&&Date.now()-(row._fired||0)<600) return;
+      qsFire(k,row); return; }
+  });
+  // Name: eigener Klick-Empfaenger. 2x2/Breite 2 oeffnet die Detailansicht; in der geteilten Zeile
+  // (3x3) bewusst ohne Wirkung - der Empfaenger verhindert aber, dass die Touch-Korrektur des
+  // Browsers einen Tipp auf den Namen auf den Knopf darunter umlenkt.
+  w.querySelectorAll('.qsn').forEach(n=>n.addEventListener('click', e=>{ e.stopPropagation();
+    if(split||justLeftSaver()) return; const row=n.closest('.qsr'); if(row) qsGo(cell,row.dataset.u); }));
 }
 // Statusleiste oben im Dashboard (Profil: saver.bar, bis zu 4 Bausteine).
 // Neutral, solange alles normal ist; faerbt sich bei Hinweis/Alarm/scharf und
@@ -5540,7 +5839,9 @@ function renderLayout(g, items, sd, place, camsOn){
       if(it.type==='camera' && camsOn) camSwStart(cell);
       if(it.type==='status') stBind(cell);
       if(it.type==='weather') wxFit(cell);
+      if(it.type==='quick') qsBind(cell);
     }
+    if(it.type==='quick') qsPaint(cell,it,sd);
     if(it.type==='energy'||it.type==='chart'||it.type==='player') svPaintLive(cell,it,sd);
   });
   g.querySelectorAll('.svw').forEach(c=>{ if(!keys.has(c.dataset.k)){ c.querySelectorAll('.svw-cam img').forEach(camStop); c.remove(); } });
@@ -6534,7 +6835,7 @@ el('saver').addEventListener('click', e=>{ e.preventDefault(); e.stopPropagation
   // freie Stelle (Uhr, Wetter, Kalender, Hintergrund).
   if(saverLayoutOn()){
     if((saverCfg.exit||[]).length) return;
-    if(e.target.closest('.tile,.svw-player')) return;
+    if(e.target.closest('.tile,.svw-player,.qsw')) return;
   }
   hideSaver(); resetIdle(); });
 ['pointerdown','keydown','wheel'].forEach(ev=>document.addEventListener(ev, ()=>{ nightWake(); if(!saverOn()) resetIdle(); }, {passive:true}));

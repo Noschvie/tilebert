@@ -199,6 +199,7 @@ Stand `jLocked`/`jLockable` kommt in **allen** Typen der Anlage vor (States/Deta
   Dimmer/EIBDimmer: Regler `<wert>` (Senden beim Loslassen) + Schalter `on`/`off`; Switch: `on`/`off`; ColorPickerV2/Colorpicker: Farbpunkt + Pfeil zur Farbwahl des
   Kreises (Detailseite eines Unterbausteins, erbt `isSecured` der Lichtsteuerung). `__dimall` lässt die Master-Helligkeit aus. **Bewusst nicht:** Szenen lernen/umbenennen/löschen,
   Favoriten-/Zusatz-Trennung, Mischen (`addMood/removeMood`), Präsenz, Verlauf.
+**0.20.34:** Schalter „Präsenzerkennung“ (`presence/on|off`) nur, wenn State `presence` Bit2 (Präsenz angeschlossen) gesetzt ist; Stellung = Bit1 (App-Einstellung). Bit0 (Freigabe DisP) wird nicht angezeigt.
 
 ### LightController (alt), LightsceneRGB [SF S.94-99]
 - LightController: States `activeScene`, `sceneList`; Befehle `<n>`, `off`, `on`, `plus`, `minus`, `<n>/learn/<name>`. **LoxPanel voll** (K W:5379, D W:6668).
@@ -236,8 +237,11 @@ Farbe: Farbton-Leiste (Name statt Grad), Sättigung, Helligkeit → `hsv(h,s,v)`
 
 ### Gate (1) [SF S.68-69]
 States `position` (1 = offen), `active` (-1 schließt, 0, 1 öffnet), `preventOpen`, `preventClose`; Details `animation` (0 Garagentor ... 5), `hasHistory`;
-Befehle `open`, `close`, `stop`, `forceOpen`, `forceClose`, `PartiallyOpen` (14.2), `getState`. **LoxPanel voll** (K W:5177, D W:6899); `PartiallyOpen/forceOpen/forceClose`
+Befehle `open`, `close`, `stop`, `forceOpen`, `forceClose`, `partiallyOpen` (14.2), `getState`. **LoxPanel voll** (K W:5177, D W:6899); `forceOpen/forceClose`
 und `preventOpen/Close`-Anzeige fehlen.
+**tilebert 0.20.34 (App-Abgleich):** Pfeile beschriftet „Öffnen“/„Schließen“ (Tipp während der Fahrt = `stop`), „Stopp“ nur während der Fahrt (`active ≠ 0`),
+im Stand „Teilweise öffnen“ (`partiallyOpen`, Doku ab 14.2; tilebert prüft die Miniserver-Version nicht – ältere Miniserver ignorieren den Befehl).
+Zustand „Geschlossen/Geöffnet/Teilweise geöffnet/Öffnet …/Schließt …“; der fahrende Pfeil wippt (nur mit animierten Symbolen).
 
 ### Window (Dachfenster), WindowMonitor (1) [SF S.141-143]
 - Window: `position`, `direction`, `lockedReason`, `targetPosition`, `type`; Befehle `open/on|off`, `close/on|off`, `fullopen`, `fullclose`, `moveToPosition/<0-100>`, `slightlyOpen`, `stop`. LoxPanel K W:5260, D W:7221.
@@ -250,7 +254,8 @@ Details `controls[{uuid,id}]`; Befehle über `selectedcontrols/...` (siehe A4); 
 **tilebert:** Zentral Licht/Jalousie wie bisher (je Mitglied über `__central/...`). **Runde 2 (10/2026), `_central_list`:** Zentral Audio, Alarm, Tor, Fenster als Liste
 (Zustand rechts, Zeile/Pfeil öffnet das Mitglied), Zusammenfassung auf Kachel und Seite gleich (`_central_sum`). Sammelbefehle direkt an den Zentralbaustein:
 CentralAudio `play`/`pause`/`voldown`/`volup` (relativ) + „Alle aus“ je Mitglied (`off`; Gen. 2 über den Audioserver); CentralAlarm `on`/`off`; CentralGate `open`/`stop`/`close`;
-CentralWindow `fullopen`/`stop`/`fullclose`. Hat ein Mitglied `isSecured`, ist der Zentralbaustein gesichert (PIN, `sec_uuids`), `__central` reicht die PIN an
+CentralWindow `fullopen`/`stop`/`fullclose`. **0.20.34:** CentralAlarm zusätzlich „Verzögert“ (`delayedon`), CentralLightController „Alle an“ (`on`,
+Wortlaut „In 3 Räumen aktiv“), CentralJalousie „Automatik“ (je Mitglied `auto`). Hat ein Mitglied `isSecured`, ist der Zentralbaustein gesichert (PIN, `sec_uuids`), `__central` reicht die PIN an
 gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht umgesetzt: CentralPresence.
 
 ## B3. Klima / Heizung / Lüftung
@@ -274,10 +279,20 @@ gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht
 - **App-Darstellung:** [KB] aktueller Temperaturmodus (Aus/Eco/Komfort/Gebäudeschutz/Manuell/Manuell-Kalender), Heizt/Kühlt-Zustand, „Boost“-Anzeige in der Vorbereitungsphase oder bei
   Abweichung > 1,5 °C, Präsenz-Taste (Komfort bis nächster Zeitplaneintrag, max. 48 h), Timer (Komfort/Eco verlängern), Fenster-offen-Hinweis, Quellen-Dialog, Verlauf; Zeitplan-Anzeige nicht beschrieben.
 - **Fallstricke:** Temperaturen kommen in der Miniserver-Einheit (`tempUnit`); -1000 = keine Außentemperatur; „Gebäudeschutz“ existiert separat.
-- **LoxPanel: teilweise.** K W:5184-5197 (Ist → Soll, heizt/kühlt, Fenster); D W:6915-6957 (Ist groß, Komfort ± 0,5 K, Zeitleiste `_irc_schedule`, Modi als 1-h-Override + Auto).
+- **tilebert 0.20.34 (Loxone-App-Vorlage, `_irc2`/`_irc2_view`):** Ist groß **ohne** −/+; Chip Betriebsart kurz („Heizen“/„Kühlen“/„Heizen & Kühlen“, Menü
+  `setOperatingMode`); **Sollwert-Karte** mit gültigem Sollwert „MIN“ (Heizen) bzw. „MAX“ (Kühlen), bei Heizen & Kühlen beide (Eco: `comfortTemperature − absentMinOffset`
+  bzw. `comfortTemperatureCool + absentMaxOffset`, abgeleitet; Gebäudeschutz Frost-/Hitzeschutz; nur Heizen/Kühlen: `tempTarget`, belegt). −/+ am MIN = `setComfortModeTemp/<Komfort + Offset ± 0,5>`
+  (temporär, Doku-Rechenweg); MAX nur Anzeige (kein temporärer Kühl-Befehl in v16, `setComfortTemperatureCool` wäre dauerhaft), außer bei `SingleComfortTemperature`;
+  manuell `setManualTemperature`. Kein −/+ bei Fenster offen, Gebäudeschutz, Aus. Zeitleiste mit Achse an den Schaltzeiten + „So. 15:15“, Zustand „● Eco bis 17:30“
+  bzw. „Komfort bis 16:45 · von Hand“ (Override aus `overrideEntries`, „von Hand“ = `isTimer`, Gründe 1 Präsenz, 2 Fenster offen, 8 Quelle), `prepareState` ±1 nur als
+  „heizt auf Komfort vor“; Fußzeile „Danach Komfort 24,0° (+0,5) · Feuchte 52 %“ (`humidityActual`). Knöpfe „Komfort | Eco | Zeitplan“ (1-h-Override bzw. `stopOverride`),
+  „Zeitplan“ aktiv ohne Override von Hand. **Glühen** des Ist-Werts (rot/blau) nur bei echter Arbeit: Ist < MIN im Heizbetrieb, Ist > MAX im Kühlbetrieb oder Vorheizen/-kühlen;
+  nie bei Fenster offen/Aus/fehlender `capabilities`-Fähigkeit. Kachel „22,9° · Eco 22,0°“, bei Arbeit dezent gefärbt. „Ruht“ entfällt.
+- **LoxPanel bis 0.20.33:** K W:5184-5197 (Ist → Soll, heizt/kühlt, Fenster); D W:6915-6957 (Ist groß, Komfort ± 0,5 K, Zeitleiste `_irc_schedule`, Modi als 1-h-Override + Auto).
   **Fehlt:** Betriebsart wählen (`setOperatingMode`, Heizen/Kühlen/Auto), Präsenz-Taste, manuelle Solltemperatur (`override/3/...` + Temp), Eco-/Schutz-Temperaturen, Kühl-Komfort, Quellen,
   Timer mit frei wählbarer Dauer, Verlauf, Feuchte/CO2.
-- IRoomController (v1) [SF S.79-81] voll in LoxPanel (K gemeinsam, D W:6958). ClimateController/ClimateControllerUS [SF S.45-53]: nur US-Variante; ClimateController (nicht US) **fehlt**.
+- IRoomController (v1) [SF S.79-81] voll in LoxPanel (K gemeinsam, D W:6958). **0.20.34:** gleiche Karte („MIN“/„MAX“ = `tempTarget`, −/+ `settemp` auf Komfort der Periode,
+  dauerhaft – v1 kennt nichts Temporäres), Zustand mit Timer-Ende (`override` Restzeit) und `manualMode`, Knöpfe Komfort | Eco | Zeitplan (`starttimer`/`stoptimer`). ClimateController/ClimateControllerUS [SF S.45-53]: nur US-Variante; ClimateController (nicht US) **fehlt**.
   **ClimateControllerUS – tilebert Runde 3 (`_ccus_view`):** Ist (Mittel der Räume), Zustand Heizt/Kühlt/Bereit, Modus `setMode/<2 Heizen|3 Kühlen|1 Auto|0 Aus>`
   (nur wenn `connectedInputs` Bit 1 nicht verdrahtet); Sollwerte je angeschlossener Raumregelung (`states.controls`) −/+ 0,5 °C mit `setComfortTemperature` bzw.
   `setComfortTemperatureCool` an die IRCv2. Bewusst nicht: Außentemperatur-Sperren, Modus-Timer, Notheizung.
@@ -295,6 +310,7 @@ gesicherte Mitglieder durch. Keine Zusatz-Rückfrage (Nutzerentscheidung). Nicht
 
 ### ACControl (Doku-Schreibweise; „AcControl“ wird beim Laden darauf vereinheitlicht) [SF S.165-167]
 States `status, mode (1-5), fan, ventMode, targetTemperature, temperature, minTemp/maxTemp, pauseUntil/Reason, Override, silentMode`; Befehle `on/off/toggle, setTarget, setMode, setFan, setAirDir, setoverride/..., startpause/<s>`. LoxPanel K W:5422, D W:7331 (nicht in Anlage).
+**0.20.34:** Ist groß ohne −/+, Soll als Gruppe „− 22,0° SOLL +“ (`setTarget`), eine Reihe „Ein“ (umschalten) | Auto | Modus | Lüfter.
 
 ## B4. Schalten, Taster, Eingaben
 
@@ -311,6 +327,7 @@ States `deactivationDelay` (>0 Rest-Sek., 0 aus, -1 dauerhaft an), `deactivation
 
 ### Slider (7), UpDownAnalog, ValueSelector, TextInput [SF S.120, 135-136, 132]
 Slider: States `value, error`; Details `min,max,step,format`; Befehl `<zahl>`. LoxPanel Slider voll (K W:5357, D W:7028); ValueSelector voll.
+**0.20.34:** Regler-Fläche mit −/+ rechts (+ oben, − unten, wie die App), Schritt = `details.step` (Slider) bzw. State `step` (ValueSelector); Dimmer ebenso (±10 %).
 **Runde 3:** UpDownAnalog/LeftRightAnalog: Wert ± `step` in `min..max` (Pfeile bei Links/Rechts). TextInput: aktueller Text; Freitext senden (Text URL-kodiert,
 ohne `/ ? # \`) nur auf Handy/Tablet/PC – auf 480er- und 960×480-Panels nur Anzeige.
 
@@ -327,7 +344,7 @@ State `entries` (Zeilen durch `|` getrennt, `\x14` = Zeilenumbruch), Details `ma
 
 ### Sauna, SteakThermo, Remote, UpDownLeftRight, Sequential
 Siehe B8. Remote/Sequential **fehlen**. **Runde 3:**
-- Sauna (`_sauna_view`): Ist groß, Soll −/+ (`temp/<t>`), Kennzahlen Feuchte/Bank/Timer, Pillen Ein (`on`/`off`), Programm (`mode/<n>`, nur mit Verdampfer), Timer (`starttimer`),
+- Sauna (`_sauna_view`): Ist groß (ab 0.20.34 ohne −/+), Soll als eigene Gruppe −/+ (`temp/<t>`), Kennzahlen Feuchte/Bank/Timer, Pillen Ein (`on`/`off`), Programm (`mode/<n>`, nur mit Verdampfer), Timer (`starttimer`),
   Lüften (`fanon`/`fanoff`). Ein „Aufguss“-Befehl existiert in der Doku nicht. `SAUNA_MODES[0]` = „Aus“ (Doku 16.0: 0 = Off; bis 0.20.31 fälschlich „Manuell“).
 - SteakThermo (`_steak_view`): je Fühler Ist/Ziel aus `sensorInfo`, Ziel ±1 `setSensor/<i>/<t>/<name>`, Timer ±1 min `setTimerDuration/<s>`, `startTimer`/`stopTimer`, `quitAlarm`.
 - UpDownDigital/LeftRightDigital: ein Pfeil-Paar, gedrückt halten (`UpOn/UpOff`, `DownOn/DownOff`; Links/Rechts: links = Down, rechts = Up); Loslassen wird auch bei
@@ -341,6 +358,8 @@ Siehe B8. Remote/Sequential **fehlen**. **Runde 3:**
   **tilebert (18.10.2026):** Timer-Knöpfe senden `startOverride/<wert>/<s>`; digital Wert 1, analog Wert wählbar (−/+ um den aktuellen Wert, Schritt aus `format`;
   die Doku nennt keinen Vorgabewert für den Timer).
 - Varianten: IRC-Daytimer v2 (Wert codiert Temperatur, s. B3), IRC-Daytimer (`setc`/`modeslistc`), Pool-Daytimer.
+- **tilebert 0.20.34 (`_daytimer_view`):** Zustand „Aktiv seit 18:00 bis 23:00“ bzw. „Aus · nächster Start 18:00“, „Timer bis HH:MM“ (Restzeit `override`),
+  Tageszeitleiste aus `entriesAndDefaultValue` (heutiger Modus); analog ein Wert („Wert im Timer“ mit −/+), aktueller Wert in der Zustandszeile.
 - **LoxPanel: teilweise.** K W:5237, D W:7161 (Wert, Modus, Override-Dauern 15/30/60/90 min, Timer beenden). **Fehlt:** Einträge anzeigen/bearbeiten (`set`), `default`, `pulse` bei `needsActivation`. Kennung-4-Events werden nicht geparst (s. A3).
 
 ### PulseAt (3) [SF S.114]
@@ -368,10 +387,12 @@ States `armed`, `level` (1 still, 2 akustisch, 3 optisch, 4 intern, 5 extern, 6 
 Details `presenceConnected`; Befehle `on`, `on/<0|1>` (ohne/mit Bewegung), `delayedon`, `delayedon/<0|1>`, `off`, `quit`, `dismv/<0|1>`.
 **LoxPanel voll (K W:5403, D W:7107):** Scharf/Verzögert/Unscharf/Quittieren. Nutzt noch `armedDelay` (W:7110, veraltet → `armedAt`); kein Bewegungsmelder-Schalter (`dismv`), keine Level-Namen/Countdown (`nextLevelAt`), keine Melderliste, kein Verlauf (`events`).
 Vollbild bei Auslösung: `SEC_ALARM_TYPES` (W:189).
+**0.20.34:** nur passende Aktionen wie die App: Unscharf → „Scharf stellen“ (`on`), „Verzögert scharf“ (`delayedon`); Verzögerung (`armedAt` in der Zukunft, Rückfall `armedDelay`) → „Sofort scharf“, „Unscharf stellen“; scharf → „Unscharf stellen“; Alarm → „Quittieren“, „Unscharf stellen“. Schalter „Präsenz berücksichtigen“ (`dismv/0|1`, Stellung = nicht `disabledMove`) nur mit `details.presenceConnected`.
 
 ### SmokeAlarm (3) [SF S.120-122]
 States `level` (1 Voralarm, 2 Hauptalarm), `nextLevel(+Delay)`, `alarmCause` (Bitmaske: 1 Rauch, 2 Wasser, 4 Temperatur, 8 Lichtbogen), `acousticAlarm`, `testAlarm`, `startTime`, `timeServiceMode`, `areAlarmSignalsOff`, `sensors`; Details `availableAlarms`, `hasAcousticAlarm`; Befehle `mute`, `confirm`, `servicemode/<s>`, `startDrill`.
 **LoxPanel voll (K W:5366, D W:7068):** Stumm + Quittieren; `alarmCause` als Text ausgegeben (W:7073, ist laut Doku eine Bitmaske!). Fehlt: Wartungs-/Servicemodus, Probealarm.
+**0.20.34 (`_smoke_view`):** Ruhe „Alles ok“ (App-Wortlaut); „Alarmunterdrückung …“ mit Dauer-Menü 15/30/60 min (`servicemode/<s>`), aktiv: „Alarmunterdrückung aktiv · noch …“ aus `timeServiceMode` (99999 = unbegrenzt) und „Unterdrückung beenden“ (`servicemode/0`).
 
 ### AalEmergency (1: „Panikalarm“) [SF S.26]
 States `status` (0 normal, 1 Alarm, 2 Reset aktiv, 3 App-deaktiviert), `disableEndTime`, `resetActive`; Befehle `trigger`, `quit`, `disable/<s>`.
@@ -391,10 +412,12 @@ Nicht genutzt: `camimage/<uuid>/<ts>`-Bilder, securedDetails-Stream, `answer`, G
 ### PresenceDetector (5) [SF S.113-114]
 States `active`, `activeSince`, `activeUntil`, `locked`, `lockedUntil`, `infoText`, `time` (Nachlaufzeit), `events`; Befehle `<wert>`, `time/<v>`, `presence/<s>`, `deactivate/<s>`; Subcontrol Tracker.
 **LoxPanel: nur Anzeige** (K W:5386, D W:7099 „Anwesend/Abwesend“); keine Befehle (`presence/deactivate/time`).
+**0.20.34:** „Präsenz aktiv“/„Keine Präsenz“ + „Aktiv seit HH:MM Uhr“ (`activeSince`, als Ortszeit gelesen). Die App-Knöpfe „Deaktivieren bis“/„Präsenz beenden“ stehen in der Strukturdoku v16 (Text) **nicht** (dort nur `<wert>`, `time/<v>`) → nicht umgesetzt.
 
 ### MailBox (1: „Briefkasten“) [SF S.101]
 States `mailReceived`, `packetReceived`, `notificationsDisabledInput`, `disableEndTime`; Befehle `confirmMail`, `confirmPacket`, `disableNotifications/<s>`; Subcontrol Tracker.
 **tilebert Runde 3 (`_mail_view`):** „Post da/Paket da/Leer“, Quittieren (`confirmMail`/`confirmPacket`), Kachel grün getönt. Zeitpunkt gibt es nicht als State (nur Tracker). Bewusst nicht: Benachrichtigungen.
+**0.20.34:** Wortlaute der App: „Post zugestellt“/„Paket zugestellt“/„Keine Post“, „Briefkasten entleert“ (`confirmMail`), „Paket entnommen“ (`confirmPacket`); „Hinweise aus …“ mit Dauer 1 h/4 h/1 Tag (`disableNotifications/<s>`), aktiv „Benachrichtigungen aus bis …“ (`disableEndTime`, UTC seit 2009) und „Hinweise an“ (`disableNotifications/0`).
 
 ## B7. Energie / Zähler
 
@@ -402,6 +425,7 @@ States `mailReceived`, `packetReceived`, `notificationsDisabledInput`, `disableE
 States `actual`, `total`, `totalNeg` (nur bidirectional/storage), `storage` (nur storage), `totalDay/Week/Month/Year`, `totalNegDay/…`; Details `actualFormat`, `totalFormat`, `type` (unidirectional | bidirectional | storage | legacy), `totalFormatNeg`,
 `storageFormat`, `storageMax` (= 100 %), `displayType` (0 regulär, sonst z. B. Behälter/Batterie), `powerName`; `statistic`/`statisticV2`; Befehl `reset`.
 **LoxPanel voll, aber reduziert:** K W:5352, D W:7023 (nur `actual` + `total`; Verlaufsdiagramm über `statistic/statisticV2` generisch W:5630). Nicht ausgewertet: `type`/`displayType` (Speicher mit Füllstand), `totalNeg` (Einspeisung/Entladung), Tages-/Wochen-/Monats-/Jahreswerte. Anlage-Details enthalten `storageFormat`, `storageMax`, `displayType`, `type`.
+**0.20.34:** Detail zusätzlich „Heute/Monat/Jahr“ (`totalDay/Month/Year`, Format `totalFormat`) und Wortlaut „Zählerstand …“ statt „… gesamt“.
 
 ### EFM (1) / EnergyManager2 (1) / Fronius (1) / PvProductionForecast / LoadManager / PowerUnit / Wallbox2 / WallboxManager / CarCharger
 - EFM [SF S.63-66]: States `Ppwr, Gpwr, Spwr, Pre, Pri, CO2, actual0…N`; Details `nodes` (Baum mit `nodeType Grid|Storage|Production|Load|Wallbox|Group`, `actualEfmState`, `ctrlUuid`), `actualFormat`, `totalFormat`, `storageFormat`, `rest`; Befehle `getNodeValue/<viewType>/<uuids;>`, `get/<viewType>` (actual|day|week|month|year|lifetime). StatisticV2. **LoxPanel voll:** K W:5449, D W:7430 (Radialdiagramm `energy_blocks`, Kennzahlen); keine Tages-/Monatsansicht (`get/<viewType>`).

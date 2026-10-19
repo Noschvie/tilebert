@@ -178,7 +178,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.33"
+APP_VERSION = "0.20.34"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -895,18 +895,45 @@ _TS_RE = re.compile(r"^\s*(\d{1,2}[.\-/]\d{1,2}[.\-/]\d{2,4}[ ,]+\d{1,2}:\d{2}(?
                     r"|\d{4}-\d{2}-\d{2}[ T]\d{1,2}:\d{2}(?::\d{2})?)\s+(.+)$")
 
 
+# Tracker-Eintrag "<Eingang>: 0|1" (Loxone protokolliert Digitalwerte roh). Eingang
+# ohne Namen (technische Kennung wie O2370, AQ1, VI3) -> nur Ein/Aus zeigen.
+_TRK_BIN_RE = re.compile(r"^\s*(.*?)\s*:\s*([01])\s*$")
+_TRK_TECH_RE = re.compile(r"^[A-Z]{1,3}\d{1,5}$")
+
+
+def _parse_ts(ts: str | None):
+    """Zeitstempel des Protokolls -> datetime oder None."""
+    if not ts:
+        return None
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%d.%m.%Y %H:%M:%S",
+                "%d.%m.%Y %H:%M", "%d.%m.%y %H:%M:%S", "%d.%m.%y %H:%M"):
+        try:
+            return datetime.strptime(ts.strip(), fmt)
+        except ValueError:
+            continue
+    return None
+
+
 def _short_ts(ts: str | None) -> str:
     """Zeitstempel des Protokolls kurz: heute nur 'HH:MM', sonst 'TT.MM. HH:MM'."""
     if not ts:
         return ""
-    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M:%S", "%d.%m.%Y %H:%M:%S",
-                "%d.%m.%Y %H:%M", "%d.%m.%y %H:%M:%S", "%d.%m.%y %H:%M"):
-        try:
-            dt = datetime.strptime(ts.strip(), fmt)
-        except ValueError:
-            continue
-        return dt.strftime("%H:%M") if dt.date() == datetime.now().date() else dt.strftime("%d.%m. %H:%M")
-    return ts
+    dt = _parse_ts(ts)
+    if dt is None:
+        return ts
+    return dt.strftime("%H:%M") if dt.date() == datetime.now().date() else dt.strftime("%d.%m. %H:%M")
+
+
+def _trk_text(txt: str) -> tuple[str, bool | None]:
+    """Tracker-Text lesbar: "<Eingang>: 1" -> "Ein" bzw. "<Name>: Ein".
+    Rueckgabe (Text, Ein/Aus oder None, wenn kein Digitalwert)."""
+    m = _TRK_BIN_RE.match(txt or "")
+    if not m:
+        return txt, None
+    on = m.group(2) == "1"
+    val = "Ein" if on else "Aus"
+    lab = m.group(1)
+    return (val if (not lab or _TRK_TECH_RE.match(lab)) else f"{lab}: {val}"), on
 
 
 def _color_ok(v) -> bool:
@@ -952,7 +979,16 @@ SAVER_SIZES = {
     "player": ((2, 2), (3, 2), (3, 3)),               # Audio-Zone (Cover, Titel, Steuerung)
     "camera": ((1, 1), (2, 1), (2, 2), (3, 2), (3, 3)),   # Kameras (Intercoms + eigene), per Pillen umschaltbar
     "status": ((1, 1), (2, 1), (2, 2), (3, 1), (3, 2)),   # Status-Ampel aus bis zu 4 Bausteinen
+    # Schnellstart: Liste von Bausteinen mit Schnellfunktion (Auf/Ab, Szene, Ein/Aus ...).
+    # Breite 1 = geteilte Zeile (Name oben, Knoepfe darunter), Breite 2 = Zeile wie im 2x2-Raster.
+    "quick": ((1, 1), (1, 2), (1, 3), (2, 1), (2, 2), (2, 3)),
 }
+# Schnellstart: erlaubte Bausteintypen -> Art der Zeile (Heizung, Alarm, Zutritt, Sensoren bewusst nicht)
+QUICK_KINDS = {"Jalousie": "shade", "Window": "window", "LightControllerV2": "light", "LightController": "light",
+               "Radio": "radio", "Switch": "switch", "TimedSwitch": "switch", "Dimmer": "dimmer",
+               "EIBDimmer": "dimmer", "Pushbutton": "tap", "AudioZone": "audio", "AudioZoneV2": "audio",
+               "Gate": "gate"}
+QUICK_MAX = 8                          # gespeicherte Bausteine je Schnellstart (groesste Kachel)
 SAVER_UUID_TYPES = ("tile", "intercom", "energy", "chart", "player")
 SAVER_EXITS = ("x", "up", "down", "left", "right")   # Schliessen: X-Button und Wischrichtungen
 # ---- Tab-Raster: dasselbe 3x3-Grundraster wie der Screensaver ----
@@ -967,7 +1003,8 @@ GRID_SIZES = {
     2: {"clock": ((1, 1), (2, 1), (2, 2)), "weather": ((2, 1), (2, 2)), "calendar": ((2, 1), (2, 2)),
         "intercom": ((2, 1), (2, 2)), "tile": ((1, 1), (2, 1), (2, 2)), "wxdetail": ((2, 1), (2, 2)),
         "energy": ((1, 1), (2, 1), (2, 2)), "chart": ((1, 1), (2, 1), (2, 2)), "player": ((2, 1), (2, 2)),
-        "camera": ((1, 1), (2, 1), (2, 2)), "status": ((1, 1), (2, 1), (2, 2))},
+        "camera": ((1, 1), (2, 1), (2, 2)), "status": ((1, 1), (2, 1), (2, 2)),
+        "quick": ((1, 1), (1, 2))},
 }
 # Bei zwei Panels nebeneinander (z.B. Shelly X2): Kamera/Intercom ueber BEIDE Panels -
 # im Dashboard wie in den Tabs (dort von der linken, geraden Seite in die rechte).
@@ -1034,6 +1071,20 @@ def _widget_entry(it: dict, x: int, y: int, w: int, h: int) -> dict | None:
             e["trk"] = it["trk"]                  # optional: Tracker fuer den Verlauf
         if it.get("look") == "color":
             e["look"] = "color"                   # kraeftig farbig statt passend zum Hintergrund
+    if it["type"] == "quick":
+        ids = []
+        for u in (it.get("ctls") or [])[:32]:
+            if isinstance(u, str) and _UUID_RE.match(u) and u not in ids:
+                ids.append(u)
+                if len(ids) == QUICK_MAX:
+                    break
+        e["ctls"] = ids                           # Reihenfolge = Zeilen; mehr als die Groesse fasst bleibt gespeichert
+        nm = it.get("names")
+        if isinstance(nm, dict):                  # eigener Anzeigename je Zeile (Loxone-Name bleibt)
+            names = {u: re.sub(r"\s+", " ", v).strip()[:40] for u, v in nm.items()
+                     if u in ids and isinstance(v, str) and v.strip()}
+            if names:
+                e["names"] = names
     if it["type"] == "weather":
         try:
             d = int(it.get("days"))
@@ -2758,7 +2809,15 @@ class App:
             txt = txt.replace(sep, "\n")
         # Loxone-Standard: Eintraege im State "entries" mit "|" getrennt
         txt = txt.replace("|", "\n")
-        return [ln.strip() for ln in txt.split("\n") if ln.strip()]
+        lines = [ln.strip() for ln in txt.split("\n") if ln.strip()]
+        # Reihenfolge ist nicht dokumentiert (echte Anlage: aelteste zuerst) ->
+        # an den Zeitstempeln ausrichten, neueste zuerst.
+        if len(lines) > 1:
+            a = _parse_ts(self._split_ts(lines[0])[0])
+            b = _parse_ts(self._split_ts(lines[-1])[0])
+            if a and b and a < b:
+                lines.reverse()
+        return lines
 
     @staticmethod
     def _split_ts(line: str) -> tuple[str | None, str]:
@@ -2798,64 +2857,346 @@ class App:
         return {int(m["id"]): _clean(m.get("name"))
                 for m in tm if isinstance(m, dict) and m.get("id") is not None}
 
-    @staticmethod
-    def _irc_activity(prep, win) -> list:
-        """Aktivitaets-Hinweise fuer die Raumregelung: heizt/kuehlt + Fenster."""
-        bits = []
-        try:
-            p = float(prep)
-        except (TypeError, ValueError):
-            p = 0.0
-        if p > 0:
-            bits.append("heizt")
-        elif p < 0:
-            bits.append("kühlt")
-        if win:
-            bits.append("Fenster")
-        return bits
+    # ---- Raumregelung nach Loxone-App-Vorlage (0.20.34) ----
+    # Detailseite: Ist-Wert gross OHNE -/+ (Messwert), Chip Betriebsart, Sollwert-Karte
+    # (gueltiger Sollwert "MIN"/"MAX" mit -/+ links/rechts, Tageszeitleiste, Zustand
+    # "Eco bis 17:30", Fusszeile "Danach Komfort 24,0° · Feuchte 52 %"), unten
+    # Komfort | Eco | Zeitplan. Ist-Wert gluehen nur bei echter Arbeit (_irc2: glow).
+    # overrideEntries.reason laut Strukturdoku v16 -> Klartext hinter dem Zustand
+    IRC_REASON = {1: "Präsenz", 2: "Fenster offen", 3: "von Hand", 4: "von Hand", 5: "von Hand"}
+    IRC_MANUAL_REASONS = {0, 3, 4, 5}      # Override aus App/Panel (0 = ohne Angabe)
+    _WD = ("Mo", "Di", "Mi", "Do", "Fr", "Sa", "So")
 
     @staticmethod
-    def _irc_tone(prep) -> str:
-        """Farbton des grossen Werts: Loxone meldet heizen (> 0) bzw. kuehlen (< 0),
-        sonst keiner. Das Panel macht daraus Theme-Farben (heat/cool)."""
+    def _irc_art_short(opm) -> tuple[str, str]:
+        """operatingMode -> kurzer Chip-Text + Farbton. Manuell/Automatik steht nur im Menue."""
+        if opm is None:
+            return "", ""
+        if opm < 0:
+            return "Aus", ""
+        if opm in (0, 3):
+            return "Heizen & Kühlen", ""
+        if opm in (1, 4):
+            return "Heizen", "heat"
+        return "Kühlen", "cool"
+
+    @staticmethod
+    def _irc_end_dt(end):
+        """overrideEntries.end (Sekunden seit 2009, Basis kalibriert) -> Wanduhr des Miniservers."""
         try:
-            p = float(prep)
+            e = int(float(end))
         except (TypeError, ValueError):
+            return None
+        if e <= 0:
+            return None
+        return _ms_dt(e + _EPOCH_2009) if _IRC_BASE == "utc" else datetime(2009, 1, 1) + timedelta(seconds=e)
+
+    @classmethod
+    def _hm_rel(cls, dt) -> str:
+        """HH:MM, an einem anderen Tag mit Wochentag ("Mo. 06:00")."""
+        if dt is None:
             return ""
-        return "heat" if p > 0 else ("cool" if p < 0 else "")
+        if dt.date() == _ms_now_dt().date():
+            return dt.strftime("%H:%M")
+        return f"{cls._WD[dt.weekday()]}. {dt:%H:%M}"
 
-    def _irc_top(self, ta, prep, tt, soll, soll_label, zustand, art, window, minus=None, plus=None) -> list:
-        """Kopfbloecke der Raumregelung (Detail-Schema, Heizung):
-          ist    grosser Ist-Wert (Farbton heizt/kuehlt) mit -/+ als runde Knoepfe daneben
-                 (stellen den Komfort-Soll; ohne bekannten Absolutwert entfallen sie)
-          sline  EINE ruhige Textzeile aus Soll, aktivem Modus, Aktivitaet (Heizen /
-                 Kuehlen / Ruht) + Ziel, Fenster; dazu nur der tippbare Betriebsart-
-                 Aufklapper als Chip (aus _irc_betriebsart)."""
-        try:
-            p = float(prep)
-        except (TypeError, ValueError):
-            p = 0.0
-        akt = "Heizen" if p > 0 else ("Kühlen" if p < 0 else "Ruht")
-        if tt:
-            akt += f" · Ziel {tt}°"
-        parts = []
-        if soll:
-            parts.append(f"Soll {soll}° {soll_label}")
-        if zustand and zustand.casefold() != soll_label.casefold():
-            parts.append(zustand)
-        parts.append(akt)
-        if window:
-            parts.append("Fenster offen")
-        ist = {"k": "ist", "text": f"{ta} °C" if ta else "–", "tone": self._irc_tone(prep)}
-        if minus and plus:
-            ist["minus"], ist["plus"] = minus, plus
-        line = {"k": "sline", "text": " · ".join(parts)}
+    @staticmethod
+    def _plan_at(plan: dict, m: int):
+        """Tagesplan an Minute m -> (kind, name, bis_min|None, (kind, name) danach|None)."""
+        segs = sorted(plan.get("segs") or [], key=lambda s: s["a"])
+        cur = next((s for s in segs if s["a"] <= m < s["b"]), None)
+        if cur:
+            nxt = next((s for s in segs if s["a"] == cur["b"]), None)
+            nk = (nxt["k"], nxt["name"]) if nxt else (plan.get("dk"), plan.get("dname"))
+            return cur["k"], cur["name"], (cur["b"] if cur["b"] < 1440 else None), nk
+        nxt = next((s for s in segs if s["a"] > m), None)
+        return (plan.get("dk"), plan.get("dname"), nxt["a"] if nxt else None,
+                (nxt["k"], nxt["name"]) if nxt else None)
+
+    def _irc2(self, c: dict) -> dict:
+        """Zustand IRoomControllerV2 (Strukturdoku v16):
+          lo/hi   gueltiger Heiz-/Kuehl-Sollwert des aktiven Modus ("MIN"/"MAX").
+                  Nur Heizen bzw. nur Kuehlen: tempTarget (belegt). Heizen & Kuehlen:
+                  aus Komfort/Offsets abgeleitet (Eco = Komfort - absentMinOffset bzw.
+                  Komfort Kuehlen + absentMaxOffset, Gebaeudeschutz = Frost-/Hitzeschutz).
+          glow    "heat"/"cool" nur bei echter Arbeit: Ist unter MIN (Heizbetrieb) bzw.
+                  ueber MAX (Kuehlbetrieb) oder Vorheizen/Vorkuehlen (prepareState).
+                  Nie bei Fenster offen, Aus, oder wenn capabilities es gerade ausschliesst.
+          ov/man  laufender Override (overrideEntries) bzw. davon von Hand (App/Panel)."""
+        n = lambda k: self._num(self._state(c, k))
+        det = c.get("details") or {}
+        modes = self._irc_modes(c)
+        ta, tt = n("tempActual"), n("tempTarget")
+        am = n("activeMode")
+        am = int(am) if am is not None else None
+        opm = n("operatingMode")
+        opm = int(opm) if opm is not None else None
+        heat_ok = opm is None or opm in (0, 1, 3, 4)
+        cool_ok = opm in (0, 2, 3, 5)
+        if opm is None and n("capabilities") is not None:     # ohne operatingMode: aktuelle Faehigkeiten
+            heat_ok, cool_ok = bool(int(n("capabilities")) & 1), bool(int(n("capabilities")) & 2)
+        single = bool(det.get("singleComfortTemperature", det.get("SingleComfortTemperature")))
+        comfort, off = n("comfortTemperature"), n("comfortTemperatureOffset") or 0.0
+        ccool, tol = n("comfortTemperatureCool"), n("comfortTolerance") or 0.0
+        mino, maxo = n("absentMinOffset") or 0.0, n("absentMaxOffset") or 0.0
+        kc = comfort + off if comfort is not None else None
+        lo = hi = None
+        if am == 1:
+            lo, hi = ((kc - tol, kc + tol) if (single and kc is not None) else (kc, ccool))
+        elif am == 0:
+            lo = comfort - mino if comfort is not None else None
+            base = comfort if single else ccool
+            hi = base + (mino if single else maxo) if base is not None else None
+        elif am == 2:
+            lo, hi = n("frostProtectTemperature"), n("heatProtectTemperature")
+        elif am == 3:
+            lo = hi = tt
+        if tt is not None and am != 4:
+            if heat_ok and not cool_ok:
+                lo = tt
+            elif cool_ok and not heat_ok:
+                hi = tt
+        win = bool(self._state(c, "openWindow"))
+        aus = opm == -1 or am == 4
+        prep = n("prepareState") or 0
+        caps = n("capabilities")
+        hcap = caps is None or bool(int(caps) & 1)
+        ccap = caps is None or bool(int(caps) & 2)
+        glow = ""
+        if ta is not None and not win and not aus:
+            if heat_ok and hcap and (prep > 0 or (lo is not None and round(ta, 1) < round(lo, 1))):
+                glow = "heat"
+            elif cool_ok and ccap and (prep < 0 or (hi is not None and round(ta, 1) > round(hi, 1))):
+                glow = "cool"
+        ents = self._json_state(c, "overrideEntries")
+        ents = [ents] if isinstance(ents, dict) else (ents if isinstance(ents, list) else [])
+        ents = [e for e in ents if isinstance(e, dict) and int(self._num(e.get("reason"), 0) or 0) not in (6, 7)]
+        # mehrere Eintraege: der zuletzt gestartete gilt, bei Gleichstand der von Hand (isTimer)
+        ent = max(ents, key=lambda e: (self._num(e.get("start"), 0) or 0, bool(e.get("isTimer")))) if ents else None
+        reason = int(n("overrideReason") or 0)
+        if ent:
+            reason = int(self._num(ent.get("reason"), reason) or 0)
+        # Kein eigenes Ablauf-Pruefen: die Zeitbasis von end ist erst nach der Kalibrierung sicher,
+        # und der Miniserver leert overrideEntries selbst.
+        end_dt = self._irc_end_dt(ent.get("end")) if ent else None
+        ov = ent is not None and reason not in (6, 7)          # Vorheizen ist kein Override
+        name = _kurz_modus(modes.get(am)) if am in modes else {3: "Manuell", 4: "Aus"}.get(am, "")
+        hum = n("humidityActual")
+        return {"modes": modes, "ta": ta, "tt": tt, "am": am, "opm": opm, "heat_ok": heat_ok, "cool_ok": cool_ok,
+                "single": single, "comfort": comfort, "kc": kc, "ccool": ccool, "tol": tol, "mino": mino,
+                "lo": lo, "hi": hi, "win": win, "aus": aus, "prep": prep, "glow": glow, "ov": ov,
+                # von Hand: Doku overrideEntries.isTimer ("timer has been started via the app"); fehlt das Feld, Grund 0/3/4/5
+                "man": ov and (bool(ent.get("isTimer")) if "isTimer" in ent else reason in self.IRC_MANUAL_REASONS), "reason": reason,
+                "src": _clean((ent or {}).get("source")) if ent else "",
+                "end": end_dt, "name": name,
+                "hum": hum if hum is not None and hum > 0 else None,
+                "frost": n("frostProtectTemperature")}
+
+    def _irc2_target(self, z: dict, kind: str):
+        """Sollwert eines Plan-Modus (fuer "Danach Komfort 24,0°")."""
+        if kind == "comfort":
+            return z["kc"] if not (z["cool_ok"] and not z["heat_ok"]) else z["ccool"]
+        if kind == "eco" and z["comfort"] is not None:
+            return z["comfort"] - z["mino"]
+        return None
+
+    def _irc2_lines(self, z: dict, plan: dict | None) -> tuple[str, str, str, str]:
+        """(Zustandszeile, Punktfarbe, Fusszeile, Text fuer den Override-Chip)."""
+        deg = lambda v: f"{self._fmt_num(v, '%.1f')}°"
+        now = _ms_now_dt()
+        m = now.hour * 60 + now.minute
+        name = z["name"]
+        dot = "comfort" if z["am"] == 1 else ("eco" if z["am"] == 0 else "other")
+        bits, sub = [], []
+        if z["opm"] == -1:
+            bits.append("Aus")
+        elif z["ov"]:
+            bits.append(f"{name} bis {self._hm_rel(z['end'])}" if (z["end"] and name) else name)
+            why = (self.IRC_REASON.get(z["reason"]) or (z["src"] if z["reason"] == 8 and z["src"] else "")
+                   or ("von Hand" if z["man"] else ""))
+            if why:
+                bits.append(why)
+            if z["end"] and plan and plan.get("segs") and z["end"].date() == now.date():
+                k, nm, _, _ = self._plan_at(plan, z["end"].hour * 60 + z["end"].minute)
+                sub.append(f"Danach {nm} nach Zeitplan" if nm else "Danach Zeitplan")
+            elif z["man"]:
+                sub.append("Danach Zeitplan")
+        else:
+            bis, nxt = None, None
+            if plan and plan.get("segs"):
+                _, pnm, bis, nxt = self._plan_at(plan, m)
+                if pnm and name and pnm != name:      # Modus kommt nicht aus dem Plan (z. B. Praesenz): kein "bis"
+                    bis = nxt = None
+            bits.append(f"{name} bis {bis // 60:02d}:{bis % 60:02d}" if (name and bis is not None) else name)
+            if nxt and nxt[1] and nxt[1] != name:
+                tv = self._irc2_target(z, nxt[0])
+                d = (z["kc"] - z["comfort"]) if (nxt[0] == "comfort" and z["kc"] is not None and z["comfort"] is not None) else 0
+                # -/+ im Eco verstellt den kommenden Komfort: Abweichung sichtbar machen ("+0,5")
+                sub.append(f"Danach {nxt[1]}" + (f" {deg(tv)}" if tv is not None else "")
+                           + (f" ({'+' if d > 0 else '−'}{self._fmt_num(abs(d), '%.1f')})" if abs(d) >= 0.05 else ""))
+        if z["win"] and z["reason"] != 2:
+            bits.append("Fenster offen")
+        if not z["aus"] and not z["win"]:
+            if z["prep"] > 0:
+                bits.append("heizt auf Komfort vor")
+            elif z["prep"] < 0:
+                bits.append("kühlt auf Komfort vor")
+            elif z["glow"]:
+                bits.append("heizt" if z["glow"] == "heat" else "kühlt")
+        if z["single"] and z["heat_ok"] and z["cool_ok"] and z["lo"] is not None and z["hi"] is not None and not z["aus"]:
+            sub.insert(0, f"Heizt unter {deg(z['lo'])} · kühlt über {deg(z['hi'])}")
+        # -/+ verstellt den Komfort (temporaer). Gilt gerade nicht Komfort und folgt er nicht als Naechstes,
+        # steht der Komfortwert trotzdem in der Fusszeile, damit die Aenderung sichtbar ist.
+        if (z["am"] in (0,) and z["heat_ok"] and z["kc"] is not None and not z["win"] and not z["aus"]
+                and not any(x.startswith("Danach Komfort") for x in sub)):
+            d = z["kc"] - (z["comfort"] if z["comfort"] is not None else z["kc"])
+            sub.insert(0, f"Komfort {deg(z['kc'])}" + (f" ({'+' if d > 0 else '−'}{self._fmt_num(abs(d), '%.1f')})" if abs(d) >= 0.05 else ""))
+        if z["hum"] is not None:
+            sub.append(f"Feuchte {self._fmt_num(z['hum'], '%.0f')} %")
+        chip = (((f"{name} bis {self._hm_rel(z['end'])}" if z["end"] else name) or "Von Hand") if z["man"] else "Nach Zeitplan")
+        return " · ".join(b for b in bits if b), dot, " · ".join(sub), chip
+
+    def _irc2_view(self, c: dict, route: dict) -> dict:
+        ua = c.get("uuidAction")
+        z = self._irc2(c)
+        deg = lambda v: f"{self._fmt_num(v, '%.1f')}°"
+        ist = {"k": "ist", "text": f"{self._fmt_num(z['ta'], '%.1f')} °C" if z["ta"] is not None else "–"}
+        if z["glow"]:
+            ist["glow"] = z["glow"]
+        blocks = [ist]
+        plan = self._irc_schedule(c, z["modes"])
+        line, dot, sub, ovchip = self._irc2_lines(z, plan)
+        art, _ = self._irc_betriebsart(c)
+        txt, tone = self._irc_art_short(z["opm"])
+        chips = []
         if art:
-            cur = next((m["label"] for m in art.get("menu") or [] if m.get("on")), "")
-            line["chip"] = {"text": cur or art.get("label") or "Betriebsart", "menu": art["menu"]}
-        return [ist, line]
+            chips.append({"text": txt or "Betriebsart", "tone": tone, "menu": art["menu"]})
+        elif txt:
+            chips.append({"text": txt, "tone": tone})
+        chips.append({"text": ovchip, "ph": 1})          # nur Handy: Zeitplan/Override als zweiter Chip
+        blocks.append({"k": "chips", "items": chips})
+        # Sollwert-Karte: -/+ nur, wenn sie gerade wirken (nicht bei Fenster offen,
+        # Gebaeudeschutz, Aus). Heizen: setComfortModeTemp (temporaer, Doku: Komfort +
+        # Offset +- 0,5). Kuehlen: Doku kennt keinen temporaeren Befehl -> MAX nur Anzeige
+        # (ausser SingleComfortTemperature). Manuell: setManualTemperature.
+        adj = not z["win"] and not z["aus"] and z["am"] != 2
+        st = 0.5
 
-    def _irc_schedule(self, c: dict, modes: dict) -> dict | None:
+        def pm(cmd, v):
+            # b/st/tmpl: das Panel zaehlt bei schnellem Mehrfach-Tippen lokal weiter (sonst ginge ein Schritt verloren)
+            return ({"minus": {"uuid": ua, "cmd": f"{cmd}/{v - st:.1f}"}, "plus": {"uuid": ua, "cmd": f"{cmd}/{v + st:.1f}"},
+                     "b": round(v, 2), "st": st, "cmd": {"uuid": ua, "tmpl": cmd + "/{v}"}}
+                    if (adj and v is not None) else {})
+        sets = []
+        if z["aus"]:
+            pass
+        elif z["am"] == 3:
+            if z["tt"] is not None:
+                sets.append({"text": deg(z["tt"]), "label": "Soll", **pm("setManualTemperature", z["tt"])})
+        elif z["single"] and z["heat_ok"] and z["cool_ok"]:
+            if z["kc"] is not None:
+                sets.append({"text": deg(z["kc"]), "label": "Komfort", **pm("setComfortModeTemp", z["kc"])})
+        else:
+            if z["heat_ok"] and z["lo"] is not None:
+                sets.append({"text": deg(z["lo"]), "label": "MIN", **pm("setComfortModeTemp", z["kc"])})
+            if z["cool_ok"] and z["hi"] is not None:
+                # Kuehlen: die Doku v16 kennt keinen temporaeren Befehl (setComfortTemperatureCool waere
+                # dauerhaft = Konfiguration) -> MAX nur anzeigen; bei SingleComfortTemperature wirkt der Komfort.
+                sets.append({"text": deg(z["hi"]), "label": "MAX", **(pm("setComfortModeTemp", z["kc"]) if z["single"] else {})})
+        card = {"k": "setp", "card": True, "items": sets, "st": {"text": line, "dot": dot}}
+        if plan and plan.get("segs"):
+            card["tl"] = plan
+        if sub:
+            card["sub"] = sub
+        blocks.append(card)
+        # Komfort | Eco als 1-h-Override (Namen aus details.timerModes), Zeitplan beendet ihn.
+        # Gedrueckt ist, was gerade gilt: ein Modus nur bei Override von Hand, sonst Zeitplan.
+        if z["modes"]:
+            order = sorted(z["modes"].items(), key=lambda x: (0 if "komfort" in (x[1] or "").lower() else 1, x[0]))
+            cells = [{"label": _kurz_modus(nm), "on": z["man"] and mid == z["am"],
+                      "cmd": {"uuid": ua, "cmd": f"__ircov/{mid}/{IRC_OVERRIDE_S}"}}
+                     for mid, nm in order if "schutz" not in (nm or "").lower()]
+            cells.append({"label": "Zeitplan", "on": not z["man"], "cmd": {"uuid": ua, "cmd": "stopOverride"}})
+            blocks.append({"k": "row", "cells": cells})
+        return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
+
+    def _irc1_view(self, c: dict, route: dict) -> dict:
+        """Alte Raumregelung (v1) sinngemaess wie V2. Befehle laut Strukturdoku:
+        settemp/<Nr>/<Wert>, starttimer/<Nr>/<Sekunden>, stoptimer, mode/<Nr>.
+        Keine temporaere Komfort-Aenderung und kein Tagesplan in der Doku: -/+
+        verstellt Komfort der Periode (bzw. manuell die manuelle Temperatur)."""
+        ua = c.get("uuidAction")
+        z = self._irc1(c)
+        zz = self._irc1_glow(c, z)
+        art, manuell = self._irc_betriebsart(c)
+        n = lambda k: self._num(self._state(c, k))
+        ta, tt = n("tempActual"), n("tempTarget")
+        deg = lambda v: f"{self._fmt_num(v, '%.1f')}°"
+        ist = {"k": "ist", "text": f"{self._fmt_num(ta, '%.1f')} °C" if ta is not None else "–"}
+        if zz:
+            ist["glow"] = zz
+        blocks = [ist]
+        rest = n("override") or 0
+        timer = rest > 0
+        txt = "Kühlen" if z["kuehlen"] else "Heizen"
+        chip = {"text": txt + (" · manuell" if manuell else ""), "tone": "cool" if z["kuehlen"] else "heat"}
+        if art:
+            chip["menu"] = art["menu"]
+        win = bool(self._state(c, "openWindow"))
+        name = _kurz_modus(z["name"] or "")
+        bits = []
+        if name:
+            bits.append(f"{name} bis {self._hm_rel(_ms_now_dt() + timedelta(seconds=int(rest)))}" if timer else name)
+        mm = int(n("manualMode") or 0)
+        if timer and mm in (1, 2, 3):
+            bits.append("von Hand")
+        elif mm == 4:
+            bits.append("Präsenz")
+        if win:
+            bits.append("Fenster offen")
+        blocks.append({"k": "chips", "items": [chip, {"text": (f"{name} bis {bits[0].split(' bis ')[-1]}" if timer and name else "Nach Zeitplan"), "ph": 1}]})
+        sets, sub = [], []
+        if tt is not None:
+            it = {"text": deg(tt), "label": "MAX" if z["kuehlen"] else "MIN"}
+            if z["stell"] is not None and not win:
+                ix, v = z["stell_ix"], z["stell"]
+                it.update(minus={"uuid": ua, "cmd": f"settemp/{ix}/{v - 0.5:.1f}"},
+                          plus={"uuid": ua, "cmd": f"settemp/{ix}/{v + 0.5:.1f}"},
+                          b=round(v, 2), st=0.5, cmd={"uuid": ua, "tmpl": f"settemp/{ix}/" + "{v}"})
+                if ix != IRC1_MANUELL and z["ix"] != z["komfort_ix"]:
+                    sub.append(f"Komfort {deg(v)}")      # sichtbar machen, was -/+ verstellt
+            sets.append(it)
+        card = {"k": "setp", "card": True, "items": sets,
+                "st": {"text": " · ".join(bits), "dot": "comfort" if z["ix"] == z["komfort_ix"] else ("eco" if z["ix"] == IRC1_ECO else "other")}}
+        if sub:
+            card["sub"] = " · ".join(sub)
+        blocks.append(card)
+        blocks.append({"k": "row", "cells": [
+            {"label": "Komfort", "on": timer and z["ix"] == z["komfort_ix"],
+             "cmd": {"uuid": ua, "cmd": f"starttimer/{z['komfort_ix']}/{IRC1_TIMER_S}"}},
+            {"label": IRC1_TEMPS[IRC1_ECO], "on": timer and z["ix"] == IRC1_ECO,
+             "cmd": {"uuid": ua, "cmd": f"starttimer/{IRC1_ECO}/{IRC1_TIMER_S}"}},
+            {"label": "Zeitplan", "on": not timer, "cmd": {"uuid": ua, "cmd": "stoptimer"}},
+        ]})
+        return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
+
+    def _irc1_glow(self, c: dict, z: dict) -> str:
+        """v1: Ventile (falls vorhanden) melden echte Arbeit, sonst Ist gegen Soll der Periode.
+        Nie bei Fenster offen oder Stopp."""
+        if self._state(c, "openWindow") or self._state(c, "stop"):
+            return ""
+        if z["prep"]:
+            return "heat" if z["prep"] > 0 else "cool"
+        ta, tt = self._num(self._state(c, "tempActual")), self._num(self._state(c, "tempTarget"))
+        if ta is None or tt is None:
+            return ""
+        if not z["kuehlen"] and round(ta, 1) < round(tt, 1):
+            return "heat"
+        if z["kuehlen"] and round(ta, 1) > round(tt, 1):
+            return "cool"
+        return ""
+
+    def _irc_schedule(self, c: dict, modes: dict, kindf=None) -> dict | None:
         """Tagesplan der Raumregelung aus dem Daytimer-Unterbaustein (State
         entriesAndDefaultValue) -> {"segs": [{"a","b","k","name"}], ...} mit
         Minuten ab Mitternacht; k = comfort | eco | other (Name des Modus aus
@@ -2894,9 +3235,12 @@ class App:
             return None
 
         def kind(v):
+            if kindf:
+                return kindf(v, dflt)
             nm = modes.get(int(v)) or ""
             low = nm.lower()
-            return ("comfort" if "komfort" in low else ("eco" if "eco" in low else "other")), nm
+            # Kurzname wie auf den Modus-Knoepfen ("Komfort-Temperatur" -> "Komfort")
+            return ("comfort" if "komfort" in low else ("eco" if "eco" in low else "other")), _kurz_modus(nm)
         # Daytimer-Event (Kennung 4, je Eintrag Modus,von,bis,Aktivierung,Wert): Eintraege
         # aller Betriebsmodi (Wochentage, Feiertag ...) - nur der laufende Modus (State
         # "mode" des Daytimers) ist der heutige Plan.
@@ -2911,9 +3255,12 @@ class App:
             a, b = (e[0], e[1]) if sz == 3 else (e[1], e[2])
             if not (0 <= a <= 1440 and 0 <= b <= 1440):
                 return None
-            if b <= a:
-                b = 1440 if b == 0 else b
             k, nm = kind(v)
+            if b == 0:
+                b = 1440
+            if b < a:                     # ueber Mitternacht: in [a, 24:00] und [0, b] teilen
+                segs.append({"a": int(a), "b": 1440, "k": k, "name": nm})
+                a = 0
             segs.append({"a": int(a), "b": int(b), "k": k, "name": nm})
         segs.sort(key=lambda x: x["a"])
         k, nm = kind(dflt)
@@ -3671,6 +4018,124 @@ class App:
             lines = [e.strip() for e in raw.split("|") if e.strip()][:6]
         return {"level": worst, "head": head, "foot": foot, "chips": chips, "log": lines}
 
+    # ---- Schnellstart (Widget "quick") ----
+    def quick_row(self, uuid: str) -> dict | None:
+        """Eine Zeile des Schnellstarts: Name, Raum, Zustand und die Schnellknoepfe
+        (b: [{k, cmd, on, stop}]) - nur fuer erlaubte Typen (QUICK_KINDS), sonst None.
+        Befehle wie in Kachel und Detailansicht; PIN fragt der Client (secured/{t:'sec'})."""
+        c = self.controls.get(uuid)
+        kind = QUICK_KINDS.get((c or {}).get("type"))
+        if not kind:
+            return None
+        t, ua = c.get("type"), c.get("uuidAction") or uuid
+        st = c.get("states") or {}
+        row: dict = {"id": uuid, "name": _clean(c.get("name")), "kind": kind,
+                     "room": _clean((self.rooms.get(c.get("room")) or {}).get("name"))}
+        if c.get("isSecured"):
+            row["secured"] = True
+
+        def b(k, cmd, on=False, stop=False):
+            d = {"k": k, "cmd": {"uuid": ua, "cmd": cmd}}
+            if on:
+                d["on"] = True
+            if stop:
+                d["stop"] = True
+            return d
+        if kind == "shade":
+            r = JAL.render(self._with_uuid(uuid), self.states)
+            up = bool(self.states.get(st.get("up")))
+            dn = bool(self.states.get(st.get("down")))
+            pct = r.get("pct")
+            row["state"] = "–" if pct is None else ("offen" if pct <= 0 else ("zu" if pct >= 100 else f"{pct} % zu"))
+            if up or dn:
+                row["move"] = "up" if up else "down"
+                row["state"] = ("öffnet" if up else "schließt") + ("" if pct is None else f" · {pct} % zu")
+            if pct is not None:
+                row["pct"] = pct
+            row["b"] = [b("up", "stop" if up else "up", up, up), b("down", "stop" if dn else "down", dn, dn)]
+        elif kind in ("window", "gate"):
+            pct = round((self._state(c, "position") or 0) * 100)
+            d = self._state(c, "direction" if kind == "window" else "active") or 0
+            try:
+                d = int(float(d))
+            except (TypeError, ValueError):
+                d = 0
+            row["pct"] = pct
+            row["state"] = ("offen" if pct >= 100 else ("zu" if pct <= 0 else f"{pct} % offen"))
+            if d:
+                row["move"] = "up" if d > 0 else "down"
+                row["state"] = ("öffnet" if d > 0 else "schließt") + f" · {pct} % offen"
+            op, cl = ("fullopen", "fullclose") if kind == "window" else ("open", "close")
+            # Waehrend der Fahrt stoppen BEIDE Knoepfe (wie die Tor-Detailansicht) - keine direkte Umkehr
+            row["b"] = [b("open", "stop" if d else op, d > 0, bool(d)),
+                        b("close", "stop" if d else cl, d < 0, bool(d))]
+            if kind == "gate":
+                row["hold"] = True                # Auf/Zu nur mit 1 s Halten (Stopp waehrend der Fahrt: Tipp)
+        elif kind == "light":
+            if t == "LightControllerV2":
+                cu = self._with_uuid(uuid)
+                r = LIGHT.render(cu, self.states)
+                off = LIGHT._off_ids(cu, self.states)
+                ids = [m.get("id") for m in LIGHT.moods(cu, self.states) if m.get("id") not in off]
+                act = LIGHT.active_moods(cu, self.states)
+                cur = next((i for i, m in enumerate(ids) if m in act), None)
+                row["on"], row["state"] = bool(r["on"]), r["label"] or "Aus"
+                mk = lambda m: f"changeTo/{m}"
+            else:
+                sc = self._lc_scenes(c)
+                asc = int(self._state(c, "activeScene") or 0)
+                ids = sorted(k for k in sc if k)
+                cur = ids.index(asc) if asc in ids else None
+                row["on"], row["state"] = asc != 0, (sc.get(asc) or ("Aus" if asc == 0 else f"Szene {asc}"))
+                mk = str
+            if ids:
+                pv = ids[-1 if cur is None else (cur - 1) % len(ids)]
+                nx = ids[0 if cur is None else (cur + 1) % len(ids)]
+                row["b"] = [b("prev", mk(pv)), b("next", mk(nx))]
+        elif kind == "radio":
+            det = c.get("details") or {}
+            outs = det.get("outputs") or {}
+            ao = int(self._state(c, "activeOutput") or 0)
+            seq = ([0] if det.get("allOff") else []) + sorted((int(k) for k in outs if str(k).isdigit()))
+            row["state"] = outs.get(str(ao)) or (_clean(det.get("allOff")) or "–" if ao == 0 else f"Ausgang {ao}")
+            if seq:
+                i = seq.index(ao) if ao in seq else None
+                pv = seq[-1 if i is None else (i - 1) % len(seq)]
+                nx = seq[0 if i is None else (i + 1) % len(seq)]
+                cm = lambda k: "reset" if k == 0 else str(k)
+                row["b"] = [b("prev", cm(pv)), b("next", cm(nx))]
+        elif kind == "switch":
+            if t == "TimedSwitch":
+                try:
+                    dd = float(self._state(c, "deactivationDelay") or 0)
+                except (TypeError, ValueError):
+                    dd = 0.0
+                on, oncmd = dd != 0, "pulse"
+                row["state"] = ("noch %d:%02d" % (int(dd) // 60, int(dd) % 60)) if dd > 0 else ("Ein" if on else "Aus")
+            else:
+                on, oncmd = bool(self._state(c, "active")), "on"
+                row["state"] = "Ein" if on else "Aus"
+            row["on"] = on
+            row["b"] = [b("off", "off", not on), b("on", oncmd, on)]
+        elif kind == "dimmer":
+            pos = self._state(c, "position") or 0
+            on = pos > 0
+            row["on"], row["state"] = on, (f"{round(pos)} %" if on else "Aus")
+            row["b"] = [b("off", "off", not on), b("on", "on", on)]
+        elif kind == "tap":
+            row["state"] = "Taster"
+            row["b"] = [b("tap", "pulse")]
+        elif kind == "audio":
+            ps = self._state(c, "playState")
+            playing = ps == 2
+            if t == "AudioZoneV2":
+                sm = self._sonn_for(c)
+                playing = playing or bool(sm and sm.get("playing"))
+            row["on"] = playing
+            row["state"] = "Spielt" if playing else ("Pause" if ps == 1 else "Aus")
+            row["b"] = [b("pause" if playing else "play", "pause" if playing else "play", playing)]
+        return row
+
     def camera_list(self) -> list:
         """Alle Kameras mit Video-URL fuer das Kamera-Widget: zuerst die
         Intercoms aus Loxone, dann die eigenen Kameras (Settings)."""
@@ -3692,8 +4157,19 @@ class App:
         Tuerstationen, Energiefluss, Verlaeufe, Audio, Kameras."""
         tiles, cams, energy, charts, players = {}, {}, {}, {}, {}
         cameras = self.camera_list() if any(it.get("type") == "camera" for it in items) else []
-        statuses = {}
+        statuses, quick = {}, {}
         for it in items:
+            if it.get("type") == "quick":
+                for u in it.get("ctls") or []:
+                    # wie die Kacheln: auf diesem Panel ausgeblendete Bausteine nicht zeigen
+                    if u not in quick and u in self.controls and self._shown(u, prof):
+                        try:
+                            r = self.quick_row(u)
+                        except Exception:
+                            _log_exc_limited(("quick", u), "Schnellstart-Zeile %s fehlgeschlagen", u)
+                            r = None
+                        if r:
+                            quick[u] = r
             if it.get("type") == "status":
                 key = ",".join(it.get("ctls") or []) + "#" + (it.get("trk") or "")
                 if key not in statuses:
@@ -3740,7 +4216,7 @@ class App:
                 # Ein fehlerhaftes Widget darf den Rest des Screensavers nicht mitreissen.
                 log.exception("Screensaver-Widget %s (%s) fehlgeschlagen", it["type"], u)
         return {"tiles": tiles, "intercoms": cams, "cameras": cameras, "statuses": statuses,
-                "energy": energy, "charts": charts, "players": players}
+                "energy": energy, "charts": charts, "players": players, "quick": quick}
 
     def _folder_item(self, kind: str, fid) -> dict | None:
         """Raum- bzw. Kategorie-Kachel (Ordner) wie in der Loxone-App: antippen
@@ -6371,19 +6847,32 @@ class App:
                       sublabel=("Offen" if pct >= 100 else
                                 ("Geschlossen" if pct <= 0 else f"{pct}% offen")))
         elif t in ("IRoomControllerV2", "IRoomController"):
-            ta = self._state(c, "tempActual"); tt = self._state(c, "tempTarget")
-            # heizt/kuehlt: V2 meldet es in prepareState, die alte Raumregelung
-            # ueber ihre Ventile (siehe _irc1)
-            prep = self._state(c, "prepareState") if t == "IRoomControllerV2" else self._irc1(c)["prep"]
-            bits = self._irc_activity(prep, self._state(c, "openWindow"))
-            sub = ((f"{self._fmt_num(ta, '%.1f')}° → {self._fmt_num(tt, '%.1f')}°" if tt is not None
-                    else f"{self._fmt_num(ta, '%.1f')}°") if ta is not None else "Heizung")   # ohne Soll kein leerer Pfeil
-            if bits:
-                sub += " · " + " · ".join(bits)
+            # Kachel wie die App-Zeile: "22,9° · Eco 22,0°" (Ist · aktiver Modus + gueltiger
+            # Sollwert). Farbe/Flackern nur bei echter Arbeit (glow, siehe _irc2/_irc1_glow).
+            if t == "IRoomControllerV2":
+                z = self._irc2(c)
+                ta, nm = z["ta"], z["name"]
+                tv = z["lo"] if (z["heat_ok"] and not z["cool_ok"]) else (z["hi"] if (z["cool_ok"] and not z["heat_ok"]) else z["tt"])
+                if z["aus"]:
+                    tv = None
+                glow, win, prep = z["glow"], z["win"], z["prep"]
+            else:
+                z1 = self._irc1(c)
+                ta, tv, nm = self._num(self._state(c, "tempActual")), self._num(self._state(c, "tempTarget")), _kurz_modus(z1["name"] or "")
+                glow, win, prep = self._irc1_glow(c, z1), bool(self._state(c, "openWindow")), 0
+            parts = [f"{self._fmt_num(ta, '%.1f')}°"] if ta is not None else []
+            if nm or tv is not None:
+                parts.append(" ".join(x for x in (nm, f"{self._fmt_num(tv, '%.1f')}°" if tv is not None else "") if x))
+            if win:
+                parts.append("Fenster offen")
+            elif prep:
+                parts.append("heizt vor" if prep > 0 else "kühlt vor")
             it.update(icon="thermo", nav={"view": "control", "id": uuid},
-                      on=bool(prep), sublabel=sub)
-            if "heizt" in bits:
-                it["anim"] = "heat"                       # Symbol flackert dezent
+                      on=bool(glow), sublabel=" · ".join(parts) or "Heizung")
+            if glow:
+                it["glow"] = glow                         # Kachelwert dezent gefaerbt (statisch)
+            if glow == "heat":
+                it["anim"] = "heat"                       # Symbol flackert dezent (nur Animationsstufe Viel)
         elif t == "Intercom":
             ring = bool(self._state(c, "bell"))
             _ev = self._bell_events(c)
@@ -6556,13 +7045,14 @@ class App:
             it["sublabel"] = str(self._state(c, "textAndIcon") or self._state(c, "text") or "")
         elif t == "SmokeAlarm":
             ok = (self._state(c, "level") or 0) == 0
+            # Ruhe neutral (wie die App), Farbe nur bei Alarm
             it.update(icon="alarm", sublabel=("Alles ok" if ok else "Alarm!"),
-                      tone=("good" if ok else "crit"))
+                      tone=(None if ok else "crit"))
         elif t == "AalEmergency":
             stt = self._aal_status(c)
             if stt == 1:
                 it["anim"] = "ring"
-            it.update(icon="alarm", on=stt == 1, tone=("crit" if stt == 1 else ("good" if stt == 0 else None)),
+            it.update(icon="alarm", on=stt == 1, tone=("crit" if stt == 1 else ("warn" if stt == 3 else None)),   # Bereit = Ruhe, neutral; pausiert = Hinweis
                       nav={"view": "control", "id": uuid}, sublabel=AAL_STATUS.get(stt, "Bereit"))
         elif t == "NfcCodeTouch":
             who = self._nfc_last(c)
@@ -6652,9 +7142,14 @@ class App:
                               else self._hc_fmt(c, self._state(c, "total")))   # Loxone liefert Sekunden
         elif t == "Tracker":
             lines = self._tracker_lines(c)
-            _, last = self._split_ts(lines[0]) if lines else (None, "")
+            ts, last = self._split_ts(lines[0]) if lines else (None, "")
+            last, on = _trk_text(last)
+            if on is not None and ts:
+                last = f"{last} seit {_short_ts(ts)}"   # Digitalwert: Zustand + Zeit
             it.update(icon="list", nav={"view": "control", "id": uuid},
                       sublabel=(last or "Keine Einträge"))
+            if on is not None:
+                it["on"] = on
         elif t == "EFM":
             # Energieflussmonitor: Ppwr Erzeugung, Gpwr Netz (+Bezug/-Einspeisung),
             # Spwr Speicher (+Entladen/-Laden), actual0..5 = Knoten aus details.nodes
@@ -7904,8 +8399,6 @@ class App:
         err = self._state(c, "error") or self._state(c, "saunaError")
         md = self._state(c, "mode")
         bits = []
-        if tt is not None:
-            bits.append(f"Soll {self._fmt_num(tt, '%.0f')}°")
         if isinstance(md, (int, float)) and int(md) in SAUNA_MODES and int(md) != 0 and det.get("hasVaporizer"):
             bits.append(SAUNA_MODES[int(md)])
         bits.append("Störung" if err else ("heizt auf" if self._state(c, "power") else
@@ -7917,10 +8410,14 @@ class App:
             bits.append("Wasser nachfüllen")
         ist = {"k": "ist", "text": f"{self._fmt_num(ta, '%.0f')} °C" if ta is not None else "–",
                **({"tone": "crit"} if err else ({"tone": "heat"} if act else {}))}
+        sp = None
         if tt is not None:
+            # Soll als eigene Gruppe (- 80° SOLL +); der Ist-Wert ist ein Messwert ohne -/+
             base = int(round(tt))
-            ist["minus"] = {"uuid": ua, "cmd": f"temp/{base - 1}"}
-            ist["plus"] = {"uuid": ua, "cmd": f"temp/{base + 1}"}
+            sp = {"k": "setp", "card": True, "items": [{"text": f"{base}°", "label": "Soll",
+                                          "minus": {"uuid": ua, "cmd": f"temp/{base - 1}"},
+                                          "plus": {"uuid": ua, "cmd": f"temp/{base + 1}"},
+                                          "b": base, "st": 1, "cmd": {"uuid": ua, "tmpl": "temp/{v}"}}]}
         kp = []
         hum = self._num(self._state(c, "humidityActual"))
         if hum is not None and det.get("hasVaporizer"):
@@ -7934,6 +8431,8 @@ class App:
         if tr or tt_tot:
             kp.append({"l": "Timer", "v": self._dur(tr) if tr else self._dur(tt_tot)})
         blocks = [ist, {"k": "mline", "text": " · ".join(bits), **({"dot": "crit"} if err else {})}]
+        if sp:
+            blocks.append(sp)
         if kp:
             blocks.append({"k": "kpis", "items": kp[:3]})
         cells = [{"label": "Ein", "on": act, "cmd": {"uuid": ua, "cmd": "off" if act else "on"}}]   # Ein-Taste schaltet um (aktiv = an)
@@ -8005,16 +8504,113 @@ class App:
     def _mail_view(self, uuid: str, c: dict, route: dict) -> dict:
         ua = c.get("uuidAction")
         mail, pk = bool(self._state(c, "mailReceived")), bool(self._state(c, "packetReceived"))
-        big = "Post und Paket" if (mail and pk) else ("Post da" if mail else ("Paket da" if pk else "Leer"))
-        sub = "" if (mail or pk) else "Keine neue Post"
-        blocks = [{"k": "state", "icon": "mailbox", "tone": "good" if (mail or pk) else "idle", "text": big, "sub": sub}]
+        # Wortlaute der App: "Post zugestellt", Aktion "Briefkasten entleert" (confirmMail)
+        big = ("Post und Paket" if (mail and pk) else ("Post zugestellt" if mail else ("Paket zugestellt" if pk else "Keine Post")))
+        blocks = [{"k": "state", "icon": "mailbox", "tone": "good" if (mail or pk) else "idle", "text": big, "sub": ""}]
         cells = []
         if mail:
-            cells.append({"label": "Post quittieren" if pk else "Quittieren", "cmd": {"uuid": ua, "cmd": "confirmMail"}})
+            cells.append({"label": "Briefkasten entleert", "cmd": {"uuid": ua, "cmd": "confirmMail"}})
         if pk:
-            cells.append({"label": "Paket quittieren" if mail else "Quittieren", "cmd": {"uuid": ua, "cmd": "confirmPacket"}})
+            cells.append({"label": "Paket entnommen", "cmd": {"uuid": ua, "cmd": "confirmPacket"}})
+        # Benachrichtigungen deaktivieren (disableNotifications/<s>, 0 = beenden; Doku v16)
+        end = self._num(self._state(c, "disableEndTime"), 0) or 0
+        until = _ms_dt(end + _EPOCH_2009) if end > 0 else None     # Doku: UTC, Sekunden seit 2009
+        if until and until > _ms_now_dt():
+            blocks[0]["sub"] = f"Benachrichtigungen aus bis {self._hm_rel(until)}"
+            cells.append({"label": "Hinweise an", "cmd": {"uuid": ua, "cmd": "disableNotifications/0"}})
+        elif "disableEndTime" in (c.get("states") or {}):
+            cells.append({"label": "Hinweise aus …", "menu": [{"label": f"Benachrichtigungen aus für {lb}",
+                                                         "cmd": {"uuid": ua, "cmd": f"disableNotifications/{sec}"}}
+                                                        for lb, sec in (("1 Stunde", 3600), ("4 Stunden", 14400), ("1 Tag", 86400))]})
         if cells:
             blocks.append({"k": "row", "act": True, "cells": cells})
+        return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
+
+    # Brandmelder: "Alles ok" wie die App; Alarmunterdrueckung (servicemode/<s>, 0 = aus,
+    # Doku v16) mit Dauer-Menue, Restzeit aus timeServiceMode (99999 = unbegrenzt)
+    def _smoke_view(self, uuid: str, c: dict, route: dict) -> dict:
+        ua = c.get("uuidAction")
+        lvl = self._state(c, "level") or 0
+        if lvl:
+            cause = self._smoke_cause(c)
+            return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": [
+                {"k": "state", "icon": "alarm", "tone": "crit", "text": "Alarm", "sub": cause or "Melder ausgelöst"},
+                {"k": "row", "act": True, "cells": [
+                    {"label": "Stumm", "cmd": {"uuid": ua, "cmd": "mute"}},
+                    {"label": "Quittieren", "cmd": {"uuid": ua, "cmd": "confirm"}}]},
+            ]}
+        sm = int(self._num(self._state(c, "timeServiceMode"), 0) or 0)
+        blocks = [{"k": "state", "icon": "alarm", "tone": "idle", "text": "Alles ok",
+                   "sub": ("Alarmunterdrückung aktiv" + ("" if sm >= 99999 else f" · noch {self._dur(sm)}")) if sm else ""}]
+        if "timeServiceMode" in (c.get("states") or {}):
+            cell = ({"label": "Unterdrückung beenden", "cmd": {"uuid": ua, "cmd": "servicemode/0"}} if sm else
+                    {"label": "Alarmunterdrückung …", "menu": [{"label": f"Alarmunterdrückung für {lb}", "cmd": {"uuid": ua, "cmd": f"servicemode/{sec}"}}
+                                                               for lb, sec in (("15 Minuten", 900), ("30 Minuten", 1800), ("1 Stunde", 3600))]})
+            blocks.append({"k": "row", "act": True, "cells": [cell]})
+        return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
+
+    # Schaltuhr: Zustand "Aktiv seit 18:00 bis 23:00" + Tageszeitleiste wie die App; Timer per
+    # startOverride/<wert>/<s>, stopOverride. Analog: EIN Wert (Timer-Wert mit -/+), der aktuelle
+    # Wert steht in der Zustandszeile (vorher doppelt).
+    def _daytimer_view(self, c: dict, route: dict) -> dict:
+        ua = c.get("uuidAction")
+        det = c.get("details") or {}
+        analog = bool(det.get("analog"))
+        fmt = det.get("format") or "%.1f"
+        ovs = self._num(self._state(c, "override"), 0) or 0
+        ov = ovs > 0 or bool(self._state(c, "override"))
+        mode = self._daytimer_mode(c)
+
+        def kindf(v, dflt):
+            # digital: jeder Eintrag ist eine Ein-Zeit (Wert ohne Bedeutung); analog: Wert != Vorgabe
+            on = (v != dflt) if analog else True
+            return ("comfort" if on else "eco"), (self._fmt_num(v, fmt) if analog else "Ein")
+        plan = self._irc_schedule(c, {}, kindf)
+        if plan and not analog:
+            plan.update(dk="eco", dname="Aus")         # digital: ausserhalb der Eintraege aus
+        now = _ms_now_dt()
+        m = now.hour * 60 + now.minute
+        segs = [x for x in ((plan or {}).get("segs") or []) if x["k"] == "comfort"]
+        cur = next((x for x in segs if x["a"] <= m < x["b"]), None)
+        nxt = next((x for x in sorted(segs, key=lambda x: x["a"]) if x["a"] > m), None)
+        hm = lambda mi: f"{mi // 60:02d}:{mi % 60:02d}"
+        val = self._daytimer_value(c)
+        if ov:
+            st = f"Timer bis {self._hm_rel(now + timedelta(seconds=int(ovs)))}" if ovs > 0 else "Timer läuft"
+        elif analog:
+            st = f"Jetzt {val}" + (f" bis {hm(cur['b'])}" if cur else (f" · ab {hm(nxt['a'])} {nxt['name']}" if nxt else ""))
+        elif self._state(c, "value"):     # Zustand aus dem Ausgang (value), der Plan liefert nur die Zeiten
+            st = f"Aktiv seit {hm(cur['a'])} bis {hm(cur['b'])}" if cur else "Ein"
+        else:
+            st = "Aus" + (f" · nächster Start {hm(nxt['a'])}" if nxt else "")
+        on = bool(self._state(c, "value"))
+        blocks = []
+        if not (analog and not ov):
+            blocks.append({"k": "big", "text": val})
+        card = {"k": "setp", "card": True, "items": [], "st": {"text": st, "dot": "comfort" if (on or ov) else "other"}}
+        if plan and plan.get("segs"):
+            card["tl"] = plan
+        if mode:
+            card["sub"] = mode
+        val_t = 1
+        if analog and not ov:
+            mm = re.search(r"%\.(\d+)f", fmt)
+            stp = 0.5 if (mm and int(mm.group(1)) > 0) else 1
+            curv = self._num(self._state(c, "value"), 0)
+            vv = self._dt_val.get(ua)
+            vv = curv if vv is None else vv
+            vv = round(round(vv / stp) * stp, 2)
+            g = lambda x: f"{x:g}"
+            card["items"] = [{"text": self._fmt_num(vv, fmt), "label": "Wert im Timer",
+                              "minus": {"uuid": ua, "cmd": f"__dtval/{g(round(vv - stp, 2))}"},
+                              "plus": {"uuid": ua, "cmd": f"__dtval/{g(round(vv + stp, 2))}"}}]
+            val_t = g(vv)
+        blocks.append(card)
+        if ov:
+            blocks.append({"k": "row", "cells": [{"label": "Timer beenden", "cmd": {"uuid": ua, "cmd": "stopOverride"}}]})
+        else:
+            blocks.append({"k": "row", "wrap": True, "cells": [
+                {"label": f"{m_} min", "cmd": {"uuid": ua, "cmd": f"startOverride/{val_t}/{m_ * 60}"}} for m_ in (15, 30, 60, 90)]})
         return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
 
     # Intercom (Gen. 1)
@@ -8415,8 +9011,10 @@ class App:
                     dim = {"k": "dim", "value": float(sl.get("value") or 0),
                            "min": float(sl.get("min") or 0), "max": float(sl.get("max") if sl.get("max") is not None else 100),
                            "step": float(sl.get("step") or 1), "unit": unit, "cmd": sl["cmd"]}
+                    dim["pm"] = dim["step"]   # -/+ rechts an der Flaeche (+ oben, - unten), Schritt = details.step
                     if dim["step"] >= 1:
-                        dim.update(value=round(dim["value"]), min=round(dim["min"]), max=round(dim["max"]), step=round(dim["step"]))
+                        dim.update(value=round(dim["value"]), min=round(dim["min"]), max=round(dim["max"]), step=round(dim["step"]),
+                                   pm=round(dim["step"]))
                     out[bi] = dim
                     out = [b for i, b in enumerate(out) if i != si and b.get("k") != "hero"]
                     v["anchor"] = "bottom"
@@ -8441,8 +9039,8 @@ class App:
     @staticmethod
     def _central_sum(t: str, n: int, total: int) -> str:
         """Zusammenfassung eines Zentralbausteins - gleiche Worte auf Kachel und Detail."""
-        if t == "CentralLightController":
-            return "Aus" if not n else ("1 Raum an" if n == 1 else f"{n} Räume an")
+        if t == "CentralLightController":   # Wortlaut der App: "In 3 Räumen aktiv"
+            return "Aus" if not n else ("In 1 Raum aktiv" if n == 1 else f"In {n} Räumen aktiv")
         if t == "CentralAudioZone":
             return (f"{n} spielt" if n == 1 else f"{n} spielen") if n else "Alle aus"
         if t in ("CentralGate", "CentralWindow"):
@@ -8458,7 +9056,7 @@ class App:
     # Sammelaktionen der Zentralbausteine: je Mitglied ein bekannter Einzelbefehl
     _CENTRAL_ACT = {"lightoff": {"LightControllerV2": "changeTo/778"},
                     "up": {"Jalousie": "FullUp"}, "down": {"Jalousie": "FullDown"},
-                    "shade": {"Jalousie": "shade"},
+                    "shade": {"Jalousie": "shade"}, "auto": {"Jalousie": "auto"},
                     "arm": {"Alarm": "on"},
                     "pause": {"AudioZone": "pause", "AudioZoneV2": "pause"},
                     "off": {"AudioZone": "off", "AudioZoneV2": "off"}}
@@ -8515,7 +9113,9 @@ class App:
         cells = []
         if t == "CentralLightController":
             summary = self._central_sum(t, on, len(uuids))
-            cells = [{"label": "Alle aus", "cmd": {"uuid": gid, "cmd": "__central/lightoff"}}]
+            # Doku Central Objects: CentralLightController on (selectedcontrols/<ids>/on)
+            cells = [{"label": "Alle an", "cmd": {"uuid": c.get("uuidAction") or gid, "cmd": "on"}},
+                     {"label": "Alle aus", "cmd": {"uuid": gid, "cmd": "__central/lightoff"}}]
         elif t == "CentralJalousie":
             opn = sum(1 for u in uuids if (self._state(self.controls[u], "position") or 0) < 0.02)
             summary = self._central_sum(t, opn, len(uuids)) or "–"
@@ -8526,6 +9126,7 @@ class App:
                 x["_o"] = (self._state(self.controls[x["id"]], "position") or 0) < 0.02
             cells = [{"label": "Alle auf", "cmd": {"uuid": gid, "cmd": "__central/up"}},
                      {"label": "Beschatten", "cmd": {"uuid": gid, "cmd": "__central/shade"}},
+                     {"label": "Automatik", "cmd": {"uuid": gid, "cmd": "__central/auto"}},
                      {"label": "Alle zu", "cmd": {"uuid": gid, "cmd": "__central/down"}}]
         elif t in self._CENTRAL_DIRECT:
             return self._central_list(gid, c, uuids, items, its, route)
@@ -8592,6 +9193,7 @@ class App:
                      {"icon": "volup", "label": "Lautstärke alle lauter", "cmd": {"uuid": ua, "cmd": "volup"}}]
         elif t == "CentralAlarm":
             cells = [{"label": "Alle scharf", "cmd": {"uuid": ua, "cmd": "on"}},
+                     {"label": "Verzögert", "cmd": {"uuid": ua, "cmd": "delayedon"}},
                      {"label": "Alle unscharf", "cmd": {"uuid": ua, "cmd": "off"}}]
         elif t == "CentralGate":
             cells = [{"label": "Alle auf", "cmd": {"uuid": ua, "cmd": "open"}},
@@ -8795,7 +9397,7 @@ class App:
                       {"k": "row", "act": True, "cells": [
                           {"label": "Wieder aktivieren", "cmd": {"uuid": ua, "cmd": "disable/0"}}]}]
         else:
-            blocks = [{"k": "big", "text": "Bereit", "tone": "good"},
+            blocks = [{"k": "big", "text": "Bereit"},   # Ruhezustand neutral (App), Farbe nur bei Notruf
                       {"k": "status", "text": "Kein Notruf"},
                       {"k": "row", "act": True, "cells": [
                           {"label": "Notruf auslösen", "menu": [
@@ -9031,6 +9633,11 @@ class App:
                     n_on = sum(1 for x in circ if x.get("on"))
                     extra = " · ".join(x for x in (extra, f"{n_on} von {len(circ)} Kreisen an") if x)
                 blocks = [{"k": "big", "text": "An" if r["on"] else "Aus", "tone": "", "line": True, "extra": extra}]
+                pr = self._num(self._state(c, "presence"))
+                if pr is not None and int(pr) & 4:
+                    pon = bool(int(pr) & 2)
+                    blocks.append({"k": "mline", "text": "", "chip": {"label": "Präsenzerkennung", "on": pon,
+                                   "cmd": {"uuid": c.get("uuidAction"), "cmd": "presence/off" if pon else "presence/on"}}})
                 if tabs:
                     blocks.append(tabs)
                 blocks.append({"k": "scenes", "items": scenes})
@@ -9134,7 +9741,10 @@ class App:
             ab = {"label": "Ab", "on": down_move, "cmd": {"uuid": ua, "cmd": "stop" if moving else "down"}}
             # Detail-Schema: grosse Stellung (Auf/Ab als runde Knoepfe daneben),
             # Loxone-Text darunter, Aktionspillen unten.
-            blocks = [{"k": "shade", "pct": pct, "up": auf, "down": ab}]
+            blocks = [{"k": "shade", "pct": pct, "lbl": True, "up": auf, "down": ab}]
+            if not moving and pct is not None and (pct >= 100 or pct <= 0):
+                # Klartext wie die App ("Geschlossen"/"Geöffnet"), vor dem Loxone-Grund
+                line = " · ".join(x for x in ("Geschlossen" if pct >= 100 else "Geöffnet", line) if x)
             ml = {"k": "mline", "text": line}
             if self._state(c, "safetyActive") or self._state(c, "locked"):
                 ml["dot"] = "crit"
@@ -9315,94 +9925,24 @@ class App:
             pct = round((self._state(c, "position") or 0) * 100)
             active = self._state(c, "active") or 0
             moving = active != 0
-            # Wie die Beschattung: oben oeffnen, Mitte Stellung (Fuellstand von
-            # unten = offen), unten schliessen. Tippen waehrend der Fahrt stoppt.
+            # Wie die Loxone-App: beschriftete Richtungen "Öffnen"/"Schließen" (Pfeil + Text),
+            # "Stopp" nur waehrend der Fahrt, sonst "Teilweise öffnen" (partiallyOpen, Doku ab 14.2).
+            # Waehrend der Fahrt wippt der Pfeil der Fahrtrichtung (nur Animation an).
             up = {"label": "Öffnen", "on": active > 0, "cmd": {"uuid": ua, "cmd": "stop" if moving else "open"}}
             dn = {"label": "Schließen", "on": active < 0, "cmd": {"uuid": ua, "cmd": "stop" if moving else "close"}}
-            status = "öffnet …" if active > 0 else ("schließt …" if active < 0 else
-                                                   ("Offen" if pct >= 100 else ("Geschlossen" if pct <= 0 else "Teilweise offen")))
+            status = "Öffnet …" if active > 0 else ("Schließt …" if active < 0 else
+                                                   ("Geöffnet" if pct >= 100 else ("Geschlossen" if pct <= 0 else "Teilweise geöffnet")))
+            cell = ({"label": "Stopp", "cmd": {"uuid": ua, "cmd": "stop"}} if moving else
+                    {"label": "Teilweise öffnen", "cmd": {"uuid": ua, "cmd": "partiallyOpen"}})
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": [
-                {"k": "shade", "pct": pct, "dir": "open", "up": up, "down": dn},
+                {"k": "shade", "pct": pct, "dir": "open", "lbl": True, "up": up, "down": dn},
                 {"k": "status", "text": status},
-                {"k": "row", "act": True, "cells": [{"label": "Stopp", "cmd": {"uuid": ua, "cmd": "stop"}}]},
+                {"k": "row", "act": True, "cells": [cell]},
             ]}
         if t == "IRoomControllerV2":
-            ua = c.get("uuidAction")
-            ta = self._fmt_num(self._state(c, "tempActual"), "%.1f")
-            tt = self._fmt_num(self._state(c, "tempTarget"), "%.1f")
-            try:
-                comfort = float(self._state(c, "comfortTemperature")
-                                or self._state(c, "tempTarget") or 20)
-            except (TypeError, ValueError):
-                comfort = 20.0
-            modes = self._irc_modes(c)
-            am = self._state(c, "activeMode")
-            try:
-                am = int(am) if am is not None else None
-            except (TypeError, ValueError):
-                am = None
-            art, manuell = self._irc_betriebsart(c)
-            prep = self._state(c, "prepareState")
-            kc = self._fmt_num(self._state(c, "comfortTemperature"), "%.1f")
-            # Detail-Schema: Ist-Temperatur gross (Farbton heizt/kuehlt von Loxone)
-            # mit -/+ (Komfort in 0,5er-Schritten), darunter eine Textzeile + Betriebsart-
-            # Chip (_irc_top), Tagesplan als Zeitleiste (nur wenn Loxone ihn liefert),
-            # unten die Modi als 1-h-Override.
-            zustand = modes.get(am) if am is not None else ""
-            blocks = self._irc_top(
-                ta, prep, tt, kc, "Komfort", _kurz_modus(zustand), art, self._state(c, "openWindow"),
-                {"uuid": ua, "cmd": f"setComfortTemperature/{comfort - 0.5:.1f}"},
-                {"uuid": ua, "cmd": f"setComfortTemperature/{comfort + 0.5:.1f}"})
-            plan = self._irc_schedule(c, modes)
-            if plan and plan["segs"]:
-                blocks.append({"k": "tline", **plan})
-            # Betriebsmodi in EINER Zeile: Temperatur-Modi (Eco/Komfort) als
-            # 1-h-Override + Automatik (zurueck zur Zeitschaltung). Namen aus MS
-            # (details.timerModes). Gebaeudeschutz wird ausgelassen (aufgeraeumt).
-            if modes:
-                cells = [{"label": _kurz_modus(nm), "on": (mid == am),
-                          "cmd": {"uuid": ua, "cmd": f"__ircov/{mid}/{IRC_OVERRIDE_S}"}}
-                         for mid, nm in sorted(modes.items())
-                         if "schutz" not in (nm or "").lower()]
-                cells.append({"label": "Auto",
-                              "cmd": {"uuid": ua, "cmd": "stopOverride"}})
-                blocks.append({"k": "row", "cells": cells})
-            return {"t": "view", "title": _clean(c.get("name")), "route": route,
-                    "anchor": "bottom", "blocks": blocks}
+            return self._irc2_view(c, route)
         if t == "IRoomController":
-            # Alte Raumregelung (v1), Befehle laut Loxone-Strukturdoku:
-            # settemp/<Nr>/<Wert>, starttimer/<Nr>/<Sekunden>, stoptimer.
-            ua = c.get("uuidAction")
-            z = self._irc1(c)
-            art, manuell = self._irc_betriebsart(c)
-            ta = self._fmt_num(self._state(c, "tempActual"), "%.1f")
-            tt = self._fmt_num(self._state(c, "tempTarget"), "%.1f")
-            # Detail-Schema wie beim V2 (kein Tagesplan: die alte Raumregelung
-            # liefert keinen). Zustand = aktuelle Temperatur (Eco, Komfort ...),
-            # bei manueller Betriebsart steht sie schon in der Betriebsart-Pille.
-            zustand = z["name"] if z["name"] and not (manuell and z["ix"] == IRC1_MANUELL) else ""
-            # -/+ verstellt Komfort der Periode (manuell: die manuelle
-            # Temperatur) - nur mit bekanntem, absolutem Wert.
-            minus = plus = None
-            soll, soll_label = "", "Komfort"
-            if z["stell"] is not None:
-                ix, v = z["stell_ix"], z["stell"]
-                soll = self._fmt_num(v, "%.1f")
-                soll_label = "Manuell" if ix == IRC1_MANUELL else "Komfort"
-                minus = {"uuid": ua, "cmd": f"settemp/{ix}/{v - 0.5:.1f}"}
-                plus = {"uuid": ua, "cmd": f"settemp/{ix}/{v + 0.5:.1f}"}
-            blocks = self._irc_top(ta, z["prep"], tt, soll, soll_label, zustand, art,
-                                   self._state(c, "openWindow"), minus, plus)
-            # Eco/Komfort fuer eine Stunde halten, Automatik beendet den Timer.
-            blocks.append({"k": "row", "cells": [
-                {"label": IRC1_TEMPS[IRC1_ECO], "on": z["ix"] == IRC1_ECO,
-                 "cmd": {"uuid": ua, "cmd": f"starttimer/{IRC1_ECO}/{IRC1_TIMER_S}"}},
-                {"label": "Komfort", "on": z["ix"] == z["komfort_ix"],
-                 "cmd": {"uuid": ua, "cmd": f"starttimer/{z['komfort_ix']}/{IRC1_TIMER_S}"}},
-                {"label": "Automatik", "cmd": {"uuid": ua, "cmd": "stoptimer"}},
-            ]})
-            return {"t": "view", "title": _clean(c.get("name")), "route": route,
-                    "anchor": "bottom", "blocks": blocks}
+            return self._irc1_view(c, route)
         if t == "Intercom":
             if tab == "hist":
                 return self._intercom_hist(uuid, c)
@@ -9418,15 +9958,23 @@ class App:
             rows = []
             for ln in lines:
                 ts, txt = self._split_ts(ln)
-                rows.append({"t": _short_ts(ts), "text": txt})
+                rows.append({"t": _short_ts(ts), "text": _trk_text(txt)[0]})
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom",
                     "blocks": [{"k": "log", "rows": rows}]}
         # --- Status-Bausteine: grosse 1/1-Wertseite ---
         if t == "Meter":
             det = c.get("details") or {}
             a = self._fmt_num(self._state(c, "actual"), det.get("actualFormat", "%.1f"))
-            tot = self._fmt_num(self._state(c, "total"), det.get("totalFormat", "%.1f"))
-            return self._big_view(uuid, "info", a or "–", (tot + " gesamt") if tot else "")
+            tf = det.get("totalFormat", "%.1f")
+            tot = self._fmt_num(self._state(c, "total"), tf)
+            v = self._big_view(uuid, "info", a or "–", ("Zählerstand " + tot) if tot else "")
+            # Wie die App: Tag/Monat/Jahr (States totalDay/totalMonth/totalYear, Doku v16, optional)
+            kp = [{"l": lb, "v": self._fmt_num(self._state(c, k), tf)}
+                  for lb, k in (("Heute", "totalDay"), ("Monat", "totalMonth"), ("Jahr", "totalYear"))
+                  if self._fmt_num(self._state(c, k), tf)]
+            if kp:
+                v["blocks"].insert(2, {"k": "kpis", "items": kp})
+            return v
         if t == "Slider":
             ua = c.get("uuidAction")
             det = c.get("details") or {}
@@ -9468,17 +10016,7 @@ class App:
             return self._big_view(uuid, "info",
                                   (tx.get("on") if on else tx.get("off")) or ("Ein" if on else "Aus"))
         if t == "SmokeAlarm":
-            ok = (self._state(c, "level") or 0) == 0
-            if ok:
-                return self._big_view(uuid, "alarm", "Kein Alarm", tone="good")
-            ua = c.get("uuidAction")
-            cause = self._smoke_cause(c)
-            return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": [
-                {"k": "state", "icon": "alarm", "tone": "crit", "text": "Alarm", "sub": cause or "Melder ausgelöst"},
-                {"k": "row", "act": True, "cells": [
-                    {"label": "Stumm", "cmd": {"uuid": ua, "cmd": "mute"}},
-                    {"label": "Quittieren", "cmd": {"uuid": ua, "cmd": "confirm"}}]},
-            ]}
+            return self._smoke_view(uuid, c, route)
         if t == "AalEmergency":
             return self._aal_view(uuid, c, route)
         if t == "NfcCodeTouch":
@@ -9490,31 +10028,46 @@ class App:
             itxt = self._text(c, "infoText")
             if itxt:
                 itxt = _presence_de(itxt)
-            # Zustand gross, der Loxone-Text (z. B. Luftqualitaet) klein darunter
-            sub = itxt if (itxt and itxt.lower() not in ("an", "aus")) else ""
-            return self._big_view(uuid, "info", "Anwesend" if on else "Abwesend", sub)
+            # Wortlaut der App: "Präsenz aktiv" / "Keine Präsenz", dazu "Aktiv seit 09:24 Uhr"
+            # (State activeSince, Doku v16). "Deaktivieren bis"/"Präsenz beenden" stehen nicht in der Doku.
+            since = self._ts_any(self._state(c, "activeSince")) if on else None
+            bits = [f"Aktiv seit {self._hm_rel(since)} Uhr"] if since else []
+            if itxt and itxt.lower() not in ("an", "aus"):
+                bits.append(itxt)
+            return self._big_view(uuid, "info", "Präsenz aktiv" if on else "Keine Präsenz", " · ".join(bits))
         if t == "Alarm":
             ua = c.get("uuidAction")
             armed = bool(self._state(c, "armed"))
             lvl = self._state(c, "level") or 0
-            delay = self._state(c, "armedDelay") or 0
+            # Verzoegerung: armedAt (Unix-Zeit, Doku ab 13.0; armedDelay ist veraltet) in der Zukunft
+            at = self._num(self._state(c, "armedAt"), 0) or 0
+            atd = self._ts_any(at) if at else None
+            delay = bool(atd and atd > _ms_now_dt()) or bool(self._state(c, "armedDelay") or 0)
+            # Wie die App: nur die Aktionen, die im Zustand Sinn ergeben (Doku v16: on, delayedon, off, quit)
             if lvl:
-                st = {"k": "state", "icon": "alarm", "tone": "crit", "text": "Alarm", "sub": "Alarm ausgelöst"}
+                big, tone, sub = "Alarm", "crit", "Alarm ausgelöst"
                 cells = [{"label": "Quittieren", "cmd": {"uuid": ua, "cmd": "quit"}},
-                         {"label": "Unscharf", "cmd": {"uuid": ua, "cmd": "off"}}]
+                         {"label": "Unscharf stellen", "cmd": {"uuid": ua, "cmd": "off"}}]
+            elif armed:
+                big, tone, sub = "Scharf", "good", ""
+                cells = [{"label": "Unscharf stellen", "cmd": {"uuid": ua, "cmd": "off"}}]
+            elif delay:
+                big, tone, sub = "Wird scharf", "", "Verzögerung läuft"
+                cells = [{"label": "Sofort scharf", "cmd": {"uuid": ua, "cmd": "on"}},
+                         {"label": "Unscharf stellen", "cmd": {"uuid": ua, "cmd": "off"}}]
             else:
-                st = {"k": "state", "icon": "shield", "tone": "good" if armed else "idle",
-                      "text": "Scharf" if armed else ("Wird scharf" if delay else "Unscharf"),
-                      "sub": "Alle Melder überwacht" if armed else ("Verzögerung läuft" if delay else "Bereit zum Scharfschalten")}
-                # Aktueller Zustand dunkel hinterlegt (wie die Modi der Heizung)
-                cells = [{"label": "Scharf", "on": armed, "cmd": {"uuid": ua, "cmd": "on"}},
-                         {"label": "Verzögert", "on": bool(delay) and not armed, "cmd": {"uuid": ua, "cmd": "delayedon"}},
-                         {"label": "Unscharf", "on": not armed and not delay, "cmd": {"uuid": ua, "cmd": "off"}}]
-            # Kopf = Raum + Name (_with_head); der Zustand steht als grosser Wert, nicht als Titel
-            big = {"k": "big", "text": st["text"]}
-            if st["tone"] in ("good", "crit"):
-                big["tone"] = st["tone"]
-            blocks = [big] + ([{"k": "status", "text": st["sub"]}] if st.get("sub") else [])
+                big, tone, sub = "Unscharf", "", ""
+                cells = [{"label": "Scharf stellen", "cmd": {"uuid": ua, "cmd": "on"}},
+                         {"label": "Verzögert scharf", "cmd": {"uuid": ua, "cmd": "delayedon"}}]
+            blocks = [{"k": "big", "text": big, **({"tone": tone} if tone else {})}]
+            if sub:
+                blocks.append({"k": "status", "text": sub})
+            # Schalter "Präsenz berücksichtigen" (dismv/0|1, State disabledMove), nur wenn ein
+            # Bewegungsmelder angeschlossen ist (details.presenceConnected)
+            if (c.get("details") or {}).get("presenceConnected") and "disabledMove" in (c.get("states") or {}):
+                pon = not bool(self._state(c, "disabledMove"))
+                blocks.append({"k": "mline", "text": "", "chip": {"label": "Präsenz berücksichtigen", "on": pon,
+                                                                   "cmd": {"uuid": ua, "cmd": "dismv/0" if pon else "dismv/1"}}})
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom",
                     "blocks": blocks + [{"k": "row", "act": True, "cells": cells}]}
         if t == "AlarmClock":
@@ -9556,46 +10109,7 @@ class App:
                 blocks.append({"k": "mlist", "rows": items})
             return {"t": "view", "title": _clean(c.get("name")), "route": route, "anchor": "bottom", "blocks": blocks}
         if t == "Daytimer":
-            ua = c.get("uuidAction")
-            ov = bool(self._state(c, "override"))
-            mode = self._daytimer_mode(c)
-            sub = ("Timer läuft · " + mode) if (ov and mode) else ("Timer läuft" if ov else mode)
-            hero = {"k": "hero", "icon": "info"}
-            iu = self._control_icon_url(c)
-            if iu:
-                hero["iconUrl"] = iu
-            blocks = [hero, {"k": "astat", "text": self._daytimer_value(c), "sub": sub}]
-            # Laeuft ein manueller Timer (override), kann er beendet werden
-            # (stopOverride). Sonst 4 feste Dauern zum Starten: startOverride/
-            # {value}/{sekunden} (Doku: "starts the timer with a new value").
-            # Digital: value=1 (ein). Analog: die Doku nennt keinen Vorgabewert ->
-            # Wert waehlen wie bei analogen Bausteinen (-/+ um den aktuellen Wert,
-            # Schritt aus details.format), Timer startet mit dem gewaehlten Wert.
-            if ov:
-                blocks.append({"k": "row", "cells": [
-                    {"label": "Timer beenden", "cmd": {"uuid": ua, "cmd": "stopOverride"}}]})
-            else:
-                det = c.get("details") or {}
-                val = 1
-                if det.get("analog"):
-                    fmt = det.get("format") or "%.1f"
-                    m = re.search(r"%\.(\d+)f", fmt)
-                    stp = 0.5 if (m and int(m.group(1)) > 0) else 1
-                    cur = self._num(self._state(c, "value"), 0)
-                    val = self._dt_val.get(ua)
-                    val = cur if val is None else val
-                    val = round(round(val / stp) * stp, 2)
-                    g = lambda x: f"{x:g}"
-                    blocks.append({"k": "status", "text": "Wert für den Timer"})
-                    blocks.append({"k": "ist", "text": self._fmt_num(val, fmt),
-                                   "minus": {"uuid": ua, "cmd": f"__dtval/{g(round(val - stp, 2))}"},
-                                   "plus": {"uuid": ua, "cmd": f"__dtval/{g(round(val + stp, 2))}"}})
-                    val = g(val)
-                blocks.append({"k": "row", "wrap": True, "cells": [
-                    {"label": f"{m_} min", "cmd": {"uuid": ua, "cmd": f"startOverride/{val}/{m_ * 60}"}}
-                    for m_ in (15, 30, 60, 90)]})
-            return {"t": "view", "title": _clean(c.get("name")), "route": route,
-                    "anchor": "bottom", "blocks": blocks}
+            return self._daytimer_view(c, route)
         if t in ("Dimmer", "EIBDimmer"):
             ua = c.get("uuidAction")
             pos = self._state(c, "position") or 0
@@ -9608,12 +10122,10 @@ class App:
             step10 = max(stp, 10)
             return {"t": "view", "title": _clean(c.get("name")), "route": route,
                     "anchor": "bottom", "blocks": [
-                {"k": "dim", "value": round(pos), "min": round(mn), "max": round(mx), "step": stp,
+                {"k": "dim", "value": round(pos), "min": round(mn), "max": round(mx), "step": stp, "pm": step10,
                  "cmd": {"uuid": ua, "tmpl": "{v}"}},
                 {"k": "row", "act": True, "cells": [
                     {"icon": "power", "plain": True, "cmd": {"uuid": ua, "cmd": "off"}},
-                    {"icon": "minus", "cmd": {"uuid": ua, "cmd": str(max(mn, round(pos) - step10))}},
-                    {"icon": "plus", "cmd": {"uuid": ua, "cmd": str(min(mx, round(pos) + step10))}},
                     {"label": f"{round(mx)} %", "cmd": {"uuid": ua, "cmd": "on"}}]},
             ]}
         if t == "ValueSelector":
@@ -9712,15 +10224,9 @@ class App:
                 ist_ok = ist is not None and float(ist) > -50
             except (TypeError, ValueError):
                 ist_ok = False
-            big = (self._fmt_num(ist, "%.1f") + " °C") if ist_ok else \
-                  ((self._fmt_num(tgt, "%.1f") + " °C") if tgt is not None else "–")
-            sbits = []
-            if tgt is not None:
-                sbits.append(f"Soll {self._fmt_num(tgt, '%.1f')} °C")
-            if cur_mode in modes:
-                sbits.append(modes[cur_mode])
-            sbits.append("Ein" if on else "Aus")
-            status = " · ".join(x for x in sbits if x)
+            big = (self._fmt_num(ist, "%.1f") + " °C") if ist_ok else "–"   # Soll steht in der Soll-Gruppe, nie als Messwert
+            # Zustand eindeutig: aus = "Aus", an = "Läuft · <Modus>" (Modus steht nicht neben "Aus")
+            status = ("Läuft · " + modes[cur_mode] if cur_mode in modes else "Läuft") if on else "Aus"
             # Zeile 2: Auto (Schnellzugriff Auto-Modus) + Modus/Fan-Aufklapper
             auto_id = next((mid for mid, nm in modes.items()
                             if (nm or "").strip().lower() == "auto"), None)
@@ -9734,19 +10240,19 @@ class App:
                     {"label": nm, "on": mid == cur_mode, "cmd": {"uuid": ua, "cmd": f"setMode/{mid}"}}
                     for mid, nm in sorted(modes.items())]})
             if fans:
-                row2.append({"label": "Fan", "menu": [
+                row2.append({"label": "Lüfter", "menu": [
                     {"label": nm, "on": fid == cur_fan, "cmd": {"uuid": ua, "cmd": f"setFan/{fid}"}}
                     for fid, nm in sorted(fans.items())]})
+            # Ist gross (Messwert, ohne -/+), Soll als eigene Gruppe "- 22,0° SOLL +",
+            # unten eine Reihe: Ein (umschalten), Auto, Modus, Fan
             blocks = [
-                {"k": "big", "text": big},
+                {"k": "ist", "text": big},
                 {"k": "status", "text": status},
-                {"k": "row", "cells": [
-                    {"label": "−", "cmd": {"uuid": ua, "cmd": f"setTarget/{dn:.1f}"}},
-                    {"label": "Aus", "on": not on, "cmd": {"uuid": ua, "cmd": "off"}},
-                    {"label": "Ein", "on": on, "cmd": {"uuid": ua, "cmd": "on"}},
-                    {"label": "+", "cmd": {"uuid": ua, "cmd": f"setTarget/{up:.1f}"}},
-                ]},
-                {"k": "row", "cells": row2},
+                {"k": "setp", "card": True, "items": [{"text": f"{self._fmt_num(cur_t, '%.1f')}°", "label": "Soll",
+                                         "minus": {"uuid": ua, "cmd": f"setTarget/{dn:.1f}"},
+                                         "plus": {"uuid": ua, "cmd": f"setTarget/{up:.1f}"},
+                                         "b": cur_t, "st": 0.5, "mn": lo, "mx": hi, "cmd": {"uuid": ua, "tmpl": "setTarget/{v}"}}]},
+                {"k": "row", "cells": [{"label": "Ein", "on": on, "cmd": {"uuid": ua, "cmd": "off" if on else "on"}}] + row2},
             ]
             return {"t": "view", "title": _clean(c.get("name")), "route": route,
                     "anchor": "bottom", "blocks": blocks}
