@@ -19,7 +19,7 @@ tilebert ist eine Loxone-Visualisierung für Wandpanels ab 480 × 480 px (ein Lo
 
 ## Inhalt und Ton
 
-- Sprache Deutsch, Du-frei und knapp: Beschriftungen sind Substantive oder Zustände („Deckenlicht“, „an · 80 %“, „Fenster offen“), keine Sätze.
+- Sprache Deutsch. **Panel:** du-frei und knapp, Beschriftungen sind Substantive oder Zustände („Deckenlicht“, „an · 80 %“, „Fenster offen“), keine Sätze. **Config:** Du-Form, Hinweise in ganzen Sätzen, Verben „tippen“ und „ziehen“ (nie „klicken“). Wortwahl siehe „Standards für Bedienmuster“.
 - Raum steht in Versalien über dem Namen (`room-label`), der Name darunter (`tile-name`), maximal zwei Zeilen.
 - Werte mit Komma und schmalem Abstand vor der Einheit: „21,5 °C“, „1,8 kW“. In der Detailansicht ist die Nachkommastelle samt Einheit 60 % groß und in `ink-2`.
 - Config-Rückmeldungen nennen das Ergebnis: „✓ Gespeichert (2 Bereiche)“, „Fehler: …“. Keine Entschuldigungen.
@@ -116,10 +116,73 @@ tilebert ist eine Loxone-Visualisierung für Wandpanels ab 480 × 480 px (ein Lo
 - Zwei Ebenen: dunkle Seitenleiste (`cfg-bezel`) und heller Inhalt (`cfg-bg`) mit Karten (`cfg-panel`, `r-l`, `shadow-cfg`) in Masonry-Spalten.
 - Eine gemeinsame Speicherleiste unten. Der Speichern-Knopf ist `cfg-prim`; bei Erfolg wird er 2 s grün mit „✓ Gespeichert“, bei Fehler rot.
 - Lange Einstellungsblöcke sind zusammenklappbar; selten Genutztes eingeklappt.
-- Die Config ist für PC/Monitor optimiert (kein Touch-Zwang für Tippflächen).
-- **Speichermodell:** Primär (`cfg-prim` gefüllt, Schrift `prim-ink`) ist nur „Speichern“ in der Speicherleiste – und „Weiter“ in Assistenten. Alles andere ist Nebenaktion: Fläche `field`, Rand `line`, Schrift `fg`. Sofort wirkende Aktionen (Test-Ton, Passwort, Log, Geräteaktionen …) tragen ein kleines Blitz-Symbol (11 px) mit Hinweis „Wirkt sofort“. Gefährliches (Löschen, Entfernen, Zurücksetzen): Schrift `crit`, rote Kontur, keine Füllung, rechts abgesetzt bzw. in eigener Zeile mit Trennlinie, immer mit Rückfrage.
+- Die Config ist für PC/Monitor optimiert. Icon-Knöpfe haben trotzdem mindestens 44 × 44 px Trefferfläche (Tablets, Standalone-Geräte); Textknöpfe dürfen 32–40 px hoch sein.
+- **Speichermodell:** Primär (`cfg-prim` gefüllt, Schrift `prim-ink`) ist nur „Speichern“ in der Speicherleiste – und „Weiter“ in Assistenten. Alles andere ist Nebenaktion: Fläche `field`, Rand `line`, Schrift `fg`. Sofort wirkende Aktionen (Test-Ton, Passwort, Log, Geräteaktionen …) tragen ein kleines Blitz-Symbol (11 px) mit Hinweis „Wirkt sofort“. Gefährliches (Entfernen, Löschen): `.btn.del` – Schrift `crit`, rote Kontur, keine Füllung, rechts abgesetzt bzw. in eigener Zeile mit Trennlinie; Rückfrage oder Rückgängig nach „Standards für Bedienmuster“. Zurücksetzen bleibt neutral (`.minibtn`); fragt es nach, ist erst der Bestätigen-Knopf im Dialog rot.
 - **Auswahl:** Ausgewählt = 2 px Ring in `prim` (ohne Layoutsprung) plus Häkchen-Quadrat 18 px (`radius-round`) oben rechts in `prim`, Häkchen in `prim-ink`; an Pillen als 16-px-Marke an der Ecke. Kleine Wahlfelder (< 44 px) und Tab-Chips nur Ring. Akzent-/Orangetöne sind für „ausgewählt“ nicht erlaubt.
 - **Karten:** Eine einzelne Karte füllt die Breite; Text steht immer in Karten; jeder Aufklapper trägt denselben Pfeil ›. Hilfe „?“ öffnet ein schwebendes Popover (`r-m`) statt Inhalt zu verschieben.
+
+## Standards für Bedienmuster
+
+Gilt für die Config (`config.html`), Grundsätze auch für das Panel. Neue Elemente nutzen diese Bausteine, keine eigenen Varianten. Prüfskript: `audit/scripts/standards-0238.mjs`.
+
+**Grundsatz Panel:** tilebert schaltet und informiert, konfiguriert nicht. Einstellen gehört in die Config (Ausnahme: Einrichtung am Standalone-Gerät).
+
+### Wortwahl
+- **Entfernen** = aus Konfiguration oder Liste nehmen (bis zum Speichern rückholbar). **Löschen** = Daten am Server endgültig weg (Server-Protokoll, hochgeladene Datei – nur im Rückfragetext).
+- **Zurücksetzen** ist das einzige Verb für „zurück zur Vorgabe“. **Standard** heißt immer tilebert-Vorgabe; Vorgaben aus Loxone heißen „Loxone-…“ (z. B. „Loxone-Farbe“). Nicht: „wiederherstellen“, „neutral“ als Knopf, „Auf Standard zurück“.
+- Knopfnamen in Hinweisen exakt wie am Knopf, in „…“, inkl. „+“: „Tippe auf „+ Kalender hinzufügen“ …“.
+- Rückmeldungen (Snackbar, Hinweise) sind ganze Sätze mit Punkt und nennen das Ergebnis: „Adresse kopiert.“, „Kamera „Garten“ entfernt. Wirksam nach dem Speichern.“; Fehler beginnen mit „Fehler: “.
+
+### Entfernen (genau zwei Formen)
+- **✕ an einem Eintrag** – Listenzeile, Chip, Kopf einer Faltkarte (rechts, neben dem Aufklapper), Bild/Datei (direkt hinter Vorschau bzw. Dateiname): `rmBtn(attrs, name, badge, label, cls)` → `button.rmx`, 44 × 44, gedämpftes ✕, beim Zeigen rot. aria-label/title „<Name> entfernen“ bzw. eigenes `label` („Kamera „{n}“ entfernen“). Chip mit ✕: `.chip.rmchip` (nur das ✕ entfernt). Auf gewählten Objekten im Raster (Tab, Kachel, Panel): `rmBtn(…, badge=true)` → `.rmx.badge` (24 px rote Marke, unsichtbar auf 44 px erweitert). Steckt das ✕ in einem selbst tippbaren `<button>` (Tab-Chip `.tbchip`), dann `rmBtn(attrs, name, true, '', '', span=true)` → `span.rmx[role=button][tabindex=0]` (kein `<button>` im `<button>`); Tastatur: Enter/Leertaste.
+- **Textknopf für das ganze Objekt**, dessen Einstellungen gerade offen sind (Panel, Kachel, Gerät, Passwortschutz): `.btn.del` „<Objekt> entfernen“ als letzte Zeile `.delrow` (Trennlinie oben, Hinweis `.hint` links, Knopf rechts) oder rechts abgesetzt in `.actions`.
+- Nicht mehr verwenden: `.btn.del.sm`, `.minibtn.del`, Zwei-Klick-Bestätigung (`.arm`), Entfernen-Knopf im Fuß einer Faltkarte.
+
+### Rückfrage oder Rückgängig
+- **Wirkt sofort am Server oder Gerät und ist nicht rückholbar** (Datei löschen, Protokoll löschen, Gerät entfernen, Neustart, Passwortschutz) → `dlgAsk(title, text, okLabel, danger, noLabel)`.
+- **Entfernt etwas nur im Entwurf** (wirkt erst mit „Speichern“) → sofort ausführen, dann Snackbar mit „Rückgängig“ (7 s). Das gilt für **jedes** ✕ an einem Eintrag (Panel, Tab, Kachel, Kamera, Kalender, Baustein einer Liste oder Chip-Reihe) und für `.btn.del` im Entwurf. Text: „<Objekt> „<Name>“ entfernt. Wirksam nach dem Speichern.“ Umsetzung: Tabs, Kacheln und Dashboard-Raster mit `undoable(p, msg, fn)` (stellt das ganze Panel-Profil wieder her und zeichnet die Tab-Liste neu). Listen, die über `o.get()`/`o.set()` gebaut sind (`sbListBind`: Statusleiste, Status-Ampel), mit `snack(msg, ()=>o.set(alterStand))`. Alles andere mit `snack(msg, undoFn)`, `undoFn` stellt den alten Stand her und zeichnet neu. Ausnahme ohne Snackbar: Einblenden/Abwählen, das man mit einem Tipp zurücknimmt (Haken, „wieder einblenden“). Ein Schalter, der beim Ausschalten Einträge mitnimmt (Statusleiste „Oben im Dashboard anzeigen“), ist keine solche Ausnahme: Snackbar mit „Rückgängig“ („Statusleiste mit {n} Bausteinen ausgeschaltet. Wirksam nach dem Speichern.“).
+- **Ganze Gruppe zurücksetzen** (Kachel, eigene Farben) → `dlgAsk` „<Objekt> zurücksetzen?“ / Knopf „Zurücksetzen“, `danger=true`. **Einzelwert zurücksetzen** (↺, Bildausschnitt, Kategorie-Farbe, Symbol) → sofort, ohne Rückfrage.
+- `dlgAsk`: Titel = Ja/Nein-Frage mit Objekt + Verb und „?“ („Gerät entfernen?“, „Nachtmodus trotzdem speichern?“); Text = Folge in einem Satz, ohne die Frage zu wiederholen; OK-Knopf = Verb aus dem Titel („Entfernen“, „Neu starten“); `danger=true` nur bei Datenverlust oder beim Abschalten einer Sicherheitsfunktion (Alarm) (roter Knopf); Gegenknopf „Abbrechen“, bei Verwerfen-Fragen „Weiter bearbeiten“ bzw. „Weiter auswählen“, fachliche Gegenoption erlaubt („Nur neue Tabs“). Nie `confirm()`/`alert()`.
+- Zurück-Taste in Dialogen/Assistenten: `dlgHist` legt einen Verlaufseintrag an; Rückfrage („… verwerfen?“) nur bei ungespeicherten Eingaben, sonst schließt Zurück still.
+
+### Zurücksetzen
+- Knopf „Zurücksetzen“, wenn Karte/Gruppe den Bezug klar macht (Kachel, Bildausschnitt, Kategorie-Farbe); sonst „<Objekt> zurücksetzen“ („Symbol zurücksetzen“, „Eigene Farben zurücksetzen“).
+- Icon ↺ nur in dichten Geräte-Zeilen (`.gdreset`, 44 × 44, neben „geändert“), title/aria-label „Auf Standard zurücksetzen“.
+
+### Auswahl
+- **Einzeloption an/aus = Schalter** (38 × 22): im Formular `label.chk > input[type=checkbox] + span` (Schalter links, Text rechts); in Geräte-Zeilen `.gr` der Schalter `.gdsw` (Text links, Schalter rechts, aria-label = Zeilentext).
+- **Mehrfachauswahl aus einer Liste = Häkchen-Liste:** jede Zeile `label.apit > input[type=checkbox] + span` (Text, optional `<small>` als zweite Zeile). Fläche `field`, Rand `line`, 48 px (in schmalen Spalten `.tbblk`/`.dexits`/`.icrdevs` 40 px), Häkchen-Quadrat 20 px; gewählt = Ring + Häkchen in `sel`/`prim`. Kein Schalter in Listen.
+- **Mit Reihenfolge (Sortier-Komponente):** Pfeilpaar `sortBtns(i, n, name, attr, so)` → `.sortg` mit zwei 44-px-Knöpfen `.sortb`; senkrechte Liste ↑ ↓ („{n} nach oben/unten“), Chip-/Tab-Reihe mit `so={axis:'x'}` ‹ › („{n} nach links/rechts“). In einem tippbaren `<button>` zusätzlich `so.span=true` (Span-Knöpfe mit `role=button`). Verdrahtung `sortBind({root, item, btn, name, move, axis})` (`axis:'x'` für Reihen): Klick, Pfeiltasten, Pos1/Ende; das Pfeilpaar ist zugleich Ziehgriff (Maus/Touch: daran ziehen); Ansage „{n}: Position a von b“ über `name`. Erster/letzter Platz: Knopf `disabled` bzw. `aria-disabled`. Häkchen-Liste mit Reihenfolge: `.camopt`-Zeile = Häkchen + Nummer `.cnum` + Pfeilpaar.
+- **Chip-Reihe** (gewählte Objekte nebeneinander): Chip `.tbchip` (Fläche `field`, Rand `line`, `r-m`, ≥ 44 px hoch, Text `.tbtx` mit `<b>` Name und `<small>` Zusatz, Namen über `hyHtml`). Ist der Chip selbst tippbar (wählen), ist er ein `<button>`; ✕ und Pfeile darin in Span-Form (s. o.). Ist er nur Anzeige, ist er ein `span.chip.rmchip` mit echtem `<button>`-✕ (`.rmchip .rmx`, 44 px). Reihenfolge der Reihe = gespeicherte Reihenfolge; „+ … hinzufügen“ steht als letzter Chip `.tbchip.add` am Ende der Reihe (siehe „Hinzufügen“; Sonderfall Tab-Leiste: dort steht er nach dem festen Dashboard-Chip vor den Tabs, weil die Tabs von rechts gezählt werden); ist die Reihe leer, steht der Leerzustand `leerHtml` vor dem Hinzufügen-Chip.
+- **Chip-Reihe mit Reihenfolge und Detailkarte** (Statusleiste, Status-Ampel; Funktionen `sbListHTML`/`sbDetHTML`/`sbListBind`): Es ist immer genau ein Chip gewählt (`aria-pressed`, Standard der erste, nach „+“ der erste neue mit kurzem Aufleuchten `sortfl`). Nur der gewählte Chip trägt das Pfeilpaar und das ✕-Badge (Span-Form); Wählen ändert keine Daten. Chip: Symbol 24 px (`aria-hidden`), Name über `hyHtml` höchstens zwei Zeilen, `<small>` eine Zusatzzeile; Name des Chips per `aria-labelledby` nur aus Name + Zusatz (ohne die Knöpfe darin). Zwischen Pfeilpaar und Chip-Rand 12 px, damit die Trefferflächen von › und ✕ nicht überlappen. Einstellungen des gewählten Eintrags stehen in EINER Detailkarte `.sbdet` darunter (12 px Abstand, `r-m`, `role=group` mit `aria-labelledby` auf den Namen): Kopf = Symbolbox 44 px, Name, „Typ · Raum“, rechts „Position a von b“ (nur Text, kein zweiter Griff); darunter Zeilen `.sbdrow` (Label links, Bedienelement rechts, schmal untereinander). Ein Aufklapper in der Karte („Symbol ändern ˅“, `aria-expanded`/`aria-controls`) öffnet seinen Inhalt in der Karte; „Symbol zurücksetzen“ steht daneben und ist `disabled`, solange die Vorgabe gilt (dann Hinweis „Standard: Loxone-Symbol“). Gelöschter Eintrag (in Loxone nicht mehr vorhanden): Chip gestrichelt ohne Fläche, „?“-Quadrat statt Symbol, Text in `fg`, Zusatz „In Loxone gelöscht. Mit ✕ entfernen.“; die Detailkarte ist dann nur ein Hinweis. Bei Maximum: „+“-Chip `disabled` mit title und zusätzlich `.hintp` unter der Reihe.
+- **Handy (≤ 600 px):** Chip-Reihen mit Reihenfolge stehen einspaltig in voller Breite; das Pfeilpaar wechselt dann auf ↑ ↓ („nach oben/unten“, Pfeiltasten ↑/↓) – die Pfeilrichtung folgt immer der sichtbaren Anordnung. (Die Tab-Leiste bleibt beim zweispaltigen Raster, da sie von rechts gezählt wird.)
+- **Anzeigeart** eines Statusbausteins heißt überall gleich: „Symbol“ / „Text“ / „Symbol + Text“ (Segment in der Detailkarte und Unterzeile des Chips; nicht „Beides“).
+- **Symbol eines Loxone-Bausteins** in der Config immer wie im Panel: eigenes Symbol > Loxone-Symbol des Bausteins (`iconUrl`) > Ersatzsymbol je Typ.
+- **Alle/Keine:** Häkchen-Listen von Objekten (Bausteine, Alarm-Ausnahmen) ab 2 Einträgen (`SEL_MIN`) bekommen über der Liste „Alle auswählen“ / „Keine auswählen“: `selAllHtml(listId, on, n)` + `selAllBind(listEl, onAll)` (`.selall`, `.minibtn`, Knopf ohne Wirkung `disabled`). Nicht bei Optionslisten (z. B. „Dashboard schließen“) und nicht bei Listen, deren Haken sofort wirken oder einzeln nachfragen.
+- **Filter:** Chip-Reihe `.mzchip` mit „Alle“ zuerst (`aria-pressed`).
+- **Ein Baustein wählen:** `pickFld(id, c, lblId)` öffnet den Auswahldialog `ctlPick` (Suche, Filter-Chips, Liste). Dialog bei Loxone-Bausteinen und bei durchsuchbaren Listen ab etwa 12 Einträgen; `select` für kurze, feste Optionen (Betriebsart, Format, Raster).
+
+### Hinzufügen
+- Unter einer Liste: `button.minibtn.qsadd` „+ <Objekt> hinzufügen“ (gestrichelt, volle Breite, 44 px, 8 px Abstand zur Liste). Hat die Liste eine Grenze, steht der Zähler im Knopf: `+ Baustein hinzufügen <span class="sbcnt">n/max</span>`; bei Maximum `disabled` und darunter `.hintp` „Höchstens {n}. Erst einen entfernen.“
+- In Chip-Reihen dasselbe als letzter Chip: `<button class="tbchip add"><span class="tbtx"><b>+ <Objekt> hinzufügen</b><small class="sbcnt">n/max</small></span></button>` (gestrichelt), bei Maximum `disabled` mit title „Höchstens {n}. Erst einen entfernen.“
+
+### Leerzustände
+- Eine Form: `leerHtml(text, knopfHtml, live, cls)` → `div.leer` (`text` ist HTML: Namen und Eingaben vorher mit `esc()` maskieren) (`muted`, 13 px, Text und darunter höchstens ein `.minibtn`). `live=true` (`role="status"`) nur bei Such- und Filterergebnissen. `cls` ist nur Ortskennung (`qsnone`, `libnone`, `sbempty`, `palnone`, `lxnote`), ohne eigene Optik.
+- Wortlaut, immer ganzer Satz mit Punkt: Suche/Filter ohne Ergebnis „Keine Treffer.“ (mit Suchbegriff „Kein Baustein passt zu „x“.“) + Knopf „Suche zurücksetzen“ / „Filter zurücksetzen“ / „Suche und Filter zurücksetzen“ – nur wenn Filter oder mehrere Felder aktiv sind; bei einem einzelnen Suchfeld ohne Knopf (das Feld leert sich mit ✕/Escape). Zu viele Treffer: „{n} weitere Treffer. Grenze die Suche ein.“; noch nichts angelegt „Noch keine <Mehrzahl>.“ / „Noch kein <Objekt>.“ (Hinweis „Tippe auf „+ … hinzufügen“.“ nur, wenn der Knopf nicht direkt darunter steht); Laden „Lädt …“; Fehler „Fehler: …“ + Knopf „Erneut laden“.
+
+### Größen, Zahlen, Text
+- Fokusring: 2 px `sel`; auf gefüllten Marken (✕-Badge) außen mit 2 px Abstand in `fg`.
+- Jeder Icon-Knopf (✕, ↺, ↑↓, Schließen) hat mindestens 44 × 44 px Trefferfläche; sichtbar ab 24 px, Rest unsichtbar erweitert (wie `.rmx.badge`). Abstand zwischen Trefferflächen ≥ 8 px oder ohne Überlappung. Einzige Ausnahme: das Hover-✕ `.pitem .pdel` in der Panel-Liste (nur Maus, 24 px); gleichwertiger Weg ist „Panel entfernen“ in den Panel-Einstellungen.
+- **−/+:** Minus links, Plus rechts (auch ‹ › und ˅ ˄: verringern links, erhöhen rechts).
+- Lange Namen in schmalen Feldern (Chips, Kacheln, Listen) über `hyHtml(name)` trennen (weiche Trennstellen), nie mitten im Wort abschneiden.
+
+### Sichtbarkeit und Stil
+- Ein- und ausblenden nur über das Attribut `hidden` (`el.hidden = …`); global gilt `[hidden]{display:none !important}`. Nie `style.display`.
+- Inline-Styles nur für berechnete Werte (Farbe, Position, CSS-Variable `--…`). Feste Abstände über Klassen (`.mt4`, `.mt8`, `.mt10`, `.mt12`, `.m0`, `.fw` = volle Zeile im Flex). Gilt für neuen Code; Bestand wird beim Anfassen umgestellt.
+
+### Ruhe und Bewegung
+- Animation nur als Antwort auf eine Aktion (Tippen, Speichern, neue Meldung); kein Dauerblinken oder Pulsieren im Ruhezustand. Ausnahme: aktiver Alarm.
+- Ruhezustände sind neutral (`ink-2`, Symbole ohne Akzent); Farbe (`on`, `good`, `crit`) erst, wenn etwas an ist oder passiert.
 
 ## Logo
 
