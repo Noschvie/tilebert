@@ -623,7 +623,7 @@
   .dpwrap .tbicopick{margin:0 14px 12px;}
   .dpwrap .dashprops{border:0;border-top:1px solid var(--line);border-radius:0 0 var(--r-m) var(--r-m);background:transparent;}
   @media (prefers-reduced-motion:reduce){ .dpbody,.dphd svg{transition:none;} }
-  .dashprops{display:grid;grid-template-columns:minmax(96px,.6fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.1fr);gap:10px 18px;align-items:start;padding:10px 14px;}
+  .dashprops{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1.4fr);gap:10px 18px;align-items:start;padding:10px 14px;}
   details.card>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none;}
   details.card>summary::-webkit-details-marker{display:none;}
   /* Aufklapp-Zeichen nur rechts (details>summary::after), kein zweites links */
@@ -713,8 +713,7 @@
     .g2ed .lib{position:static;max-height:280px;min-height:0;}
   }
   /* Dashboard-Eigenschaften: Spalten nach verfuegbarer Breite, nichts ragt heraus */
-  @container (max-width:1000px){ .dashprops{grid-template-columns:repeat(2,minmax(0,1fr));} }
-  @container (max-width:520px){ .dashprops{grid-template-columns:minmax(0,1fr);} }
+  @container (max-width:900px){ .dashprops{grid-template-columns:minmax(0,1fr);} }
   /* Ohne Container-Queries (Safari < 16): Fensterbreite minus ca. 300 px Seitenleiste */
   @supports not (container-type:inline-size){
     @media (max-width:1700px){ .sved.g2ed{grid-template-columns:190px minmax(0,1fr) 230px;gap:12px;} .sved.g2ed>.side{width:230px;} }
@@ -729,8 +728,7 @@
       .sved.g2ed>.side{position:static;max-height:none;}
       .g2ed .lib{position:static;max-height:280px;min-height:0;}
     }
-    @media (max-width:1300px){ .dashprops{grid-template-columns:repeat(2,minmax(0,1fr));} }
-    @media (max-width:820px){ .dashprops{grid-template-columns:minmax(0,1fr);} }
+    @media (max-width:1200px){ .dashprops{grid-template-columns:minmax(0,1fr);} }
   }
   .dashprops select{max-width:100%;min-width:0;}
   .dashprops .dambrow [data-amb]{flex:none;}
@@ -935,6 +933,58 @@
   .qspick .wzft{align-items:center;}
   .qspick .mzchip.on{background:var(--fg);border-color:var(--fg);color:var(--panel);}
   .qspick .mzchip.on::after,.qspick .mzchip.on::before{display:none;}
+  /* Standard-Auswahldialog fuer Bausteine (ctlPick) */
+  .qspick .wzhd.qshd{align-items:flex-start;padding-bottom:10px;}
+  .qsti{display:flex;flex-direction:column;gap:3px;min-width:0;}
+  .qsti small{color:var(--muted);font-size:12.5px;}
+  .qspick .qspn{align-self:center;font-variant-numeric:tabular-nums;white-space:nowrap;} .qspick .qspn.full{color:var(--fg);font-weight:600;}
+  .qspick .wzx{flex:none;align-self:center;}
+  .qspick .wzbody{padding-top:4px;}
+  .qspick .qschips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -20px;padding:2px 20px;scroll-padding:0 20px;flex:none;}
+  .qspick .qschips::-webkit-scrollbar{display:none;}
+  .qspick .qschips{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);}
+  .qspick .mzchip{flex:none;min-height:44px;white-space:nowrap;}
+  .qspick .mzchip .qsn{color:var(--muted);font-size:11.5px;margin-left:3px;font-variant-numeric:tabular-nums;}
+  .qspick .mzchip.on{background:color-mix(in srgb,var(--sel) 14%,var(--field));border-color:var(--sel);box-shadow:inset 0 0 0 1px var(--sel);color:var(--fg);}
+  .qshint{color:var(--muted);font-size:12.5px;line-height:1.4;margin-top:-4px;flex:none;}
+  .qschk{border-width:1px;}
+  .qspi.on .qschk::after{border-color:var(--sel-ink,#fff);}
+  .qspi.locked,.qspi.locked.on{opacity:1;background:transparent;} .qspi.locked .qspn2{color:var(--muted);}
+  .qspi.locked .qschk{background:var(--muted);border-color:var(--muted);opacity:.7;}
+  .qspi.full{opacity:.45;}
+  .qsrad{flex:none;width:20px;height:20px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;}
+  .qspi.on .qsrad{border-color:var(--sel);} .qspi.on .qsrad::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--sel);}
+  .qsnone{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:12px 2px;}
+  .qspick .wzft{justify-content:flex-end;}
+  @media (max-width:600px){
+    .wzov.qspick{padding:0;place-items:stretch;}
+    .qspick .wzbox{width:100%;height:100vh;height:100dvh;max-height:none;border-radius:0;}
+    .qspick .wzhd{padding:14px 16px 8px;} .qspick .wzbody{padding:4px 16px 12px;} .qspick .qschips{margin:0 -16px;padding:2px 16px;}
+    .qspick .wzft{padding:12px 16px calc(12px + env(safe-area-inset-bottom));}
+    .qspick .wzft .btn{flex:1 1 0;justify-content:center;min-height:48px;}
+  }
+  /* Statusleiste / Status-Ampel: eine Liste der Gewaehlten */
+  .dashprops .dbar{grid-column:1/-1;padding-top:10px;border-top:1px solid var(--line);}
+  .dashprops .dbar>.chk{margin-bottom:8px;}
+  .sblist{max-width:760px;}
+  .sblist .qslist{margin:0 0 8px;}
+  .sbrow{min-height:56px;gap:10px;padding:6px 6px 6px 8px;}
+  .sbrow .qsrt{gap:2px;}
+  .sbname{font-size:14px;font-weight:600;color:var(--fg);overflow-wrap:break-word;hyphens:auto;line-height:1.3;}
+  .sbrow.gone .sbname{color:var(--muted);font-weight:500;}
+  .sbico{flex:none;width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:var(--r-s);background:var(--panel);color:var(--fg);cursor:pointer;padding:0;transition:border-color .15s;}
+  .sbico:hover,.sbico.on{border-color:var(--sel);} .sbico.on{box-shadow:inset 0 0 0 1px var(--sel);}
+  .sbico.ro{width:24px;border-color:transparent;background:transparent;cursor:default;}
+  .sbico .tbico{display:grid;place-items:center;width:20px;height:20px;} .sbico svg,.sbico .loxi,.sbico .eico{width:20px;height:20px;}
+  .sbmv{display:flex;flex:none;}
+  .sbrow .qsbtn{width:44px;height:44px;}
+  .sbseg{flex:none;}
+  .sbadd{display:flex;align-items:center;justify-content:center;gap:6px;min-height:44px;} .sbcnt{color:var(--muted);font-variant-numeric:tabular-nums;}
+  .sblist .hintp{margin-top:6px;}
+  .sbpick{margin:0 0 8px;} .dpwrap .sbpick{margin:0 0 8px;}
+  .sbpkhd{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;} .sbpkhd b{font-size:13px;flex:1 1 160px;min-width:0;}
+  .sbpick .chk{margin:0 0 8px;font-size:13px;}
+  @container (max-width:640px){ .sbrow{flex-wrap:wrap;gap:4px;padding:6px 2px 6px 6px;} .sbrow .qsrt{flex:1 1 0;margin-left:6px;} .sbrow .qsbtn{width:40px;} .sbrow .qsrt small{white-space:normal;} .sbrow .sbseg{order:5;margin:0 0 4px 54px;} }
   .camopt{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--r-s);background:var(--field);border:1px solid var(--line);cursor:grab;font-size:13px;}
   .camopt.on{background:color-mix(in srgb,var(--dot) 30%,transparent);background:color-mix(in srgb,var(--dot) 30%,var(--field));border-color:color-mix(in srgb,var(--dot) 55%,transparent);border-color:color-mix(in srgb,var(--dot) 55%,transparent);}
   .camopt.dragging{opacity:.4;}
@@ -1884,6 +1934,7 @@
             <p class="note keep" data-i18n>Zugang zum Loxone Miniserver. Nach dem Speichern verbindet sich der Server sofort neu.</p>
             <div class="row2">
               <div class="field" style="flex:3 1 200px"><label class="lbl" data-i18n>Adresse (Host oder IP)</label><input type="text" id="ms_host" placeholder="192.168.1.50"></div>
+              <div class="field" style="flex:0 1 150px;min-width:120px"><label class="lbl" data-i18n>Protokoll</label><select id="ms_proto"><option value="auto" data-i18n>Automatisch</option><option value="https">HTTPS</option><option value="http">HTTP</option></select></div>
               <div class="field" style="flex:0 1 96px;min-width:80px"><label class="lbl" data-i18n>Port</label><input type="number" id="ms_port" value="443"></div>
             </div>
             <div class="row2" style="margin-top:12px">
@@ -2334,7 +2385,7 @@ const NAV={
   start:[{k:'start',label:'Start',at:'overview'}],
   system:[
     {k:'loxone',label:'Loxone',at:'settings:loxone',cards:[
-      {k:'ms',label:'Miniserver',sel:'#msCard',kw:'Zugangsdaten Zertifikat'},
+      {k:'ms',label:'Miniserver',sel:'#msCard',kw:'Zugangsdaten Zertifikat Protokoll HTTPS HTTP Port'},
       {k:'wx',label:'Wetter',sel:'#wxCard'},
       {k:'audio',label:'Audioserver',sel:'#amCard',kw:'Audio'},
       {k:'alarms',label:'Alarmbausteine',sel:'#alCard',kw:'Alarm Rauchmelder Alarmanlage Vollbild',need:()=>alList().length>0}]},
@@ -3528,37 +3579,124 @@ function renderTabList(p){
   const add=$('#tbAdd'); if(add) add.onclick=()=>{ const k=tbNewId(p); p.tabs.push(k); tbTab=k; tbSel=-1; markDirty(); renderTabList(p); };
   renderTabProps(p); renderTabEditor();
 }
-// Bausteinauswahl fuer Status-Ampel (Widget) und Dashboard-Statusleiste:
-// passende Bausteine, Haken = anzeigen (max. 4), Ziehen = Reihenfolge.
+// Status-Bausteine fuer Status-Ampel (Widget) und Dashboard-Statusleiste:
+// Seite zeigt nur die Gewaehlten (eine Liste, Reihenfolge per Pfeil), Hinzufuegen ueber ctlPick.
 const ST_PRI=['WindowMonitor','CentralAlarm','Alarm','SmokeAlarm','MailBox','TextState','InfoOnlyDigital','PresenceDetector','AalEmergency','Intercom'];
 const ST_TL={WindowMonitor:'Fensterüberwachung',CentralAlarm:'Zentral-Alarm',Alarm:'Alarmanlage',SmokeAlarm:'Rauch-/Wassermelder',MailBox:'Briefkasten',
   TextState:'Statusbaustein',InfoOnlyDigital:'Digitaler Status',PresenceDetector:'Präsenz',AalEmergency:'Notruf',Intercom:'Türklingel'};
-function stPickHTML(selIds, boxId, compact){
-  const cands=(META.controls||[]).filter(c=>ST_PRI.indexOf(c.type)>=0)
-    .sort((a,b)=>ST_PRI.indexOf(a.type)-ST_PRI.indexOf(b.type)||(a.name||'').localeCompare(b.name||''));
-  const sel=(selIds||[]).filter(u=>cands.some(c=>c.uuid===u));
-  const order=sel.map(u=>cands.find(c=>c.uuid===u)).concat(cands.filter(c=>sel.indexOf(c.uuid)<0));
-  return (cands.length?'<div class="camsel" id="'+boxId+'">'+order.map(c=>{ const k=sel.indexOf(c.uuid);
-      return '<div class="camopt'+(k>=0?' on':'')+'" draggable="true" data-id="'+esc(c.uuid)+'"><span class="grip" aria-hidden="true">⋮⋮</span>'+
-        '<label><input type="checkbox"'+(k>=0?' checked':'')+'> <span>'+esc(c.name)+'<small style="display:block;opacity:.6;font-size:11px">'+esc(T(ST_TL[c.type]||c.type))+(c.roomName?' · '+esc(c.roomName):'')+'</small></span></label>'+
-        '<span class="cnum">'+(k>=0?k+1:'')+'</span></div>'; }).join('')+'</div>'
-    :'<div class="hintp">'+T('Keine passenden Bausteine in der Anlage.')+'</div>')+
-    (compact?'':'<div class="hintp">'+T('Farben vom Miniserver: Fenster offen gelb, Alarm oder Rauch rot, Alarm scharf blau. Statusbausteine nutzen ihre Farbe aus Loxone Config.')+'</div>');
+// Typ-Chips im Auswahldialog (Schluessel, Bezeichnung)
+const ST_CHIP={WindowMonitor:['win','Fenster'],CentralAlarm:['alarm','Alarm'],Alarm:['alarm','Alarm'],SmokeAlarm:['smoke','Rauch / Wasser'],
+  MailBox:['mail','Briefkasten'],TextState:['state','Status'],InfoOnlyDigital:['state','Status'],PresenceDetector:['pres','Präsenz'],
+  AalEmergency:['sos','Notruf'],Intercom:['bell','Türklingel']};
+const ST_CHIPS=['win','alarm','smoke','mail','state','pres','sos','bell'];
+function stCands(){ return (META.controls||[]).filter(c=>ST_PRI.indexOf(c.type)>=0); }
+function stIsText(c){ return !!c&&(c.type==='TextState'||c.type==='InfoOnlyText'); }
+// Liste der Gewaehlten. o: {id, max, icons (Symbol-Knopf + Anzeige je Baustein, nur Statusleiste), show, icoFor, add}
+function sbListHTML(ids, o){
+  ids=ids||[]; const max=o.max, n=ids.length, nc=stCands().length;
+  const rows=ids.map((u,i)=>{ const c=(META.controls||[]).find(x=>x.uuid===u), nm=c?c.name:T('Baustein nicht mehr vorhanden');
+    if(!c) return '<div class="qsrow sbrow gone" data-si="'+i+'"><span class="sbico ro" aria-hidden="true">'+svg(BICONS.info)+'</span>'+
+      '<div class="qsrt"><span class="sbname">'+esc(nm)+'</span><small>'+T('In Loxone gelöscht. Mit ✕ entfernen.')+'</small></div>'+
+      '<div class="sbmv"><button type="button" class="qsbtn del" data-srm="'+i+'" title="'+esc(T('Entfernen'))+'" aria-label="'+esc(T('{n} entfernen').replace('{n}',nm))+'">✕</button></div></div>';
+    const ic=o.icons?(o.ics||{})[u]:null, sh=(o.show||{})[u]||{}, md=sh.mode||'icon';
+    return '<div class="qsrow sbrow" data-si="'+i+'">'+
+      (o.icons?'<button type="button" class="sbico'+(o.icoFor===u?' on':'')+'" data-sic="'+esc(u)+'" title="'+esc(T('Symbol ändern'))+'" aria-label="'+esc(T('Symbol ändern: {n}').replace('{n}',nm))+'" aria-expanded="'+(o.icoFor===u)+'"><span class="tbico">'+barIcoHtml(c,ic)+'</span></button>'
+        :'<span class="sbico ro" aria-hidden="true">'+svg(BICONS[stDefIco(c)]||BICONS.info)+'</span>')+
+      '<div class="qsrt"><span class="sbname">'+esc(nm)+'</span><small>'+esc([T(ST_TL[c.type]||c.type),c.roomName].filter(Boolean).join(' · '))+'</small></div>'+
+      (o.icons&&stIsText(c)?'<div class="dbseg sbseg" role="radiogroup" aria-label="'+esc(T('Anzeige: {n}').replace('{n}',nm))+'">'+[['icon','Symbol'],['text','Text'],['both','Beides']].map(([k,l])=>
+        '<button type="button" role="radio" aria-checked="'+(md===k)+'" class="'+(md===k?'on':'')+'" data-bsm="'+k+'" data-bs="'+esc(u)+'">'+T(l)+'</button>').join('')+'</div>':'')+
+      '<div class="sbmv">'+
+        '<button type="button" class="qsbtn" data-smv="'+i+'" data-d="-1"'+(i===0?' style="visibility:hidden" tabindex="-1"':'')+' title="'+esc(T('Nach oben'))+'" aria-label="'+esc(T('{n} nach oben').replace('{n}',nm))+'">↑</button>'+
+        '<button type="button" class="qsbtn" data-smv="'+i+'" data-d="1"'+(i===n-1?' style="visibility:hidden" tabindex="-1"':'')+' title="'+esc(T('Nach unten'))+'" aria-label="'+esc(T('{n} nach unten').replace('{n}',nm))+'">↓</button>'+
+        '<button type="button" class="qsbtn del" data-srm="'+i+'" title="'+esc(T('Entfernen'))+'" aria-label="'+esc(T('{n} entfernen').replace('{n}',nm))+'">✕</button></div></div>'; }).join('');
+  return '<div class="sblist" id="'+o.id+'">'+
+    (n?'<div class="qslist">'+rows+'</div>':'<div class="hintp sbempty">'+(nc?T('Noch keine Bausteine. Die Leiste bleibt leer, bis du welche hinzufügst.'):'')+'</div>')+
+    (o.pick||'')+
+    '<button type="button" class="minibtn qsadd sbadd"'+(n>=max||!nc?' disabled':'')+'>+ '+T('Baustein hinzufügen')+' <span class="sbcnt">'+n+'/'+max+'</span></button>'+
+    (!nc?'<div class="hintp">'+T('Keine passenden Bausteine in der Anlage. Nötig sind z. B. Fensterüberwachung, Alarmanlage, Rauchmelder, Briefkasten oder Statusbaustein.')+'</div>'
+      :n>=max?'<div class="hintp">'+T('Höchstens {n}. Erst einen entfernen.').replace('{n}',max)+'</div>':'')+
+    '</div>';
 }
-function stPickBind(box, onIds, rerender, max){
-  if(!box) return; max=max||4;
-  const apply=()=>{ const rows=[...box.querySelectorAll('.camopt')], ids=rows.filter(r=>r.querySelector('input').checked).map(r=>r.dataset.id);
-    if(ids.length>max){ snack(T('Höchstens')+' '+max+' '+T('Bausteine')); rerender(); return; }
-    onIds(ids); };
-  box.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.onchange=apply);
-  let drag=null, order0='';
-  const order=()=>[...box.querySelectorAll('.camopt')].map(r=>r.dataset.id).join('|');
-  box.querySelectorAll('.camopt').forEach(r=>{
-    r.ondragstart=e=>{ drag=r; order0=order(); r.classList.add('dragging'); try{ e.dataTransfer.setData('text/plain',''); }catch(x){} };
-    // Uebernehmen beim Loslassen: liegt die Zeile nach dem Verschieben unter dem Zeiger, kommt kein drop
-    r.ondragend=()=>{ r.classList.remove('dragging'); drag=null; if(order()!==order0) apply(); };
-    r.ondragover=e=>{ if(!drag||drag===r) return; e.preventDefault(); const q=r.getBoundingClientRect(); box.insertBefore(drag,(e.clientY-q.top)>q.height/2?r.nextSibling:r); };
-    r.ondrop=e=>{ e.preventDefault(); }; });
+// Bedienung der Liste: o.get() -> ids, o.set(ids) speichert, o.ctx = Kontextzeile im Dialog
+function sbListBind(box, o){
+  if(!box) return;
+  box.querySelectorAll('[data-smv]').forEach(b=>b.onclick=()=>{ const l=o.get().slice(), i=+b.dataset.smv, j=i+(+b.dataset.d);
+    if(j<0||j>=l.length) return; [l[i],l[j]]=[l[j],l[i]]; o.set(l, {focus:'[data-smv="'+j+'"]:not([tabindex="-1"])'}); });
+  box.querySelectorAll('[data-srm]').forEach(b=>b.onclick=()=>{ const l=o.get().slice(); l.splice(+b.dataset.srm,1); o.set(l, {focus:'.sbadd'}); });
+  const add=box.querySelector('.sbadd'); if(add) add.onclick=()=>{ const cur0=o.get();
+    ctlPick({title:T('Baustein hinzufügen'), ctx:o.ctx, list:stCands(), chip:c=>ST_CHIP[c.type], chipOrder:ST_CHIPS, tlabel:c=>(ST_CHIP[c.type]||[])[1],
+      hint:T('Zeigt Fenster, Alarm, Rauch/Wasser, Briefkasten, Status, Präsenz, Notruf und Türklingel.'),
+      empty:T('Keine passenden Bausteine in der Anlage. Nötig sind z. B. Fensterüberwachung, Alarmanlage, Rauchmelder, Briefkasten oder Statusbaustein.'),
+      max:o.max, sel:cur0, onOk:ids=>{ if(ids.length) o.set(cur0.concat(ids), {focus:'.sbadd'}); } }); };
+}
+// Standard-Auswahldialog fuer Bausteine (Statusleiste, Status-Ampel, Schnellstart).
+// o: {title, ctx, list, chip(c)->[key,label], chipOrder, tlabel(c), hint, empty, max, multi, sel, cur, onOk(neueIds), onPick(uuid)}
+// Mehrfach: fuegt nur hinzu (sel ist gesperrt), Grenze max; Abbrechen fragt bei Aenderungen nach.
+// Einzel: ein Tipp uebernimmt und schliesst. Hintergrund schliesst nie.
+function ctlPick(o){
+  const multi=o.multi!==false, max=o.max||999, locked=(o.sel||[]).slice(), all=o.list||[];
+  const catN={}; (META.cats||[]).forEach(c=>{ if(c&&c.uuid) catN[c.uuid]=c.name||''; });
+  const ck=c=>(o.chip&&o.chip(c))||['',''], tl=c=>T((o.tlabel&&o.tlabel(c))||ck(c)[1]||c.type);
+  const cnt={}, lbl={}; all.forEach(c=>{ const [k,l]=ck(c); cnt[k]=(cnt[k]||0)+1; lbl[k]=l; });
+  const keys=(o.chipOrder||Object.keys(cnt)).filter(k=>cnt[k]);
+  let add=[], q='', ty='', asking=false;
+  const prev=document.activeElement;
+  const ov=document.createElement('div'); ov.className='wzov qspick'+(multi?'':' single');
+  ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-labelledby','qsTi');
+  ov.innerHTML='<div class="wzbox" tabindex="-1"><div class="wzhd qshd"><div class="qsti"><b id="qsTi">'+esc(o.title||T('Baustein hinzufügen'))+'</b>'+
+      (o.ctx?'<small>'+esc(o.ctx)+'</small>':'')+'</div><span class="wzstep qspn"></span>'+
+      '<button type="button" class="wzx" aria-label="'+esc(T('Schließen'))+'">✕</button></div>'+
+    '<div class="wzbody"><input type="search" class="qsq" placeholder="'+esc(T('Name, Raum oder Typ suchen …'))+'" aria-label="'+esc(T('Name, Raum oder Typ suchen …'))+'">'+
+      (keys.length>=3?'<div class="mzchips qschips" role="group" aria-label="'+esc(T('Typ'))+'">'+[''].concat(keys).map(k=>
+        '<button type="button" class="mzchip'+(k===''?' on':'')+'" data-qt="'+esc(k)+'" aria-pressed="'+(k==='')+'">'+(k===''?T('Alle'):esc(T(lbl[k]))+' <span class="qsn">'+cnt[k]+'</span>')+'</button>').join('')+'</div>':'')+
+      (o.hint?'<div class="qshint">'+esc(o.hint)+'</div>':'')+
+      '<div class="qsplist"></div></div>'+
+    '<div class="wzft">'+(multi?'<button type="button" class="btn ghost qscancel">'+T('Abbrechen')+'</button><button type="button" class="btn qsok">'+T('Übernehmen')+'</button>'
+      :'<button type="button" class="btn ghost qscancel">'+T('Abbrechen')+'</button>')+'</div></div>';
+  document.body.appendChild(ov);
+  const L=ov.querySelector('.qsplist'), qi=ov.querySelector('.qsq');
+  const close=()=>{ ov.remove(); document.removeEventListener('keydown',key,true); try{ if(prev&&prev.isConnected&&prev.focus) prev.focus(); }catch(e){} };
+  const tryClose=async()=>{ if(asking) return;
+    if(multi&&add.length){ asking=true; const y=await dlgAsk(T('Auswahl verwerfen?'),T('Die neu gewählten Bausteine werden nicht übernommen.'),T('Verwerfen'),true,T('Weiter auswählen')); asking=false; if(!y) return; }
+    close(); };
+  const vis=()=>{ const t=q.trim().toLowerCase();
+    return all.filter(c=>(!ty||ck(c)[0]===ty)&&(!t||[c.name,c.roomName,catN[c.cat],tl(c)].some(s=>(s||'').toLowerCase().includes(t))))
+      .sort((a,b)=>(a.roomName?0:1)-(b.roomName?0:1)||(a.roomName||'').localeCompare(b.roomName||'')||(a.name||'').localeCompare(b.name||'')); };
+  const draw=()=>{ const v=vis(), n=locked.length+add.length; let h='', room=null;
+    v.forEach(c=>{ const r=c.roomName||T('Ohne Raum'); if(r!==room){ room=r; h+='<div class="qsgrp">'+esc(r)+'</div>'; }
+      if(!multi){ const on=c.uuid===o.cur;
+        h+='<button type="button" class="qspi'+(on?' on':'')+'" data-u="'+esc(c.uuid)+'" role="radio" aria-checked="'+on+'"><span class="qsrad" aria-hidden="true"></span>'+
+          '<span class="qspn2">'+esc(c.name)+'</span><small>'+esc(tl(c))+'</small></button>'; return; }
+      const lk=locked.indexOf(c.uuid)>=0, on=lk||add.indexOf(c.uuid)>=0, full=!on&&n>=max;
+      h+='<button type="button" class="qspi'+(on?' on':'')+(lk?' locked':'')+(full?' full':'')+'" data-u="'+esc(c.uuid)+'"'+(lk||full?' disabled':'')+' aria-pressed="'+on+'">'+
+        '<span class="qschk" aria-hidden="true"></span><span class="qspn2">'+esc(c.name)+'</span><small>'+esc(lk?T('schon in der Liste'):full?T('Grenze erreicht'):tl(c))+'</small></button>'; });
+    L.innerHTML=h||(all.length?'<div class="qsnone"><div class="hintp">'+esc(T('Kein Baustein passt zu „{q}“.').replace('{q}',q.trim()||(lbl[ty]?T(lbl[ty]):'')))+'</div>'+
+        '<button type="button" class="minibtn qsreset">'+T('Suche zurücksetzen')+'</button></div>'
+      :'<div class="hintp">'+esc(o.empty||T('Keine passenden Bausteine.'))+'</div>');
+    ov.querySelector('.qspn').textContent=!multi?T('Antippen übernimmt'):o.max?n+'/'+max:String(n);
+    ov.querySelector('.qspn').classList.toggle('full',multi&&n>=max);
+    L.querySelectorAll('.qspi').forEach(b=>b.onclick=()=>{ const u=b.dataset.u;
+      if(!multi){ close(); if(o.onPick) o.onPick(u); return; }
+      const i=add.indexOf(u); if(i>=0) add.splice(i,1); else if(locked.length+add.length<max) add.push(u); else return;
+      draw(); const nb=L.querySelector('.qspi[data-u="'+CSS.escape(u)+'"]'); if(nb) nb.focus(); });
+    const rs=L.querySelector('.qsreset'); if(rs) rs.onclick=()=>{ q=''; qi.value=''; ty=''; ov.querySelectorAll('[data-qt]').forEach(x=>{ const a=x.dataset.qt===''; x.classList.toggle('on',a); x.setAttribute('aria-pressed',a); }); draw(); qi.focus(); }; };
+  const key=e=>{ if(!ov.isConnected||asking) return;
+    if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); tryClose(); return; }
+    if(e.key==='Enter'&&e.target===qi){ const bs=[...L.querySelectorAll('.qspi:not(:disabled)')]; if(bs.length===1){ e.preventDefault(); bs[0].click(); } return; }
+    if(e.key==='Tab'){ const f=[...ov.querySelectorAll('button:not(:disabled),input')].filter(x=>x.offsetParent!==null&&x.tabIndex>=0); if(!f.length) return;
+      const a=f[0], z=f[f.length-1];
+      if(e.shiftKey&&(document.activeElement===a||!ov.contains(document.activeElement))){ e.preventDefault(); z.focus(); }
+      else if(!e.shiftKey&&(document.activeElement===z||!ov.contains(document.activeElement))){ e.preventDefault(); a.focus(); } } };
+  document.addEventListener('keydown',key,true);
+  qi.oninput=()=>{ q=qi.value; draw(); };
+  ov.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ ty=b.dataset.qt; ov.querySelectorAll('[data-qt]').forEach(x=>{ const a=x===b; x.classList.toggle('on',a); x.setAttribute('aria-pressed',a); });
+    b.scrollIntoView({block:'nearest',inline:'nearest'}); draw(); });
+  ov.querySelector('.wzx').onclick=tryClose; ov.querySelector('.qscancel').onclick=tryClose;
+  const ok=ov.querySelector('.qsok'); if(ok) ok.onclick=()=>{ const a=add.slice(); close(); if(o.onOk) o.onOk(a); };
+  draw();
+  // Autofokus nur am Desktop (am Handy klappt sonst sofort die Tastatur auf)
+  setTimeout(()=>{ if(!ov.isConnected) return; if(matchMedia('(min-width:601px) and (pointer:fine)').matches) qi.focus(); else ov.querySelector('.wzbox').focus(); },30);
+  return ov;
 }
 // Panel, dessen Dashboard globale Standardansicht ist (Vorlage fuer neue Panels)
 function dashStdId(){ return Object.keys(PANELS).find(id=>id!=='__global__'&&PANELS[id]&&PANELS[id].saver&&PANELS[id].saver.std&&(PANELS[id].saver.items||[]).length)||''; }
@@ -3569,9 +3707,10 @@ function barIcoHtml(c,ic){
   if(ic&&ic.src==='builtin') return svg(BICONS[ic.id]||BICONS.info);
   if(ic&&ic.src==='loxone') return '<span class="loxi" style="--u:url(\'/icon?p='+encodeURIComponent(ic.p)+'\')"></span>';
   if(ic&&ic.src==='loxlib') return '<span class="loxi" style="--u:url(\'/loxlib?n='+encodeURIComponent(ic.name)+'\')"></span>';
-  return c.iconUrl ? '<span class="loxi" style="--u:url(\''+esc(c.iconUrl)+'\')"></span>' : svg(BICONS.info); }
+  return svg(BICONS[stDefIco(c)]||BICONS.info); }
+// Standardsymbol je Typ wie im Panel (status_chip in webvisu.py)
+function stDefIco(c){ return ({WindowMonitor:'window',Alarm:'shield',CentralAlarm:'shield',SmokeAlarm:'alarm'})[(c||{}).type]||'info'; }
 let dBarOpen=false;   // Haken "Statusleiste" gesetzt, aber noch nichts gewaehlt
-let dBarSecOpen=false;
 let dPropsOpen=false;
 let tPropsOpen=false;    // Block "Tab-Einstellungen" aufgeklappt    // Block "Dashboard-Einstellungen" aufgeklappt   // Bausteinauswahl der Statusleiste aufgeklappt
 function renderDashProps(p){
@@ -3598,24 +3737,16 @@ function renderDashProps(p){
         '<button type="button" class="minibtn del" id="dBgDel" data-live="1" hidden>'+T('Bild entfernen')+'</button></div>'+
         '<div class="hint">'+T('JPG, PNG oder WebP, höchstens 12 MB. Wird sofort hochgeladen. Querformat passt am besten.')+'</div>':'')+'</div>'+
     '<div class="field dbar"><label class="lbl">'+T('Statusleiste')+'</label>'+
-      '<label class="chk"><input type="checkbox" id="dBarOn"'+(barOn?' checked':'')+'> <span>'+T('Statusleiste oben anzeigen')+'</span></label>'+
-      (barOn?'<div class="dbarbox'+(dBarSecOpen?' open':'')+'"><button type="button" class="dbarhd" aria-expanded="'+(dBarSecOpen?'true':'false')+'"><span>'+T('Bausteine')+' <small>'+(sv.bar||[]).length+'/6</small></span>'+
-        '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
-        '<div class="dbarbody"><div><div class="dbarlbl">'+T('Anhaken zum Anzeigen, ziehen zum Sortieren')+'</div>'+stPickHTML(sv.bar,'dBar',true)+
-        ((sv.bar||[]).length?'<div class="dbarlbl" style="margin-top:8px">'+T('Statusleiste: Anzeige je Baustein')+'</div><div class="dbshow">'+
-          (sv.bar||[]).map(u=>{ const c=tileRef(u)||{}, isSt=c.type==='TextState'||c.type==='InfoOnlyText', sh=(sv.barShow||{})[u]||{}, md=sh.mode||'icon';
-            return '<div class="dbsrow'+(isSt?'':' off')+'" data-bs="'+esc(u)+'"><div class="dbshd"><span class="dbsname">'+esc(c.name||u)+'</span>'+
-              '<small>'+(isSt?'„'+esc(c.stext||'–')+'“':esc(T('kein Status-Baustein')))+'</small></div>'+
-              (isSt?'<div class="dbsctl"><div class="dbseg" role="group">'+[['icon','Symbol'],['text','Text'],['both','Beides']].map(([k,l])=>
-                  '<button type="button" class="'+(md===k?'on':'')+'" data-bsm="'+k+'">'+T(l)+'</button>').join('')+'</div>'+
-                '<label class="chk" title="'+esc(T('Loxone-Statussymbol statt festem Symbol'))+'"><input type="checkbox" data-bsl'+(sh.lox?' checked':'')+'> <span>'+T('Loxone-Symbol')+'</span></label></div>':'')+'</div>'; }).join('')+
-          '</div><div class="dbarlbl" style="margin-top:8px">'+T('Symbol je Baustein (zum Ändern antippen)')+'</div><div class="dbaricons">'+
-          (sv.bar||[]).map(u=>{ const c=tileRef(u)||{}; const ic=(sv.barIcons||{})[u];
-            return '<button type="button" class="tbicobtn dbic'+(dBarIcoFor===u?' on':'')+'" data-bic="'+esc(u)+'"><span class="tbico">'+barIcoHtml(c,ic)+'</span>'+esc(c.name||u)+'</button>'; }).join('')+
-          '</div><div id="dBarIcoPick" class="tbicopick"'+(dBarIcoFor?'':' hidden')+'><div class="itabs">'+
-            '<span class="itab on" data-bsrc="builtin">'+T('Mitgeliefert')+'</span><span class="itab" data-bsrc="loxone">Loxone</span>'+
-            (((META.icons||{}).loxlib)?'<span class="itab" data-bsrc="loxlib">'+T('Bibliothek')+'</span>':'')+
-          '</div><div class="ipick" id="dBarIpick"></div></div>':'')+'</div></div></div>':'')+
+      '<label class="chk"><input type="checkbox" id="dBarOn"'+(barOn?' checked':'')+'> <span>'+T('Oben im Dashboard anzeigen')+'</span></label>'+
+      (barOn?sbListHTML(sv.bar,{id:'dBar',max:6,icons:true,ics:sv.barIcons,show:sv.barShow,icoFor:dBarIcoFor,pick:(()=>{
+        const u=dBarIcoFor, c=u&&(sv.bar||[]).indexOf(u)>=0&&tileRef(u); if(!c) return '';
+        return '<div id="dBarIcoPick" class="tbicopick sbpick"><div class="sbpkhd"><b>'+esc(T('Symbol für „{n}“').replace('{n}',c.name||''))+'</b>'+
+          '<button type="button" class="minibtn" id="dBarIcoStd">'+T('Standard wiederherstellen')+'</button>'+
+          '<button type="button" class="qsbtn" id="dBarIcoX" aria-label="'+esc(T('Schließen'))+'">✕</button></div>'+
+          (stIsText(c)?'<label class="chk" title="'+esc(T('Loxone-Statussymbol statt festem Symbol'))+'"><input type="checkbox" data-bsl'+((((sv.barShow||{})[u])||{}).lox?' checked':'')+'> <span>'+T('Loxone-Statussymbol verwenden')+'</span></label>':'')+
+          '<div class="itabs"><span class="itab on" data-bsrc="builtin">'+T('Mitgeliefert')+'</span><span class="itab" data-bsrc="loxone">Loxone</span>'+
+          (((META.icons||{}).loxlib)?'<span class="itab" data-bsrc="loxlib">'+T('Bibliothek')+'</span>':'')+
+          '</div><div class="ipick" id="dBarIpick"></div></div>'; })()}):'')+
       '<div class="hint">'+T('Die Symbole stehen oben und bleiben neutral, bis etwas passiert.')+'</div></div>'+
     '<div class="field dstd"><label class="lbl">'+T('Standard-Dashboard')+'</label>'+
       '<label class="chk"><input type="checkbox" id="dStd"'+(sv.std?' checked':'')+((sv.items||[]).length?'':' disabled')+'> <span>'+T('Als Standard für neue Panels verwenden')+'</span></label>'+
@@ -3630,30 +3761,34 @@ function renderDashProps(p){
       const s2=svCfg(p), cur0=items(); s2.grid=ng; s2.items=[];
       tbEff[DK]=gridReflow(cur0, tbDashPages(p)*ng, ng, ng, t=>gridSizes(t,ng,false));
       tbHist[DK]=[]; delete tbLast[DK]; tbSel=-1; tbCommit(p); renderTabList(p); }); });
-  stPickBind($('#dBar'), ids=>{ const s2=svCfg(p); if(ids.length) s2.bar=ids; else delete s2.bar;
+  // Statusleiste: Liste der Gewaehlten (bar), Anzeige je Status-Baustein (barShow), eigenes Symbol (barIcons) - Datenformat unveraendert
+  const barFocus=f=>{ const el=f&&f.focus&&$('#dBar')&&$('#dBar').querySelector(f.focus); if(el) el.focus(); };
+  sbListBind($('#dBar'), {max:6, ctx:T('Statusleiste · Dashboard'), get:()=>((p.saver||{}).bar||[]).slice(), set:(ids,f)=>{ const s2=svCfg(p);
+    if(ids.length) s2.bar=ids; else delete s2.bar;
     if(s2.barIcons){ Object.keys(s2.barIcons).forEach(u=>{ if((s2.bar||[]).indexOf(u)<0) delete s2.barIcons[u]; }); if(!Object.keys(s2.barIcons).length) delete s2.barIcons; }
     if(s2.barShow){ Object.keys(s2.barShow).forEach(u=>{ if((s2.bar||[]).indexOf(u)<0) delete s2.barShow[u]; }); if(!Object.keys(s2.barShow).length) delete s2.barShow; }
-    dBarOpen=true; markDirty(); renderDashProps(p); renderTabEditor(); }, ()=>renderDashProps(p), 6);
+    if(dBarIcoFor&&(s2.bar||[]).indexOf(dBarIcoFor)<0) dBarIcoFor='';
+    dBarOpen=true; markDirty(); renderDashProps(p); renderTabEditor(); barFocus(f); }});
   // Anzeige je Status-Baustein (barShow {uuid:{mode,lox}}); Standard (Symbol, fest) wird nicht gespeichert
   { const setShow=(u,fn)=>{ const s2=svCfg(p); s2.barShow=s2.barShow||{}; const e=s2.barShow[u]||{mode:'icon',lox:false}; fn(e);
       if(e.mode==='icon'&&!e.lox) delete s2.barShow[u]; else s2.barShow[u]=e; if(!Object.keys(s2.barShow).length) delete s2.barShow; markDirty(); };
-    box.querySelectorAll('.dbsrow[data-bs]').forEach(r=>{ const u=r.dataset.bs;
-      r.querySelectorAll('[data-bsm]').forEach(b=>b.onclick=()=>{ setShow(u,e=>{ e.mode=b.dataset.bsm; });
-        r.querySelectorAll('[data-bsm]').forEach(x=>x.classList.toggle('on',x===b)); });
-      const l=r.querySelector('[data-bsl]'); if(l) l.onchange=()=>setShow(u,e=>{ e.lox=l.checked; }); }); }
-  // Eigenes Symbol je Statusleisten-Baustein (gleicher Waehler wie bei den Tabs)
+    box.querySelectorAll('[data-bsm]').forEach(b=>b.onclick=()=>{ setShow(b.dataset.bs,e=>{ e.mode=b.dataset.bsm; });
+      b.parentNode.querySelectorAll('[data-bsm]').forEach(x=>{ x.classList.toggle('on',x===b); x.setAttribute('aria-checked',x===b?'true':'false'); }); });
+    const l=box.querySelector('[data-bsl]'); if(l) l.onchange=()=>setShow(dBarIcoFor,e=>{ e.lox=l.checked; }); }
+  // Eigenes Symbol je Statusleisten-Baustein (gleicher Waehler wie bei den Tabs), oeffnet unter der Liste
   { const tgt=()=>({box:'dBarIpick', get:()=>((svCfg(p).barIcons)||{})[dBarIcoFor],
       set:ic=>{ const s2=svCfg(p); s2.barIcons=s2.barIcons||{}; if(ic) s2.barIcons[dBarIcoFor]=ic; else delete s2.barIcons[dBarIcoFor];
         if(!Object.keys(s2.barIcons).length) delete s2.barIcons; markDirty();
-        const b=box.querySelector('[data-bic="'+CSS.escape(dBarIcoFor)+'"] .tbico'); if(b) b.innerHTML=barIcoHtml(tileRef(dBarIcoFor)||{},(s2.barIcons||{})[dBarIcoFor]); }});
-    box.querySelectorAll('[data-bic]').forEach(b=>b.onclick=()=>{ dBarIcoFor=(dBarIcoFor===b.dataset.bic)?'':b.dataset.bic; renderDashProps(p);
-      if(dBarIcoFor) renderIconPick('builtin',tgt()); });
+        const b=box.querySelector('[data-sic="'+CSS.escape(dBarIcoFor)+'"] .tbico'); if(b) b.innerHTML=barIcoHtml(tileRef(dBarIcoFor)||{},(s2.barIcons||{})[dBarIcoFor]); }});
+    box.querySelectorAll('[data-sic]').forEach(b=>b.onclick=()=>{ dBarIcoFor=(dBarIcoFor===b.dataset.sic)?'':b.dataset.sic; renderDashProps(p);
+      const nb=box.querySelector('[data-sic="'+CSS.escape(b.dataset.sic)+'"]'); if(nb) nb.focus();
+      if(dBarIcoFor){ renderIconPick('builtin',tgt()); const pk=$('#dBarIcoPick'); if(pk) pk.scrollIntoView({block:'nearest',behavior:'smooth'}); } });
     box.querySelectorAll('[data-bsrc]').forEach(t=>t.onclick=()=>{ box.querySelectorAll('[data-bsrc]').forEach(x=>x.classList.remove('on'));
       t.classList.add('on'); renderIconPick(t.dataset.bsrc,tgt()); });
+    { const sd=$('#dBarIcoStd'); if(sd) sd.onclick=()=>{ tgt().set(null); const t=box.querySelector('[data-bsrc].on'); renderIconPick(t?t.dataset.bsrc:'builtin',tgt()); }; }
+    { const x=$('#dBarIcoX'); if(x) x.onclick=()=>{ const u=dBarIcoFor; dBarIcoFor=''; renderDashProps(p); const nb=box.querySelector('[data-sic="'+CSS.escape(u)+'"]'); if(nb) nb.focus(); }; }
     if(dBarIcoFor && $('#dBarIpick') && !$('#dBarIpick').children.length) renderIconPick('builtin',tgt()); }
-  { const hd=box.querySelector('.dbarhd'); if(hd) hd.onclick=()=>{ const bx=hd.parentNode; dBarSecOpen=!bx.classList.contains('open');
-      bx.classList.toggle('open',dBarSecOpen); hd.setAttribute('aria-expanded',dBarSecOpen?'true':'false'); }; }
-  { const on=$('#dBarOn'); if(on) on.onchange=()=>{ if(on.checked){ dBarOpen=true; dBarSecOpen=true; }
+  { const on=$('#dBarOn'); if(on) on.onchange=()=>{ if(on.checked){ dBarOpen=true; }
       else { dBarOpen=false; const s2=svCfg(p); if(s2.bar){ delete s2.bar; if(!s2.items.length&&!s2.exit.length) delete p.saver; markDirty(); } }
       renderDashProps(p); renderTabEditor(); }; }
   box.querySelectorAll('[data-amb]').forEach(sel=>sel.onchange=()=>{ p.ui=p.ui||{};
@@ -3788,7 +3923,7 @@ function renderTabEditor(){
   for(let pg=0;pg<pages;pg++){ const cr=tbCR(p,pg,0,0,g), empty=k!==DK&&pg===pages-1;
     // Dashboard: Menueleiste schematisch (Statusleiste links, X rechts)
     const dbar=k===DK?((p.saver||{}).bar||[]):[], dx=k===DK&&((p.saver||{}).exit||[]).indexOf('x')>=0;
-    const barHtml=(k===DK&&pg===0&&dbar.length)?'<span class="pgbar" title="'+esc(T('Statusleiste'))+'">'+dbar.map(u=>{ const ct=tbCtl(u); return tbIcoHtml(ct&&ct.iconUrl); }).join('')+'</span>':'';
+    const barHtml=(k===DK&&pg===0&&dbar.length)?'<span class="pgbar" title="'+esc(T('Statusleiste'))+'">'+dbar.map(u=>barIcoHtml(tbCtl(u)||{},((p.saver||{}).barIcons||{})[u])).join('')+'</span>':'';
     const xHtml=(dx&&pg===pages-1)?'<span class="pgx" title="'+esc(T('Schließen'))+'">✕</span>':'';
     // 2 Panels: "Seite N" (Rasterseite = ein Wisch) + "Fläche links/rechts" (Bildschirmhälfte); Handy: oben/unten
     const phn=(p.ui||{}).phone, sideT=phn?(k===DK?(pg%2?T('unten'):T('oben')):''):(pg%2?T('Rechte Hälfte'):T('Linke Hälfte'));
@@ -3965,8 +4100,8 @@ function tbSideHTML(p){
     [1,2,3].map(n=>'<button data-wxd="'+n+'"'+(Math.min(it.days||3,3)===n?' class="on"':'')+'>'+n+'</button>').join('')+'</div>';
   if(it.type==='weather') h+='<label class="chk" style="margin-top:8px"><input type="checkbox" id="tbWxDet"'+(it.detail?' checked':'')+'> <span>'+T('Detailansicht beim Antippen eines Tages')+'</span></label>'+
     '<div class="hintp">'+T('Öffnet ein Fenster mit Temperaturverlauf, Regen je Stunde, Wind, UV und Sonnenzeiten des Tages.')+'</div>';
-  if(it.type==='status'){   // Status-Ampel: bis zu 4 Bausteine als Chips (Haken + Ziehen), optional Verlauf
-    h+='<div class="lbl2">'+T('Status (max. 4)')+'</div>'+stPickHTML(it.ctls,'tbStCh')+
+  if(it.type==='status'){   // Status-Ampel: bis zu 4 Bausteine (Liste + Auswahldialog), optional Verlauf
+    h+='<div class="lbl2">'+T('Status (max. 4)')+'</div>'+sbListHTML(it.ctls,{id:'tbStCh',max:4})+
       '<div class="hintp">'+T('Farben vom Miniserver: Fenster offen gelb, Alarm oder Rauch rot, Alarm scharf blau. Statusbausteine nutzen ihre Farbe aus Loxone Config.')+'</div>';
     h+='<div class="lbl2">'+T('Standard-Aussehen')+'</div><div class="seg">'+
       '<button data-stlook="auto"'+(it.look!=='color'?' class="on"':'')+'>'+T('Passend zum Design')+'</button>'+
@@ -4047,42 +4182,14 @@ function qsBindSide(p,it,redo){
     if(v) it.names[u]=v; else delete it.names[u]; if(!Object.keys(it.names).length) delete it.names; tbCommit(p); });
   const add=$('#qsAdd'); if(add) add.onclick=()=>qsPick(p,it,redo);
 }
-// Auswahlfenster "Baustein hinzufuegen": Suche, Typ-Chips, nach Raum gruppiert, nur erlaubte Typen
+// Schnellstart: Standard-Auswahldialog, nur Bausteine mit Schnellfunktion; fuegt hinten an, Grenze = Anzahl der Groesse
 function qsPick(p,it,redo){
-  const g=tbGrid(p,tbTab), n=qsCountCfg(g,it.w,it.h), all=(META.controls||[]).filter(c=>QS_TYPES[c.type]);
-  let sel=(it.ctls||[]).slice(), q='', ty='';
-  const ov=document.createElement('div'); ov.className='wzov qspick'; ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true');
-  ov.innerHTML='<div class="wzbox"><div class="wzhd"><b>'+T('Baustein hinzufügen')+'</b><span class="wzstep qspn"></span>'+
-    '<button type="button" class="wzx" aria-label="'+esc(T('Schließen'))+'">✕</button></div>'+
-    '<div class="wzbody"><input type="search" class="qsq" placeholder="'+esc(T('Suchen …'))+'" aria-label="'+esc(T('Suchen …'))+'">'+
-    '<div class="mzchips qschips">'+QS_CHIPS.map(([k,l])=>'<button type="button" class="mzchip'+(k===''?' on':'')+'" data-qt="'+k+'">'+T(l)+'</button>').join('')+'</div>'+
-    '<div class="qsplist"></div></div>'+
-    '<div class="wzft"><span class="hintp" style="margin:0">'+T('Nur Bausteine mit Schnellfunktion. Heizung, Alarm, Zutritt und Sensoren sind nicht wählbar.')+'</span>'+
-    '<span class="row" style="gap:8px;flex:none"><button type="button" class="btn ghost qscancel">'+T('Abbrechen')+'</button><button type="button" class="btn qsok">'+T('Übernehmen')+'</button></span></div></div>';
-  document.body.appendChild(ov);
-  const L=ov.querySelector('.qsplist'), close=()=>{ ov.remove(); document.removeEventListener('keydown',key); };
-  const key=e=>{ if(e.key==='Escape'){ e.preventDefault(); close(); } };
-  document.addEventListener('keydown',key);
-  const draw=()=>{ const t=q.toLowerCase();
-    const vis=all.filter(c=>(!ty||QS_TYPES[c.type][0]===ty)&&(!t||(c.name||'').toLowerCase().includes(t)||(c.roomName||'').toLowerCase().includes(t)))
-      .sort((a,b)=>(a.roomName||'~').localeCompare(b.roomName||'~')||(a.name||'').localeCompare(b.name||''));
-    let h='', room=null;
-    vis.forEach(c=>{ const r=c.roomName||T('Ohne Raum'); if(r!==room){ room=r; h+='<div class="qsgrp">'+esc(r)+'</div>'; }
-      const on=sel.indexOf(c.uuid)>=0, full=!on&&sel.length>=n;
-      h+='<button type="button" class="qspi'+(on?' on':'')+'" data-u="'+esc(c.uuid)+'"'+(full?' disabled':'')+' aria-pressed="'+on+'">'+
-        '<span class="qschk" aria-hidden="true"></span><span class="qspn2">'+esc(c.name)+'</span><small>'+esc(T(QS_TYPES[c.type][2]))+'</small></button>'; });
-    L.innerHTML=h||'<div class="hintp">'+T('Keine passenden Bausteine.')+'</div>';
-    ov.querySelector('.qspn').textContent=T('{n} von {m}').replace('{n}',sel.length).replace('{m}',n);
-    L.querySelectorAll('.qspi').forEach(b=>b.onclick=()=>{ const u=b.dataset.u, i=sel.indexOf(u);
-      if(i>=0) sel.splice(i,1); else if(sel.length<n) sel.push(u); draw(); }); };
-  const qi=ov.querySelector('.qsq'); qi.oninput=()=>{ q=qi.value; draw(); };
-  ov.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ ty=b.dataset.qt; ov.querySelectorAll('[data-qt]').forEach(x=>x.classList.toggle('on',x===b)); draw(); });
-  ov.querySelector('.wzx').onclick=close; ov.querySelector('.qscancel').onclick=close;
-  ov.addEventListener('click',e=>{ if(e.target===ov) close(); });
-  ov.querySelector('.qsok').onclick=()=>{ it.ctls=sel.slice(0,QS_MAX);
-    if(it.names){ Object.keys(it.names).forEach(u=>{ if(it.ctls.indexOf(u)<0) delete it.names[u]; }); if(!Object.keys(it.names).length) delete it.names; }
-    close(); redo(); };
-  draw(); setTimeout(()=>qi.focus(),30);
+  const g=tbGrid(p,tbTab), n=qsCountCfg(g,it.w,it.h), cur0=(it.ctls||[]).slice();
+  ctlPick({title:T('Baustein hinzufügen'), ctx:T('Schnellstart · Kachel {s}').replace('{s}',it.w+'\u202f×\u202f'+it.h), list:(META.controls||[]).filter(c=>QS_TYPES[c.type]),
+    chip:c=>{ const k=QS_TYPES[c.type][0]; return [k,(QS_CHIPS.find(x=>x[0]===k)||['',''])[1]]; }, chipOrder:QS_CHIPS.map(x=>x[0]).filter(Boolean),
+    tlabel:c=>QS_TYPES[c.type][1], hint:T('Zeigt nur Bausteine mit Schnellfunktion: Rollladen, Fenster, Licht, Radio, Schalter, Taster, Audio und Tor.'),
+    empty:T('Keine Bausteine mit Schnellfunktion in der Anlage.'), max:n, sel:cur0,
+    onOk:ids=>{ if(!ids.length) return; it.ctls=cur0.concat(ids).slice(0,QS_MAX); redo(); } });
 }
 // Bausteine hinter einer Kachel: Raum/Kategorie -> ihre Bausteine, Zentralbaustein -> Mitglieder
 function tbBlocks(it){
@@ -4125,7 +4232,8 @@ function tbBindSide(p){
   { const cb=$('#tbCamBack'); if(cb) cb.onchange=()=>{ let n=Math.round(+cb.value); if(!(n>=0)) n=3; n=Math.min(240,n);   // Standard 3 min
       if(n===3) delete it.back; else it.back=n; redo(); }; }
   host.querySelectorAll('[data-wxd]').forEach(b=>b.onclick=()=>{ const n=+b.dataset.wxd; if(n===3) delete it.days; else it.days=n; redo(); });   // Standard 3 Tage
-  stPickBind($('#tbStCh'), ids=>{ it.ctls=ids; redo(); }, renderTabEditor);
+  sbListBind($('#tbStCh'), {max:4, ctx:T('Status-Ampel · Widget'), get:()=>(it.ctls||[]).slice(),
+    set:(ids,f)=>{ it.ctls=ids; redo(); const el=f&&f.focus&&$('#tbStCh')&&$('#tbStCh').querySelector(f.focus); if(el) el.focus(); }});
   { const tr=$('#tbStTrk'); if(tr) tr.onchange=()=>{ if(tr.value) it.trk=tr.value; else delete it.trk; redo(); }; }
   host.querySelectorAll('[data-stlook]').forEach(b=>b.onclick=()=>{ if(b.dataset.stlook==='color') it.look='color'; else delete it.look; redo(); });
   { const box=$('#tbCams'); if(box){
@@ -4983,7 +5091,8 @@ async function loadSettings(force){
   const keep=k=>SECT_DIRTY.has(k);
   const m=SET.miniserver||{};
   if(!keep('ms')){ $('#ms_host').value=m.host||''; $('#ms_user').value=m.user||'';
-    $('#ms_port').value=m.port||443; $('#ms_tls').checked=!!m.verify_tls; }
+    $('#ms_port').value=m.port||443; $('#ms_tls').checked=!!m.verify_tls;
+    $('#ms_proto').value=['auto','https','http'].includes(m.httpsMode)?m.httpsMode:'auto'; msProtoUi(); }
   $('#ms_pass').placeholder = m.hasPass ? T('Leer lassen, um das Passwort zu behalten') : T('Passwort eingeben');
   // Tatsaechlich laufender Code-Stand - unabhaengig von der Plugin-Version,
   // die LoxBerry anzeigt (die kennt nur plugin.cfg, nicht den Docker-Build).
@@ -5211,20 +5320,31 @@ function wxRender(cal, st, autoGeo){
     +' '+(lox?T('Gilt für die Sonnenzeiten.'):T('Gilt für Sonnenzeiten und Open-Meteo.'));
 }
 
+// Protokoll: Automatisch (Server erkennt TLS/Klartext am Port) | HTTPS | HTTP.
+// Zertifikat pruefen gibt es nur mit TLS; Port 80/443 springt beim Wechsel mit.
+function msProtoUi(){ const p=$('#ms_proto').value, tls=$('#ms_tls'); tls.disabled=p==='http';
+  const l=tls.closest('label'); if(l) l.style.opacity=p==='http'?'.5':''; }
+$('#ms_proto').addEventListener('change',()=>{ const p=$('#ms_proto').value, port=$('#ms_port');
+  if(p!=='auto'&&(port.value==='80'||port.value==='443'||port.value==='')) port.value=p==='http'?'80':'443';
+  msProtoUi(); });
+function msProtoText(pr){ return pr&&pr.mode==='auto'&&pr.detected
+  ? ' '+T('Erkannt: {p} auf Port {n}.').replace('{p}',pr.https?'HTTPS':'HTTP').replace('{n}',pr.port) : ''; }
 async function msSave(force){
   const g0=SECT_GEN.ms||0;
+  const proto=$('#ms_proto').value;
   const body={host:$('#ms_host').value.trim(),user:$('#ms_user').value.trim(),
-    port:parseInt($('#ms_port').value)||443,verify_tls:$('#ms_tls').checked};
+    port:parseInt($('#ms_port').value)||443,verify_tls:$('#ms_tls').checked,
+    https:proto==='auto'?'auto':proto==='https'};
   const pw=$('#ms_pass').value; if(pw) body.pass=pw;
   if(force) body.force=true;
   $('#ms_save').disabled=true; $('#ms_force').hidden=true;
   try{
     const r=await fetch('/api/settings/miniserver',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
     const j=await r.json();
-    if(j.ok&&j.connected===false){ flash($('#ms_toast'),T('Gespeichert, aber nicht verbunden.')+' '+T(String(j.warning||'').replace(/[.\s]+$/,''))+'.',false); if((SECT_GEN.ms||0)===g0) SECT_DIRTY.delete('ms'); saveInfo(); loadSettings(); }   // gespeichert (nur nicht verbunden)
-    else if(j.ok){ flash($('#ms_toast'),T('Verbunden. {n} Bausteine gefunden.').replace('{n}',j.nControls),true); $('#ms_pass').value=''; loadSettings(); }
+    if(j.ok&&j.connected===false){ flash($('#ms_toast'),T('Gespeichert, aber nicht verbunden.')+' '+T(String(j.warning||'').replace(/[.\s]+$/,''))+'.'+msProtoText(j.proto),false); if((SECT_GEN.ms||0)===g0) SECT_DIRTY.delete('ms'); saveInfo(); loadSettings(); }   // gespeichert (nur nicht verbunden)
+    else if(j.ok){ flash($('#ms_toast'),T('Verbunden. {n} Bausteine gefunden.').replace('{n}',j.nControls)+msProtoText(j.proto),true); $('#ms_pass').value=''; loadSettings(); }
     else if(j.canForce){   // Pruefung fehlgeschlagen: nichts gespeichert, auf Wunsch trotzdem
-      flash($('#ms_toast'),T('Nicht gespeichert.')+' '+T(String(j.error||'').replace(/[.\s]+$/,''))+'.',false);
+      flash($('#ms_toast'),T('Nicht gespeichert.')+' '+T(String(j.error||'').replace(/[.\s]+$/,''))+'.'+msProtoText(j.proto),false);
       $('#ms_force').hidden=false;
     }
     else flashErr($('#ms_toast'),T('Verbindung fehlgeschlagen.'),j);

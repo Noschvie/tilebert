@@ -1329,7 +1329,9 @@
   html[data-motion="mid"] .dstate,html[data-motion="off"] .dstate{animation:none;}
   /* Tuerstation: Livebild fuellt die Karte, Klingel-Hinweis im Bild */
   .grid.panel .pantop>.video{flex:1 1 auto;min-height:0;aspect-ratio:auto;border-radius:var(--r-l);position:relative;align-self:stretch;}
-  .grid.panel .pantop>.video img{object-fit:cover;}
+  /* Bild haengt am Rahmen statt an der inhaltsabhaengigen Grid-Zeile (sonst unten abgeschnitten,
+     contain/Fokuspunkt wirkungslos); object-fit per Inline-Stil aus camCrop bleibt wirksam */
+  .grid.panel .pantop>.video img{position:absolute;inset:0;object-fit:cover;}
   .video .vbell{position:absolute;left:12px;top:12px;background:var(--crit-txt);color:#fff;border-radius:var(--r-pill);padding:6px 12px;
     font-weight:700;font-size:14px;animation:critPulse 1.6s ease-in-out infinite;}
   /* Tor: Fuellstand von unten = offen */
@@ -1986,6 +1988,11 @@
   .ptl .tlax span{position:absolute;top:0;transform:translateX(-50%);}
   .ptl .tlax span:first-child{transform:none;} .ptl .tlax span:last-child{transform:translateX(-100%);}
   .ptl .tltx{text-align:center;font-size:14px;color:var(--muted);min-height:17px;}
+  /* aktiver Betriebsmodus des Zeitplans unter der Achse (dezent, wie die App) */
+  .ptl .tlmode{text-align:center;font-size:11.5px;line-height:14px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  /* niedrige Panels: keine eigene Zeile, sondern in der Jetzt-Zeile ueber dem Balken, gegenueber der Uhrzeit */
+  @media (max-height:520px){ .ptl.incard{position:relative;} .ptl.incard .tlmode{position:absolute;top:0;right:2px;max-width:40%;line-height:13px;font-size:11px;text-align:right;}
+    .ptl.incard .tlmode.ml{right:auto;left:2px;text-align:left;} }
   /* ==== Flaeche heisst tippbar (0.19.80) ====
      Alles Tippbare hat eine Flaeche; Rang ueber Groesse und Deckkraft:
      Haupt = tile deckend, Neben (Kreis 32 px) und Chips = tile 55 %, ohne Umriss.
@@ -3465,12 +3472,14 @@ function tlineHtml(b,inCard){
   const segs=(b.segs||[]).map(s=>'<i class="'+esc(s.k)+'" style="left:'+(s.a/14.4)+'%;width:'+((s.b-s.a)/14.4)+'%"></i>').join('');
   return '<div class="ptl'+(inCard?' incard':'')+'">'+(inCard?'<div class="tlnow"><span></span></div>':'')+'<div class="tlbar'+(b.dk==='comfort'?' dflt':'')+'">'+segs+'<u class="now"></u></div>'+
     '<div class="tlax">'+(inCard?tlAxis(b):'<span style="left:0">0</span><span style="left:25%">6</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span>')+'</div>'+
+    (inCard&&b.mode?'<div class="tlmode">'+esc(b.mode)+'</div>':'')+
     (inCard?'':'<div class="tltx"></div>')+'</div>'; }
 // Jetzt-Marke (+ in der Karte "So. 15:15" darueber; sonst Text Komfort bis / ab ...)
 const TL_WD=['So','Mo','Di','Mi','Do','Fr','Sa'];
 function paintTline(e,b){ if(!e||!b) return; const d=new Date(), m=d.getHours()*60+d.getMinutes();
   const nw=e.querySelector('.now'); if(nw) nw.style.left=(m/14.4)+'%';
   const tn=e.querySelector('.tlnow span'); if(tn){ tn.textContent=dsT(TL_WD[d.getDay()])+'. '+hhmm(m); tn.style.left=Math.min(88,Math.max(12,m/14.4))+'%'; }
+  const md=e.querySelector('.tlmode'); if(md) md.classList.toggle('ml',m>720);   // niedrige Panels: Modus gegenueber der Uhrzeit
   const tx=e.querySelector('.tltx'); if(!tx) return;
   const cs=(b.segs||[]).filter(s=>s.k==='comfort'), nm=(cs[0]&&cs[0].name)||'Komfort';
   const in_=cs.find(s=>s.a<=m&&m<s.b), nx=cs.filter(s=>s.a>m).sort((x,y)=>x.a-y.a)[0];

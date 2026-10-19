@@ -129,6 +129,86 @@ def _ms_https(port, https=None) -> bool:
         return True
 
 
+def _ms_proto_auto(ms: dict) -> bool:
+    """Protokoll automatisch erkennen? Ja bei https_auto oder fehlendem Feld (alte Config)."""
+    return bool(ms.get("https_auto")) or not isinstance(ms.get("https"), bool)
+
+
+def _ms_proto_mode(ms: dict) -> str:
+    """Auswahl fuer die Oberflaechen: auto | https | http."""
+    if _ms_proto_auto(ms):
+        return "auto"
+    return "https" if ms.get("https") else "http"
+
+
+PROTO_PROBE_TIMEOUT = 4.0     # s je Versuch (TLS-Handshake, Klartext-Anfrage)
+
+
+async def _ms_detect_https(host: str, port, timeout: float = PROTO_PROBE_TIMEOUT) -> bool | None:
+    """Welches Protokoll spricht der Port? True = TLS (HTTPS), False = Klartext-HTTP,
+    None = nicht feststellbar (nicht erreichbar). Zuerst ein TLS-Handshake ohne
+    Zertifikatspruefung; scheitert er an der TLS-Schicht (WRONG_VERSION_NUMBER o. Ae.)
+    oder antwortet der Server im Klartext mit HTTP, gilt HTTP (Gen2 auf Port 8006 u. a.)."""
+    try:
+        port = int(port)
+    except (TypeError, ValueError):
+        return None
+    try:                                     # erreichbar? (sonst nicht doppelt auf Zeitueberschreitung warten)
+        _r, w = await asyncio.wait_for(asyncio.open_connection(host, port), timeout)
+        w.close()
+    except (asyncio.TimeoutError, TimeoutError, OSError):
+        return None
+    ctx = _ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = _ssl.CERT_NONE
+    tls_err = None
+    try:
+        _r, w = await asyncio.wait_for(asyncio.open_connection(host, port, ssl=ctx), timeout)
+        w.close()
+        with contextlib.suppress(Exception):
+            await asyncio.wait_for(w.wait_closed(), 1)
+        return True
+    except _ssl.SSLError as err:            # TLS-Schicht: Gegenstelle spricht kein TLS
+        tls_err = err
+    except (asyncio.TimeoutError, TimeoutError, OSError, EOFError) as err:
+        tls_err = err                        # Abbruch/keine Antwort: Klartext-Gegenprobe entscheidet
+    # Klartext-Gegenprobe: antwortet der Port auf eine HTTP-Anfrage mit HTTP/…?
+    try:
+        r, w = await asyncio.wait_for(asyncio.open_connection(host, port), timeout)
+        try:
+            w.write(f"GET / HTTP/1.0\r\nHost: {host}\r\n\r\n".encode())
+            await w.drain()
+            head = await asyncio.wait_for(r.read(5), timeout)
+        finally:
+            w.close()
+            with contextlib.suppress(Exception):
+                await asyncio.wait_for(w.wait_closed(), 1)
+        if head.startswith(b"HTTP/"):
+            return False
+    except Exception:
+        pass
+    return False if isinstance(tls_err, _ssl.SSLError) else None
+
+
+def _ms_proto_store(host: str, port, https: bool) -> None:
+    """Erkanntes Protokoll in loxpanel.cfg merken (https + https_auto), nur bei
+    automatischer Wahl und demselben Miniserver. Best effort."""
+    if not CFG_FILE.is_file():
+        return
+    try:
+        cfg = _load_cfg()
+        ms = cfg.get("miniserver")
+        if (not isinstance(ms, dict) or ms.get("host") != host or not _ms_proto_auto(ms)
+                or int(ms.get("port", 443)) != int(port)):
+            return
+        if ms.get("https") is https and ms.get("https_auto") is True:
+            return
+        ms["https"], ms["https_auto"] = https, True
+        _write_cfg(cfg)
+    except (OSError, ValueError, TypeError) as err:
+        log.warning("Erkanntes Miniserver-Protokoll nicht gespeichert: %s", err)
+
+
 class _LoxClient(LoxoneClient):
     """loxone_api-Client, der Objekt-Werte auch als JSON-Text annimmt (getkey2, getjwt):
     manche Firmware liefert LL.value als Text, teils mit \\" (wie lxcommunicator)."""
@@ -178,7 +258,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.35"
+APP_VERSION = "0.20.36"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -2007,7 +2087,7 @@ class App:
         # ms kann leer sein (noch kein Miniserver konfiguriert) -> Server startet
         # trotzdem, /settings bleibt bedienbar; verbunden wird erst mit host.
         self.host, self.port = ms.get("host", ""), ms.get("port", 443)
-        self.https = ms.get("https")          # None = alt, Schema aus dem Port
+        self._proto_from_cfg(ms)
         self.user, self.password = ms.get("user", ""), ms.get("pass", "")
         self.verify_tls = ms.get("verify_tls", False)
 
@@ -2484,8 +2564,36 @@ class App:
         self._dirty = True
         return True
 
+    def _proto_from_cfg(self, ms: dict) -> None:
+        """Protokoll-Zustand aus der Miniserver-Config: https = wirksames Schema (None =
+        noch unbekannt, dann aus dem Port), https_auto = selbst erkennen. Ein gemerktes
+        Ergebnis gilt bis zu einem Verbindungsfehler; alte Configs ohne Feld erkennen beim
+        ersten Verbinden."""
+        h = ms.get("https")
+        self.https = h if isinstance(h, bool) else None
+        self.https_auto = _ms_proto_auto(ms)
+        self._proto_ok = not self.https_auto or self.https is not None
+        self._proto_redetect = True          # einmal neu erkennen je erfolgreicher Verbindung
+
+    async def _proto_check(self) -> bool:
+        """Bei automatischer Wahl das Protokoll des Ports erkennen, falls (noch) offen.
+        -> True, wenn sich das Schema dadurch geaendert hat."""
+        if not self.https_auto or self._proto_ok or not self.host:
+            return False
+        found = await _ms_detect_https(self.host, self.port)
+        if found is None:
+            return False                     # nicht erreichbar: naechster Versuch (nach Pause) prueft erneut
+        self._proto_ok = True
+        old, self.https = _ms_https(self.port, self.https), found
+        _ms_proto_store(self.host, self.port, found)
+        if old != found:
+            log.info("Miniserver-Protokoll erkannt: %s auf Port %s", "HTTPS" if found else "HTTP", self.port)
+            return True
+        return False
+
     async def start(self) -> None:
         try:
+            await self._proto_check()
             self.client = _make_client(self.host, self.user, self.password,
                                        self.port, self.verify_tls, self.https)
             await self.client.__aenter__()
@@ -2554,7 +2662,7 @@ class App:
             raise
         # Erfolg -> uebernehmen
         self.host, self.port = ms["host"], ms.get("port", 443)
-        self.https = ms.get("https")
+        self._proto_from_cfg(ms)
         self.user, self.password = ms["user"], ms["pass"]
         self.verify_tls = ms.get("verify_tls", False)
         old_client, self.client = self.client, newc
@@ -3280,7 +3388,13 @@ class App:
             segs.append({"a": int(a), "b": int(b), "k": k, "name": nm})
         segs.sort(key=lambda x: x["a"])
         k, nm = kind(dflt)
-        return {"segs": segs, "dk": k, "dname": nm}
+        out = {"segs": segs, "dk": k, "dname": nm}
+        # Aktiver Betriebsmodus des Zeitplans (wie die App unter der Zeitleiste, z. B.
+        # "Heizbetrieb E-Heizung Bad OG"): State mode des Daytimer-Unterbausteins
+        mname = self._daytimer_mode(src) if src is not c else ""
+        if mname:
+            out["mode"] = mname
+        return out
 
     def _irc1(self, c: dict) -> dict:
         """Zustand der alten Raumregelung (IRoomController, v1):
@@ -6597,13 +6711,16 @@ class App:
     def _daytimer_mode(self, c: dict) -> str:
         """Aktiver Modus/Tag eines Daytimers als Name. `mode` (Zahl) wird ueber
         `modeList` aufgeloest, Format: '0:mode=0;name=\"Feiertag\",1:mode=3;
-        name=\"Montag\",...' (Anfuehrungszeichen escaped)."""
+        name=\"Montag\",...' (Anfuehrungszeichen escaped). Eigene Betriebsmodi haben
+        negative Ids (z. B. -968); fehlt der Name in modeList, gilt die Struktur
+        `operatingModes`."""
         raw = str(self._state(c, "modeList") or "").replace('\\"', '"')
-        modes = {int(m): n for m, n in re.findall(r'mode=(\d+);name="([^"]*)"', raw)}
+        modes = {int(m): n for m, n in re.findall(r'mode=(-?\d+);name="([^"]*)"', raw)}
         try:
-            return modes.get(int(float(self._state(c, "mode"))), "")
+            mid = int(float(self._state(c, "mode")))
         except (TypeError, ValueError):
             return ""
+        return modes.get(mid) or _clean((self.op_modes or {}).get(str(mid)) or "")
 
     def _daytimer_value(self, c: dict) -> str:
         """Aktueller Wert eines Daytimers als Text: 0/leer -> „Aus"; analog ->
@@ -10946,6 +11063,8 @@ class App:
                     # (kein Verbindungsversuch, kein Log-Spam).
                     await asyncio.sleep(5)
                     continue
+                if self.client is not None and await self._proto_check():
+                    await self._close_conn()    # Protokoll neu erkannt und anders: Client neu bauen
                 if self.client is None:
                     await self.start()          # Erstverbindung / nach hartem Reset
                 elif self.ws is None:
@@ -10964,6 +11083,7 @@ class App:
                     await self._connect_ws()    # WS neu (Settings-Reconnect / nach Abriss)
                 connected_at = time.monotonic()
                 auth_retry = 0                  # Anmeldung hat funktioniert
+                self._proto_redetect = True     # nach dem naechsten Fehler darf wieder einmal erkannt werden
                 self._retry_now.clear()
                 self.ms_reason, self.ms_next_retry = "", 0.0
                 self.ms_up, self.ms_up_since = True, time.time()
@@ -11024,6 +11144,10 @@ class App:
                     wait = MS_RETRY[min(retry, len(MS_RETRY) - 1)]
                     retry += 1
                     log.warning("Miniserver nicht verbunden (%s) — neuer Versuch in %ss", err, wait)
+                if self.https_auto and self._proto_redetect and not rejected and close_code != 4003:
+                    # Automatische Protokollwahl: Fehler kann am Schema liegen (Port umgestellt) ->
+                    # beim naechsten Versuch (nach der Pause) EINMAL neu erkennen, bis wieder verbunden
+                    self._proto_ok, self._proto_redetect = False, False
                 self.ms_reason = _ms_reason_code(rejected, close_code, oos)
                 self.ms_next_retry = time.time() + wait
                 # Pause, aber durch reconnect() (neue Zugangsdaten) jederzeit abbrechbar.
@@ -11925,8 +12049,9 @@ async def api_settings(request: web.Request) -> web.Response:
             "host": ms.get("host") or os.environ.get("LOXPANEL_MS_HOST", ""),
             "user": ms.get("user") or os.environ.get("LOXPANEL_MS_USER", ""),
             "port": ms.get("port", 443),
-            # wirksames Schema (gespeichert oder alt aus dem Port)
+            # wirksames Schema (gespeichert/erkannt oder alt aus dem Port) und Auswahl auto|https|http
             "https": _ms_https(ms.get("port", 443), ms.get("https")),
+            "httpsMode": _ms_proto_mode(ms),
             "verify_tls": bool(ms.get("verify_tls", False)),
             "hasPass": bool(ms.get("pass")) or env_ms,
         },
@@ -12050,12 +12175,22 @@ async def api_settings_ms(request: web.Request) -> web.Response:
         ms["port"] = int(data.get("port") or 443)
     except (TypeError, ValueError):
         ms["port"] = 443
-    # Schema explizit (true/false). Ohne Angabe: gespeichertes Feld nur bei
-    # gleichem Port behalten, sonst wieder aus dem Port ableiten.
-    if isinstance(data.get("https"), bool):
-        ms["https"] = data["https"]
-    elif ms["port"] != alt_port:
+    # Schema: explizit true/false gewinnt immer; "auto" = selbst erkennen. Ohne Angabe
+    # (aeltere Oberflaechen): gespeicherte Wahl nur bei gleichem Port behalten, sonst auto.
+    want = data.get("https")
+    if isinstance(want, bool):
+        ms["https"] = want
+        ms.pop("https_auto", None)
+    elif want == "auto" or ms["port"] != alt_port or _ms_proto_auto(ms):
+        ms["https_auto"] = True
         ms.pop("https", None)
+    found = None
+    if ms.get("https_auto"):
+        found = await _ms_detect_https(host, ms["port"])
+        if found is not None:
+            ms["https"] = found            # Ergebnis merken, Auswahl bleibt "Automatisch"
+    proto = {"mode": _ms_proto_mode(ms), "https": _ms_https(ms["port"], ms.get("https")),
+             "port": ms["port"], "detected": found is not None}
     ms["verify_tls"] = bool(data.get("verify_tls"))
     if data.get("pass"):                       # leer = altes Passwort behalten
         ms["pass"] = str(data["pass"])
@@ -12068,7 +12203,7 @@ async def api_settings_ms(request: web.Request) -> web.Response:
     problem = await _ms_pruefen(ms)
     if problem and not force:
         return web.json_response({"ok": False, "saved": False, "kind": problem[0], "error": problem[1],
-                                  "canForce": True})
+                                  "canForce": True, "proto": proto})
     cfg["miniserver"] = ms
     try:
         _write_cfg(cfg)
@@ -12077,13 +12212,14 @@ async def api_settings_ms(request: web.Request) -> web.Response:
     try:
         n = await app.reconnect()
         log.info("Miniserver-Settings gespeichert, verbunden (%d Controls)", n)
-        return web.json_response({"ok": True, "connected": True, "nControls": n})
+        return web.json_response({"ok": True, "connected": True, "nControls": n, "proto": proto})
     except Exception as err:
         if problem and force:
             log.warning("Miniserver-Zugang trotz Fehler gespeichert: %s", problem[1])
             return web.json_response({"ok": True, "connected": False, "saved": True, "warning": problem[1],
-                                      "nControls": 0})
-        return web.json_response({"ok": False, "saved": True, "error": f"Verbindung fehlgeschlagen: {err}"})
+                                      "nControls": 0, "proto": proto})
+        return web.json_response({"ok": False, "saved": True, "error": f"Verbindung fehlgeschlagen: {err}",
+                                  "proto": proto})
 
 
 async def _ms_token_frei(c, jwt: str, user: str, alg: str) -> None:

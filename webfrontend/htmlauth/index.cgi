@@ -138,7 +138,9 @@ if ($action eq 'miniserver') {
         user       => scalar($cgi->param('user')) // '',
         pass       => scalar($cgi->param('pass')) // '',
         port       => int((scalar($cgi->param('port')) || 443)),
-        https      => ((scalar($cgi->param('scheme')) // '') eq 'http' ? JSON::false : JSON::true),
+        # Protokoll: auto (Server erkennt TLS/Klartext am Port) | https | http
+        https      => do { my $sc = scalar($cgi->param('scheme')) // '';
+                           $sc eq 'http' ? JSON::false : $sc eq 'https' ? JSON::true : 'auto' },
         verify_tls => ($cgi->param('tls') ? JSON::true : JSON::false),
         force      => ($cgi->param('force') ? JSON::true : JSON::false),
     });
@@ -279,7 +281,7 @@ elsif ($action eq 'delete_backup') {
 }
 
 # ---- Status vom Container holen ----
-my ($running, $conn, $mhost, $muser, $mport, $haspass, $mhttps) = (0, 0, '', '', 443, 0, 1);
+my ($running, $conn, $mhost, $muser, $mport, $haspass, $mmode) = (0, 0, '', '', 443, 0, 'auto');
 my $sr = LWP::UserAgent->new(timeout => 5)->get("$api/api/settings", 'X-LoxPanel-Token' => $tok);
 if ($sr->is_success) {
     $running = 1;
@@ -289,8 +291,9 @@ if ($sr->is_success) {
         my $m = $j->{miniserver} // {};
         $mhost = $m->{host} // ''; $muser = $m->{user} // '';
         $mport = $m->{port} // 443; $haspass = $m->{hasPass} ? 1 : 0;
-        # Schema: Feld vom Server, aeltere Server ohne Feld -> alt aus dem Port
-        $mhttps = defined $m->{https} ? ($m->{https} ? 1 : 0) : ($mport == 80 ? 0 : 1);
+        # Protokoll-Auswahl vom Server (auto|https|http); aeltere Server ohne httpsMode -> https-Feld
+        $mmode = ($m->{httpsMode} // '') =~ /^(auto|https|http)$/ ? $1
+               : defined $m->{https} ? ($m->{https} ? 'https' : 'http') : 'auto';
     }
 }
 # Laufender Code-Stand (Version/Commit) fuer die Statuskachel
@@ -320,7 +323,8 @@ my $stat = !$running ? "<span style='color:#a94442'>Container l&auml;uft nicht</
     : "<span style='color:#8a6d3b'>l&auml;uft &middot; noch kein Miniserver</span>";
 
 my ($hh, $hu, $hp) = (h($mhost), h($muser), h($mport));
-my ($sel_https, $sel_http) = $mhttps ? (" selected", "") : ("", " selected");
+my ($sel_auto, $sel_https, $sel_http) = map { $mmode eq $_ ? " selected" : "" } qw(auto https http);
+my $tls_dis = $mmode eq 'http' ? " disabled" : "";
 my $passph = $haspass ? "unver&auml;ndert lassen" : "Passwort eingeben";
 
 # ---- Verlauf der letzten Aktion (Tail) ----
@@ -540,17 +544,17 @@ print <<"HTML";
         <div class="lpx-f">
           <div><label class="l">Host / IP</label><input class="i" data-role="none" name="host" value="$hh" placeholder="192.168.1.50"></div>
           <div><label class="l">Protokoll</label><select class="i" data-role="none" name="scheme"
-            onchange="var p=this.form.port;if(p.value==='80'||p.value==='443'||p.value==='')p.value=this.value==='http'?'80':'443';">
-            <option value="https"$sel_https>HTTPS</option><option value="http"$sel_http>HTTP</option></select></div>
+            onchange="var p=this.form.port;if(this.value!=='auto'&amp;&amp;(p.value==='80'||p.value==='443'||p.value===''))p.value=this.value==='http'?'80':'443';var t=this.form.tls;t.disabled=this.value==='http';">
+            <option value="auto"$sel_auto>Automatisch</option><option value="https"$sel_https>HTTPS</option><option value="http"$sel_http>HTTP</option></select></div>
           <div><label class="l">Port</label><input class="i" data-role="none" name="port" value="$hp"></div>
         </div>
         <div class="lpx-f2">
           <div><label class="l">Benutzer</label><input class="i" data-role="none" name="user" value="$hu" autocomplete="off"></div>
           <div><label class="l">Passwort</label><input class="i" data-role="none" type="password" name="pass" placeholder="$passph" autocomplete="new-password"></div>
         </div>
-        <label class="lpx-chk"><input type="checkbox" data-role="none" name="tls"> Zertifikat pr&uuml;fen (Gen2 selbstsigniert: aus)</label>
+        <label class="lpx-chk"><input type="checkbox" data-role="none" name="tls"$tls_dis> Zertifikat pr&uuml;fen (Gen2 selbstsigniert: aus)</label>
         <label class="lpx-chk"><input type="checkbox" data-role="none" name="force"> Auch bei fehlgeschlagener Pr&uuml;fung speichern</label>
-        <p class="lpx-note" style="margin:6px 0 0">HTTPS f&uuml;r Gen2 (meist Port 443), HTTP f&uuml;r Gen1 (Port 80).</p>
+        <p class="lpx-note" style="margin:6px 0 0">Automatisch erkennt HTTPS oder HTTP am Port. Sonst HTTPS f&uuml;r Gen2 (meist Port 443), HTTP f&uuml;r Gen1 (Port 80).</p>
       </form>
       <div class="lpx-row">
         <button class="lpx-btn lpx-pri" data-role="none" type="submit" form="msform">Verbinden &amp; Speichern</button>
