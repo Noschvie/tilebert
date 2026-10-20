@@ -693,14 +693,14 @@
   /* Anti-Einbrennen: Inhalt driftet langsam ueber den Schirm. Kleinere Amplitude
      als bei der reinen Uhr, damit Wetter/Termine nicht ueber den Rand wandern. */
   .saver .sv-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;
-    width:min(92%,440px);transform:var(--svd,translate(-14px,-5px));}   /* Drift-Stufe setzt svDrift() (alle 90 s) */
+    width:min(92%,440px);transform:translate(-14px,-5px);}   /* Drift-Stufe setzt svDrift() direkt am Element (alle 90 s) */
   .sv-clock{display:flex;flex-direction:column;align-items:center;gap:4px;}
   /* Kompakte Front, sobald Wetter/Termine dazukommen (sonst passt es nicht aufs
      480x480-Panel). Die reine Uhr (ohne Front-Daten) bleibt gross. */
   .sv-wrap.rich{gap:9px;}
   /* Mit Wetter/Terminen keine Anti-Einbrenn-Drift — der Inhalt soll ruhig stehen
      (die reine Uhr weiter unten driftet weiterhin als Einbrennschutz). */
-  .saver .sv-wrap.rich{animation:none;transform:none;}
+  .saver .sv-wrap.rich{animation:none;transform:none !important;}   /* !important: schlaegt die Drift-Stufe im style-Attribut */
   .sv-wrap.rich .sv-time{font-size:44px;}
   .sv-wrap.rich .sv-date{font-size:15px;}
   .sv-wrap.rich .sv-clock{margin:20px 0 6px;}   /* Uhr klar von der Wettervorschau darueber absetzen */
@@ -733,7 +733,9 @@
   .saver.layout .sv-grid{display:grid;position:absolute;inset:70px 12px 12px;padding:14px;gap:10px;border-radius:var(--r-xl);
     background:rgba(var(--bezel-ink-rgb,255,255,255),.035);
     grid-template-columns:repeat(var(--svc,3),minmax(0,1fr));grid-template-rows:repeat(var(--svr,3),minmax(0,1fr));
-    transform:var(--svgd,translate(-3px,-2px));}   /* Einbrennschutz: Stufe setzt svDrift() (alle 120 s) */
+    transform:translate(-3px,-2px);}   /* Einbrennschutz: Stufe setzt svDrift() direkt am Element (alle 120 s) */
+  /* Eigene Ebene nur bei sichtbarem Dashboard: der Drift-Schritt verschiebt sie dann ohne Neuzeichnen */
+  .saver.layout:not(.hidden) .sv-grid{will-change:transform;}
   .svw{min-width:0;min-height:0;position:relative;display:flex;}
   /* Tabs als Raster: 3 Spalten x 3 Zeilen je Seite (160 px je 480er-Display),
      gleiche Zellen wie der Screensaver; mehrere Seiten rasten beim Wischen ein. */
@@ -901,7 +903,7 @@
      je Profil) im Stil eines Tab-Symbols */
   .saver .sv-bar{display:none;}
   .saver.layout .sv-bar{display:flex;position:absolute;left:12px;right:12px;top:8px;height:52px;align-items:center;gap:8px;z-index:3;
-    transform:var(--svgd,translate(-3px,-2px));}   /* Einbrennschutz wie das Raster (immer, auch bei Animation "Keine") */
+    transform:translate(-3px,-2px);}   /* Einbrennschutz wie das Raster (immer, auch bei Animation "Keine"), Stufe per svDrift() */
   .sv-st{display:flex;align-items:center;gap:4px;min-width:0;overflow:hidden;
     align-self:stretch;}   /* volle Leistenhoehe: Platz fuer die Zahlen-Bubble ueber dem Symbol (sonst abgeschnitten) */
   .sv-st .svsti{height:100%;max-height:52px;}
@@ -6730,11 +6732,15 @@ function svCover(){ clearTimeout(_svCoverT); const on=saverOn(), h=document.docu
 // Einbrennschutz-Drift per Takt statt CSS-Daueranimation: eine laufende (auch step-end) Animation
 // laesst den Kompositor im WebView jede Bildschirmaktualisierung (60/s) arbeiten, hier gibt es nur
 // einen Stilwechsel je Stufe. Gleiche Positionen und Stufenlaengen wie bisher (Uhr 4x90 s, Raster 4x120 s).
-const SV_DRIFT=[['--svd',90000,['-14px,-5px','14px,-5px','14px,5px','-14px,5px']],
-  ['--svgd',120000,['-3px,-2px','3px,-2px','3px,2px','-3px,2px']]];
-function svDrift(){ const st=el('saver').style, now=Date.now(); let next=Infinity;   // am #saver: kein Stil-Neuberechnen der ganzen Seite
-  SV_DRIFT.forEach(([k,ms,pos])=>{ const v='translate('+pos[Math.floor(now/ms)%4]+')';
-    if(st.getPropertyValue(k)!==v){ st.setProperty(k,v); LT.driftT=performance.now(); } next=Math.min(next, ms-now%ms); });
+// Die Stufe sitzt als transform direkt an den bewegten Elementen (nicht als vererbte CSS-Variable am #saver:
+// die liess bei jedem Schritt Stil/Layout/Paint des ganzen Dashboards neu rechnen -> Haenger am Shelly).
+// Das Raster hat bei sichtbarem Dashboard eine eigene Ebene: der Schritt ist dann reine Kompositor-Arbeit.
+const SV_DRIFT=[[['#saver .sv-wrap'],90000,['-14px,-5px','14px,-5px','14px,5px','-14px,5px']],
+  [['#svGrid','#svBar'],120000,['-3px,-2px','3px,-2px','3px,2px','-3px,2px']]];
+function svDrift(){ const now=Date.now(); let next=Infinity;
+  SV_DRIFT.forEach(([sel,ms,pos])=>{ const v='translate('+pos[Math.floor(now/ms)%4]+')';
+    sel.forEach(q=>{ const e=document.querySelector(q); if(e && e._svd!==v){ e._svd=v; e.style.transform=v; LT.driftT=performance.now(); } });
+    next=Math.min(next, ms-now%ms); });
   setTimeout(svDrift, next+50); }
 svDrift();
 // Screensaver zweispaltig NUR im Querformat (breites 2-Pane-Tablet, z.B. Shelly
