@@ -172,6 +172,48 @@ def _volle_stunde(t: datetime) -> datetime:
     return t.replace(minute=0, second=0, microsecond=0)
 
 
+# Versatz erst uebernehmen, wenn er sich ueber mehrere Pushes bestaetigt. Am
+# Stundenwechsel (Push kurz vor/nach der vollen Stunde, Messwert schon auf der neuen
+# oder noch auf der alten Stunde) ergibt die Messung +-1 h, ohne dass sich an der
+# Zeitzone etwas geaendert hat - solche Messungen zaehlen nicht. build() laeuft bei
+# jedem Abruf der Front, daher zaehlen nur verschiedene Messwert-Zeitstempel (Pushes).
+VERSATZ_STABIL = 3                 # so viele Pushes in Folge mit gleichem neuem Versatz
+VERSATZ_RAND_MIN = (55, 15)        # Minuten vor / nach der vollen Stunde: unsicher
+_versatz_kandidat: tuple | None = None   # (Versatz, {Messwert-Zeitstempel})
+_versatz_gilt: timedelta | None = None   # uebernommener Versatz (None = noch keiner)
+
+
+def _versatz_reset() -> None:
+    global _versatz_kandidat, _versatz_gilt, _LETZTER_VERSATZ
+    _versatz_kandidat = _versatz_gilt = _LETZTER_VERSATZ = None
+
+
+def _versatz_uebernehmen(gemessen: timedelta, now: datetime, t_roh: datetime) -> timedelta:
+    """Gemessenen Stundenversatz nur bei Bestaetigung uebernehmen, sonst den bisherigen."""
+    global _versatz_kandidat, _versatz_gilt, _LETZTER_VERSATZ
+    am_rand = now.minute >= VERSATZ_RAND_MIN[0] or now.minute < VERSATZ_RAND_MIN[1]
+    if _versatz_gilt is None and (not am_rand or not gemessen):
+        # Erster brauchbarer Messwert: es gibt nichts Besseres
+        _versatz_gilt, _versatz_kandidat = gemessen, None
+    elif gemessen == _versatz_gilt:
+        _versatz_kandidat = None
+    elif not am_rand:
+        seen = _versatz_kandidat[1] if _versatz_kandidat and _versatz_kandidat[0] == gemessen else set()
+        seen = seen | {t_roh}
+        _versatz_kandidat = (gemessen, seen)
+        if len(seen) >= VERSATZ_STABIL:
+            _versatz_gilt, _versatz_kandidat = gemessen, None
+    gilt = _versatz_gilt or timedelta(0)     # noch keiner (erster Messwert am Stundenrand): 0
+    if gilt != (_LETZTER_VERSATZ or timedelta(0)):   # nur bei Aenderung melden
+        if gilt:
+            log.info("Wetterserver: Zeitstempel um %+d h gegen die Ortszeit verschoben — wird ausgeglichen",
+                     round(gilt.total_seconds() / 3600))
+        else:
+            log.info("Wetterserver: Zeitstempel wieder ohne Versatz")
+    _LETZTER_VERSATZ = gilt
+    return gilt
+
+
 def weather_texts(cfg: dict) -> dict:
     """`weatherTypeTexts` der Struktur -> {Wettertyp-Nummer: Text}.
 
@@ -259,16 +301,12 @@ def build(cfg: dict, actual: list, forecast: list, *,
     # Anlage in einer anderen Zeitzone als hier angenommen; der Abstand wird
     # gemessen und auf alle Eintraege angewandt, statt ihn zu raten. Ohne das
     # rutschen Stunden ueber die Tagesgrenze und "heute" bekommt fremde Werte.
-    versatz = _volle_stunde(now) - _volle_stunde(t_roh)
-    if abs(versatz) > MAX_RUECK:
+    gemessen = _volle_stunde(now) - _volle_stunde(t_roh)
+    if abs(gemessen) > MAX_RUECK:
         log.warning("Wetterserver: Zeitstempel unplausibel (%s statt ~%s) — kein Wetter",
                     t_roh, now.replace(microsecond=0))
         return None
-    global _LETZTER_VERSATZ
-    if versatz and versatz != _LETZTER_VERSATZ:     # nur bei Aenderung melden (sonst bei jedem Wetter-Push)
-        _LETZTER_VERSATZ = versatz
-        log.info("Wetterserver: Zeitstempel um %+d h gegen die Ortszeit verschoben — wird ausgeglichen",
-                 round(versatz.total_seconds() / 3600))
+    versatz = _versatz_uebernehmen(gemessen, now, t_roh)
 
     fmt = cfg.get("format") if isinstance(cfg.get("format"), dict) else {}
     # Temperatur wird als Grad Celsius gelesen; nur eine ausdrueckliche

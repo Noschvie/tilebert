@@ -21,12 +21,11 @@
   .wrap{display:grid;grid-template-columns:216px 1fr;height:100vh;}
   /* ---------- Sidebar (Panelleiste) ---------- */
   aside.side{background:var(--panel);border-right:1px solid var(--line);padding:18px 16px;display:flex;flex-direction:column;gap:14px;overflow-y:auto;}
-  .brand{font-size:20px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;gap:8px;}
+  .brand{font-size:20px;font-weight:600;letter-spacing:.2px;display:flex;align-items:center;gap:10px;min-height:36px;}
   /* Marke (design-system/logo/marke-klein.svg) vor dem Schriftzug; farbig fix, steht nur auf bezel */
   .brand .bmark{flex:none;width:28px;height:28px;display:block;}
   .brand .btx{display:block;min-width:0;}
-  .brand small{display:block;color:var(--muted);font-size:12px;font-weight:400;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
-  .sectlbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 0 -4px;}
+  .sectlbl{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:14px 0 -4px;}
   .plist{display:flex;flex-direction:column;gap:5px;}
   .pitem{display:flex;flex-direction:column;gap:1px;padding:9px 11px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--bg);cursor:pointer;}
   .pitem:hover{background:var(--panel2);border-color:var(--line);}
@@ -365,7 +364,7 @@
   a{color:var(--accent);}
   /* Rahmen: Seitenleiste */
   aside.side{background:var(--bezel);border-right:0;color:var(--bezel-ink);}
-  .brand{color:var(--bezel-strong);} .brand small,.sectlbl{color:var(--bezel-muted);}
+  .brand{color:var(--bezel-strong);} .sectlbl{color:var(--bezel-muted);}
   .pitem{background:var(--bezel-tint);border:1px solid transparent;border-radius:var(--r-m);padding:11px 14px;color:var(--bezel-ink);}
   .pitem:hover{background:var(--bezel-hover);border-color:transparent;}
   .pitem.active{background:var(--active);color:var(--active-ink);border-color:transparent;}
@@ -558,7 +557,7 @@
 
   /* Seitenleiste: einklappbar, unten Theme-Umschalter als Symbol */
   .wrap{transition:grid-template-columns .22s ease;}
-  .brandrow{display:flex;align-items:flex-start;gap:8px;}
+  .brandrow{display:flex;align-items:center;gap:8px;padding-top:4px;}
   .brandrow .brand{flex:1;min-width:0;white-space:nowrap;}
   .sidetog{flex:none;width:34px;height:34px;border-radius:var(--r-m);border:0;display:grid;place-items:center;cursor:pointer;
     background:var(--bezel-tint);color:var(--bezel-muted);text-decoration:none;transition:background .15s,color .15s,transform .22s;}
@@ -566,8 +565,8 @@
   .sidetog svg,.themesw svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
   .sidefoot{margin-top:auto;display:flex;align-items:center;gap:8px;}
   .sidefoot .themesw{flex:1;}
-  /* Versionsstempel rechts neben der Farbauswahl: Version · Commit · Installiert */
-  .appver{display:flex;flex-direction:column;align-items:flex-end;line-height:1.25;font-size:10px;opacity:.62;
+  /* Versionsstempel unten rechts: nur die Versionsnummer, einzeilig (Commit/Installiert im title) */
+  .appver{display:flex;align-items:center;line-height:1.25;font-size:10px;opacity:.62;
     font-variant-numeric:tabular-nums;white-space:nowrap;cursor:default;}
   .appverwrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px;}
   .appupd{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:600;white-space:nowrap;
@@ -589,7 +588,7 @@
   .wrap.slim .brand:hover{background:var(--bezel-tint);}
   .wrap.slim .brand .btx{display:none;}
   .wrap.slim .sectlbl,.wrap.slim .pn,.wrap.slim .pid,.wrap.slim .adt{display:none;}
-  .wrap.slim .brandrow{justify-content:center;}
+  .wrap.slim .brandrow{justify-content:center;padding:0;}
   .wrap.slim .sidetog{transform:rotate(180deg);}
   .wrap.slim .plist{align-items:center;gap:8px;}
   .wrap.slim .pitem{width:48px;height:48px;padding:0;border-radius:var(--r-m);display:grid;place-items:center;}
@@ -621,7 +620,7 @@
   .dpwrap .tbicopick{margin:0 14px 12px;}
   .dpwrap .dashprops{border:0;border-top:1px solid var(--line);border-radius:0 0 var(--r-m) var(--r-m);background:transparent;}
   @media (prefers-reduced-motion:reduce){ .dpbody,.dphd svg{transition:none;} }
-  .dashprops{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1.4fr);gap:10px 18px;align-items:start;padding:10px 14px;}
+  .dashprops{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 18px;align-items:start;padding:10px 14px;}
   details.card>summary{cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;list-style:none;}
   details.card>summary::-webkit-details-marker{display:none;}
   /* Aufklapp-Zeichen nur rechts (details>summary::after), kein zweites links */
@@ -629,18 +628,30 @@
   .dashprops .field{width:auto;margin:0;min-width:0;}
   .dashprops .lbl{margin-bottom:5px;}
   .dashprops .hint{font-size:11px;margin-top:4px;line-height:1.35;}
-  .dashprops .dstd{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:2px 12px;padding-top:8px;border-top:1px solid var(--line);}
-  .dashprops .dstd{flex-direction:row;justify-content:flex-start;align-items:center;text-align:left;}
-  .dashprops .dstd .lbl{margin:0;width:auto;display:inline-block;} .dashprops .dstd .chk{margin:0;width:auto;} .dashprops .dstd .hint{margin:0;width:auto;flex:1 1 220px;}
-  .dashprops .dinfo{color:var(--muted);font-weight:400;cursor:help;}
+  .dashprops .lbl{font-size:13px;color:var(--muted);}
+  .dashprops .dgridf>.chk{margin-bottom:0;}
+  /* Feldhilfe: ?-Knopf hinter dem Feldnamen (helpify: .field > p.fhelp) */
+  .field>p.fhelp{display:none;}
+  .fhead{display:flex;align-items:center;gap:8px;margin-bottom:5px;} .fhead>.lbl{margin:0 !important;}
+  /* Unterzeile in einem Feld (z. B. "Wischen") */
+  .fsub{display:block;font-size:12px;color:var(--muted);margin:6px 0 0;}
+  /* Richtungswahl: Haekchen-Raster 2 × 2 */
+  .apgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+  .apgrid .apit{padding-left:6px;padding-right:6px;gap:6px;} .apdir{white-space:nowrap;}
+  .dashprops .dseg{display:flex;gap:4px;}
+  @media (max-width:760px){ .dashprops .dbar .dbarhd,.dashprops .chk,.dashprops .apit,.dashprops .dexits .apit{min-height:44px;} }
+  .dashprops .fhead>.qhelp{margin:-4px 0;}
+  .dashprops .dbgimg .dbgthumb{height:36px;padding:0;align-self:center;}
+  .apit>.apdir{flex-direction:row;align-items:center;gap:6px;} .apdir>i{font-style:normal;width:1.1em;text-align:center;flex:none;}
   .dashprops .dambrow{display:flex;flex-direction:column;gap:2px;margin:0 0 6px;font-size:12px;color:var(--muted);}
   .dashprops .dambrow select{width:100%;}
   .dashprops .dbgimg{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px;}
   .dashprops .dbgthumb{width:64px;height:36px;border-radius:var(--r-s);border:1px solid var(--line);background:var(--panel2) center/cover no-repeat;flex:none;}
   .dashprops .dbgthumb.empty{background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgba(127,127,127,.12) 6px 12px);}
   .dashprops .dbgimg .minibtn{display:inline-flex;align-items:center;cursor:pointer;}
-  .dashprops .dbarhd{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;width:100%;cursor:pointer;font-size:12px;font-weight:600;color:var(--fg);}
-  .dashprops .dbarhd small{color:var(--muted);font-weight:400;margin-left:4px;}
+  .dashprops .dbarhd{all:unset;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:40px;cursor:pointer;font-size:13px;font-weight:600;color:var(--fg);}
+  .dashprops .dbarhd:focus-visible{outline:2px solid var(--sel);outline-offset:2px;border-radius:var(--r-s);}
+  .dashprops .dbarhd small{color:var(--muted);font-weight:400;font-size:12px;margin-left:8px;}
   .dashprops .dbarhd svg{color:var(--muted);transition:transform .22s ease;flex:none;}
   .dashprops .dbarbox.open .dbarhd svg{transform:rotate(180deg);}
   .dashprops .dbarbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .24s cubic-bezier(.2,0,0,1);}
@@ -710,7 +721,7 @@
     .g2ed .lib{position:static;max-height:280px;min-height:0;}
   }
   /* Dashboard-Eigenschaften: Spalten nach verfuegbarer Breite, nichts ragt heraus */
-  @container (max-width:900px){ .dashprops{grid-template-columns:minmax(0,1fr);} }
+  @container (max-width:900px){ .dashprops{grid-template-columns:minmax(0,1fr);row-gap:18px;} }
   /* Ohne Container-Queries (Safari < 16): Fensterbreite minus ca. 300 px Seitenleiste */
   @supports not (container-type:inline-size){
     @media (max-width:1700px){ .sved.g2ed{grid-template-columns:190px minmax(0,1fr) 230px;gap:12px;} .sved.g2ed>.side{width:230px;} }
@@ -725,7 +736,7 @@
       .sved.g2ed>.side{position:static;max-height:none;}
       .g2ed .lib{position:static;max-height:280px;min-height:0;}
     }
-    @media (max-width:1200px){ .dashprops{grid-template-columns:minmax(0,1fr);} }
+    @media (max-width:1200px){ .dashprops{grid-template-columns:minmax(0,1fr);row-gap:18px;} }
   }
   .dashprops select{max-width:100%;min-width:0;}
   .dashprops .dambrow [data-amb]{flex:none;}
@@ -927,7 +938,7 @@
   .qspi.on .qschk::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:translateY(-1px) rotate(-45deg);}
   .qspick .wzft{align-items:center;}
   .qspick .mzchip.on{background:var(--fg);border-color:var(--fg);color:var(--panel);}
-  .qspick .mzchip.on::after,.qspick .mzchip.on::before{display:none;}
+  .qspick .mzchip.on::after,.qspick .mzchip.on::before,.libchips .mzchip.on::after,.libchips .mzchip.on::before{display:none;}
   /* Standard-Auswahldialog fuer Bausteine (ctlPick) */
   .qspick .wzhd.qshd{align-items:flex-start;padding-bottom:10px;}
   .qsti{display:flex;flex-direction:column;gap:3px;min-width:0;}
@@ -939,8 +950,8 @@
   .qspick .qschips::-webkit-scrollbar{display:none;}
   .qspick .qschips{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 28px),transparent);}
   .qspick .mzchip{flex:none;min-height:44px;white-space:nowrap;}
-  .qspick .mzchip .qsn{color:var(--muted);font-size:11.5px;margin-left:3px;font-variant-numeric:tabular-nums;}
-  .qspick .mzchip.on{background:color-mix(in srgb,var(--sel) 14%,var(--field));border-color:var(--sel);box-shadow:inset 0 0 0 1px var(--sel);color:var(--fg);}
+  .qspick .mzchip .qsn,.libchips .mzchip .qsn{color:var(--muted);font-size:11.5px;margin-left:3px;font-variant-numeric:tabular-nums;}
+  .qspick .mzchip.on,.libchips .mzchip.on{background:color-mix(in srgb,var(--sel) 14%,var(--field));border-color:var(--sel);box-shadow:inset 0 0 0 1px var(--sel);color:var(--fg);}
   .qshint{color:var(--muted);font-size:12.5px;line-height:1.4;margin-top:-4px;flex:none;}
   .qschk{border-width:1px;}
   .qspi.on .qschk::after{border-color:var(--sel-ink,#fff);}
@@ -955,8 +966,8 @@
   .qspn2 .qsrm{display:block;color:var(--muted);font-size:12px;margin-top:1px;}
   .qspi small{max-width:40%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .qsgrp{overflow-wrap:break-word;}
-  .qspick mark{background:color-mix(in srgb,var(--sel) 24%,transparent);color:inherit;border-radius:3px;padding:0 1px;margin:0 -1px;}
-  .qspick .mzchip.zero:not(.on){opacity:.55;}
+  .qspick mark,.g2ed .lib mark{background:color-mix(in srgb,var(--sel) 24%,transparent);color:inherit;border-radius:3px;padding:0 1px;margin:0 -1px;}
+  .qspick .mzchip.zero:not(.on),.libchips .mzchip.zero:not(.on){opacity:.55;}
   .qspick .qschk,.qspick .qsrad{border-color:var(--muted);}
   .qspick .qspi:focus-visible{outline:2px solid var(--sel);outline-offset:-2px;}
   .qspick .qsok:disabled{opacity:.45;cursor:default;}
@@ -995,8 +1006,8 @@
   .tbchip .tbtx b,.tbchip .tbtx small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .camopt{min-height:44px;cursor:default;padding:0 0 0 8px;} .camopt label{min-height:44px;}
   /* Statusleiste / Status-Ampel: Chip-Reihe wie die Tab-Chips + Detailkarte des gewaehlten Bausteins (0.20.38) */
-  .dashprops .dbar{grid-column:1/-1;padding-top:10px;border-top:1px solid var(--line);}
-  .dashprops .dbar>.chk{margin-bottom:8px;}
+  .dashprops .dbar{grid-column:1/-1;padding-top:4px;border-top:1px solid var(--line);}
+  .dashprops .dbar .dbarbody .chk{margin-bottom:8px;}
   .sblist{max-width:820px;}
   .sbstrip{display:flex;flex-wrap:wrap;gap:8px;padding-top:10px;margin:0 0 12px;}
   .sbstrip .tbtx{gap:2px;} .sbstrip .tbtx b{margin:0;font-size:14px;line-height:1.25;} .sbstrip .tbtx small{margin:0;font-size:11px;line-height:1.3;}
@@ -1171,7 +1182,6 @@
   .crpdot{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:var(--r-round,32%);background:var(--ov-ink);border:3px solid var(--ov-dot);pointer-events:none;box-shadow:0 1px 4px rgba(0,0,0,.5);}
   .crpctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:8px;max-width:520px;}
   .crpz{flex:1;min-width:120px;} .crpzv{min-width:38px;font-variant-numeric:tabular-nums;font-size:13px;}
-  .dashprops .dbarbox{margin-top:6px;padding:7px 9px;border:1px solid var(--line);border-radius:var(--r-s);}
   .dashprops .dbarbox .camsel{max-height:190px;overflow:auto;}
   .dashprops .dbarlbl{font-size:12px;color:var(--muted);margin-bottom:6px;}
   .sved .egrid .pgl.haspgbar{display:flex;align-items:center;gap:6px;}
@@ -1188,7 +1198,7 @@
   @media (max-width:760px){
     .wrap:not(.slim) aside.side{flex-direction:row;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;}
     .wrap:not(.slim) .brandrow{flex:1 1 100%;}
-    .wrap:not(.slim) .brand small,.wrap:not(.slim) .sectlbl{display:none;}
+    .wrap:not(.slim) .sectlbl{display:none;}
     .brand .bmark{width:24px;height:24px;}
     .brand{min-height:44px;}   /* Logo ist ein Knopf (role=button): Tap-Ziel 44 px */
     .wrap:not(.slim) .plist{flex:1 1 0;min-width:0;flex-direction:row;flex-wrap:nowrap;overflow-x:auto;gap:8px;scrollbar-width:none;}
@@ -1263,6 +1273,7 @@
     .qhelp{position:relative;}
     .qhelp::after{content:'';position:absolute;inset:-11px;}
     .chk{min-height:44px;margin-bottom:0;}
+    .dashprops .dbar .dbarhd,.dashprops .chk,.dashprops .apit,.dashprops .dexits .apit{min-height:44px;}
   }
 
   /* ===== Vereinheitlichung: Aufklapper, Entfernen-Knöpfe, Geräte-Gruppen, Gerät hinzufügen ===== */
@@ -1338,7 +1349,7 @@
   .icwrap .muted{padding:0;}
   /* Aufklapper: überall derselbe Pfeil › rechts (dreht beim Öffnen) */
   .sved .tbsech svg,.dphd svg,.dashprops .dbarhd svg{display:none;}
-  .sved .tbsech::after,.dphd::after,.dashprops .dbarhd::after{content:'›';margin-left:auto;font-size:18px;line-height:1;opacity:.55;transition:transform .2s ease;flex:none;color:var(--fg);}
+  .sved .tbsech::after,.dphd::after,.dashprops .dbarhd::after{content:'›';content:'›' / '';margin-left:auto;font-size:18px;line-height:1;opacity:.55;transition:transform .2s ease;flex:none;color:var(--fg);}
   .sved .tbsec.open .tbsech::after,.dpwrap.open .dphd::after,.dashprops .dbarbox.open .dbarhd::after{transform:rotate(90deg);}
   /* 4) Geräte-Karte: Kopf mit Status, danach Abschnitte ohne Akkordeon (Panel, Display live, TbViewer, Einstellungen, Wartung) */
   /* Geraeteliste: eine Zeile je Geraet (Geraet, Typ, Panel, Status) */
@@ -1703,7 +1714,7 @@
   .tbchip.add{background:transparent;border-style:dashed;}
   .tbstrip{background:transparent;padding:0;}
   /* 5) Typografie: Größen 10-11-12-13-14-15-18-20-22-26-30, Gewichte 400/600, Versalien-Label eine Laufweite */
-  .sectlbl,.sflbl,.brand small,.grph,.dcols .dgh,.g2ed .libgrp,.wzq,.ovcard .ovk,.ovoptrow .ovk,.gdhd,.gds h3,.ovw .p2h{letter-spacing:.06em;}
+  .sectlbl,.sflbl,.grph,.dcols .dgh,.g2ed .libgrp,.wzq,.ovcard .ovk,.ovoptrow .ovk,.gdhd,.gds h3,.ovw .p2h{letter-spacing:.06em;}
   /* Suche: Symbole aus dem Linien-Satz */
   .palit .pic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;}
 
@@ -1785,8 +1796,6 @@
   input:not([type=checkbox]):not([type=radio]):not([type=range]),select,textarea{border-color:var(--field-line) !important;}
   input:focus-visible,select:focus-visible,textarea:focus-visible{border-color:var(--prim) !important;}
   .gs.ok{color:var(--good-txt);} .gs.warn{color:var(--warn-txt);} .gs.bad{color:var(--crit-txt);}
-  /* Blitz-Symbol an Sofort-Aktionen entfaellt (title bleibt) */
-  .now::after,.btn.sm.now::after,.minibtn.now::after{display:none !important;}
   /* Klickziele: sichtbar klein, Tippflaeche >= 44 px */
   .themesw button,.g2ed .libtabs button,.sved .seg button,.dbseg button{position:relative;}
   .themesw button::after,.g2ed .libtabs button::after,.dbseg button::after{content:'';position:absolute;inset:-8px 0;}
@@ -1833,13 +1842,18 @@
   #ag_list .devanon.card{padding:22px;}
   #ag_list .devanon.card>h3{margin:0 0 4px;}
   /* ===== 0.22.5 UI ===== */
-  /* Panel-Ansicht: Untermenue schmaler; auf Touch bleibt die Trefferflaeche 44 px (::after im Leistenabstand) */
-  .subtabs.psub{padding:6px 28px 2px;gap:4px;}
-  .subtabs.psub .stab{min-height:30px;padding:0 12px;}
-  @media (pointer:coarse),(max-width:760px){
-    .subtabs.psub{padding:6px 14px;}
-    .subtabs.psub .stab{min-height:32px;position:relative;}
-    .subtabs.psub .stab::after{content:"";position:absolute;inset:-6px 0;}
+  /* Seitenkopf mit Untermenue (0.20.39): eine Zeile - Art-Marke + Name (nur Panel), 16 px, Untermenue-Pillen 32 px.
+     Gleiche Masse in Panel, System, Geraete; Touch: Pille unsichtbar auf 44 px erweitert. Schmal: Menue in eigener Zeile, seitlich scrollend. */
+  .pagehead{display:flex;align-items:center;flex-wrap:wrap;column-gap:16px;row-gap:6px;padding:16px 28px 8px;background:var(--bg);min-width:0;flex:none;}
+  .pagehead #phead{padding:0;flex:0 1 auto;min-width:120px;max-width:min(480px,50%);align-items:center;}
+  #phead .phtxt{flex-direction:row;align-items:baseline;gap:8px;}
+  .pagehead .subtabs{padding:0;flex:0 0 auto;gap:4px;max-width:100%;}
+  .pagehead .subtabs .stab{min-height:32px;padding:0 12px;position:relative;}
+  @media (pointer:coarse),(max-width:760px){ .pagehead .subtabs .stab{min-height:32px;} .pagehead .subtabs .stab::after{content:"";position:absolute;inset:-6px 0;} }
+  @media (max-width:760px){
+    .pagehead{padding:14px 14px 4px;row-gap:4px;}
+    .pagehead #phead{max-width:none;flex:1 1 100%;}
+    .pagehead .subtabs{flex:1 1 100%;min-width:0;padding:6px 0;}
   }
   /* Start-Adresse: kleiner Link "Oeffnen" neben Kopieren */
   .pstartopen{display:inline-flex;align-items:center;gap:4px;min-height:32px;padding:0 4px;font-size:13px;font-weight:600;color:var(--sel,var(--accent));text-decoration:none;}
@@ -1956,6 +1970,24 @@
   /* Haekchen-Listen in schmalen Spalten */
   .tbblk .apit,.dexits .apit,.icrdevs .apit{min-height:40px;padding:4px 10px;font-size:13px;}
   .dashprops .dexits{gap:4px;} .sved .tbblk{gap:4px;}
+  /* ===== Bausteinbibliothek im Raster-Editor wie der Auswahldialog (0.20.39): gleiche Chips, Treffer, Gruppen; Zeilen sind Knoepfe ===== */
+  .g2ed .libit{font:inherit;font-size:13px;color:var(--fg);text-align:left;width:100%;margin:0;}
+  .g2ed .libit:focus{outline:none;} .g2ed .libit:focus-visible{outline:2px solid var(--sel);outline-offset:-2px;}
+  .g2ed .libit[aria-disabled="true"]{cursor:default;}
+  .g2ed .libchips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;gap:6px;padding:2px 0;flex:none;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 20px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 20px),transparent);}
+  .g2ed .libchips::-webkit-scrollbar{display:none;}
+  .g2ed .libchips .mzchip{flex:none;white-space:nowrap;min-height:32px;padding:5px 12px;font-size:12.5px;}
+  .g2ed .libchips .mzchip:last-child{margin-right:20px;}
+  @media (pointer:coarse),(max-width:760px){ .g2ed .libchips .mzchip{min-height:44px;} }
+  .g2ed .liblist .qsgrp{overflow-wrap:break-word;}
+  .g2ed .libit .qssr{position:absolute;}
+  /* zweite Zeile („Raum · Kategorie“) bricht wie im Dialog um statt mitten im Wort abzuschneiden */
+  .g2ed .libit .lsub{white-space:normal;overflow-wrap:break-word;hyphens:auto;}
+  .g2ed .libchips{gap:8px;} .g2ed .libfilt select{font-size:13px;} .g2ed .libchips .mzchip{font-size:13px;}
+  .g2ed .libhint{font-size:12px;}
+  /* Zeilen kommen blockweise (PICK_CHUNK) - content-visibility nicht mehr noetig; es verfaelscht Hoehen ueber dem Sichtbereich (Liste springt beim Ablegen) */
+  .g2ed .liblist>.libit{content-visibility:visible;}
 </style>
 </head>
 <body>
@@ -1963,7 +1995,7 @@
   <aside class="side">
     <div class="brandrow">
       <!-- Marke: Quelle design-system/logo/marke-klein.svg (inline, kein Request) -->
-      <div class="brand" id="brand" role="button" tabindex="0" style="cursor:pointer"><svg class="bmark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="4" y="4" width="18.2" height="18.2" rx="6.952" fill="#ffc145"/><rect x="25.8" y="4" width="18.2" height="18.2" rx="6.952" fill="#7db7ff"/><rect x="4" y="25.8" width="18.2" height="18.2" rx="6.952" fill="#ff9e7a"/><rect x="25.8" y="25.8" width="18.2" height="18.2" rx="6.952" fill="#5cd6a4"/><circle cx="13.1" cy="13.1" r="3.476" fill="#1f2440"/><rect x="27.62" y="9.46" width="14.56" height="7.28" rx="3.64" fill="#1f2440"/><circle cx="38.54" cy="13.1" r="2.54" fill="#7db7ff"/></svg><span class="btx">tilebert<small>Konfiguration</small></span></div>
+      <div class="brand" id="brand" role="button" tabindex="0" style="cursor:pointer"><svg class="bmark" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="4" y="4" width="18.2" height="18.2" rx="6.952" fill="#ffc145"/><rect x="25.8" y="4" width="18.2" height="18.2" rx="6.952" fill="#7db7ff"/><rect x="4" y="25.8" width="18.2" height="18.2" rx="6.952" fill="#ff9e7a"/><rect x="25.8" y="25.8" width="18.2" height="18.2" rx="6.952" fill="#5cd6a4"/><circle cx="13.1" cy="13.1" r="3.476" fill="#1f2440"/><rect x="27.62" y="9.46" width="14.56" height="7.28" rx="3.64" fill="#1f2440"/><circle cx="38.54" cy="13.1" r="2.54" fill="#7db7ff"/></svg><span class="btx">tilebert</span></div>
       <button type="button" class="sidetog" id="sideTog" title="Menü einklappen" aria-label="Menü einklappen">
         <svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button>
     </div>
@@ -1997,8 +2029,7 @@
         <button type="button" class="palbtn" id="palBtn" title="Suchen (Strg/⌘ + K)" data-i18n-title="Suchen (Strg/⌘ + K)"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span data-i18n>Suchen</span><kbd>⌘K</kbd></button>
       </div>
     </div>
-    <div id="phead"></div>
-    <div class="subtabs" id="subtabs"></div>
+    <div class="pagehead"><div id="phead"></div><div class="subtabs" id="subtabs"></div></div>
     <div class="scroll" id="scroll">
       <!-- Übersicht / Beschreibung -->
       <div id="overviewHost" class="ovw">
@@ -2311,7 +2342,7 @@
           <figure class="wide">
             <div class="faceplate fptab">
               <div class="miniscr"><div class="visu"><i></i><i></i><i></i><i></i></div></div>
-              <div class="miniscr"><div class="p2"><div class="p2h">Wetter</div><div class="wxr"><svg viewBox="0 0 24 24" fill="none" stroke="#5aa9e6" stroke-width="1.7" stroke-linecap="round"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.5A4 4 0 0 0 6.5 19z"/></svg><b>13°</b></div><div class="fore"><span></span><span></span><span></span><span></span></div></div></div>
+              <div class="miniscr"><div class="p2"><div class="p2h" data-i18n>Wetter</div><div class="wxr"><svg viewBox="0 0 24 24" fill="none" stroke="#5aa9e6" stroke-width="1.7" stroke-linecap="round"><path d="M17.5 19a4.5 4.5 0 0 0 0-9 6 6 0 0 0-11.6 1.5A4 4 0 0 0 6.5 19z"/></svg><b>13°</b></div><div class="fore"><span></span><span></span><span></span><span></span></div></div></div>
             </div>
             <div class="nm" data-i18n-html>7–8″-Tablet <span class="badge">2 Hälften oder Zoom</span></div>
             <div class="spec" data-i18n>1024 × 600 oder 1280 × 800 · Android oder iPad mini · quer</div>
@@ -2639,6 +2670,22 @@ document.addEventListener('click',e=>{ if(qOpen&&!qOpen.pop.contains(e.target)&&
 document.addEventListener('keydown',e=>{ if(e.key==='Escape'&&qOpen){ const b=qOpen.b; qClose(); b.focus(); } });
 window.addEventListener('resize',qPlace); document.addEventListener('scroll',qPlace,true);
 function helpify(root){
+  // Feldhilfe: .field > p.fhelp wandert hinter einen ?-Knopf neben dem Feldnamen (.lbl)
+  (root||document).querySelectorAll('.field').forEach(fd=>{
+    if(fd.dataset.help) return; const notes=[...fd.querySelectorAll(':scope > p.fhelp')], l=fd.querySelector(':scope > .lbl');
+    if(!notes.length||!l) return; fd.dataset.help='1';
+    const key=l.id||('fh'+Math.random().toString(36).slice(2,8)), name=l.textContent.trim();
+    const row=document.createElement('div'); row.className='fhead'; fd.insertBefore(row,l); row.appendChild(l);
+    const b=document.createElement('button'); b.type='button'; b.className='qhelp'; b.textContent='?';
+    const al=T('Hilfe zu „{n}“').replace('{n}',name); b.title=al; b.setAttribute('aria-label',al); b.setAttribute('aria-expanded','false'); b.setAttribute('aria-controls','qp_'+key); row.appendChild(b);
+    // Popover ausserhalb von Containern mit container-type (die waeren Bezugsrahmen fuer position:fixed); alte Kopie nach Neuzeichnen entfernen
+    document.querySelectorAll('.qpop[data-fh="'+key+'"]').forEach(x=>x.remove());
+    const pop=document.createElement('div'); pop.className='qpop'; pop.hidden=true; pop.id='qp_'+key; pop.dataset.fh=key; pop.setAttribute('role','dialog'); pop.setAttribute('aria-label',al);
+    notes.forEach(n=>{ n.classList.remove('fhelp'); n.classList.add('note'); pop.appendChild(n); });
+    let host=fd; for(let a=fd.parentElement;a&&a!==document.body;a=a.parentElement){ if(getComputedStyle(a).containerType!=='normal') host=a; }
+    if(host===fd) row.after(pop); else host.after(pop);
+    b.onclick=e=>{ e.stopPropagation(); if(qOpen&&qOpen.b===b){ qClose(); return; } qClose(); qOpen={b,pop}; pop.hidden=false; b.classList.add('on'); b.setAttribute('aria-expanded','true'); qPlace(); };
+  });
   (root||document).querySelectorAll('.card').forEach(card=>{
     if(card.dataset.help) return;
     // Eingeklappte Karte mit Klasse qhd: ?-Knopf in der Summary hinter der Ueberschrift, Popover neben der Karte
@@ -2663,7 +2710,7 @@ function helpify(root){
   });
 }
 // Sofort wirkende Aktionen (nicht ueber "Speichern" unten): Nebenaktion mit kleinem Blitz (CSS .now) + title
-const NOW_SEL='#at_send,#dg_dl,#np_go,#secSet,#secOff,#secOut,.dren_go,[data-dglog],[data-act],.dbri_get,.ddel,.ic_soundtest,.ddetuse';
+const NOW_SEL='#dBgPick,#dBgDel,#at_send,#dg_dl,#np_go,#secSet,#secOff,#secOut,.dren_go,[data-dglog],[data-act],.dbri_get,.ddel,.ic_soundtest,.ddetuse';
 function markNow(root){ (root||document).querySelectorAll(NOW_SEL).forEach(el=>{ if(el.classList.contains('now')) return;
   el.classList.add('now'); const t=T('Wirkt sofort, ohne Speichern'); el.title=el.title?el.title+' · '+t:t; }); }
 setTimeout(()=>markNow(),400);
@@ -2887,8 +2934,7 @@ function setRubric(r){
   $('#pconfHost').hidden=!pc;
   $('#setHost').hidden=!!(ov||pc);     // System und Geraete teilen sich setHost
   $('#phead').hidden=!pc;
-  $('#subtabs').hidden=!!ov;
-  $('#subtabs').classList.toggle('psub', r==='pconf');   // Panel-Ansicht: schmaleres Untermenue
+  $('#subtabs').hidden=!!ov; { const ph=document.querySelector('.pagehead'); if(ph) ph.hidden=!!ov; }   // Start: kein Seitenkopf
   saveBarVis();
   if(ov){ renderOverview(); refreshAdmin(); navHashWrite(); return; }
   renderList();                                          // aktives Panel nur im Panel-Editor markieren
@@ -2917,7 +2963,7 @@ document.querySelectorAll('.rub').forEach(b=>b.onclick=()=>setRubric(b.dataset.r
 (function(){ const w=document.querySelector('.wrap'), t=$('#sideTog');
   const set=c=>{ w.classList.toggle('slim',c); t.title=c?T('Menü ausklappen'):T('Menü einklappen'); t.setAttribute('aria-label',t.title);
     // Eingeklappt steht die Marke allein -> eigener Name fuer Screenreader
-    const br=$('#brand'); if(br){ if(c) br.setAttribute('aria-label',T('tilebert – Übersicht')); else br.removeAttribute('aria-label'); }
+    const br=$('#brand'); if(br) br.setAttribute('aria-label',T('tilebert – Übersicht'));
     try{ localStorage.setItem('lp_cfg_slim',c?'1':''); }catch(e){} };
   let c=false; try{ c=localStorage.getItem('lp_cfg_slim')==='1'; }catch(e){}
   set(c); t.onclick=()=>set(!w.classList.contains('slim')); })();
@@ -3303,7 +3349,7 @@ function renderEditor(){
   if(!ok.includes(subPconf)) subPconf='tabs';
   // Seitentitel des Panels (ueber den Reitern): Label "Panel", Name. Adresse, Kopieren und Oeffnen: Reiter Einstellungen.
   $('#phead').innerHTML =
-    '<div class="phtxt"><span class="pheyebrow">'+T('Panel')+'</span><h2 id="hTitle">'+esc(p.title||cur)+'</h2></div>';
+    '<div class="phtxt"><span class="pheyebrow">'+T('Panel')+'</span><h2 id="hTitle" title="'+esc(p.title||cur)+'">'+esc(p.title||cur)+'</h2></div>';
 
   $('#pconfHost').innerHTML =
    // 1 · Tabs: Leiste + Raster
@@ -3398,7 +3444,7 @@ function renderEditor(){
   // Titel live
   { const db=$('#pDelBtn'); if(db) db.onclick=()=>deletePanel(cur); }   // wie das ✕ in der Liste: sofort, mit Rueckgaengig
   $('#phCopy').onclick=()=>copyText(startUrl(cur)).then(()=>snack(T('Adresse kopiert.')),()=>snack(T('Kopieren nicht möglich. Markiere den Text und kopiere ihn von Hand.')));
-  $('#fTitle').oninput=e=>{ p.title=e.target.value; const h=$('#hTitle'); if(h)h.textContent=e.target.value||cur; markDirty(); };
+  $('#fTitle').oninput=e=>{ p.title=e.target.value; const h=$('#hTitle'); if(h){ h.textContent=e.target.value||cur; h.title=h.textContent; } markDirty(); };
   bindAppearance(p);
   { const ff=$('#fFill'); if(ff) ff.onchange=e=>{ p.ui=p.ui||{};
       if(e.target.value) p.ui.fill=true; else delete p.ui.fill; markDirty(); }; }
@@ -3466,8 +3512,8 @@ const SV_PICK={
   chart:()=>statControls(),
   player:()=>(META.controls||[]).filter(c=>c.type==='AudioZone'||c.type==='AudioZoneV2')
 };
-const SV_EXITS=[['x','✕ Schließen-Button (oben rechts)'],['up','Wischen nach oben ↑'],['down','Wischen nach unten ↓'],
-  ['left','Wischen nach links ←'],['right','Wischen nach rechts →']];
+const SV_EXITS=[['x','✕-Knopf oben rechts'],['up','Nach oben','↑'],['down','Nach unten','↓'],
+  ['left','Nach links','←'],['right','Nach rechts','→']];
 function svCfg(p){ if(!p.saver||typeof p.saver!=='object') p.saver={items:[],exit:[]};
   p.saver.items=p.saver.items||[]; p.saver.exit=p.saver.exit||[]; return p.saver; }
 // ---- Raster 2x2 / 3x3 (Tabs und Dashboard) ----
@@ -3718,7 +3764,7 @@ function sbDetHTML(ids, si, o){
   return '<div class="sbdet" role="group" aria-labelledby="'+pid+'">'+
     '<div class="sbdhd"><span class="sbdico" aria-hidden="true"><span class="tbico">'+barIcoHtml(c,ic)+'</span></span>'+
       '<div class="sbdtx"><b id="'+pid+'">'+hyHtml(c.name)+'</b><small>'+hyHtml([T(ST_TL[c.type]||c.type),c.roomName].filter(Boolean).join(' · '))+'</small></div>'+
-      '<span class="sbpos">'+T('Position {a} von {b}').replace('{a}',si+1).replace('{b}',n)+'</span></div>'+
+      '<span class="sbpos">'+T('Platz {a} von {b}').replace('{a}',si+1).replace('{b}',o.max||n)+'</span></div>'+
     (stIsText(c)?'<div class="sbdrow"><span class="lbl" id="'+o.id+'AnzL">'+T('Anzeige')+'</span><div class="dbseg sbseg" role="radiogroup" aria-labelledby="'+o.id+'AnzL">'+
       [['icon','Symbol'],['text','Text'],['both','Symbol + Text']].map(([k,l])=>
         '<button type="button" role="radio" aria-checked="'+(md===k)+'" tabindex="'+(md===k?0:-1)+'" class="'+(md===k?'on':'')+'" data-bsm="'+k+'" data-bs="'+esc(u)+'">'+T(l)+'</button>').join('')+'</div></div>':'')+
@@ -3914,25 +3960,117 @@ function pickFld(id, c, lblId){
     (c?'<span class="pfn" id="'+id+'N">'+hyHtml(c.name)+'<small>'+hyHtml([pickCat(c),c.roomName].filter(Boolean).join(' · '))+'</small></span>'
       :'<span class="pfn empty" id="'+id+'N">'+T('Baustein wählen')+' …</span>')+'</button>'; }
 const PICK_CHUNK=80;   // so viele Zeilen sofort, der Rest beim Scrollen (600+ Bausteine bleiben fluessig)
+const PICK_RK='\u0001recent';   // Schluessel des Chips „Zuletzt“
+// ==== Gemeinsame Such- und Filterliste (Standard 0.20.39): Auswahldialog ctlPick UND Bausteinbibliothek im Raster-Editor ====
+// pickIdx(all, o): Suchfelder einmal normalisieren. o: {chip(c)->[key,label], chipOrder, tlabel(c)->Typtext}
+//   .run(q, ty, {pre(c), rec:[uuid], rank(c)}) -> {list, terms, cnt (je Chip, folgen Suche und pre), nRec, flat}
+//   Suche: mehrere Woerter (UND) ueber Name, Raum, Kategorie, Typ; ohne Gross-/Kleinschreibung, Akzente, sz=ss.
+//   Sortierung: mit Suchtext nach Relevanz (Name beginnt mit > Wortanfang > im Namen > nur Raum/Kategorie/Typ),
+//   „Zuletzt“ in Verlaufsreihenfolge, sonst rank (z. B. „In diesem Tab“ zuerst), dann Raum, dann Name.
+function pickIdx(all, o){ o=o||{};
+  const catN={}; (META.cats||[]).forEach(c=>{ if(c&&c.uuid) catN[c.uuid]=c.name||''; });
+  const ck=c=>(o.chip&&o.chip(c))||['',''];
+  const lbl={}, base={}; all.forEach(c=>{ const [k,l]=ck(c); lbl[k]=l; base[k]=(base[k]||0)+1; });
+  const keys=(o.chipOrder||Object.keys(base)).filter(k=>k&&base[k]);
+  const IX=all.map(c=>({c, k:ck(c)[0], nm:fold(c.name), rm:fold(c.roomName), ct:fold(catN[c.cat]), ty:fold(o.tlabel?o.tlabel(c):'')}));
+  const match=(x,ts)=>ts.every(t=>x.nm.includes(t)||x.rm.includes(t)||x.ct.includes(t)||x.ty.includes(t));
+  const score=(x,ts)=>x.nm.startsWith(ts[0])?0:ts.every(t=>(' '+x.nm).includes(' '+t))?1:ts.every(t=>x.nm.includes(t))?2:3;
+  const byRoom=(a,b)=>(a.c.roomName?0:1)-(b.c.roomName?0:1)||(a.c.roomName||'').localeCompare(b.c.roomName||'')||(a.c.name||'').localeCompare(b.c.name||'');
+  const run=(q, ty, f)=>{ f=f||{}; const rec=f.rec||[], terms=fold(q).split(/[\s,\/·]+/).filter(Boolean);
+    const hit=IX.filter(x=>(!f.pre||f.pre(x.c))&&(!terms.length||match(x,terms)));
+    const cnt={}; let nRec=0; hit.forEach(x=>{ cnt[x.k]=(cnt[x.k]||0)+1; if(rec.indexOf(x.c.uuid)>=0) nRec++; });
+    let v=hit.filter(x=>!ty||(ty===PICK_RK?rec.indexOf(x.c.uuid)>=0:x.k===ty)); if(f.raw) return v;
+    if(ty===PICK_RK&&!terms.length) v.sort((a,b)=>rec.indexOf(a.c.uuid)-rec.indexOf(b.c.uuid));
+    else if(terms.length){ const sc=new Map(v.map(x=>[x,score(x,terms)])); v.sort((a,b)=>sc.get(a)-sc.get(b)||(a.c.name||'').localeCompare(b.c.name||'')||byRoom(a,b)); }
+    else if(f.rank){ const rk=new Map(v.map(x=>[x,f.rank(x.c)])); v.sort((a,b)=>rk.get(a)-rk.get(b)||byRoom(a,b)); }
+    else v.sort(byRoom);
+    return {list:v, terms, cnt, nRec, flat:!!terms.length||ty===PICK_RK}; };
+  // Zweite Zeile bei flacher Liste: „Raum · Kategorie“
+  const sub=c=>[c.roomName,catN[c.cat]].filter(Boolean).join(' · ');
+  return {run, sub, keys, lbl, n:all.length, cat:u=>catN[u]||''};
+}
+// Chip-Reihe „Alle“ / „Zuletzt“ / je Typ bzw. Kategorie mit Anzahl (folgt der Suche). Nur ab 3 Typen oder mit „Zuletzt“.
+// lblFn(k): Anzeigetext eines Chips (Standard T(idx.lbl[k])); grp = aria-label der Gruppe; cls = zusaetzliche Ortsklasse
+function pickChipsHtml(idx, rec, grp, lblFn, cls, ty){ const keys=idx.keys.length>=3?idx.keys:[]; if(!keys.length&&!rec) return '';
+  const lf=lblFn||(k=>T(idx.lbl[k])), on=k=>(ty||'')===k;
+  const ch=(k,t,n)=>'<button type="button" class="mzchip'+(on(k)?' on':'')+'" data-qt="'+esc(k)+'" aria-pressed="'+on(k)+'">'+t+(n?' <span class="qsn"></span>':'')+'</button>';
+  return '<div class="mzchips qschips'+(cls?' '+cls:'')+'" role="group" aria-label="'+esc(grp)+'">'+ch('',T('Alle'),false)+
+    (rec?ch(PICK_RK,T('Zuletzt'),true):'')+keys.map(k=>ch(k,esc(lf(k)),true)).join('')+'</div>'; }
+// pickView(o): Liste zu einer pickIdx-Suche - Gruppenkoepfe (ohne Suche), Bloecke zu PICK_CHUNK beim Scrollen, Entprellung ab 200,
+// Chip-Zaehler, Live-Region, Leerzustand mit Zuruecksetzen, Tastatur (nav). Zeilen tragen data-u (Schluessel) und tabindex=-1.
+// o: {L, qi, SR, chips, n, q, ty, foc, run(q,ty)->R, row(x,R)->HTML, grp(x)->Text|null, sel (fokussierbare Zeilen),
+//     say(R)->Text, empty(R,q,ty)->HTML mit .qsreset, onQ(q), onTy(ty), onReset(), after(R)}
+function pickView(o){
+  const L=o.L, qi=o.qi;
+  let q=o.q||'', ty=o.ty||'', shown=0, R={list:[],terms:[],cnt:{},nRec:0,flat:false}, foc=o.foc||'';
+  const items=()=>[...L.querySelectorAll(o.sel)];
+  // genau ein Eintrag per Tab erreichbar (zuletzt fokussierter oder erster)
+  const roving=()=>{ const bs=items(); if(!bs.length) return; let a=foc&&bs.find(b=>b.dataset.u===foc);
+    if(!a){ const t=bs.find(b=>b.tabIndex===0); if(t) a=t; } if(!a) a=bs[0];
+    bs.forEach(b=>{ if(b!==a&&b.tabIndex!==-1) b.tabIndex=-1; }); a.tabIndex=0; };
+  const io=('IntersectionObserver' in window)?new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)) more(); },{root:L,rootMargin:'300px'}):null;
+  // Zeilen ab shown anhaengen (Gruppenkoepfe nur ohne Suche/Zuletzt)
+  const more=()=>{ const end=Math.min(R.list.length, shown+PICK_CHUNK); let h='', g=shown&&o.grp?o.grp(R.list[shown-1]):null;
+    for(let i=shown;i<end;i++){ const x=R.list[i];
+      if(!R.flat&&o.grp){ const r=o.grp(x); if(r!==g){ g=r; if(r) h+='<div class="qsgrp'+(o.gcls?' '+o.gcls:'')+'" aria-hidden="true">'+hyHtml(r)+'</div>'; } }
+      h+=o.row(x,R); }
+    const s=L.querySelector('.qsmore'); if(s) s.remove();
+    L.insertAdjacentHTML('beforeend', h+(end<R.list.length?'<div class="qsmore" aria-hidden="true"></div>':''));
+    shown=end; const m=L.querySelector('.qsmore'); if(m&&io) io.observe(m); roving(); };
+  const chipSync=()=>{ if(!o.chips) return; o.chips.querySelectorAll('[data-qt]').forEach(b=>{ const k=b.dataset.qt, a=k===ty;
+    b.classList.toggle('on',a); b.setAttribute('aria-pressed',a); if(!k) return;
+    const n=k===PICK_RK?R.nRec:(R.cnt[k]||0), s=b.querySelector('.qsn'); if(s) s.textContent=n; b.classList.toggle('zero',!n); }); };
+  const say=()=>{ if(o.SR) o.SR.textContent=o.say?o.say(R):(R.list.length===1?T('1 Baustein'):T('{n} Bausteine').replace('{n}',R.list.length)); };
+  const draw=()=>{ R=o.run(q,ty); shown=0; L.innerHTML=''; L.scrollTop=0; chipSync();
+    if(R.list.length) more();
+    else { L.innerHTML=o.empty(R,q,ty); const rs=L.querySelector('.qsreset'); if(rs) rs.onclick=()=>reset(); }
+    say(); if(o.after) o.after(R); };
+  // alle bisher gezeigten Zeilen neu zeichnen, Scrollstand halten (z. B. Grenze erreicht)
+  const redraw=()=>{ const st=L.scrollTop, cnt=shown; L.innerHTML=''; shown=0; while(shown<cnt&&shown<R.list.length) more(); L.scrollTop=st; };
+  const setTy=k=>{ ty=k; if(o.onTy) o.onTy(k); };
+  const reset=()=>{ q=''; if(qi) qi.value=''; setTy(''); if(o.onQ) o.onQ(''); if(o.onReset) o.onReset(); draw(); if(qi) qi.focus(); };
+  // Zeile mit Schluessel u nachladen (Bloecke) und liefern
+  const find=u=>{ const s=o.sel+'[data-u="'+CSS.escape(u)+'"]'; let g=0; while(!L.querySelector(s)&&shown<R.list.length&&g++<50) more(); return L.querySelector(s); };
+  // Tastatur: ↓ aus der Suche in die Liste, ↑/↓/Pos1/Ende in der Liste, ↑ am Anfang zurueck in die Suche,
+  // Enter in der Suche bei genau einem Treffer. Liefert true, wenn die Taste verarbeitet wurde.
+  const nav=e=>{
+    if(e.key==='Enter'&&qi&&e.target===qi){ const bs=items(); if(bs.length===1&&shown>=R.list.length){ e.preventDefault(); bs[0].click(); return true; } return false; }
+    const inL=e.target.closest&&e.target.closest(o.sel);
+    if(!((e.key==='ArrowDown'&&qi&&e.target===qi)||(inL&&L.contains(inL)&&['ArrowDown','ArrowUp','Home','End'].indexOf(e.key)>=0))) return false;
+    let bs=items(); if(!bs.length) return false; e.preventDefault();
+    const go=b=>{ b.focus(); b.scrollIntoView({block:'nearest'}); };
+    if(e.target===qi){ go(bs[0]); return true; }
+    if(e.key==='End'){ while(shown<R.list.length) more(); bs=items(); go(bs[bs.length-1]); return true; }
+    if(e.key==='Home'){ go(bs[0]); return true; }
+    const i=bs.indexOf(e.target), j=i+(e.key==='ArrowDown'?1:-1);
+    if(j<0){ if(qi) qi.focus(); return true; } if(j>=bs.length&&shown<R.list.length){ more(); bs=items(); }
+    if(bs[j]) go(bs[j]); return true; };
+  L.addEventListener('focusin',e=>{ const b=e.target.closest(o.sel); if(b){ foc=b.dataset.u; roving(); } });
+  // Eingabe bei grossen Listen kurz entprellen
+  let qt=0; if(qi) qi.oninput=()=>{ q=qi.value; if(o.onQ) o.onQ(q); clearTimeout(qt); if((o.n||0)>200) qt=setTimeout(()=>{ if(L.isConnected) draw(); },120); else draw(); };
+  if(o.chips){ o.chips.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ setTy(b.dataset.qt); b.scrollIntoView({block:'nearest',inline:'nearest'}); draw(); });
+    // Mausrad scrollt die Chip-Reihe am Desktop seitlich
+    const ch=o.chips; ch.addEventListener('wheel',e=>{ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&ch.scrollWidth>ch.clientWidth){ e.preventDefault(); ch.scrollLeft+=e.deltaY; } },{passive:false}); }
+  return {draw, redraw, more, items, roving, nav, reset, find, setFoc:u=>{ foc=u; },
+    R:()=>R, shown:()=>shown, q:()=>q, ty:()=>ty, stop:()=>{ if(io) io.disconnect(); }};
+}
+// Leerzustand einer gefilterten Liste (Standard: „Kein Baustein passt zu „x“.“, Filter nennen, passender Zuruecksetzen-Knopf)
+// tn = Namen der aktiven Filter (Chip, Raum …), noQ = Text ohne Suchwort
+function pickEmpty(q, tn, noQ, cls, noBtn){ q=q.trim();
+  return leerHtml(esc(q?T('Kein Baustein passt zu „{q}“.').replace('{q}',q)+(tn?' '+T('Filter: {t}.').replace('{t}',tn):''):noQ),
+    noBtn?'':'<button type="button" class="minibtn qsreset">'+(q&&tn?T('Suche und Filter zurücksetzen'):q?T('Suche zurücksetzen'):T('Filter zurücksetzen'))+'</button>',true,cls); }
 function ctlPick(o){
   const multi=o.multi!==false, max=o.max||999, all=o.list||[];
   const inAll=new Set(all.map(c=>c.uuid)), locked=(o.sel||[]).filter(u=>inAll.has(u));
-  const catN={}; (META.cats||[]).forEach(c=>{ if(c&&c.uuid) catN[c.uuid]=c.name||''; });
   const ck=c=>(o.chip&&o.chip(c))||['',''], tl=c=>T((o.tlabel&&o.tlabel(c))||ck(c)[1]||c.type);
-  const lbl={}, base={}; all.forEach(c=>{ const [k,l]=ck(c); lbl[k]=l; base[k]=(base[k]||0)+1; });
-  const keys=(o.chipOrder||Object.keys(base)).filter(k=>base[k]);
-  // Suchfelder einmal normalisieren
-  const IX=all.map(c=>({c, nm:fold(c.name), rm:fold(c.roomName), ct:fold(catN[c.cat]), ty:fold(tl(c))}));
-  const rec=pickRecent().filter(u=>inAll.has(u)), RK='\u0001recent';
-  let add=[], q='', ty='', shown=0, list=[], terms=[], foc='';
+  const idx=pickIdx(all,{chip:o.chip, chipOrder:o.chipOrder, tlabel:tl});
+  const rec=pickRecent().filter(u=>inAll.has(u)), RK=PICK_RK;
+  let add=[];
   const prev=document.activeElement;
   const ov=document.createElement('div'); ov.className='wzov qspick'+(multi?'':' single');
   ov.setAttribute('role','dialog'); ov.setAttribute('aria-modal','true'); ov.setAttribute('aria-labelledby','qsTi');
   if(o.hint) ov.setAttribute('aria-describedby','qsHint');
-  const chipsH=(keys.length>=3||rec.length)?'<div class="mzchips qschips" role="group" aria-label="'+esc(T('Typ'))+'">'+
-      '<button type="button" class="mzchip on" data-qt="" aria-pressed="true">'+T('Alle')+'</button>'+
-      (rec.length?'<button type="button" class="mzchip" data-qt="'+RK+'" aria-pressed="false">'+T('Zuletzt')+' <span class="qsn"></span></button>':'')+
-      (keys.length>=3?keys.map(k=>'<button type="button" class="mzchip" data-qt="'+esc(k)+'" aria-pressed="false">'+esc(T(lbl[k]))+' <span class="qsn"></span></button>').join(''):'')+'</div>':'';
+  const chipsH=pickChipsHtml(idx, rec.length>0, T('Typ'));
   ov.innerHTML='<div class="wzbox" tabindex="-1"><div class="wzhd qshd"><div class="qsti"><b id="qsTi">'+esc(o.title||T('Baustein hinzufügen'))+'</b>'+
       (o.ctx?'<small>'+esc(o.ctx)+'</small>':'')+'</div><span class="wzstep qspn"></span>'+
       '<button type="button" class="wzx" aria-label="'+esc(T('Schließen'))+'">✕</button></div>'+
@@ -3942,103 +4080,53 @@ function ctlPick(o){
     '<div class="wzft">'+(multi?'<button type="button" class="btn ghost qscancel">'+T('Abbrechen')+'</button><button type="button" class="btn qsok">'+T('Übernehmen')+'</button>'
       :'<button type="button" class="btn ghost qscancel">'+T('Abbrechen')+'</button>')+'</div></div>';
   document.body.appendChild(ov);
-  const L=ov.querySelector('.qsplist'), qi=ov.querySelector('.qsq'), SR=ov.querySelector('.qssr'), ok=ov.querySelector('.qsok');
+  const L=ov.querySelector('.qsplist'), qi=ov.querySelector('.qsq'), ok=ov.querySelector('.qsok');
   // ---- Verlauf (Browser-Zurueck / Zurueck-Geste): gemeinsame Logik dlgHist ----
   const H=dlgHist({alive:()=>ov.isConnected, dirty:()=>multi&&add.length>0, close:()=>close(),
     ask:()=>dlgAsk(T('Auswahl verwerfen?'),T('Die neu gewählten Bausteine werden nicht übernommen.'),T('Verwerfen'),true,T('Weiter auswählen'))});
   const leave=H.leave;
-  const close=()=>{ if(!ov.isConnected) return; ov.remove(); document.removeEventListener('keydown',key,true); if(io) io.disconnect();
+  const close=()=>{ if(!ov.isConnected) return; ov.remove(); document.removeEventListener('keydown',key,true); V.stop();
     try{ if(prev&&prev.isConnected&&prev.focus) prev.focus(); }catch(e){} };
   const tryClose=H.tryClose;
-  // ---- Filtern ----
-  const match=x=>terms.every(t=>x.nm.includes(t)||x.rm.includes(t)||x.ct.includes(t)||x.ty.includes(t));
-  const score=x=>{ const t0=terms[0]; return x.nm.startsWith(t0)?0:terms.every(t=>(' '+x.nm).includes(' '+t))?1:terms.every(t=>x.nm.includes(t))?2:3; };
-  const byRoom=(a,b)=>(a.c.roomName?0:1)-(b.c.roomName?0:1)||(a.c.roomName||'').localeCompare(b.c.roomName||'')||(a.c.name||'').localeCompare(b.c.name||'');
-  const compute=()=>{ terms=fold(q).split(/[\s,\/·]+/).filter(Boolean);
-    const hit=terms.length?IX.filter(match):IX;
-    const cnt={}; hit.forEach(x=>{ const k=ck(x.c)[0]; cnt[k]=(cnt[k]||0)+1; });
-    ov.querySelectorAll('[data-qt]').forEach(b=>{ const k=b.dataset.qt; if(!k) return; const n=k===RK?hit.filter(x=>rec.indexOf(x.c.uuid)>=0).length:(cnt[k]||0);
-      const s=b.querySelector('.qsn'); if(s) s.textContent=n; b.classList.toggle('zero',!n); });
-    let v=hit.filter(x=>!ty||(ty===RK?rec.indexOf(x.c.uuid)>=0:ck(x.c)[0]===ty));
-    if(ty===RK&&!terms.length) v=v.sort((a,b)=>rec.indexOf(a.c.uuid)-rec.indexOf(b.c.uuid));
-    else if(terms.length){ const sc=new Map(v.map(x=>[x,score(x)])); v=v.sort((a,b)=>sc.get(a)-sc.get(b)||(a.c.name||'').localeCompare(b.c.name||'')||byRoom(a,b)); }
-    else v=v.sort(byRoom);
-    list=v; };
-  const flat=()=>terms.length||ty===RK;
   const n=()=>locked.length+add.length;
-  const rowH=x=>{ const c=x.c, sub=flat()?[c.roomName,catN[c.cat]].filter(Boolean).join(' · '):'';
-    const nmH='<span class="qsnm">'+hyHtml(c.name,hlRanges(c.name,terms))+'</span>'+(sub?'<span class="qsrm">'+hyHtml(sub,hlRanges(sub,terms))+'</span>':'');
+  const rowH=(x,R)=>{ const c=x.c, sub=R.flat?idx.sub(c):'';
+    const nmH='<span class="qsnm">'+hyHtml(c.name,hlRanges(c.name,R.terms))+'</span>'+(sub?'<span class="qsrm">'+hyHtml(sub,hlRanges(sub,R.terms))+'</span>':'');
     if(!multi){ const on=c.uuid===o.cur;
       return '<button type="button" class="qspi'+(on?' on':'')+'" data-u="'+esc(c.uuid)+'" role="radio" aria-checked="'+on+'" tabindex="-1"><span class="qsrad" aria-hidden="true"></span>'+
         '<span class="qspn2">'+nmH+'</span><small>'+esc(tl(c))+'</small></button>'; }
     const lk=locked.indexOf(c.uuid)>=0, on=lk||add.indexOf(c.uuid)>=0, full=!on&&n()>=max;
     return '<button type="button" class="qspi'+(on?' on':'')+(lk?' locked':'')+(full?' full':'')+'" data-u="'+esc(c.uuid)+'"'+(lk||full?' disabled':'')+' role="checkbox" aria-checked="'+on+'" tabindex="-1">'+
       '<span class="qschk" aria-hidden="true"></span><span class="qspn2">'+nmH+'</span><small>'+esc(lk?T('schon in der Liste'):full?T('Grenze erreicht'):tl(c))+'</small></button>'; };
-  // Zeilen ab shown anhaengen (Gruppenkoepfe nach Raum, ausser bei Suche/Zuletzt)
-  const more=()=>{ const end=Math.min(list.length, shown+PICK_CHUNK); let h='', room=shown?((list[shown-1]||{}).c||{}).roomName||T('Ohne Raum'):null;
-    for(let i=shown;i<end;i++){ const x=list[i];
-      if(!flat()){ const r=x.c.roomName||T('Ohne Raum'); if(r!==room){ room=r; h+='<div class="qsgrp" aria-hidden="true">'+hyHtml(r)+'</div>'; } }
-      h+=rowH(x); }
-    const s=L.querySelector('.qsmore'); if(s) s.remove();
-    L.insertAdjacentHTML('beforeend', h+(end<list.length?'<div class="qsmore" aria-hidden="true"></div>':''));
-    shown=end; const m=L.querySelector('.qsmore'); if(m&&io) io.observe(m); roving(); };
-  const io=('IntersectionObserver' in window)?new IntersectionObserver(es=>{ if(es.some(e=>e.isIntersecting)) more(); },{root:L,rootMargin:'300px'}):null;
-  const items=()=>[...L.querySelectorAll('.qspi:not(:disabled)')];
-  // genau ein Eintrag per Tab erreichbar (zuletzt fokussierter oder erster)
-  const roving=()=>{ const bs=items(); if(!bs.length) return; let a=foc&&bs.find(b=>b.dataset.u===foc);
-    if(!a){ const t=L.querySelector('.qspi[tabindex="0"]'); if(t&&!t.disabled) a=t; } if(!a) a=bs[0];
-    bs.forEach(b=>{ if(b!==a&&b.tabIndex!==-1) b.tabIndex=-1; }); a.tabIndex=0; };
   const head=()=>{ const k=n(); const e=ov.querySelector('.qspn');
     e.textContent=!multi?T('Antippen übernimmt'):o.max?k+'/'+max:String(k); e.classList.toggle('full',multi&&k>=max);
     if(ok){ ok.disabled=!add.length; } };
-  const say=()=>{ SR.textContent=(list.length===1?T('1 Baustein'):T('{n} Bausteine').replace('{n}',list.length))+(multi&&o.max?', '+T('{a} von {b} gewählt').replace('{a}',n()).replace('{b}',max):''); };
-  const draw=()=>{ compute(); shown=0; L.innerHTML=''; L.scrollTop=0;
-    if(list.length) more();
-    else if(!all.length) L.innerHTML=leerHtml(esc(o.empty||T('Keine Treffer.')));
-    else { const tn=ty===RK?T('Zuletzt'):lbl[ty]?T(lbl[ty]):'';
-      L.innerHTML=leerHtml(esc(q.trim()?T('Kein Baustein passt zu „{q}“.').replace('{q}',q.trim())+(tn?' '+T('Filter: {t}.').replace('{t}',tn):''):T('Keine Bausteine vom Typ {t}.').replace('{t}',tn)),
-        '<button type="button" class="minibtn qsreset">'+(q.trim()&&tn?T('Suche und Filter zurücksetzen'):q.trim()?T('Suche zurücksetzen'):T('Filter zurücksetzen'))+'</button>',true,'qsnone');
-      L.querySelector('.qsreset').onclick=()=>{ q=''; qi.value=''; setTy(''); draw(); qi.focus(); }; }
-    head(); say(); };
+  const sayT=R=>(R.list.length===1?T('1 Baustein'):T('{n} Bausteine').replace('{n}',R.list.length))+(multi&&o.max?', '+T('{a} von {b} gewählt').replace('{a}',n()).replace('{b}',max):'');
+  const V=pickView({L, qi, SR:ov.querySelector('.qssr'), chips:ov.querySelector('.qschips'), n:all.length, foc:'',
+    run:(q,ty)=>idx.run(q,ty,{rec}), row:rowH, grp:x=>x.c.roomName||T('Ohne Raum'), sel:'.qspi:not(:disabled)', say:sayT,
+    empty:(R,q,ty)=>{ if(!all.length) return leerHtml(esc(o.empty||T('Keine Treffer.')));
+      const tn=ty===RK?T('Zuletzt'):idx.lbl[ty]?T(idx.lbl[ty]):''; return pickEmpty(q,tn,T('Keine Bausteine vom Typ {t}.').replace('{t}',tn),'qsnone'); },
+    after:()=>head()});
   // Ein Tipp schaltet nur die eine Zeile um; neu gezeichnet wird nur beim Erreichen/Verlassen der Grenze
-  L.addEventListener('click',e=>{ const b=e.target.closest('.qspi'); if(!b||b.disabled) return; const u=b.dataset.u; foc=u;
+  L.addEventListener('click',e=>{ const b=e.target.closest('.qspi'); if(!b||b.disabled) return; const u=b.dataset.u; V.setFoc(u);
     if(!multi){ pickRecentAdd([u]); leave(()=>{ if(o.onPick) o.onPick(u); }); return; }
     const i=add.indexOf(u), wasFull=n()>=max; if(i>=0) add.splice(i,1); else if(n()<max) add.push(u); else return;
-    if(wasFull!==(n()>=max)){ const st=L.scrollTop, cnt=shown; L.innerHTML=''; shown=0; while(shown<cnt&&shown<list.length) more(); L.scrollTop=st;
-      const nb=L.querySelector('.qspi[data-u="'+CSS.escape(u)+'"]'); if(nb) nb.focus(); }
+    if(wasFull!==(n()>=max)){ V.redraw(); const nb=L.querySelector('.qspi[data-u="'+CSS.escape(u)+'"]'); if(nb) nb.focus(); }
     else { const on=add.indexOf(u)>=0; b.classList.toggle('on',on); b.setAttribute('aria-checked',on); }
-    roving(); head(); say(); });
-  L.addEventListener('focusin',e=>{ const b=e.target.closest('.qspi'); if(b){ foc=b.dataset.u; roving(); } });
+    V.roving(); head(); ov.querySelector('.qssr').textContent=sayT(V.R()); });
   const key=e=>{ if(!ov.isConnected||H.asking()) return;
     if(e.key==='Escape'){ e.preventDefault(); e.stopPropagation(); tryClose(); return; }
-    if(e.key==='Enter'&&e.target===qi){ const bs=items(); if(bs.length===1&&shown>=list.length){ e.preventDefault(); bs[0].click(); } return; }
-    const inL=e.target.closest&&e.target.closest('.qspi');
-    if((e.key==='ArrowDown'&&e.target===qi)||(inL&&['ArrowDown','ArrowUp','Home','End'].indexOf(e.key)>=0)){
-      let bs=items(); if(!bs.length) return; e.preventDefault();
-      if(e.target===qi){ bs[0].focus(); return; }
-      if(e.key==='End'){ while(shown<list.length) more(); bs=items(); bs[bs.length-1].focus(); return; }
-      if(e.key==='Home'){ bs[0].focus(); return; }
-      const i=bs.indexOf(e.target), j=i+(e.key==='ArrowDown'?1:-1);
-      if(j<0){ qi.focus(); return; } if(j>=bs.length&&shown<list.length){ more(); bs=items(); }
-      if(bs[j]){ bs[j].focus(); bs[j].scrollIntoView({block:'nearest'}); } return; }
+    if(V.nav(e)) return;
     if(e.key==='Tab'){ const f=[...ov.querySelectorAll('button:not(:disabled),input')].filter(x=>x.tabIndex>=0&&x.offsetParent!==null); if(!f.length) return;
       const a=f[0], z=f[f.length-1];
       if(e.shiftKey&&(document.activeElement===a||!ov.contains(document.activeElement))){ e.preventDefault(); z.focus(); }
       else if(!e.shiftKey&&(document.activeElement===z||!ov.contains(document.activeElement))){ e.preventDefault(); a.focus(); } } };
   document.addEventListener('keydown',key,true);
-  // Eingabe bei grossen Listen kurz entprellen
-  let qt=0; qi.oninput=()=>{ q=qi.value; clearTimeout(qt); if(all.length>200) qt=setTimeout(draw,120); else draw(); };
-  const setTy=k=>{ ty=k; ov.querySelectorAll('[data-qt]').forEach(x=>{ const a=x.dataset.qt===k; x.classList.toggle('on',a); x.setAttribute('aria-pressed',a); }); };
-  ov.querySelectorAll('[data-qt]').forEach(b=>b.onclick=()=>{ setTy(b.dataset.qt); b.scrollIntoView({block:'nearest',inline:'nearest'}); draw(); });
-  // Typ-Chips: Mausrad scrollt am Desktop seitlich
-  { const ch=ov.querySelector('.qschips'); if(ch) ch.addEventListener('wheel',e=>{ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&ch.scrollWidth>ch.clientWidth){ e.preventDefault(); ch.scrollLeft+=e.deltaY; } },{passive:false}); }
   ov.querySelector('.wzx').onclick=tryClose; ov.querySelector('.qscancel').onclick=tryClose;
   if(ok) ok.onclick=()=>{ const a=add.slice(); if(!a.length) return; pickRecentAdd(a); leave(()=>{ if(o.onOk) o.onOk(a); }); };
-  draw();
+  V.draw();
   // Einzelauswahl: aktuellen Baustein nachladen und sichtbar machen
-  if(!multi&&o.cur&&inAll.has(o.cur)){ foc=o.cur; let g=0; const sel='.qspi[data-u="'+CSS.escape(o.cur)+'"]';
-    while(!L.querySelector(sel)&&shown<list.length&&g++<50) more(); roving();
-    const cb=L.querySelector(sel); if(cb) requestAnimationFrame(()=>{ const r=cb.getBoundingClientRect(), lr=L.getBoundingClientRect(); L.scrollTop+=r.top-lr.top-(lr.height-r.height)/2; }); }
+  if(!multi&&o.cur&&inAll.has(o.cur)){ V.setFoc(o.cur); const cb=V.find(o.cur); V.roving();
+    if(cb) requestAnimationFrame(()=>{ const r=cb.getBoundingClientRect(), lr=L.getBoundingClientRect(); L.scrollTop+=r.top-lr.top-(lr.height-r.height)/2; }); }
   // Autofokus nur am Desktop (am Handy klappt sonst sofort die Tastatur auf)
   setTimeout(()=>{ if(!ov.isConnected) return; if(matchMedia('(min-width:601px) and (pointer:fine)').matches) qi.focus(); else ov.querySelector('.wzbox').focus(); },30);
   return ov;
@@ -4059,31 +4147,44 @@ function barIcoHtml(c,ic){
 function stDefIco(c){ return ({WindowMonitor:'window',Alarm:'shield',CentralAlarm:'shield',SmokeAlarm:'alarm'})[(c||{}).type]||'info'; }
 let dBarOpen=false;   // Haken "Statusleiste" gesetzt, aber noch nichts gewaehlt
 let dPropsOpen=false;
+let dBarBox=false;   // Unterabschnitt "Statusleiste" in den Dashboard-Einstellungen aufgeklappt
 let tPropsOpen=false;    // Block "Tab-Einstellungen" aufgeklappt    // Block "Dashboard-Einstellungen" aufgeklappt   // Bausteinauswahl der Statusleiste aufgeklappt
 function renderDashProps(p){
   const box=$('#tbProps'), sv=p.saver||{}, ex=sv.exit||[], g=svGrid(p), two=tbDashPages(p)===2;
   const barOn=dBarOpen||(sv.bar||[]).length>0;
-  box.innerHTML='<div class="dpwrap'+(dPropsOpen?' open':'')+'"><button type="button" class="dphd" aria-expanded="'+(dPropsOpen?'true':'false')+'"><span>'+T('Dashboard-Einstellungen')+'</span>'+
+  box.innerHTML='<div class="dpwrap'+(dPropsOpen?' open':'')+'"><button type="button" class="dphd" aria-expanded="'+(dPropsOpen?'true':'false')+'" aria-controls="dPropsBody"><span>'+T('Dashboard-Einstellungen')+'</span>'+
       '<small>'+[g+' × '+g, ex.length?ex.length+' '+T('Schließen'):'', (sv.bar||[]).length?T('Statusleiste'):'', sv.std?T('Standard'):''].filter(Boolean).join(' · ')+'</small>'+
       '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
-    '<div class="dpbody"><div><div class="tbprops dashprops">'+
-    '<div class="field"><label class="lbl">'+T('Raster')+'</label><div class="seg" style="display:flex;gap:4px">'+
-      '<button type="button" class="minibtn'+(g===3?' on':'')+'" data-dgrid="3">3 × 3</button>'+
-      '<button type="button" class="minibtn'+(g===2?' on':'')+'" data-dgrid="2">2 × 2</button></div>'+
-      '<div class="hint">'+(two?T('Zwei Hälften'):T('Eine Hälfte'))+'</div></div>'+
-    '<div class="field dexits"><label class="lbl">'+T('Dashboard schließen')+'</label>'+
-      SV_EXITS.map(([k,l])=>'<label class="apit"><input type="checkbox" data-exit="'+k+'"'+(ex.indexOf(k)>=0?' checked':'')+'><span>'+esc(T(l))+'</span></label>').join('')+
-      '<div class="hint">'+T('Mehrere Haken sind möglich. Ohne Haken schließt nur ein Tipp auf eine freie Stelle das Dashboard.')+'</div></div>'+
-    '<div class="field damb"><label class="lbl" title="'+esc(T('Tageslicht: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten vom Miniserver). Außentemperatur: kalt blau, mild grün, warm gelb, heiß orange bis rot. Ohne Wetterdaten bleiben die festen Farben.'))+'">'+T('Farbverlauf')+' <span class="dinfo">ⓘ</span></label>'+
+    '<div class="dpbody" id="dPropsBody"><div'+(dPropsOpen?'':' inert')+'><div class="tbprops dashprops">'+
+    '<div class="field dgridf" role="group" aria-labelledby="dGridLbl"><span class="lbl" id="dGridLbl">'+T('Raster')+'</span><div class="seg dseg">'+
+      '<button type="button" class="minibtn'+(g===3?' on':'')+'" data-dgrid="3" aria-pressed="'+(g===3)+'">3 × 3</button>'+
+      '<button type="button" class="minibtn'+(g===2?' on':'')+'" data-dgrid="2" aria-pressed="'+(g===2)+'">2 × 2</button></div>'+
+      '<div class="hint">'+(two?T('Zwei Hälften'):T('Eine Hälfte'))+'</div>'+
+      // Zugehoeriger Schalter: steht unter dem Bedienelement, ohne eigene Ueberschrift
+      '<label class="chk mt12"><input type="checkbox" id="dStd" aria-describedby="dStdHint"'+(sv.std?' checked':'')+((sv.items||[]).length?'':' disabled')+'> <span>'+T('Als Standard für neue Panels verwenden')+'</span></label>'+
+      '<div class="hint" id="dStdHint">'+((sv.items||[]).length?T('Neue Panels starten mit diesem Dashboard. Nur ein Dashboard kann Standard sein.'):T('Ziehe zuerst Widgets ins Dashboard.'))+
+        (()=>{ const o=dashStdId(); return (o&&o!==cur)?' '+T('Derzeit Standard:')+' „'+esc((PANELS[o]||{}).title||o)+'“.':''; })()+'</div></div>'+
+    // Dashboard schliessen: ✕-Knopf als eigene Haekchenzeile, darunter "Wischen" als 2×2-Richtungswahl (Datenformat exit unveraendert)
+    (()=>{ const it=([k,l,ar])=>'<label class="apit"><input type="checkbox" data-exit="'+k+'"'+(k==='x'?' aria-label="'+esc(T('Schließen-Knopf oben rechts'))+'"':'')+(ex.indexOf(k)>=0?' checked':'')+'><span class="apdir">'+(ar?'<i aria-hidden="true">'+ar+'</i>':'')+esc(T(l))+'</span></label>';
+      return '<div class="field dexits" role="group" aria-labelledby="dExLbl"><span class="lbl" id="dExLbl">'+T('Dashboard schließen')+'</span>'+
+        it(SV_EXITS[0])+'<span class="fsub" id="dSwLbl">'+T('Wischen')+'</span>'+
+        '<div class="apgrid" role="group" aria-labelledby="dSwLbl">'+SV_EXITS.slice(1).map(it).join('')+'</div>'+
+        '<div class="hint">'+T('Ohne Haken schließt nur ein Tipp auf eine freie Stelle.')+'</div></div>'; })()+
+    '<div class="field damb" role="group" aria-labelledby="dAmbLbl"><span class="lbl" id="dAmbLbl">'+T('Farbstimmung')+'</span>'+
+      '<p class="fhelp">'+T('„Nach Tageslicht“: morgens leicht hell, mittags hell, abends dunkler, nachts dunkel (Sonnenzeiten vom Miniserver). „Nach Außentemperatur“: kalt blau, mild grün, warm gelb, heiß orange bis rot; ohne Wetterdaten bleiben die Design-Farben. „Eigenes Bild“ zeigt ein hochgeladenes Foto als Hintergrund.')+'</p>'+
       [['ambBg',T('Hintergrund')],['ambClock',T('Uhrzeit')]].map(([k,l])=>
-        '<div class="dambrow"><span>'+l+'</span><select data-amb="'+k+'">'+
-        [['',T('Feste Farben (Vorlage)')],['light',T('Nach Tageslicht')],['temp',T('Nach Außentemperatur')]].concat(k==='ambBg'?[['image',T('Eigenes Bild')]]:[]).map(([v,t])=>
+        '<div class="dambrow"><label for="dAmb_'+k+'">'+l+'</label><select id="dAmb_'+k+'" data-amb="'+k+'">'+
+        [['',T('Design-Farben')],['light',T('Nach Tageslicht')],['temp',T('Nach Außentemperatur')]].concat(k==='ambBg'?[['image',T('Eigenes Bild')]]:[]).map(([v,t])=>
           '<option value="'+v+'"'+(((p.ui||{})[k]||'')===v?' selected':'')+'>'+t+'</option>').join('')+'</select></div>').join('')+
-      ((p.ui||{}).ambBg==='image'?'<div class="dbgimg" id="dBgImg"><span class="dbgthumb" id="dBgThumb"></span>'+
-        '<label class="minibtn" data-live="1">'+T('Bild wählen …')+'<input type="file" id="dBgFile" accept="image/jpeg,image/png,image/webp" hidden data-live="1"></label>'+
+      ((p.ui||{}).ambBg==='image'?'<div class="dbgimg" id="dBgImg"><span class="dbgthumb" id="dBgThumb" aria-hidden="true"></span>'+
+        '<button type="button" class="minibtn" id="dBgPick" data-live="1">'+T('Bild wählen …')+'</button><input type="file" id="dBgFile" accept="image/jpeg,image/png,image/webp" hidden data-live="1" tabindex="-1">'+
         rmBtn('id="dBgDel" data-live="1" hidden','',false,T('Hintergrundbild entfernen'))+'</div>'+
         '<div class="hint">'+T('JPG, PNG oder WebP, höchstens 12 MB. Wird sofort hochgeladen. Querformat passt am besten.')+'</div>':'')+'</div>'+
-    '<div class="field dbar"><label class="lbl">'+T('Statusleiste')+'</label>'+
+    // Statusleiste: Unterabschnitt im Faltblock, volle Breite, standardmaessig zu; Schalter als erste Zeile im Inhalt
+    '<div class="field dbar dbarbox'+(dBarBox?' open':'')+'"><button type="button" class="dbarhd" id="dBarHd" aria-expanded="'+(dBarBox?'true':'false')+'" aria-controls="dBarBody">'+
+      '<span>'+T('Statusleiste')+'<small>'+(barOn?(sv.bar||[]).length+'/6':T('aus'))+'</small></span>'+
+      '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>'+
+      '<div class="dbarbody" id="dBarBody" role="region" aria-labelledby="dBarHd"><div'+(dBarBox?'':' inert')+'>'+
       '<label class="chk"><input type="checkbox" id="dBarOn"'+(barOn?' checked':'')+'> <span>'+T('Oben im Dashboard anzeigen')+'</span></label>'+
       (barOn?sbListHTML(sv.bar,{id:'dBar',max:6,lbl:T('Statusleiste'),icons:true,ics:sv.barIcons,show:sv.barShow,icoFor:dBarIcoFor,det:(()=>{
         const u=dBarIcoFor, c=u&&(sv.bar||[]).indexOf(u)>=0&&sbCtl(u); if(!c) return '';
@@ -4092,14 +4193,12 @@ function renderDashProps(p){
           (stIsText(c)?'<label class="chk" title="'+esc(T('Loxone-Statussymbol statt festem Symbol'))+'"><input type="checkbox" data-bsl'+((((sv.barShow||{})[u])||{}).lox?' checked':'')+'> <span>'+T('Loxone-Statussymbol verwenden')+'</span></label>':'')+
           '<div class="itabs">'+tb('builtin',T('Mitgeliefert'))+tb('loxone','Loxone')+(((META.icons||{}).loxlib)?tb('loxlib',T('Bibliothek')):'')+
           '</div><div class="ipick" id="dBarIpick"></div></div>'; })()}):'')+
-      '<div class="hint">'+T('Die Symbole stehen oben und bleiben neutral, bis etwas passiert.')+'</div></div>'+
-    '<div class="field dstd"><label class="lbl">'+T('Standard-Dashboard')+'</label>'+
-      '<label class="chk"><input type="checkbox" id="dStd"'+(sv.std?' checked':'')+((sv.items||[]).length?'':' disabled')+'> <span>'+T('Als Standard für neue Panels verwenden')+'</span></label>'+
-      '<div class="hint">'+((sv.items||[]).length?T('Neue Panels starten mit diesem Dashboard. Nur ein Dashboard kann Standard sein.'):T('Ziehe zuerst Widgets ins Dashboard.'))+
-        (()=>{ const o=dashStdId(); return (o&&o!==cur)?' '+T('Derzeit Standard:')+' „'+esc((PANELS[o]||{}).title||o)+'“.':''; })()+'</div></div>'+
+      '<div class="hint">'+T('Die Symbole stehen oben und bleiben neutral, bis etwas passiert.')+'</div></div></div></div>'+
     '</div></div></div></div>';
   { const hd=box.querySelector('.dphd'); hd.onclick=()=>{ const w=hd.parentNode; dPropsOpen=!w.classList.contains('open');
-      w.classList.toggle('open',dPropsOpen); hd.setAttribute('aria-expanded',dPropsOpen?'true':'false'); }; }
+      w.classList.toggle('open',dPropsOpen); hd.setAttribute('aria-expanded',dPropsOpen?'true':'false'); w.querySelector('.dpbody>div').inert=!dPropsOpen; }; }
+  { const hd=$('#dBarHd'); if(hd) hd.onclick=()=>{ const w=hd.parentNode; dBarBox=!w.classList.contains('open');
+      w.classList.toggle('open',dBarBox); hd.setAttribute('aria-expanded',dBarBox?'true':'false'); w.querySelector('.dbarbody>div').inert=!dBarBox; }; }
   const items=()=>tbEff[DK]||tbDashLoad(p);
   box.querySelectorAll('[data-dgrid]').forEach(b=>b.onclick=()=>{ const ng=+b.dataset.dgrid; if(ng===g) return;
     undoable(p, T('Raster auf {n} × {n} umgestellt.').replace(/\{n\}/g,ng), ()=>{
@@ -4153,7 +4252,7 @@ function renderDashProps(p){
     if(sel.value) p.ui[sel.dataset.amb]=sel.value; else delete p.ui[sel.dataset.amb]; markDirty();
     if(sel.dataset.amb==='ambBg') renderDashProps(p); });
   // Eigenes Hintergrundbild: Vorschau, Hochladen/Entfernen wirken sofort (wie Klingelton)
-  { const th=$('#dBgThumb'), fi=$('#dBgFile'), del=$('#dBgDel');
+  { const th=$('#dBgThumb'), fi=$('#dBgFile'), del=$('#dBgDel'), pk=$('#dBgPick'); if(pk&&fi) pk.onclick=()=>fi.click();
     const show=url=>{ if(th) th.style.backgroundImage=url?'url("'+url+'")':''; if(th) th.classList.toggle('empty',!url); if(del) del.hidden=!url; };
     if(th){ fetch('/api/panel/bg?panel='+encodeURIComponent(cur)).then(r=>r.json()).then(j=>show(j.url||'')).catch(()=>show('')); }
     if(fi) fi.onchange=async()=>{ const f=fi.files&&fi.files[0]; if(!f) return; const fd=new FormData(); fd.append('file',f);
@@ -4176,10 +4275,10 @@ function renderTabProps(p){
   const rooms=(META.tabs||[]).filter(t=>t.room), cats=(META.tabs||[]).filter(t=>t.cat);
   const opts=list=>list.map(t=>'<option value="'+esc(t.tab)+'"'+(t.tab===k?' selected':'')+'>'+esc(t.label)+'</option>').join('');
   const tyL=(TB_TYPES.find(x=>x[0]===ty)||[,''])[1];
-  box.innerHTML='<div class="dpwrap'+(tPropsOpen?' open':'')+'"><button type="button" class="dphd" aria-expanded="'+(tPropsOpen?'true':'false')+'"><span>'+T('Tab-Einstellungen')+'</span>'+
+  box.innerHTML='<div class="dpwrap'+(tPropsOpen?' open':'')+'"><button type="button" class="dphd" aria-expanded="'+(tPropsOpen?'true':'false')+'" aria-controls="tPropsBody"><span>'+T('Tab-Einstellungen')+'</span>'+
       '<small>'+[T(tyL), tbIsLayout(k)?g+'×'+g:''].filter(Boolean).join(' · ')+'</small>'+
       '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
-    '<div class="dpbody"><div><div class="tbprops">'+
+    '<div class="dpbody" id="tPropsBody"><div'+(tPropsOpen?'':' inert')+'><div class="tbprops">'+
     '<div class="field"><label class="lbl">'+T('Typ')+'</label><select id="tbType">'+
       TB_TYPES.map(([v,l])=>'<option value="'+v+'"'+(v===ty?' selected':'')+'>'+T(l)+'</option>').join('')+'</select></div>'+
     (ty==='room'?'<div class="field"><label class="lbl">'+T('Raum')+'</label><select id="tbRef">'+opts(rooms)+'</select></div>'
@@ -4197,7 +4296,7 @@ function renderTabProps(p){
       (((META.icons||{}).loxlib)?'<span class="itab" data-tsrc="loxlib">'+T('Bibliothek')+'</span>':'')+
     '</div><div class="ipick" id="tbIpick"></div></div></div></div></div>';
   { const hd=box.querySelector('.dphd'); hd.onclick=()=>{ const w=hd.parentNode; tPropsOpen=!w.classList.contains('open');
-      w.classList.toggle('open',tPropsOpen); hd.setAttribute('aria-expanded',tPropsOpen?'true':'false'); }; }
+      w.classList.toggle('open',tPropsOpen); hd.setAttribute('aria-expanded',tPropsOpen?'true':'false'); w.querySelector('.dpbody>div').inert=!tPropsOpen; }; }
   const redo=()=>{ markDirty(); renderTabList(p); };
   const dropLay=o=>{ if(p.tabs.indexOf(o)<0){ if(p.layouts) delete p.layouts[o]; if(p.tabIcons) delete p.tabIcons[o]; delete tbEff[o]; delete tbHist[o]; delete tbLast[o]; delete tbLoadErr[o]; } };
   const setKey=nk=>{ if(p.tabs.indexOf(nk)>=0 && nk!==k){ snack(T('Dieser Tab ist schon vorhanden. Wähle einen anderen.')); renderTabProps(p); return; }
@@ -4241,7 +4340,7 @@ const WG_ICONS={clock:'<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>'
   camera:'<path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.5"/>',
   status:'<circle cx="12" cy="12" r="8"/><path d="m8.5 12.5 2.5 2.5 4.5-5"/>',
   quick:'<path d="M4 6h9M4 12h9M4 18h9"/><path d="m16 5 4 2-4 2zM16 11l4 2-4 2zM16 17l4 2-4 2z"/>'};
-let tbLibTab='blocks', tbLibQ='', tbLibRoom='', tbLibCat='', tbHist={}, tbLast={};
+let tbLibTab='blocks', tbLibQ='', tbLibQF='', tbLibRoom='', tbLibCat='', tbHist={}, tbLast={};
 function tbLum(c){   // relative Helligkeit 0..1 einer #rrggbb-Farbe (nur fuer die Darstellung der Rahmen-Beschriftung)
   const m=/^#?([0-9a-f]{6})$/i.exec(String(c||'').trim()); if(!m) return 0;
   const v=[0,2,4].map(i=>{ const x=parseInt(m[1].substr(i,2),16)/255; return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4); });
@@ -4310,6 +4409,7 @@ function renderTabEditor(){
       (sel?rmBtn('data-edel="1"',nm,true,'','edel'):'')+
       '<span class="rs" data-rs="1" title="'+T('Größe ändern')+'"></span></div>'; }).join('');
   const seeded=k!==DK&&(tbType(k)!=='free'||k==='favoriten'), canUndo=(tbHist[k]||[]).length>0;
+  const libSnap=tbLibSnap();
   host.innerHTML='<div class="sved g2ed">'+
     '<div class="lib">'+tbLibHTML(p,k)+'</div>'+
     '<div class="stage">'+
@@ -4326,7 +4426,7 @@ function renderTabEditor(){
     tbEff[k]=[]; tbSel=-1; tbCommit(p); renderTabEditor(); });
   $('#tbUndo').onclick=()=>tbUndo(p);
   tbFitCells(two?2*g:g, two, cell);
-  tbBindLib(p); tbBindSide(p); tbBindDrag(p);
+  tbBindLib(p); tbBindSide(p); tbBindDrag(p); tbLibRestore(libSnap);
   if(keepF){ const f=host.querySelector('#tbGridEd .ew[data-i="'+tbSel+'"]')||host.querySelector('#tbGridEd .ew'); if(f) f.focus({preventScroll:true}); }
 }
 // Schmal (Einstellungen unter dem Raster): nach Antippen einer Kachel die Einstellungen ins Bild holen
@@ -4336,52 +4436,84 @@ function tbShowSide(){ const sd=document.querySelector('#tbEd .sved.g2ed>.side')
   if(b.top>innerHeight-80||b.bottom<0) r.scrollIntoView({block:'center',behavior:'smooth'}); }
 // Baustein ohne Loxone-Symbol: vier kleine Kacheln statt eines einzelnen Quadrats (sieht sonst wie eine Checkbox aus)
 const LIB_NOICON='<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>';
-// Listenzeile der Bibliothek: Name (bis 2 Zeilen), darunter Raum bzw. Groesse; Haken "schon im Tab" per CSS rechts
-function tbLibTxt(name, sub){ return '<span class="ltx"><span class="lnm">'+hyHtml(name||'')+'</span>'+(sub?'<span class="lsub">'+esc(sub)+'</span>':'')+'</span>'; }
+// Listenzeile der Bibliothek: Name (bis 2 Zeilen, Treffer markiert), darunter Raum bzw. „Raum · Kategorie“ oder Groesse; Haken "schon im Tab" per CSS rechts
+function tbLibTxt(name, sub, terms){ name=name||''; return '<span class="ltx"><span class="lnm">'+hyHtml(name,hlRanges(name,terms))+'</span>'+
+  (sub?'<span class="lsub">'+hyHtml(sub,hlRanges(sub,terms))+'</span>':'')+'</span>'; }
 function tbLibTip(name, room, used){ const t=(name||'')+(room?' · '+room:'')+(used?' · '+T('schon im Tab'):''); return ' title="'+esc(t)+'"'; }
-// Bibliothek: Bausteine (nach Raum, mit Suche) bzw. Raeume/Kategorien und Widgets
+// Bibliothek (Standard 0.20.39): dieselbe Such- und Filterlogik wie der Auswahldialog (pickIdx/pickView/pickChipsHtml).
+// Bausteine: Suche (Name, Raum, Kategorie, Typ), Raum-Auswahl mit Anzahl, Kategorie-Chips mit Anzahl + „Zuletzt“,
+// ohne Suche gruppiert („In diesem Tab“ zuerst, dann nach Raum), mit Suche flache Relevanzliste.
+// Zeilen sind Knoepfe: ziehen = an die Stelle legen, antippen/Enter = auf den ersten freien Platz legen.
+let tbLibIx=null, tbLibV=null, tbLibPlaced='';
+// Typname eines Bausteins wie in den Auswahldialogen (Schnellstart, Status) - plus Loxone-Typ, beides durchsuchbar
+function ctlTypeName(c){ const t=(c&&c.type)||'', n=(QS_TYPES[t]||[])[1]||(ST_CHIP[t]||[])[1]||''; return (n?T(n)+' ':'')+t; }
+// Kategorie-Chips: groesste Kategorien zuerst (bei vielen Kategorien stehen die wichtigsten sichtbar), dann alphabetisch
+function tbLibCatOrder(src){ const n={}; src.forEach(c=>{ if(c.cat) n[c.cat]=(n[c.cat]||0)+1; });
+  return (META.cats||[]).slice().sort((a,b)=>(n[b.uuid]||0)-(n[a.uuid]||0)||(a.name||'').localeCompare(b.name||'','de')).map(c=>c.uuid); }
+function tbLibIdx(fk){ const src=fk?tbFolderList(fk):(META.controls||[]);
+  if(!tbLibIx||tbLibIx.src!==src) tbLibIx={src, idx:pickIdx(src, fk?{}:{chip:c=>[c.cat||'',''],
+    chipOrder:tbLibCatOrder(src), tlabel:ctlTypeName})};
+  return tbLibIx.idx; }
 function tbLibHTML(p,k){
-  const g=tbGrid(p,k), fk=tbFolder(k), placed=new Set((tbEff[k]||[]).map(it=>it.uuid).filter(Boolean));
-  const tabs='<div class="libtabs"><button type="button" data-lib="blocks" class="'+(tbLibTab==='blocks'?'on':'')+'">'+
+  const g=tbGrid(p,k), fk=tbFolder(k);
+  const tabs='<div class="libtabs"><button type="button" data-lib="blocks" class="'+(tbLibTab==='blocks'?'on':'')+'" aria-pressed="'+(tbLibTab==='blocks')+'">'+
       T(fk==='room'?'Räume':fk==='cat'?'Kategorien':'Bausteine')+'</button>'+
-    '<button type="button" data-lib="widgets" class="'+(tbLibTab==='widgets'?'on':'')+'">'+T('Widgets')+'</button></div>';
-  const usedT=new Set((tbEff[k]||[]).map(it=>it.type));
+    '<button type="button" data-lib="widgets" class="'+(tbLibTab==='widgets'?'on':'')+'" aria-pressed="'+(tbLibTab==='widgets')+'">'+T('Widgets')+'</button></div>';
+  const hint=id=>'<div class="libhint" id="'+id+'">'+T(tbLibTab==='widgets'?'Ins Raster ziehen, antippen oder Enter drücken, dann Baustein oder Quelle wählen.':'Ins Raster ziehen, antippen oder Enter drücken.')+'</div>';
   if(tbLibTab==='widgets')
-    return tabs+'<div class="liblist">'+Object.keys(SV_W).filter(t=>t!=='tile').sort((a,b)=>(usedT.has(b)?1:0)-(usedT.has(a)?1:0)).map(t=>
-      '<div class="libit wg c-'+t+(usedT.has(t)?' used':'')+'" data-new="'+t+'"'+tbLibTip(T(SV_W[t].label),'',usedT.has(t))+'>'+tbIcoHtml('',WG_ICONS[t])+
-      tbLibTxt(T(SV_W[t].label),gridMin(t,g,tbTabF()).join('×'))+'</div>').join('')+'</div>'+
-      '<div class="libhint">'+T('Widget ins Raster ziehen, dann Baustein oder Quelle wählen.')+'</div>';
-  const q=tbLibQ.toLowerCase();
-  let list;
-  if(fk){ list=tbFolderList(fk).filter(o=>!q||o.name.toLowerCase().includes(q))
-      .sort((a,b)=>(placed.has(b.uuid)?1:0)-(placed.has(a.uuid)?1:0)).map(o=>
-      '<div class="libit'+(placed.has(o.uuid)?' used':'')+'" data-new="'+fk+'" data-uuid="'+esc(o.uuid)+'"'+tbLibTip(o.name,'',placed.has(o.uuid))+'>'+tbIcoHtml('',BICONS.folder)+
-      tbLibTxt(o.name,'')+'</div>').join(''); }
-  else {
-    const cs=(META.controls||[]).filter(c=>(!q||(c.name||'').toLowerCase().includes(q)||(c.roomName||'').toLowerCase().includes(q))
-        && (!tbLibRoom||(c.room||'')===tbLibRoom) && (!tbLibCat||(c.cat||'')===tbLibCat))
-      .sort((a,b)=>(a.roomName||'').localeCompare(b.roomName||'')||(a.name||'').localeCompare(b.name||''));
-    let room=null; list='';
-    // schon im Tab: oben als eigene Gruppe, danach alle uebrigen nach Raum
-    const inTab=cs.filter(c=>placed.has(c.uuid)), rest=cs.filter(c=>!placed.has(c.uuid));
-    if(inTab.length) list+='<div class="libgrp">'+T('In diesem Tab')+'</div>'+inTab.map(c=>
-      '<div class="libit used" data-new="tile" data-uuid="'+esc(c.uuid)+'"'+tbLibTip(c.name,c.roomName,true)+'>'+tbIcoHtml(c.iconUrl,LIB_NOICON)+
-      tbLibTxt(c.name,c.roomName||'')+'</div>').join('');
-    rest.slice(0,400).forEach(c=>{ if(c.roomName!==room){ room=c.roomName; list+='<div class="libgrp">'+esc(room||T('Ohne Raum'))+'</div>'; }
-      list+='<div class="libit'+(placed.has(c.uuid)?' used':'')+'" data-new="tile" data-uuid="'+esc(c.uuid)+'"'+tbLibTip(c.name,'',placed.has(c.uuid))+'>'+tbIcoHtml(c.iconUrl,LIB_NOICON)+
-        tbLibTxt(c.name,'')+'</div>'; });
-    if(rest.length>400) list+='<div class="libhint">'+T('{n} weitere – Suche oder Filter eingrenzen.').replace('{n}',rest.length-400)+'</div>';
-  }
-  // Filter nach Raum / Kategorie (nur in der Bausteinliste)
-  const opt=(arr,sel,all)=>'<option value="">'+all+'</option>'+arr.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))
-    .map(o=>'<option value="'+esc(o.uuid)+'"'+(o.uuid===sel?' selected':'')+'>'+esc(o.name||'')+'</option>').join('');
-  const filt=fk?'':'<div class="libfilt"><select id="tbLibRoom">'+opt(META.rooms||[],tbLibRoom,T('Alle Räume'))+'</select>'+
-    '<select id="tbLibCat">'+opt(META.cats||[],tbLibCat,T('Alle Kategorien'))+'</select></div>';
-  return tabs+'<input type="search" id="tbLibQ" class="libq" placeholder="'+T('Suchen…')+'" value="'+esc(tbLibQ)+'">'+filt+
-    '<div class="liblist">'+(list||leerHtml(T('Keine Treffer.'),
-      (tbLibQ||tbLibRoom||tbLibCat)?'<button type="button" class="minibtn" data-libreset="1">'+T('Suche und Filter zurücksetzen')+'</button>':'',true,'libnone'))+'</div>'+
-    '';
+    return tabs+'<div class="liblist" id="tbLibList" role="group" aria-label="'+esc(T('Widgets'))+'" aria-describedby="tbLibHint"></div>'+hint('tbLibHint');
+  const idx=tbLibIdx(fk), ids=new Set((fk?[]:META.controls||[]).map(c=>c.uuid)), rec=fk?false:pickRecent().some(u=>ids.has(u));
+  if(!rec&&tbLibCat===PICK_RK) tbLibCat='';
+  const ph=T(fk?'Name suchen …':'Name, Raum, Typ …'), al=T(fk?'Name suchen …':'Name, Raum oder Typ suchen …');   // schmale Spalte: kurzer Platzhalter
+  const filt=fk?'':'<div class="libfilt"><select id="tbLibRoom" aria-label="'+esc(T('Raum'))+'"><option value="">'+T('Alle Räume')+'</option>'+
+    (META.rooms||[]).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','de'))
+      .map(o=>'<option value="'+esc(o.uuid)+'"'+(o.uuid===tbLibRoom?' selected':'')+'>'+esc(o.name||'')+'</option>').join('')+'</select></div>';
+  return tabs+'<input type="search" id="tbLibQ" class="libq" placeholder="'+esc(ph)+'" aria-label="'+esc(al)+'" autocomplete="off" value="'+esc(fk?tbLibQF:tbLibQ)+'">'+filt+
+    (fk?'':pickChipsHtml(idx, rec, T('Kategorie'), u=>idx.cat(u), 'libchips', tbLibCat))+
+    '<div class="liblist" id="tbLibList" role="group" aria-label="'+esc(T(fk==='room'?'Räume':fk==='cat'?'Kategorien':'Bausteine'))+'" aria-describedby="tbLibHint"></div>'+
+    '<div class="qssr" id="tbLibSr" role="status" aria-live="polite"></div>'+hint('tbLibHint');
 }
+// Stand der Bibliothek vor dem Neuzeichnen (Scroll-Anker, Fokus), damit Ablegen/Antippen die Liste nicht springen laesst
+function tbLibSnap(){ const L=$('#tbLibList'), ae=document.activeElement; if(!L) return null;
+  const lt=L.getBoundingClientRect().top, a=[...L.querySelectorAll('.libit')].find(r=>r.getBoundingClientRect().bottom>lt+1);
+  return {key:tbTab+'|'+tbLibTab, u:a?a.dataset.u:'', off:a?a.getBoundingClientRect().top-lt:0,
+    f:ae&&L.contains(ae)&&ae.dataset.u?ae.dataset.u:(ae&&ae.id==='tbLibQ'?'#q':''), pos:ae&&ae.id==='tbLibQ'?ae.selectionStart:0,
+    nb:ae&&L.contains(ae)&&ae.dataset.u?[ae.nextElementSibling,ae.previousElementSibling].map(function nx(e,i){ while(e&&!(e.classList&&e.classList.contains('libit'))) e=i?e.previousElementSibling:e.nextElementSibling; return e?e.dataset.u:''; }):[]}; }
+function tbLibRestore(s){ const L=$('#tbLibList'); if(!s||!L||!tbLibV||s.key!==tbTab+'|'+tbLibTab) return;
+  // zweimal ausrichten: Zeilen ausserhalb des Bildes haben erst geschaetzte Hoehen (content-visibility)
+  const fix=()=>{ const a=s.u&&L.querySelector('.libit[data-u="'+CSS.escape(s.u)+'"]'); if(a) L.scrollTop+=a.getBoundingClientRect().top-L.getBoundingClientRect().top-s.off; };
+  if(s.u&&tbLibV.find(s.u)){ fix(); requestAnimationFrame(()=>{ if(L.isConnected) fix(); }); }
+  if(s.f==='#q'){ const q=$('#tbLibQ'); if(q){ q.focus({preventScroll:true}); try{ q.setSelectionRange(s.pos,s.pos); }catch(e){} } }
+  else if(s.f){
+    // Fokus bleibt sichtbar an der alten Stelle: ist die Zeile weggewandert (z. B. nach „In diesem Tab“), die Nachbarzeile
+    const vis=b=>{ const r=b.getBoundingClientRect(), l=L.getBoundingClientRect(); return r.bottom>l.top+2&&r.top<l.bottom-2; };
+    // eben abgelegte Zeile wandert ohne Suche in „In diesem Tab“ - dann weiter mit der Nachbarzeile (Enter, Enter … legt nacheinander ab)
+    const moved=s.f===tbLibPlaced&&!tbLibV.R().flat; tbLibPlaced='';
+    let b=moved?null:tbLibV.find(s.f); if(!b||!vis(b)) b=s.nb.map(u=>u&&tbLibV.find(u)).find(x=>x&&vis(x))||b||tbLibV.find(s.f);
+    if(b){ tbLibV.setFoc(b.dataset.u); tbLibV.roving(); b.focus({preventScroll:true}); if(!vis(b)) b.scrollIntoView({block:'nearest'}); } } }
+// Antippen / Enter: auf den ersten freien Platz legen (Alternative zum Ziehen, auch fuer Tastatur und Schalter-Bedienung)
+function tbPlaceFirst(p, type, uuid, name){
+  const k=tbTab, items=tbEff[k]; if(!items||!type) return;
+  if(uuid&&tbFolder(k)===type&&items.some(it=>it.uuid===uuid)){ snack(T('„{n}“ ist schon in der Übersicht.').replace('{n}',name||''),null,3000); return; }
+  const g=tbGrid(p,k), [w,h]=gridMin(type,g,tbTabF()), rows=tbRows(items,g); let t=null;
+  if(k===DK){ const cols=tbDashPages(p)*g;      // Dashboard: Seite fuer Seite, je Seite zeilenweise
+    for(let pg=0;pg*g<cols&&!t;pg++) for(let y=0;y<=g-h&&!t;y++) for(let x=pg*g;x<(pg+1)*g&&!t;x++) if(tbFree(items,x,y,w,h,-1,rows,g)) t={x,y,w,h}; }
+  else for(let y=0;y<=rows-h&&!t;y++) for(let x=0;x<2*g&&!t;x++) if(tbFree(items,x,y,w,h,-1,rows,g)) t={x,y,w,h};
+  if(!t){ snack(T('Kein freier Platz. Erst eine Kachel entfernen.'),null,3500); return; }
+  tbLibPlaced=uuid||type; tbAddNew(p,{type,uuid},t); tbCommit(p); renderTabEditor();
+  snack(T('„{n}“ ins Raster gelegt.').replace('{n}',name||''),()=>tbUndo(p),7000);
+  // neben der Liste sichtbar machen (untereinander nicht wegscrollen, die Liste bleibt im Blick)
+  const e=$('#tbGridEd .ew.sel'), lib=$('#tbEd .lib'), st=$('#tbEd .stage');
+  if(e&&lib&&st&&lib.getBoundingClientRect().right<=st.getBoundingClientRect().left+4) e.scrollIntoView({block:'nearest'}); }
+// Neuen Eintrag ins Raster (Ziehen und Antippen)
+function tbAddNew(p,d,t){ const items=tbEff[tbTab], it={type:d.type,x:t.x,y:t.y,w:t.w,h:t.h};
+  if(d.uuid) it.uuid=d.uuid;
+  if(d.type==='clock'){ it.align='center'; it.date='short'; }
+  // aus der Vorbefuellung entfernt gewesen? -> wieder zulassen
+  if(d.uuid){ const lay=tbLay(p,tbTab); if(lay.removed){ lay.removed=lay.removed.filter(u=>u!==d.uuid); if(!lay.removed.length) delete lay.removed; } }
+  if(d.uuid && tbFolder(tbTab)===d.type){ const sel=tbSelected(p,tbTab); if(sel.indexOf(d.uuid)<0) tbSetSelected(p,tbTab,sel.concat(d.uuid)); }
+  if(d.type==='tile'&&d.uuid) pickRecentAdd([d.uuid]);
+  items.push(it); tbSel=items.length-1; }
 // Kachelgroesse an die verfuegbare Breite anpassen (kleine Fenster: kein seitliches Scrollen)
 function tbFitCells(cols, two, base){
   const grid=$('#tbGridEd'), stage=grid&&grid.closest('.stage'); if(!stage) return;
@@ -4398,16 +4530,49 @@ function tbFitCells(cols, two, base){
 }
 let tbFit=null, tbFitRaf=0;
 function tbBindLib(p){
-  const host=$('#tbEd'); if(!host) return;
-  host.querySelectorAll('[data-lib]').forEach(b=>b.onclick=()=>{ tbLibTab=b.dataset.lib; renderTabEditor(); });
-  const q=$('#tbLibQ'); if(q) q.oninput=()=>{ tbLibQ=q.value; clearTimeout(tbBindLib.t); tbBindLib.t=setTimeout(()=>{ if(!q.isConnected) return;   // entprellt (viele Bausteine)
-    const pos=q.selectionStart;
-    const lib=host.querySelector('.lib'); lib.innerHTML=tbLibHTML(p,tbTab); tbBindLib(p); tbBindDrag(p,true);
-    const q2=$('#tbLibQ'); q2.focus(); try{ q2.setSelectionRange(pos,pos); }catch(e){} }, 120); };
-  { const rs=host.querySelector('[data-libreset]'); if(rs) rs.onclick=()=>{ tbLibQ=''; tbLibRoom=''; tbLibCat='';
-    const lib=host.querySelector('.lib'); lib.innerHTML=tbLibHTML(p,tbTab); tbBindLib(p); tbBindDrag(p,true); const q2=$('#tbLibQ'); if(q2) q2.focus(); }; }
-  [['#tbLibRoom',v=>tbLibRoom=v],['#tbLibCat',v=>tbLibCat=v]].forEach(([id,set])=>{ const sel=$(id); if(sel) sel.onchange=()=>{ set(sel.value);
-    const lib=host.querySelector('.lib'); lib.innerHTML=tbLibHTML(p,tbTab); tbBindLib(p); tbBindDrag(p,true); }; });
+  const host=$('#tbEd'), lib=host&&host.querySelector('.lib'); if(!lib) return;
+  if(tbLibV){ tbLibV.stop(); tbLibV=null; }
+  lib.querySelectorAll('[data-lib]').forEach(b=>b.onclick=()=>{ if(tbLibTab===b.dataset.lib) return; tbLibTab=b.dataset.lib; renderTabEditor();
+    const nb=$('#tbEd .lib [data-lib="'+tbLibTab+'"]'); if(nb) nb.focus(); });
+  // Antippen, Enter oder Leertaste auf einer Zeile: auf den ersten freien Platz (nicht direkt nach einem Ziehen)
+  lib.onclick=e=>{ const b=e.target.closest('.libit'); if(!b||!lib.contains(b)||Date.now()-(tbBindDrag.dropT||0)<400) return;
+    // Doppelklick bzw. zweites Antippen derselben Zeile legt nicht doppelt ab
+    const key=b.dataset.new+'|'+(b.dataset.u||''), t=Date.now(); if(tbBindLib.lastK===key&&t-tbBindLib.lastT<600) return; tbBindLib.lastK=key; tbBindLib.lastT=t;
+    tbPlaceFirst(p,b.dataset.new,b.dataset.uuid||'',(b.querySelector('.lnm')||b).textContent.replace(/­/g,'')); };
+  lib.onkeydown=e=>{ if(tbLibV&&tbLibV.nav(e)) e.stopPropagation(); };
+  const L=$('#tbLibList'); if(!L) return;
+  const k=tbTab, g=tbGrid(p,k), fk=tbFolder(k), items=tbEff[k]||[], placed=new Set(items.map(it=>it.uuid).filter(Boolean));
+  if(tbLibTab==='widgets'){ const usedT=new Set(items.map(it=>it.type));
+    const list=Object.keys(SV_W).filter(t=>t!=='tile').map(t=>({c:{uuid:t,name:T(SV_W[t].label)}}))
+      .sort((a,b)=>(usedT.has(b.c.uuid)?1:0)-(usedT.has(a.c.uuid)?1:0));
+    tbLibV=pickView({L, n:list.length, sel:'.libit', run:()=>({list,terms:[],cnt:{},nRec:0,flat:true}), empty:()=>'',
+      row:x=>{ const t=x.c.uuid, u=usedT.has(t);
+        return '<button type="button" class="libit wg c-'+t+(u?' used':'')+'" data-new="'+t+'" data-u="'+t+'" tabindex="-1"'+tbLibTip(x.c.name,'',u)+'>'+
+          tbIcoHtml('',WG_ICONS[t])+tbLibTxt(x.c.name,gridMin(t,g,tbTabF()).join('×'))+'</button>'; }});
+    tbLibV.draw(); return; }
+  const idx=tbLibIdx(fk), rec=fk?[]:pickRecent(), roomSel=$('#tbLibRoom');
+  const roomN=u=>((META.rooms||[]).find(r=>r.uuid===u)||{}).name||'';
+  const rank=c=>placed.has(c.uuid)?0:1, pre=()=>(!fk&&tbLibRoom)?(c=>(c.room||'')===tbLibRoom):null;
+  const row=(x,R)=>{ const c=x.c, used=placed.has(c.uuid), sub=fk?'':R.flat?idx.sub(c):(used?c.roomName||'':'');
+    return '<button type="button" class="libit'+(used?' used':'')+'" data-new="'+(fk||'tile')+'" data-u="'+esc(c.uuid)+'" data-uuid="'+esc(c.uuid)+'" tabindex="-1"'+
+      (used&&fk?' aria-disabled="true"':'')+tbLibTip(c.name,fk?'':c.roomName,used)+'>'+
+      tbIcoHtml(fk?'':c.iconUrl,fk?BICONS.folder:LIB_NOICON)+tbLibTxt(c.name,sub,R.terms)+(used?'<span class="qssr">, '+esc(T('schon im Tab'))+'</span>':'')+'</button>'; };
+  // Raum-Auswahl zeigt die Anzahl je Raum (folgt Suche und Kategorie, wie die Chips)
+  const roomCounts=()=>{ if(!roomSel||!tbLibV) return; const c={}; let all=0;
+    idx.run(tbLibV.q(),tbLibV.ty(),{rec,raw:true}).forEach(x=>{ const r=x.c.room||''; c[r]=(c[r]||0)+1; all++; });
+    [...roomSel.options].forEach(o=>{ o.textContent=(o.value?roomN(o.value):T('Alle Räume'))+' ('+(o.value?c[o.value]||0:all)+')'; }); };
+  tbLibV=pickView({L, qi:$('#tbLibQ'), SR:$('#tbLibSr'), chips:lib.querySelector('.libchips'), n:idx.n, q:fk?tbLibQF:tbLibQ, ty:tbLibCat, sel:'.libit',
+    run:(q,ty)=>idx.run(q,ty,{pre:pre(),rec,rank}), row, gcls:'libgrp',
+    grp:x=>placed.has(x.c.uuid)?T('In diesem Tab'):fk?'':(x.c.roomName||T('Ohne Raum')),
+    say:fk?(R=>R.list.length===1?T('1 Eintrag'):T('{n} Einträge').replace('{n}',R.list.length)):null,
+    empty:(R,q,ty)=>{ if(!idx.n) return leerHtml(esc(T(fk==='room'?'Noch keine Räume.':fk==='cat'?'Noch keine Kategorien.':'Noch keine Bausteine.')));
+      const tn=[ty===PICK_RK?T('Zuletzt'):ty?idx.cat(ty):'', tbLibRoom&&!fk?roomN(tbLibRoom):''].filter(Boolean).join(', ');
+      if(fk) return leerHtml(esc(T(fk==='room'?'Kein Raum passt zu „{q}“.':'Keine Kategorie passt zu „{q}“.').replace('{q}',q.trim())),'',true,'libnone');   // nur ein Suchfeld: ohne Knopf (Escape leert)
+      return pickEmpty(q,tn,T('Keine Treffer.')+' '+T('Filter: {t}.').replace('{t}',tn),'libnone'); },
+    onQ:v=>{ if(fk) tbLibQF=v; else tbLibQ=v; }, onTy:v=>{ tbLibCat=v; }, onReset:()=>{ tbLibRoom=''; if(roomSel) roomSel.value=''; },
+    after:R=>{ roomCounts(); const h=$('#tbLibHint'); if(h) h.hidden=!R.list.length; }});
+  if(roomSel) roomSel.onchange=()=>{ tbLibRoom=roomSel.value; tbLibV.draw(); };
+  tbLibV.draw(); const sr=$('#tbLibSr'); if(sr) sr.textContent='';   // Ansage nur nach Eingabe, nicht beim Neuzeichnen
 }
 // Rueckgaengig: Stand vor jeder Aenderung merken (tbCommit)
 function tbUndo(p){ const k=tbTab, h=tbHist[k]||[]; if(!h.length) return;
@@ -4418,7 +4583,7 @@ function tbUndo(p){ const k=tbTab, h=tbHist[k]||[]; if(!h.length) return;
 function tbSideHTML(p){
   const it=(tbEff[tbTab]||[])[tbSel];
   if(!it) return tbSec('tips',T('So geht’s'),'<div class="tips"><ol>'+
-    '<li>'+T('Baustein oder Widget in der Liste suchen und <b>ins Raster ziehen</b>.')+'</li>'+
+    '<li>'+T('Baustein oder Widget in der Liste suchen und <b>ins Raster ziehen</b> oder <b>antippen</b> (legt es auf den ersten freien Platz).')+'</li>'+
     '<li>'+T('Kachel <b>antippen</b>, um Größe, Inhalt und Aussehen einzustellen.')+'</li>'+
     '<li>'+T('An der <b>Ecke</b> ziehen ändert die Größe. Auf eine andere Kachel ziehen <b>tauscht</b> beide.')+'</li>'+
     '<li>'+T('<b>✕</b> oder <b>Entf</b> entfernt, <b>Strg+Z</b> macht rückgängig.')+'</li>'+
@@ -4717,22 +4882,18 @@ function tbBindDrag(p, libOnly){
   const up=(ev)=>{ const d=cleanup();
     if(!d) return;
     if(!d.moved){ if(d.kind==='move'||d.kind==='resize'){ tbSel=d.i; tbBindDrag.selT=Date.now(); renderTabEditor(); tbShowSide(); } return; }
+    tbBindDrag.dropT=Date.now();      // der folgende click auf der Bibliothekszeile legt nicht noch einmal ab
     const t=target(ev,d); if(!t||!t.ok){ if(t&&!t.ok) snack(T('Hier ist kein Platz.'),null,2500); return; }
-    if(d.kind==='new'){ const it={type:d.type,x:t.x,y:t.y,w:t.w,h:t.h};
-      if(d.uuid) it.uuid=d.uuid;
-      if(d.type==='clock'){ it.align='center'; it.date='short'; }
-      // aus der Vorbefuellung entfernt gewesen? -> wieder zulassen
-      if(d.uuid){ const lay=tbLay(p,tbTab); if(lay.removed){ lay.removed=lay.removed.filter(u=>u!==d.uuid); if(!lay.removed.length) delete lay.removed; } }
-      if(d.uuid && tbFolder(tbTab)===d.type){ const sel=tbSelected(p,tbTab); if(sel.indexOf(d.uuid)<0) tbSetSelected(p,tbTab,sel.concat(d.uuid)); }
-      items.push(it); tbSel=items.length-1; }
+    if(d.kind==='new') tbAddNew(p,d,t);
     else if(t.swap!==undefined){ const a=items[d.i], b=items[t.swap], ax=a.x, ay=a.y; a.x=b.x; a.y=b.y; b.x=ax; b.y=ay;
       delete a.auto; delete b.auto; tbSel=d.i; }
     else { const it=items[d.i]; it.x=t.x; it.y=t.y; it.w=t.w; it.h=t.h; delete it.auto; tbSel=d.i; }
     tbCommit(p); renderTabEditor(); };
-  $('#tbEd').querySelectorAll('.lib [data-new]').forEach(ch=>ch.addEventListener('pointerdown',ev=>{
+  // Bibliothek: ein Zuhoerer fuer alle Zeilen (Zeilen kommen beim Scrollen blockweise nach)
+  { const lib=$('#tbEd .lib'); if(lib) lib.onpointerdown=ev=>{ const ch=ev.target.closest('[data-new]'); if(!ch||!lib.contains(ch)) return;
     const type=ch.dataset.new, [w,h]=gridMin(type,g,tbTabF());
     if(ch.classList.contains('used') && tbFolder(tbTab)===type) return;
-    start(ev,{kind:'new',type,uuid:ch.dataset.uuid||'',w,h,src:ch}); }));
+    start(ev,{kind:'new',type,uuid:ch.dataset.uuid||'',w,h,src:ch}); }; }
   if(libOnly) return;
   grid.querySelectorAll('.ew').forEach(el=>el.addEventListener('pointerdown',ev=>{
     const i=+el.dataset.i, it=items[i];
@@ -4764,6 +4925,7 @@ document.addEventListener('keydown',ev=>{
   // offener Dialog/Assistent: Tasten gehoeren dem Dialog
   if([...document.querySelectorAll('.wzov')].some(o=>o.getClientRects().length)) return;
   if((ev.ctrlKey||ev.metaKey)&&!ev.shiftKey&&ev.key.toLowerCase()==='z'){ ev.preventDefault(); tbUndo(p); return; }
+  if(tg&&tg.closest&&tg.closest('#tbEd .lib')) return;     // Bibliothek: Tasten gehoeren der Liste (Entf loescht dort keine Kachel)
   if(ev.ctrlKey||ev.metaKey||ev.shiftKey) return;
   // fokussierte Kachel gilt als gewaehlt; auf anderen Knoepfen loescht Backspace nichts
   const onEw=tg&&tg.classList&&tg.classList.contains('ew')&&ed.contains(tg);
@@ -4801,7 +4963,7 @@ let SAVED_SNAP=null;
 function snapSaved(){ try{ SAVED_SNAP=JSON.parse(JSON.stringify(PANELS)); }catch(e){ SAVED_SNAP=null; } }
 function stable(v){ return JSON.stringify(v,(k,x)=>(x&&typeof x==='object'&&!Array.isArray(x))?Object.keys(x).sort().reduce((o,kk)=>(o[kk]=x[kk],o),{}):x); }
 const CHG_UI={devBtn:'Zahnrad am Gerät',grid:'Raster',split:'Format',design:'Design',dpmsOff:'Dashboard nach Leerlauf (s)',prox:'Präsenzerkennung',autoBright:'Helligkeit',nightCam:'Nachts Kamerabild nur bei Präsenz zeigen',brightMin:'Helligkeit min. (%)',brightMax:'Helligkeit max. (%)',reloadHours:'Seite neu laden',nightDim:'Abdunkeln nachts (%)',
-  nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbverlauf Hintergrund',ambClock:'Farbverlauf Uhrzeit',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
+  nightWake:'Hell nach Antippen (s)',phone:'Format',ambBg:'Farbstimmung Hintergrund',ambClock:'Farbstimmung Uhrzeit',fill:'Bildschirm füllen',font:'Schriftart',fontNum:'Schrift für Zahlen & Titel',
   nudgeX:'Versatz horizontal (px)',iconSize:'Symbol',nameSize:'Kachelname',subSize:'Statuszeile',bold:'Kachelnamen',dblTapOff:'Doppeltipp',alarmsEnabled:'Wecker',alarmOff:'Alarmbausteine',
   lang:'Sprache',saverFcSize:'Wettervorschau',tileShadow:'Kachel-Schatten'};
 function changeList(){ return panelChanges().concat([...SECT_DIRTY].map(k=>T((SECTS.find(x=>x.k===k)||{}).label||k))); }
@@ -5452,7 +5614,7 @@ async function loadSettings(force){
 window.SHOWN_VER=window.SHOWN_VER||'';
 function loadVersion(){ fetch('/api/version').then(r=>r.json()).then(v=>{ const e=$('#appVersion'); window.SHOWN_VER=v.version||'';
   const bt=v.built?new Date(v.built):null, bts=bt&&!isNaN(bt)?bt.toLocaleString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';
-  if(e){ e.innerHTML='<b>'+esc(v.version)+'</b>'+(v.commit?'<span>'+esc(v.commit.slice(0,7))+'</span>':'')+(bts?'<span>'+esc(bts)+'</span>':'');
+  if(e){ e.innerHTML='<b>'+esc(v.version)+'</b>';   // einzeilig; Commit und Installationszeit nur im title
     e.title='tilebert '+v.version+(v.commit?'\nCommit '+v.commit:'')+(bts?'\nInstalliert '+bts:'')+'\n'+T('GitHub öffnen'); }
   const b=$('#brand'); if(b) b.title='Version '+v.version; }).catch(()=>{}); }
 loadVersion();

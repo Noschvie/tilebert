@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Bausteinliste wie Auswahldialog, Dashboard-Einstellungen, Verbindung stabiler (0.20.39)** — Bausteinliste im Raster-Editor mit derselben Suche wie „+ Baustein hinzufügen“ (Name/Raum/Kategorie/Typ, Hervorhebung, Kategorie-Chips, Antippen/Enter legt auf freien Platz). Dashboard-Einstellungen aufgeräumt: „Farbstimmung“ mit ?-Hilfe, Standard-Dashboard als Schalter unter Raster, „Dashboard schließen“ kompakt (✕-Knopf + Wischen 2×2), Statusleiste einklappbar. Seitenkopf einzeilig (Name + Menü), Seitenleiste luftiger, Version einzeilig, Blitz an Sofort-Aktionen. Fehlende englische Texte ergänzt. Server: Miniserver-Zugang wird vor Ablauf erneuert (kein Abbruch mehr nach 12,5 h), Komfort-Verschiebung auch serverseitig auf ±5 K begrenzt, Zeitbasis der Raumregelung wird gespeichert, Wetter-Stundenversatz robuster, Geräteprotokoll gefiltert und Gerätekennungen geschwärzt. Doku: Sicherheitshinweis ADB über WLAN.
 - **Statusleiste als Chip-Reihe, einheitliche Bedienmuster (0.20.38)** — Statusleiste und Status-Ampel als Chip-Reihe wie die Tabs: echtes Loxone-Symbol, Name, Anzeige (Symbol / Text / Symbol + Text); gewählter Chip mit ‹ › zum Verschieben und ✕ mit Rückgängig; Detailkarte mit Symbol ändern; „+ Baustein hinzufügen n/6“; am Handy einspaltig mit ↑ ↓. Ausschalten der Statusleiste mit Rückgängig. Standards für Bedienmuster im Design-Guide und umgesetzt: Entfernen vs. Löschen, Rückfrage nur bei sofortiger Wirkung am Server sonst Rückgängig, einheitliches Zurücksetzen, Schalter vs. Häkchen-Liste mit Alle/Keine, einheitliche Leerzustände, Rückfragen als Frage mit passendem Verb, 44-px-Tippflächen.
 - **Config aus einem Guss (0.20.37)** — Auswahldialog „+ Baustein hinzufügen“ optimiert: Suche über Name/Raum/Kategorie/Typ mit Hervorhebung, „Zuletzt“, Tastaturbedienung, schneller bei großen Anlagen; Rückfrage bei Browser-Zurück mit ungespeicherten Eingaben (auch Panel- und Betriebsmodus-Assistent). Silbentrennung an Wortfugen für lange Namen am Handy. Einheitliches Sortieren: das Pfeilpaar ↑↓ ist zugleich Griff (tippen, ziehen mit Maus/Finger, Tastatur) für Statusleiste, Ampel, Schnellstart, Kameras und Tabs. Einheitliche Rückfragen statt Browser-Fenster, einheitliches ✕-Entfernen, „+ … hinzufügen“ mit Zähler und „Alle“; Kachel „Baustein“ und Verlauf-Widget wählen über den Auswahldialog.
 - **Protokoll-Automatik, Statusleiste neu, Kamera-Fix (0.20.36)** — Miniserver-Protokoll wird automatisch erkannt (HTTPS oder HTTP auf beliebigem Port, z. B. 8006), Auswahl Automatisch/HTTPS/HTTP in Config und Plugin-Seite. Statusleiste im Dashboard neu: eine Liste über die volle Breite mit Symbol/Text je Baustein, Sortieren per ↑↓, „+ Baustein hinzufügen“. Einheitlicher Auswahldialog mit Suche, Typfilter und Raumgruppen (Statusleiste, Status-Ampel, Schnellstart; Handy im Vollbild). Kamera-/Türstationsansicht im Querformat zeigt wieder das ganze Bild, „ganzes Bild“/„Füllen“ wirken. Raumregelung zeigt den aktiven Zeitplan-Modus; Schaltuhr erkennt eigene Betriebsmodi.
@@ -737,6 +738,16 @@ Einstellungen-Seite und in `data/plugins/loxpanelfav/config/loxpanel.cfg`
 - LoxBerry **3.0+** (Debian Bullseye oder neuer)
 - Genug freier Speicher/RAM für einen lokalen Docker-Image-Build (Python-Base-Image
   + pip-Abhängigkeiten); auf einem Raspberry Pi dauert der erste Build ca. 2–5 Minuten.
+
+## Sicherheit: Android-Panels (ADB über WLAN)
+
+Einrichtung, Updates und Geräte-Log der Android-Panels laufen über ADB im WLAN
+(Port 5555). Das Shelly Wall Display verlangt dafür **keine Anmeldung**, hat die
+Entwickleroptionen an und SELinux nur *permissive*: jeder Rechner im selben Netz
+bekommt eine Shell auf dem Gerät. Daher Panels in ein **eigenes Netz/VLAN** legen
+(Port 5555 nur vom LoxBerry erreichbar) und Port 5555 **nie ins Internet**
+freigeben. Auf Tablets ADB nach der Einrichtung wieder ausschalten, wenn es nicht
+gebraucht wird. Details: `docs/TBVIEW.md`, Abschnitt „Sicherheit“.
 
 ## Steuerung von Hand (SSH auf dem LoxBerry)
 

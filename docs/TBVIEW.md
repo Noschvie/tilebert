@@ -187,3 +187,17 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - Version 5.11 (versionCode 16): nur Texte der Info- und Einrichtungsseite überarbeitet (Linguisten-Prüfung). Signatur unverändert.
 - Version 5.12 (versionCode 17): Infoseite: Zeile wieder „Standard-Launcher“. Signatur unverändert.
 - Version 5.14 (versionCode 19, 0.20.28; 5.13 nur intern): weniger Grafiklast – kein Hardware-Layer an der WebView, kein eigener Hintergrund, Fenster deckend (`setBackgroundDrawable(null)`, `PixelFormat.OPAQUE`). Shelly: Helligkeit unter 4 % wird auf 4 % angehoben (`SHELLY_MIN_BRIGHT`), da die Firmware Werte 0–2 % als Backlight 169/255 umsetzt (4 % → 11). Signatur unverändert (SHA-256 `80ee7b07…`).
+
+## Sicherheit: ADB über WLAN (Stand 0.20.39)
+
+Für Einrichtung, Updates, Helligkeit und Geräte-Log spricht tilebert per ADB über WLAN (Port 5555) mit dem Gerät. Am Shelly Wall Display (Geräte-Log 20.10.2026) heißt das:
+
+- `adbd: authentication not required` – **jeder Rechner im selben Netz** bekommt ohne Rückfrage eine Shell auf dem Gerät (Apps installieren, Einstellungen ändern, Bildschirm/Kamera auslesen).
+- Entwickleroptionen an (`development_settings_enabled=1`, `adb_enabled=1`), SELinux im Modus *permissive* (`avc … permissive=1`): die Firmware setzt Android-Schutzmechanismen kaum durch.
+
+Das ist für den Betrieb von tilebert so nötig, aber ein Risiko. Empfehlung:
+
+- Panels in ein **eigenes Netz/VLAN** (IoT) legen; Zugriff auf Port 5555 nur vom LoxBerry erlauben.
+- Port 5555 **nie ins Internet** weiterleiten (keine Portfreigabe, kein UPnP), kein Gäste-WLAN.
+- Auf Tablets ADB nach der Einrichtung wieder ausschalten, wenn kein Geräte-Log/Update per ADB gebraucht wird (TbViewer läuft ohne ADB weiter).
+- Geräte-Logs schwärzt tilebert seit 0.20.39 (Seriennummer, `android_id`, MAC-Adressen, IPv6-Privacy-Secret); vor dem Teilen trotzdem kurz durchsehen.

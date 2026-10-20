@@ -62,7 +62,11 @@ _EPOCH_2009 = 1230768000          # 1.1.2009 00:00 als Unix-Zeit (Wanduhr-Basis)
 _MS_OFF: int | None = None        # UTC-Abstand des Miniservers in s (None = unbekannt)
 # Basis fuer IRCv2 override/<modus>/<until>: "local" (Ortszeit) oder "utc". Die Doku
 # nennt keine Zone; korrigiert wird per Selbstkalibrierung an overrideEntries.start.
-_IRC_BASE = "local"
+# Startwert "utc": am echten Miniserver (17.1) dreimal so gelernt. Das Gelernte wird je
+# Miniserver in ms_state.json gemerkt (_irc_base_load/_irc_base_store), damit nach
+# einem Neustart nicht wieder der erste Override mit falscher Endzeit rausgeht.
+_IRC_BASE_DEFAULT = "utc"
+_IRC_BASE = _IRC_BASE_DEFAULT
 _MSTIME_RE = re.compile(r"([+-])(\d{1,2}):(\d{2})(?::(\d{2}))?\s*$")
 
 
@@ -221,7 +225,27 @@ class _LoxClient(LoxoneClient):
 # Kennung dieses Clients fuer getjwt: die Doku verlangt eine feste UUID je Client
 # (der Miniserver ordnet ihr alle Tokens zu) und einen lesbaren Namen.
 TOKEN_INFO = "tilebert"
-TOKEN_PERM = 2          # Web-Recht (kurzlebig) wie bisher (loxone_api-Vorgabe)
+# Recht 2 = Web (kurzlebig, ~12,5 h), 4 = App (Wochen). Bleibt bei 2: das Token wird vor
+# Ablauf per refreshjwt erneuert (loxone_ws._token_keeper), ein kurzlebiges Token ist bei
+# Verlust weniger wert, und ob jeder Benutzer das App-Recht bekommt, ist nicht belegt
+# (ein Wechsel koennte bestehende Anmeldungen brechen).
+TOKEN_PERM = 2
+
+
+class _Expected401(logging.Filter):
+    """loxone_api meldet einen 401 beim Struktur-Abruf als ERROR ("Error loading structure:
+    Non-JSON response (status 401)"). Bei abgelaufenem/abgelehntem Token ist das erwartet:
+    tilebert holt dann ein neues Token. Solche Meldungen nur als DEBUG fuehren."""
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno >= logging.WARNING and "(status 401)" in record.getMessage():
+            record.levelno, record.levelname = logging.DEBUG, "DEBUG"
+            return logging.getLogger(record.name).isEnabledFor(logging.DEBUG) or \
+                logging.getLogger().isEnabledFor(logging.DEBUG)
+        return True
+
+
+logging.getLogger("loxone_api.client").addFilter(_Expected401())
 
 
 def _client_uuid(host, user) -> str:
@@ -258,7 +282,7 @@ log = logging.getLogger("loxpanel.webvisu")
 # kennt sie nicht). Bei jedem Release-Bump hier mitziehen - einziger
 # zuverlaessiger Weg zu pruefen, ob ein Update den Container tatsaechlich neu
 # gebaut hat (z.B. bei einem haengenden Docker-Build-Cache).
-APP_VERSION = "0.20.38"
+APP_VERSION = "0.20.39"
 _WEB = Path(__file__).resolve().parent.parent / "webfrontend" / "html"
 HTML = _WEB / "panel.html"
 CONFIG_HTML = _WEB / "config.html"
@@ -321,6 +345,39 @@ def _sound_file_for(uuid: str) -> Path | None:
         if p.is_file():
             return p
     return None
+
+
+MS_STATE_FILE = _CFGDIR / "ms_state.json"   # Gelerntes je Miniserver (IRCv2-Zeitbasis)
+
+
+def _ms_state() -> dict:
+    try:
+        d = json.loads(MS_STATE_FILE.read_text(encoding="utf-8"))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _irc_base_load(host: str) -> None:
+    """Gemerkte IRCv2-Zeitbasis fuer diesen Miniserver uebernehmen (sonst Startwert)."""
+    global _IRC_BASE
+    b = (_ms_state().get("irc_base") or {}).get(str(host or "")) if host else None
+    _IRC_BASE = b if b in ("utc", "local") else _IRC_BASE_DEFAULT
+
+
+def _irc_base_store(host: str, base: str) -> None:
+    if not host or base not in ("utc", "local"):
+        return
+    d = _ms_state()
+    m = d.get("irc_base") if isinstance(d.get("irc_base"), dict) else {}
+    if m.get(host) == base:
+        return
+    m[host] = base
+    d["irc_base"] = m
+    try:
+        _atomic_write(MS_STATE_FILE, json.dumps(d, indent=1, ensure_ascii=False) + "\n")
+    except OSError as err:
+        log.warning("IRCv2-Zeitbasis nicht gespeichert: %s", err)
 
 
 def _load_cfg() -> dict:
@@ -2087,6 +2144,7 @@ class App:
         # ms kann leer sein (noch kein Miniserver konfiguriert) -> Server startet
         # trotzdem, /settings bleibt bedienbar; verbunden wird erst mit host.
         self.host, self.port = ms.get("host", ""), ms.get("port", 443)
+        _irc_base_load(self.host)
         self._proto_from_cfg(ms)
         self.user, self.password = ms.get("user", ""), ms.get("pass", "")
         self.verify_tls = ms.get("verify_tls", False)
@@ -2662,6 +2720,7 @@ class App:
             raise
         # Erfolg -> uebernehmen
         self.host, self.port = ms["host"], ms.get("port", 443)
+        _irc_base_load(self.host)
         self._proto_from_cfg(ms)
         self.user, self.password = ms["user"], ms["pass"]
         self.verify_tls = ms.get("verify_tls", False)
@@ -2739,6 +2798,22 @@ class App:
         self.ws = LoxoneWS(host=self.host, port=self.port, user=self.user, jwt=self.jwt,
                            hash_alg=self.alg, verify_tls=self.verify_tls,
                            secure=_ms_https(self.port, self.https))
+        self.ws.on_token = self._on_token_refreshed     # Token vor Ablauf erneuern (refreshjwt)
+        self.ws.ms_off = lambda: _MS_OFF
+
+    def _on_token_refreshed(self, old: str, new: str, valid_until: int | None) -> None:
+        """Der WS hat sein Token per refreshjwt erneuert: ab jetzt das neue fuer HTTP und
+        den naechsten WS-Aufbau. Das alte (und ein inzwischen per HTTP-401 geholtes, das
+        der WS nie benutzt hat) erst nach dem naechsten WS-Aufbau freigeben - killtoken
+        auf das Token des laufenden WS koennte ihn trennen."""
+        for j in {old, self.jwt}:
+            if j and j != new and all(j != x[0] for x in self._stale_jwt):
+                self._stale_jwt.append((j, self._jwt_user, self.alg))
+        del self._stale_jwt[:-3]
+        self.jwt = new
+        self._auth_gen += 1                  # parallele 401-Wiederholungen nehmen das neue Token
+        if self.client is not None:
+            self.client._jwt = new           # Struktur-Abruf (loxone_api) ebenso
 
     def _set_token(self, jwt: str) -> None:
         self.jwt = jwt
@@ -5354,9 +5429,16 @@ class App:
             ("Systemeigenschaften", ["getprop"]),
             ("CPU", ["dumpsys", "cpuinfo"]),
             ("Prozesse (top)", ["top", "-b", "-n", "1", "-m", "25"]),
+            # Wakelocks, Display an/aus, Bildschirm-Timeout (wer haelt das Geraet wach?)
+            ("Energie (dumpsys power: Wakelocks, Display)", ["dumpsys", "power"]),
             ("ANR / Abstürze (dropbox)", ["dumpsys", "dropbox", "--print", "system_server_anr",
                                          "system_app_anr", "data_app_anr", "system_app_crash", "data_app_crash"]),
-            ("Systemprotokoll (logcat, letzte 3000 Zeilen)", ["logcat", "-d", "-t", "3000", "-v", "time"]),
+            # Kiosk/WebView zuerst und ueber den ganzen Puffer: die Konsole der Seite steht
+            # unter "chromium"/"cr_*", der Kiosk unter seinem Paketnamen
+            ("Systemprotokoll Kiosk/WebView (logcat, gefiltert)", [_LOGCAT_APP]),
+            # Rauschen der Shelly-Firmware (~1/s) und des WLAN-Treibers ausblenden, sonst
+            # reichen 3000 Zeilen keine Stunde zurueck
+            (f"Systemprotokoll (logcat, ohne Firmware-/WLAN-Rauschen, letzte {_LOGCAT_LINES} Zeilen)", [_LOGCAT_ALL]),
         ]
         async with _adb_lock:
             code, out = await _adb("connect", target, timeout=15)
@@ -5369,7 +5451,9 @@ class App:
                 code, out = await _adb("-s", target, "shell", *cmd, timeout=40)
                 parts.append(f"\n===== {title} =====\n{out[-400000:] if out else '(leer)'}")
         log.info("Geräte-Log von %s (%s) geholt", device, ip)
-        return {"ok": True, "text": "\n".join(parts)}
+        # Das Log landet u. U. im Forum: Geraetekennungen (Seriennummer, android_id,
+        # MAC-Adressen, IPv6-Privacy-Secret ...) schwaerzen
+        return {"ok": True, "text": _devlog_redact("\n".join(parts))}
 
     async def _agent_start(self, agent: dict, profile: str) -> bool:
         """Startet den Kiosk eines Panel-Agenten mit einem Profil (Fernbefehl)."""
@@ -10736,6 +10820,9 @@ class App:
             except ValueError:
                 pass
             return "200"
+        if not _cmd_plausible(cmd):
+            log.warning("Befehl abgelehnt (Wert unplausibel): %s/%s", uuid, str(cmd)[:60])
+            return None
         cmd = self._central_cmd(uuid, cmd)
         try:
             if pin is not None:
@@ -10878,6 +10965,7 @@ class App:
         if base != _IRC_BASE:
             log.info("IRCv2-Zeitbasis: Miniserver rechnet in %s (bisher %s)", base, _IRC_BASE)
             _IRC_BASE = base
+            _irc_base_store(self.host, base)
             if not secured:
                 rest = int(sent_at + secs - time.time())
                 if rest >= 60:
@@ -13466,6 +13554,22 @@ def _log_once_warn(key, msg: str, *args) -> None:
 
 
 # Loxone-UUID (ggf. mit Unterbaustein "/AI1"), Befehl nur aus harmlosen Zeichen
+IRC_COMFORT_OFF_MAX = 5.0   # K: setComfortModeTemp ist ein Offset zur Komforttemperatur
+
+
+def _cmd_plausible(cmd: str) -> bool:
+    """Serverseitige Grenzen fuer Werte, die der Miniserver ungeprueft uebernimmt.
+    setComfortModeTemp/<v> (IRCv2) ist ein Offset; das Panel bietet nur +-5 K an.
+    0.20.34 sandte versehentlich die Zieltemperatur (/24.5 -> Komfort 48,5 °C)."""
+    if cmd.startswith("setComfortModeTemp/"):
+        try:
+            v = float(cmd.split("/", 1)[1])
+        except ValueError:
+            return False
+        return math.isfinite(v) and abs(v) <= IRC_COMFORT_OFF_MAX + 1e-9
+    return True
+
+
 _UUID_CMD_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{16}(/[A-Za-z0-9_]+)?$")
 _AUDIO_V2_EXTRA_RE = re.compile(r"^(?:shuffle/[01]|repeat/[013]|on|off)$")
 _CMD_OK_RE = re.compile(r"^(?:-\d+(?:\.\d+)?|[A-Za-z0-9_%][A-Za-z0-9_ .,:;/+()=%\-]*)$")   # % am Anfang: kodierter Text (z. B. "Über")   # temp(..), hsv(..), %XX (Weckername)
@@ -13547,6 +13651,55 @@ def _launcher_bundled_ver() -> int:
         return int(LAUNCHER_VERSION_FILE.read_text().split()[0])
     except (OSError, ValueError):
         return 0
+
+
+# Geraete-Log: logcat ohne Dauer-Rauschen (Shelly-Firmware "APP NOT YET STARTED" ~1/s,
+# WLAN-Treiber), damit der Ausschnitt Stunden statt Minuten abdeckt; dazu ein Auszug
+# nur mit Kiosk-/WebView-Zeilen (Seitenkonsole = Tag "chromium", "[INFO:CONSOLE").
+_LOGCAT_LINES = 6000
+_LOGCAT_NOISE = ("ShellyWallDisplay", "WifiVendorHal", "WifiHAL", "wificond", "chatty", "wpa_supplicant")
+_LOGCAT_ALL = ("logcat -d -v time -t %d %s '*:V'"
+               % (_LOGCAT_LINES, " ".join(f"'{t}:S'" for t in _LOGCAT_NOISE)))
+_LOGCAT_APP = ("logcat -d -v time | grep -iE "
+               "'chromium|CONSOLE|cr_|WebView|loxpanel|tilebert|tbview|ozerov|AndroidRuntime|FATAL|ANR in' "
+               "| tail -n 2000")
+
+# Schluessel, deren Wert ein Geraet identifiziert (getprop "[k]: [v]", settings "k=v",
+# dumpsys "k: v"). Bewusst eng: Build-Kennungen wie ro.build.id bleiben lesbar.
+_DEVLOG_ID_KEY = re.compile(
+    r"(?i)(serial(no|_?number)?|stable_secret|android_id|advertising_id|imei|meid|iccid|imsi|"
+    r"mac_?addr(ess)?|wifimac|wlan_?mac|eth_?mac|btmac|bt_?addr|bdaddr|bluetooth_address|"
+    r"bluetooth_addr|cpuid|device_?id|hw_?id|chipid|cloud\.shelly\.(id|serial|mac|device|key))")
+_DEVLOG_KV = re.compile(
+    r"(?m)(\[(?P<k1>[^\]\n]{1,120})\]:\s*\[(?P<v1>[^\]\n]*)\])"         # getprop
+    r"|(^\s*(?P<k2>[A-Za-z0-9_.\-]{2,80})\s*[=:]\s*(?P<v2>\S[^\n]{0,200}?)\s*$)")   # k=v / k: v
+_DEVLOG_MAC = re.compile(r"(?i)(?<![0-9a-f:])(?:[0-9a-f]{2}[:-]){5}[0-9a-f]{2}(?![0-9a-f:])")
+_DEVLOG_MASK = "[geschwärzt]"
+
+
+def _devlog_redact(text: str) -> str:
+    """Geraetekennungen im Geraete-Log schwaerzen: Werte bekannter ID-Schluessel und
+    jedes weitere Vorkommen dieser Werte im Text, dazu alle MAC-Adressen."""
+    secrets_found: set[str] = set()
+
+    def kv(m: re.Match) -> str:
+        g = "v1" if m.group("k1") is not None else "v2"
+        k = m.group("k1") if g == "v1" else m.group("k2")
+        v = (m.group(g) or "").strip()
+        if not k or not _DEVLOG_ID_KEY.search(k) or len(v) < 4 or v.startswith("/") \
+                or v.lower() in ("unknown", "null", "00:00:00:00:00:00", "02:00:00:00:00:00"):
+            return m.group(0)
+        if len(v) >= 6:
+            secrets_found.add(v)
+        a, b = m.span(g)
+        a0 = m.start(0)
+        return m.group(0)[:a - a0] + _DEVLOG_MASK + m.group(0)[b - a0:]
+
+    out = _DEVLOG_KV.sub(kv, text)
+    for v in sorted(secrets_found, key=len, reverse=True):
+        out = out.replace(v, _DEVLOG_MASK)
+    return _DEVLOG_MAC.sub(lambda m: m.group(0) if m.group(0) in ("00:00:00:00:00:00", "02:00:00:00:00:00")
+                           else "xx:xx:xx:xx:xx:xx", out)
 
 
 def _launcher_ver_of(dumpsys: str) -> int:

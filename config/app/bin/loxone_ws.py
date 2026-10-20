@@ -30,6 +30,7 @@ bliebe unsichtbar, dass der Miniserver etwas schickt, das hier niemand liest.
 from __future__ import annotations
 
 import asyncio
+import calendar
 import hashlib
 import hmac
 import json
@@ -55,6 +56,17 @@ DEAD_S = 3 * KEEPALIVE_S   # so lange ohne JEDE Nachricht -> Verbindung gilt als
 # TCP/WS annimmt aber nicht antwortet (halb offen, haengende Firmware), den
 # Reconnect-Loop unbegrenzt blockieren: der Keepalive-Waechter laeuft erst im Stream.
 HANDSHAKE_TIMEOUT_S = 20
+
+# Token-Erneuerung vor Ablauf (wie lxcommunicator TokenHandler._startKeepAlive):
+# bei 90 % der Restlaufzeit "jdev/sys/refreshjwt", hoechstens TOKEN_REFRESH_MAX_S
+# warten. Ohne Erneuerung trennt der Miniserver den WS, sobald das Token ablaeuft
+# (Web-Recht: ~12,5 h nach der Anmeldung).
+EPOCH_2009 = 1230768000          # validUntil zaehlt Sekunden seit 1.1.2009
+TOKEN_REFRESH_SHARE = 0.9
+TOKEN_REFRESH_MAX_S = 24 * 3600
+TOKEN_REFRESH_MIN_S = 10         # nie in kuerzerem Abstand (auch bei unklarer Restlaufzeit)
+TOKEN_REFRESH_RETRY_S = 60       # nach Verbindungsfehler/Zeitueberschreitung erneut
+WS_REPLY_TIMEOUT_S = 10
 
 # Websocket-Close-Codes des Miniservers (Loxone "Communicating with the
 # Miniserver", Abschnitt "Websocket Close Codes").
@@ -83,6 +95,40 @@ def _log_cb_error(what: str, uuid: str) -> None:
         log.exception("%s-Callback fuer %s fehlgeschlagen", what, uuid)
     else:
         log.debug("%s-Callback fuer %s fehlgeschlagen", what, uuid, exc_info=True)
+
+
+class TokenRefreshFailed(Exception):
+    """refreshjwt vom Miniserver abgelehnt (LL-Code != 200): Token gilt nicht mehr."""
+
+    def __init__(self, code: str):
+        super().__init__(f"refreshjwt abgelehnt (Code {code})")
+        self.code = code
+
+
+def _ms_off_default() -> int:
+    """UTC-Abstand der Container-Uhr in s (Ersatz, solange der Aufrufer keinen liefert)."""
+    t = time.time()
+    return calendar.timegm(time.localtime(t)) - int(t)
+
+
+def token_refresh_delay(valid_until: int | None, now: float | None = None, ms_off: int = 0) -> float:
+    """Wartezeit bis zur Token-Erneuerung in s.
+
+    validUntil zaehlt Sekunden seit 1.1.2009; lxcommunicator rechnet UTC. Ob jede
+    Firmware wirklich UTC meint, ist nicht belegt (Loxone mischt UTC und Ortszeit).
+    Daher vorsichtig: liegt der Miniserver oestlich von UTC, wird "jetzt" in seiner
+    Ortszeit genommen (die kleinere Restlaufzeit) - zu frueh erneuern schadet nicht,
+    zu spaet trennt die Verbindung. Unbekannte Laufzeit: bald erneuern (Antwort
+    liefert sie dann)."""
+    t = time.time() if now is None else now
+    if not valid_until:
+        return float(TOKEN_REFRESH_RETRY_S)
+    rest = valid_until - (t - EPOCH_2009 + max(0, int(ms_off or 0)))
+    return float(min(max(rest * TOKEN_REFRESH_SHARE, TOKEN_REFRESH_MIN_S), TOKEN_REFRESH_MAX_S))
+
+
+def _dauer(s: float) -> str:
+    return f"{s / 3600:.1f} h" if s >= 3600 else f"{round(s / 60)} min" if s >= 120 else f"{round(s)} s"
 
 
 class TokenRejected(ConnectionError):
@@ -181,6 +227,14 @@ class LoxoneWS:
         self.out_of_service = False          # Miniserver hat Kennung 5 (Neustart/Update) gemeldet
         self.valid_until: int | None = None  # Token-Ablauf laut authwithtoken (s seit 2009)
         self._table_errors = 0               # uebersprungene Tabellen (nur fuer Log-Drosselung)
+        # Token-Erneuerung: on_token(altes, neues, validUntil) meldet ein per refreshjwt
+        # erneuertes Token an den Besitzer (HTTP-Anfragen, killtoken); ms_off() liefert den
+        # UTC-Abstand des Miniservers (None = unbekannt -> Container-Zeitzone).
+        self.on_token: Callable[[str, str, int | None], None] | None = None
+        self.ms_off: Callable[[], int | None] | None = None
+        self._reply: asyncio.Future | None = None   # wartet auf eine Text-Antwort im Stream
+        self._reply_match = ""
+        self._cmd_lock = asyncio.Lock()
 
     def _ssl(self) -> ssl.SSLContext:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
@@ -266,10 +320,90 @@ class LoxoneWS:
         assert self._ws is not None
         self._last_rx = time.monotonic()
         ka = asyncio.create_task(self._keepalive())
+        tk = asyncio.create_task(self._token_keeper()) if self.on_token is not None else None
         try:
             await self._receive_loop(on_value, on_weather)
         finally:
             ka.cancel()
+            if tk is not None:
+                tk.cancel()
+            if self._reply is not None and not self._reply.done():
+                self._reply.cancel()
+
+    def _off(self) -> int:
+        try:
+            off = self.ms_off() if self.ms_off is not None else None
+        except Exception:
+            off = None
+        return _ms_off_default() if off is None else int(off)
+
+    async def _token_keeper(self) -> None:
+        """Token vor Ablauf erneuern (refreshjwt ueber diesen WS), solange er lebt.
+        Abgelehnt (LL-Fehler): Token gilt nicht mehr - nichts weiter tun, der Abbruch
+        beim Ablauf fuehrt ueber den normalen Neuaufbau zu einem neuen Token.
+        Verbindungsfehler/Zeitueberschreitung: Token behalten, spaeter erneut."""
+        delay = token_refresh_delay(self.valid_until, ms_off=self._off())
+        log.info("Miniserver-Token: Erneuerung in %s", _dauer(delay))
+        while self._ws is not None and not self._ws.closed:
+            await asyncio.sleep(delay)
+            if self._ws is None or self._ws.closed:
+                return
+            old = self.jwt
+            try:
+                new, vu = await self.refresh_token()
+            except TokenRefreshFailed as err:
+                log.warning("Miniserver-Token nicht erneuert (%s) - neue Anmeldung beim naechsten Verbindungsaufbau", err)
+                return
+            except asyncio.CancelledError:
+                raise
+            except Exception as err:
+                delay = float(TOKEN_REFRESH_RETRY_S)
+                log.info("Miniserver-Token-Erneuerung fehlgeschlagen (%s) - neuer Versuch in %d s",
+                         type(err).__name__, TOKEN_REFRESH_RETRY_S)
+                continue
+            delay = token_refresh_delay(vu, ms_off=self._off())
+            log.info("Miniserver-Token erneuert - naechste Erneuerung in %s", _dauer(delay))
+            if self.on_token is not None:
+                try:
+                    self.on_token(old, new, vu)
+                except Exception:
+                    log.exception("Token-Callback fehlgeschlagen")
+
+    async def _request(self, command: str, match: str) -> dict:
+        """Befehl ueber den laufenden WS senden und die passende Text-Antwort abwarten
+        (die liest _receive_loop und reicht sie hierher weiter)."""
+        assert self._ws is not None
+        fut = asyncio.get_running_loop().create_future()
+        self._reply, self._reply_match = fut, match
+        try:
+            await self._ws.send_str(command)
+            return await asyncio.wait_for(fut, WS_REPLY_TIMEOUT_S)
+        finally:
+            if self._reply is fut:
+                self._reply = None
+
+    async def refresh_token(self) -> tuple[str, int | None]:
+        """jdev/sys/refreshjwt/{HMAC(token, getkey)}/{user} ueber den laufenden WS
+        (Doku 16.0 "Refreshing tokens"). -> (neues Token, validUntil). Das neue Token
+        gilt ab sofort fuer diesen WS und weitere Anmeldungen."""
+        async with self._cmd_lock:
+            key_hex = str(ll_part(await self._request("jdev/sys/getkey", "sys/getkey")).get("value") or "")
+            digestmod = hashlib.sha256 if self.hash_alg == "SHA256" else hashlib.sha1
+            h = hmac.new(bytes.fromhex(key_hex), self.jwt.encode(), digestmod).hexdigest()
+            res = await self._request(f"jdev/sys/refreshjwt/{h}/{self.user}", "sys/refreshjwt")
+            code = ll_code(res)
+            if code != "200":
+                raise TokenRefreshFailed(code or "?")
+            val = ll_obj(ll_part(res).get("value"))
+            tok = val.get("token") if isinstance(val, dict) else None
+            if not isinstance(tok, str) or not tok:
+                raise TokenRefreshFailed("ohne Token")
+            try:
+                vu = int(val.get("validUntil"))
+            except (TypeError, ValueError):
+                vu = None
+            self.jwt, self.valid_until = tok, vu
+            return tok, vu
 
     async def _keepalive(self) -> None:
         """Loxone-Protokoll: der Client meldet sich regelmaessig mit "keepalive"
@@ -355,7 +489,16 @@ class LoxoneWS:
                     log.info("WS-Tabelle mit unbekannter Kennung %s (%d Byte) ignoriert",
                              ident, len(data))
             elif msg.type == aiohttp.WSMsgType.TEXT:
-                pending_ident = None  # Kommando-Antwort im Stream ignorieren
+                pending_ident = None  # Kommando-Antwort im Stream: nur fuer eine wartende Anfrage
+                fut = self._reply
+                if fut is not None and not fut.done():
+                    try:
+                        payload = json.loads(msg.data)
+                    except ValueError:
+                        payload = None
+                    part = ll_part(payload)
+                    if self._reply_match in str(part.get("control") or part.get("Control") or ""):
+                        fut.set_result(payload)
             elif msg.type in (aiohttp.WSMsgType.CLOSED, aiohttp.WSMsgType.ERROR):
                 log.warning("WS-Stream beendet (%s)", msg.type)
                 break
