@@ -15,6 +15,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -350,11 +351,18 @@ public class Kiosk extends Activity implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent e) {
         if (e.sensor.getType() == Sensor.TYPE_PROXIMITY) {
-            boolean n = e.values.length > 0 && e.values[0] < e.sensor.getMaximumRange();
+            float max = e.sensor.getMaximumRange();
+            float v = e.values.length > 0 ? e.values[0] : max;
+            // Android-Konvention: Wert < maxRange = nah. Shelly (rk30board, maxRange 1): Ruhe 0,
+            // Annaeherung = kurzer Puls auf 1 (0,03-1,1 s) -> dort ist ">= maxRange" nah.
+            // Kein Nachlauf hier: das Panel haelt die Nacht-Kamera nach "fern" CAM_NIGHT_HOLD_MS offen.
+            boolean n = StockHome.isShelly() ? v >= max : v < max;
+            logProx(v, max, n);
             if (n == near) return;
             near = n;
             // Display an; ob das Dashboard schliesst, entscheidet das Panel (Ereignis "prox")
             if (near && saverOn && proxWake) { exitSaver(); rearmOff(); }
+            js("proxraw", String.valueOf(v));   // nur fuers Diagnose-Log im Panel (aeltere Panels ignorieren es)
             js("prox", near ? "true" : "false");
         } else if (e.sensor.getType() == Sensor.TYPE_LIGHT) {
             float raw = e.values[0];
@@ -366,6 +374,17 @@ public class Kiosk extends Activity implements SensorEventListener {
             if (lv != pendingLevel) { pendingLevel = lv; pendingSince = now; return; }
             if (now - pendingSince >= LIGHT_HOLD_MS) setLight(lv);
         }
+    }
+
+    /** Annaeherung mit Rohwert ins logcat (Tag TbViewer), hoechstens 1 Zeile je 2 s, Rest wird gezaehlt. */
+    private long proxLogT;
+    private int proxLogSkip;
+    private void logProx(float v, float max, boolean n) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - proxLogT < 2000) { proxLogSkip++; return; }
+        Log.i("TbViewer", "prox roh=" + v + " max=" + max + " -> " + (n ? "nah" : "fern") + (n == near ? " (unveraendert)" : "")
+                + (StockHome.isShelly() ? " [Shelly-Puls]" : "") + (proxLogSkip > 0 ? " (+" + proxLogSkip + " uebersprungen)" : ""));
+        proxLogT = now; proxLogSkip = 0;
     }
 
     /** Lux -> 0..1, logarithmisch (0 lx = 0, 1000 lx = 1). */

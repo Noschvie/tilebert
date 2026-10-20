@@ -5061,14 +5061,15 @@ function clog(m){ if(!DIAG) return; const t=new Date().toTimeString().slice(0,8)
 // DOM-Groesse - zeigt im Diagnose-Log, ob das Panel ueber Tage "zulaeuft".
 // Lange Rechenschritte (>50 ms, "Hänger") zaehlen: zeigt auf dem Geraet selbst, ob
 // die Seite ruckelt - Anzahl, Summe und laengster je 10 Minuten.
-const LT={n:0,ms:0,max:0};
-try{ new PerformanceObserver(l=>l.getEntries().forEach(e=>{ LT.n++; LT.ms+=e.duration; LT.max=Math.max(LT.max,e.duration); }))
+const LT={n:0,ms:0,max:0,drift:0,driftT:-1e9};   // drift: Haenger bis 1 s nach einem Einbrennschutz-Schritt (svDrift), nur Diagnose
+try{ new PerformanceObserver(l=>l.getEntries().forEach(e=>{ LT.n++; LT.ms+=e.duration; LT.max=Math.max(LT.max,e.duration);
+    if(e.startTime>=LT.driftT && e.startTime-LT.driftT<1000) LT.drift++; }))
   .observe({type:'longtask', buffered:false}); }catch(e){ LT.n=-1; }
 setInterval(()=>{ if(!DIAG) return; const m=performance.memory, mb=b=>Math.round(b/1048576);
   clog('Speicher · JS '+(m?mb(m.usedJSHeapSize)+'/'+mb(m.jsHeapSizeLimit)+' MB':'?')+' · Kamera-Streams '+camImgs.size+(CAM_DARK?' (angehalten)':'')+
     ' · DOM '+document.getElementsByTagName('*').length+' · offen '+Math.round(performance.now()/3600000)+' h'+
-    ' · Hänger '+(LT.n<0?'?':LT.n+'× / '+Math.round(LT.ms)+' ms (max '+Math.round(LT.max)+' ms)'));
-  if(LT.n>=0){ LT.n=0; LT.ms=0; LT.max=0; } }, 600000);
+    ' · Hänger '+(LT.n<0?'?':LT.n+'× / '+Math.round(LT.ms)+' ms (max '+Math.round(LT.max)+' ms, '+LT.drift+'× nach Drift)'));
+  if(LT.n>=0){ LT.n=0; LT.ms=0; LT.max=0; LT.drift=0; } }, 600000);
 function clogFlush(){ while(DIAG&&_clogQ.length&&ws&&ws.readyState===1){ try{ ws.send(JSON.stringify({t:'clog',msg:'(nachgereicht) '+_clogQ.shift()})); }catch(e){ break; } } }
 window.addEventListener('error',e=>clog('JS-Fehler: '+(e.message||e)+' @'+String(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
 window.addEventListener('unhandledrejection',e=>clog('Promise-Fehler: '+((e.reason&&e.reason.message)||e.reason)));
@@ -6321,7 +6322,7 @@ function camsApply(){ const on=_camScreenOff||_camNight;
   if(on){ camStills(); camImgs.forEach(img=>{ clearTimeout(img._camTick); clearTimeout(img._camRetry); clearTimeout(img._camCycle);
     camFetchStop(img); if(img.getAttribute('src')) img.removeAttribute('src'); }); }   // ohne src: Laden bricht ab, ohne Fehler-Ereignis
   else { camStills(true); camsRefresh(); }
-  clog(_camScreenOff?'Display aus – Kamera angehalten':(_camNight?'Nacht – Kamera bis zur Annäherung angehalten':'Kamera läuft'));
+  clog(_camScreenOff?'Display aus – Kamera angehalten':(_camNight?'Nacht – Kamera bis zur Annäherung angehalten':'Kamera läuft')+(_camNightWhy?' ('+_camNightWhy+')':''));
 }
 // Nacht-Pause sichtbar machen: letztes Bild als abgedunkeltes Standbild + Hinweis.
 // Wird VOR dem Abbrechen des Streams gezeichnet (danach ist das Bild leer).
@@ -6338,19 +6339,28 @@ function camStills(clear){
 }
 // Nachts zeigt die Kamera nur live, wenn jemand da ist: Annaeherung, Beruehrung oder
 // Klingel oeffnen, CAM_NIGHT_HOLD_MS nach dem Weggehen schliesst es wieder.
-const CAM_NIGHT_HOLD_MS=30000;
+// "nah" ohne Folge-Ereignis wirkt hoechstens CAM_NIGHT_NEAR_MAX_MS (haengender Sensor/falsche Semantik, z. B. TbViewer < 5.15 am Shelly).
+const CAM_NIGHT_HOLD_MS=30000, CAM_NIGHT_NEAR_MAX_MS=120000;
 let _camNightNear=false, _camNightT=null;
+var _camNightWhy='';   // var: camsApply (weiter oben) darf es schon vorher lesen
 function camNightGate(){   // ob die Regel gerade greift
   return lpHost.type==='tbview' && SENS.nightCam!==false && NIGHT.on && lpHost.shelly && (lpHost.prox||lpHost.light);   // nur Shelly (Speicher/Performance); Tablets zeigen die Kamera nachts weiter live
 }
 function camNightUpdate(){
-  const pause=camNightGate() && !_camNightNear && !_camNightT;   // Praesenz (Annaeherung/Lichtaenderung) oeffnet ueber camNightOpen
-  if(pause===_camNight) return; _camNight=pause; camsApply();
+  const gate=camNightGate(), pause=gate && !_camNightNear && !_camNightT;   // Praesenz (Annaeherung/Lichtaenderung) oeffnet ueber camNightOpen
+  if(pause===_camNight) return; _camNight=pause;
+  // Grund fuers Diagnose-Log (nur bei Wechsel, also ohne Spam)
+  _camNightWhy=pause?'niemand da':!gate?(lpHost.type!=='tbview'||!lpHost.shelly?'':!NIGHT.on?'Tag':SENS.nightCam===false?'Nacht-Pause aus':'ohne Sensor')
+    :_camNightNear?'Annäherung':'Nachlauf';
+  camsApply();
 }
 function camNightOpen(near, touch){   // near: jemand da; weg -> Nachlauf; touch: Beruehrung/Klingel = jemand da gewesen
   if(!near && !touch && !_camNightNear){ camNightUpdate(); return; }   // "fern" ohne vorheriges "nah" (z. B. beim Laden)
   clearTimeout(_camNightT); _camNightT=null; _camNightNear=!!near;
-  if(!near) _camNightT=setTimeout(()=>{ _camNightT=null; camNightUpdate(); }, CAM_NIGHT_HOLD_MS);
+  // fern/Beruehrung: Nachlauf; nah: Obergrenze, jedes neue "nah" verlaengert
+  _camNightT=setTimeout(()=>{ _camNightT=null;
+    if(_camNightNear){ _camNightNear=false; clog('Annäherung ohne „fern“ seit '+CAM_NIGHT_NEAR_MAX_MS/1000+' s – als weg gewertet'); }
+    camNightUpdate(); }, near?CAM_NIGHT_NEAR_MAX_MS:CAM_NIGHT_HOLD_MS);
   camNightUpdate();
 }
 // Fully meldet den echten Schirmzustand (auch wenn Fully selbst abgeschaltet hat)
@@ -6724,7 +6734,7 @@ const SV_DRIFT=[['--svd',90000,['-14px,-5px','14px,-5px','14px,5px','-14px,5px']
   ['--svgd',120000,['-3px,-2px','3px,-2px','3px,2px','-3px,2px']]];
 function svDrift(){ const st=el('saver').style, now=Date.now(); let next=Infinity;   // am #saver: kein Stil-Neuberechnen der ganzen Seite
   SV_DRIFT.forEach(([k,ms,pos])=>{ const v='translate('+pos[Math.floor(now/ms)%4]+')';
-    if(st.getPropertyValue(k)!==v) st.setProperty(k,v); next=Math.min(next, ms-now%ms); });
+    if(st.getPropertyValue(k)!==v){ st.setProperty(k,v); LT.driftT=performance.now(); } next=Math.min(next, ms-now%ms); });
   setTimeout(svDrift, next+50); }
 svDrift();
 // Screensaver zweispaltig NUR im Querformat (breites 2-Pane-Tablet, z.B. Shelly
@@ -6944,9 +6954,14 @@ function applySensors(s){
 function presence(src){
   if(SENS.prox==='off') return;
   nightWake();   // Dashboard bleibt Startpunkt: Praesenz schliesst es nie (nur Wischen/Tippen)
-  if(src==='light') camNightOpen(!!lpHost.near, true);
+  if(src==='light') camNightOpen(false, true);   // jemand war da: oeffnen mit Nachlauf (nicht den letzten prox-Zustand uebernehmen)
 }
+lpHost.on('proxraw', v=>{ lpHost.proxRaw=v; });   // TbViewer >= 5.15: Rohwert kommt direkt vor 'prox'
+const PROX_LOG={t:0,skip:0};
 lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
+  const now=Date.now();   // Diagnose: hoechstens 1 Zeile je 5 s, Rest gezaehlt
+  if(now-PROX_LOG.t>=5000){ clog('Annäherung '+(near?'nah':'fern')+(lpHost.proxRaw!=null?' (roh '+lpHost.proxRaw+')':'')+(PROX_LOG.skip?' (+'+PROX_LOG.skip+' weitere)':'')); PROX_LOG.t=now; PROX_LOG.skip=0; }
+  else PROX_LOG.skip++;
   if(near) presence('prox');
   if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
 lpHost.on('light', v=>{ const lv=(+v>=0)?+v:-1, prev=PRES.last; lpHost.lightLevel=lv; lpHost.light=lv>=0||lpHost.light; PRES.last=lv;
@@ -6961,7 +6976,7 @@ lpHost.on('lux', ()=>{ const now=Date.now();
 // Annaeherung/App-Wecken: Leerlauf neu starten, naechster Tipp wird nicht verschluckt
 lpHost.on('screen', on=>{ camsDark(!on); if(on){ _screenWasOff=false; resetIdle(); } });
 // Tipp bei sichtbarem Display: Nacht-Kamera live (wie Beruehrung)
-document.addEventListener('pointerdown', ()=>{ if(lpHost.type==='tbview') camNightOpen(!!lpHost.near,true); }, true);
+document.addEventListener('pointerdown', ()=>{ if(lpHost.type==='tbview') camNightOpen(false,true); }, true);
 function screenOff(){ const f=kiosk(); if(!f) return; _screenWasOff=true; camsDark(true); try{ f.turnScreenOff(); }catch(e){} }
 function screenOn(){ camsDark(false); const f=kiosk(); if(!f) return; _screenWasOff=false;
   try{ if(typeof f.isScreenOn!=='function' || !f.isScreenOn()) f.turnScreenOn(); }catch(e){} }
@@ -7017,7 +7032,7 @@ function neuladenFaellig(jetzt){
 }
 setInterval(()=>{ if(saverOn() && neuladenFaellig(Date.now())) location.reload(); }, 60*1000);
 // Server-Ereignis, das Aufmerksamkeit braucht: Display an, Uhr weg, Timer neu.
-function wake(){ screenOn(); nightWake(); hideSaver(); resetIdle(); camNightOpen(!!lpHost.near, true); }
+function wake(){ screenOn(); nightWake(); hideSaver(); resetIdle(); camNightOpen(false, true); }
 setInterval(tickClock, 1000);
 showSaver();     // Startseite = Uhr
 resetIdle();

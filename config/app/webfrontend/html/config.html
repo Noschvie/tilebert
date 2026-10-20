@@ -4149,11 +4149,18 @@ let dBarOpen=false;   // Haken "Statusleiste" gesetzt, aber noch nichts gewaehlt
 let dPropsOpen=false;
 let dBarBox=false;   // Unterabschnitt "Statusleiste" in den Dashboard-Einstellungen aufgeklappt
 let tPropsOpen=false;    // Block "Tab-Einstellungen" aufgeklappt    // Block "Dashboard-Einstellungen" aufgeklappt   // Bausteinauswahl der Statusleiste aufgeklappt
+// Kurzinfo im Faltkopf (Guide: Werte in Feldnamen, Reihenfolge wie im Inhalt): „2 × 2 · Schließen: ✕ + Wischen ↑↓ · Statusleiste 2/6 · Standard für neue Panels“
+function dashSum(g,ex,nBar,std){
+  const sw=SV_EXITS.slice(1).filter(e=>ex.indexOf(e[0])>=0).map(e=>e[2]).join('');
+  const cl=[ex.indexOf('x')>=0?'✕':'', sw?T('Wischen {r}').replace('{r}',sw):''].filter(Boolean).join(' + ')||T('Tippen');
+  return [g+' × '+g, T('Schließen: {v}').replace('{v}',cl), nBar!=null?T('Statusleiste {n}').replace('{n}',nBar+'/6'):T('Statusleiste aus'),
+    std?T('Standard für neue Panels'):''].filter(Boolean).join(' · ');
+}
 function renderDashProps(p){
   const box=$('#tbProps'), sv=p.saver||{}, ex=sv.exit||[], g=svGrid(p), two=tbDashPages(p)===2;
   const barOn=dBarOpen||(sv.bar||[]).length>0;
   box.innerHTML='<div class="dpwrap'+(dPropsOpen?' open':'')+'"><button type="button" class="dphd" aria-expanded="'+(dPropsOpen?'true':'false')+'" aria-controls="dPropsBody"><span>'+T('Dashboard-Einstellungen')+'</span>'+
-      '<small>'+[g+' × '+g, ex.length?ex.length+' '+T('Schließen'):'', (sv.bar||[]).length?T('Statusleiste'):'', sv.std?T('Standard'):''].filter(Boolean).join(' · ')+'</small>'+
+      '<small>'+dashSum(g,ex,barOn?(sv.bar||[]).length:null,sv.std)+'</small>'+
       '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
     '<div class="dpbody" id="dPropsBody"><div'+(dPropsOpen?'':' inert')+'><div class="tbprops dashprops">'+
     '<div class="field dgridf" role="group" aria-labelledby="dGridLbl"><span class="lbl" id="dGridLbl">'+T('Raster')+'</span><div class="seg dseg">'+
@@ -4261,7 +4268,9 @@ function renderDashProps(p){
     if(del) del.onclick=async()=>{ if(!(await dlgAsk(T('Hintergrundbild entfernen?'),T('Das Bild wird vom Server gelöscht.'),T('Entfernen'),true))) return; try{ await fetch('/api/panel/bg?panel='+encodeURIComponent(cur)+'&delete=1',{method:'POST'}); show(''); snack(T('Hintergrundbild entfernt.')); }catch(e){} }; }
   box.querySelectorAll('[data-exit]').forEach(cb=>cb.onchange=()=>{ const s2=svCfg(p);
     s2.exit=SV_EXITS.map(e=>e[0]).filter(k=>box.querySelector('[data-exit="'+k+'"]').checked);
-    s2.items=s2.items||[]; if(!s2.items.length && !s2.exit.length && !(s2.bar||[]).length) delete p.saver; markDirty(); });
+    s2.items=s2.items||[]; if(!s2.items.length && !s2.exit.length && !(s2.bar||[]).length) delete p.saver; markDirty();
+    const sv2=p.saver||{}, hs=box.querySelector('.dphd small');   // Kurzinfo im Kopf mitfuehren (kein Neuzeichnen: Fokus bleibt)
+    if(hs) hs.textContent=dashSum(g,sv2.exit||[],(dBarOpen||(sv2.bar||[]).length)?(sv2.bar||[]).length:null,sv2.std); });
   { const sd=$('#dStd'); if(sd) sd.onchange=()=>{
     if(sd.checked){ Object.keys(PANELS).forEach(id=>{ const q=PANELS[id]; if(q&&q.saver&&q.saver.std) delete q.saver.std; }); svCfg(p).std=true; }
     else if(p.saver) delete p.saver.std;
@@ -4276,7 +4285,7 @@ function renderTabProps(p){
   const opts=list=>list.map(t=>'<option value="'+esc(t.tab)+'"'+(t.tab===k?' selected':'')+'>'+esc(t.label)+'</option>').join('');
   const tyL=(TB_TYPES.find(x=>x[0]===ty)||[,''])[1];
   box.innerHTML='<div class="dpwrap'+(tPropsOpen?' open':'')+'"><button type="button" class="dphd" aria-expanded="'+(tPropsOpen?'true':'false')+'" aria-controls="tPropsBody"><span>'+T('Tab-Einstellungen')+'</span>'+
-      '<small>'+[T(tyL), tbIsLayout(k)?g+'×'+g:''].filter(Boolean).join(' · ')+'</small>'+
+      '<small>'+[T(tyL), tbIsLayout(k)?g+' × '+g:''].filter(Boolean).join(' · ')+'</small>'+
       '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>'+
     '<div class="dpbody" id="tPropsBody"><div'+(tPropsOpen?'':' inert')+'><div class="tbprops">'+
     '<div class="field"><label class="lbl">'+T('Typ')+'</label><select id="tbType">'+

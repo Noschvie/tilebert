@@ -121,6 +121,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
   sind alle Kamerabilder (Dashboard, Schoner, Widget, Türstation; alle über `camStream`) angehalten.
   Sichtbar: abgedunkeltes, unscharfes Standbild + Mond + „Live-Bild bei Annäherung“ (`html.camnight`).
   Live bei Annäherung, Berührung oder Klingel (`wake()`), 30 s Nachlauf nach „fern“.
+  Absicherung: ein „nah“ ohne folgendes „fern“ wirkt höchstens 2 min (`CAM_NIGHT_NEAR_MAX_MS`, jedes neue „nah“ verlängert); Berührung, Licht-Präsenz und `wake()` öffnen immer nur mit 30 s Nachlauf (nicht mit dem letzten prox-Zustand). Diagnose-Log: „Annäherung nah/fern (roh v)“ (max. 1 Zeile je 5 s) und Grund der Kamera-Entscheidung („Kamera läuft (Annäherung|Nachlauf|Tag …)“, „… angehalten (niemand da)“).
 - **Präsenzerkennung** (`presence(src)` im Panel): Annäherung „nah“ **oder** Änderung der Lichtstufe (0–16, ≥ 1 Stufe; Lux-Sensoren: ≥ 30 % und ≥ 5 lx gegenüber dem letzten Wert, max. 1 Ereignis je 2 s, nach eigener Helligkeitsänderung 2,5 s stumm) = Präsenz. Präsenz hellt nachts kurz auf (wie Berührung, `nightWake`) und schaltet die Nacht-Kamera live (30 s Nachlauf). Das Dashboard bleibt dabei sichtbar. Lichtänderung zählt nur nachts. Bei `prox=off` keine Reaktion. Es gibt keine Lux-Schwelle mehr (Licht an hält nicht mehr dauerhaft wach).
 - Tag/Nacht kommt **nur** aus dem Betriebsmodus der Config (Nutzervorgabe), nicht vom Lichtsensor.
 - **Dynamische Helligkeit** (`ui.autoBright`, min/max): nur Shelly mit TbView + Lichtsensor regelt nach dem Sensor (ohne „Abdunkeln um“); alle anderen Geräte und Option aus: Abdunkeln nach Betriebsmodus.
@@ -187,6 +188,7 @@ Build auf dem Pi: aapt/apksigner/zipalign (apt) + `~/projekte/tools/android/{r8.
 - Version 5.11 (versionCode 16): nur Texte der Info- und Einrichtungsseite überarbeitet (Linguisten-Prüfung). Signatur unverändert.
 - Version 5.12 (versionCode 17): Infoseite: Zeile wieder „Standard-Launcher“. Signatur unverändert.
 - Version 5.14 (versionCode 19, 0.20.28; 5.13 nur intern): weniger Grafiklast – kein Hardware-Layer an der WebView, kein eigener Hintergrund, Fenster deckend (`setBackgroundDrawable(null)`, `PixelFormat.OPAQUE`). Shelly: Helligkeit unter 4 % wird auf 4 % angehoben (`SHELLY_MIN_BRIGHT`), da die Firmware Werte 0–2 % als Backlight 169/255 umsetzt (4 % → 11). Signatur unverändert (SHA-256 `80ee7b07…`).
+- Version 5.15 (versionCode 20): Näherungssensor Shelly (`StockHome.isShelly()`): Ruhe 0, Annäherung = kurzer Puls auf `maxRange` (1,0, 0,03–1,1 s) → dort gilt `Wert >= maxRange` als „nah“ (sonst Android-Konvention `Wert < maxRange`). Bis 5.14 galt die Ruhe am Shelly als „nah“, die Nacht-Kamera wurde nach dem ersten Puls nie mehr angehalten. Kein Nachlauf in der App: sie meldet „nah“ an der steigenden, „fern“ an der fallenden Flanke, den Nachlauf (30 s) macht das Panel. Neu: `Log.i("TbViewer", "prox roh=… max=… -> nah|fern")` (max. 1 Zeile je 2 s) und Ereignis `proxraw` (Rohwert, direkt vor `prox`, nur für das Diagnose-Log). Signatur unverändert (SHA-256 `80ee7b07…`).
 
 ## Sicherheit: ADB über WLAN (Stand 0.20.39)
 
