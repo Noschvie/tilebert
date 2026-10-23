@@ -103,6 +103,7 @@ tilebert ist eine Loxone-Visualisierung für Wandpanels ab 480 × 480 px (ein Lo
 ## Bewegung
 
 - Dezent und abschaltbar: alle Dauern sind `anim-*` × `--anim-scale`; „Animationen aus“ in der Config bzw. `prefers-reduced-motion` setzt 0. Neue Animationen hängen an `html.ianim`.
+- Energiefluss je Animationsstufe: „Viel“ und „Mittel“ zeigen laufende Punkte (Bewegung = Flussrichtung, also Information), als HTML-Overlay mit `transform`/`opacity`, damit sie auf dem Compositor laufen. „Keine“ zeigt stehende Chevrons in Flussrichtung und Rollenfarbe (2/3/4 Stück bei < 1 / < 2,5 / ≥ 2,5 kW) plus eine einmalige kurze Helligkeitswelle nur bei Richtungs- oder deutlicher Wertänderung. Linien ohne Fluss zeigen nichts.
 - Kachel-Einblendung nur über `opacity` (schwache Panel-Hardware wie Shelly). Tippen: `scale(.97)`. Zoom Kachel → Detail `anim-zoom`.
 
 ## Ikonografie
