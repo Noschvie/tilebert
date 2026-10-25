@@ -29,6 +29,7 @@ installierten Original-LoxPanel-Version**, ohne Kollision:
 
 ## Eigene Funktionen dieses Forks
 
+- **Nachts weckt nur „Licht an“ (0.20.44)** — Im Nachtmodus löst nur noch steigende Helligkeit (Licht an) eine Präsenz aus; Licht aus, Abdunkeln und Abschatten nicht mehr (TbViewer 5.17).
 - **Präsenz per Licht empfindlicher, weniger Hänger (0.20.43)** — Lichtsensor erkennt nachts Licht an/aus und Vorbeigehen zuverlässig, ohne sich durch die eigene Displayhelligkeit selbst auszulösen (TbViewer 5.16; Shelly nutzt jetzt Helligkeitsstufen). Die Uhr rechnet nur noch zum Minutenwechsel (deutlich weniger Rechenlast am Shelly), Diagnose-Log nennt die Quellen von Hängern. Datum in der Wettervorschau wird bei 480×480 nicht mehr abgeschnitten.
 - **Energiefluss wieder sichtbar am Shelly (0.20.42)** — Bei Animation „Mittel“ (Standard am Shelly) laufen die Flusspunkte wieder, jetzt sparsamer über die Grafikkarte animiert; bei „Keine“ zeigen stehende Pfeile die Flussrichtung, kurz hervorgehoben nur bei Änderung.
 - **Flüssigere Anzeige am Wandpanel (0.20.41)** — Die Verschiebung gegen Einbrennen kostet pro Schritt nur noch ~25 statt ~640 ms Rechenzeit; die kurzen Ruckler alle 2 Minuten am Shelly entfallen.

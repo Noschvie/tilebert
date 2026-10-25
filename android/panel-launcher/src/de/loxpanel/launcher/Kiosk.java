@@ -398,14 +398,15 @@ public class Kiosk extends Activity implements SensorEventListener {
         return Math.max(0f, Math.min(1f, (float) (Math.log10(Math.max(0f, lux) + 1.0) / 3.0)));
     }
 
-    /** Praesenz bei Lux-Sensoren: relative Aenderung >= 20 % und >= 3 lx gegen einen langsam nachgefuehrten Bezug. */
+    /** Praesenz bei Lux-Sensoren nur bei Licht an: Anstieg >= 20 % und >= 3 lx ueber dem langsam nachgefuehrten Bezug; Abfall fuehrt nur den Bezug nach. */
     private void luxPresence(float lux) {
         long now = android.os.SystemClock.elapsedRealtime();
         if (luxRef < 0f) { luxRef = luxLast = lux; luxLastT = now; return; }
         // Bezug nur nachfuehren, wenn der Wert > 2 s stabil ist (Rampen/Aenderungen laufen nicht mit)
         if (Math.abs(lux - luxLast) > Math.max(1f, 0.1f * luxLast)) { luxLast = lux; luxLastT = now; }
-        float d = Math.abs(lux - luxRef);
-        if (d >= 3f && d >= 0.2f * Math.max(luxRef, 1f)) { luxRef = luxLast = lux; luxLastT = now; js("lux", String.valueOf(Math.round(lux))); }
+        float d = lux - luxRef;
+        if (d <= -3f && -d >= 0.2f * Math.max(luxRef, 1f)) { luxRef = luxLast = lux; luxLastT = now; }   // Licht aus/Abschatten: nur Bezug nachfuehren
+        else if (d >= 3f && d >= 0.2f * Math.max(luxRef, 1f)) { luxRef = luxLast = lux; luxLastT = now; js("lux", String.valueOf(Math.round(lux))); }
         else if (now - luxLastT >= 2000) luxRef = lux;
     }
 

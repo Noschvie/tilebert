@@ -6982,7 +6982,7 @@ function notifyBeep(){   // kurzer Hinweiston (nur wenn Audio schon freigeschalt
 }
 function phoneDev(){ return DEV_MODEL ? DEV_MODEL==='phone'
   : (lpHost.type!=='tbview' && /iPhone|iPod|Android.+Mobile/i.test(navigator.userAgent)); }
-const PRES = { last:-1, t:0, mute:0, h:[], fl:[], raw:false }, PRES_MIN_STEP=1, PRES_GAP_MS=2000, PRES_MUTE_MS=4000, PRES_MUTE_DIM_MS=20000;   // Praesenzerkennung: Lichtaenderung (Stufen 0..16), Entprellung
+const PRES = { last:-1, t:0, mute:0, h:[], raw:false }, PRES_MIN_STEP=1, PRES_GAP_MS=2000, PRES_MUTE_MS=4000, PRES_MUTE_DIM_MS=20000;   // Praesenzerkennung: Lichtaenderung (Stufen 0..16), Entprellung
 let _dpmsIdle=false;   // TbViewer: Leerlauf am Tag erreicht (Dashboard statt aus), s. armDpms
 let nightEl=null, nightWakeTimer=null;
 function nightLayer(){
@@ -7039,7 +7039,7 @@ function applySensors(s){
   try{ lpHost.api.setAutoBrightness(s.auto!==false && !!lpHost.light, +s.min||10, +s.max||100); }catch(e){}
   try{ lpHost.api.setFixedBrightness((s.auto===false && +s.fix>0) ? Math.min(100,+s.fix) : 0); }catch(e){}   // Fest: feste Helligkeit (%), nachts gilt der Nachtwert direkt
 }
-// Praesenzerkennung: Annaeherung "nah" ODER Lichtaenderung (>= PRES_MIN_STEP Stufen, max. 1 Ereignis je PRES_GAP_MS)
+// Praesenzerkennung: Annaeherung "nah" ODER "Licht an" (Anstieg >= 2 Stufen, max. 1 Ereignis je PRES_GAP_MS)
 // = Praesenz. Weckt wie eine Beruehrung (nachts hell + Kamera live, dann Nachlauf). Aus bei SENS.prox==='off'.
 // Licht zaehlt nur nachts (tagsueber wechselt es durch Wolken/Auto-Helligkeit); Tag/Nacht kommt nie aus dem Lichtsensor.
 function presence(src){
@@ -7055,10 +7055,10 @@ lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
   else PROX_LOG.skip++;
   if(near) presence('prox');
   if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
-// Praesenz aus Licht (Stufen 0..16): TbViewer >= 5.16 liefert 'lightraw' (jede Stufe, gedrosselt); aeltere nur 'light' (mit Hysterese).
-// Verlauf PRES.h = [Zeit, Stufe] (ca. 12 s, dazu der letzte stabile Wert davor). Praesenz bei (1) Rampe: >= 2 Stufen innerhalb 3 s (Licht an/aus; mit laufendem Kamerabild >= 3),
-// (2) Abschatten: Aenderung um 1 Stufe, die innerhalb 10 s zurueckkehrt (nur ab Stufe 2, da 0<->1 rauscht; nicht bei laufendem Kamerabild, das flackert selbst).
-// Langsame Drift (z. B. Daemmerung, +1 Stufe je 30 s) erreicht beides nie. Abschatten gilt nur bei Abweichung >= 0,6 s und nicht fuer ein Stufenpaar, das in 60 s mehr als 2x gewechselt hat (Grenz-Flackern). Waehrend der Stummzeit wird der Verlauf verworfen.
+// Praesenz aus Licht (nur Licht an, Stufen 0..16): TbViewer >= 5.16 liefert 'lightraw' (jede Stufe, gedrosselt); aeltere nur 'light' (mit Hysterese).
+// Verlauf PRES.h = [Zeit, Stufe] (ca. 12 s, dazu der letzte stabile Wert davor). Praesenz nur bei "Licht an": Rampe aufwaerts um >= 2 Stufen innerhalb 3 s
+// (mit laufendem Kamerabild >= 3, das flackert selbst). Licht aus, Abdunkeln und Abschatten (fallende Stufen) zaehlen nie. Langsame Drift (z. B. Daemmerung, +1 Stufe je 30 s)
+// erreicht die Rampe nie. Waehrend der Stummzeit wird der Verlauf verworfen.
 function camLive(){ try{ return !!(typeof camImgs!=='undefined' && [...camImgs].some(i=>i.getAttribute('src'))); }catch(e){ return false; } }
 function lightPres(lv, src){
   const now=Date.now();
@@ -7066,18 +7066,9 @@ function lightPres(lv, src){
   if(now<PRES.mute){ PRES.h=[[now,lv]]; return; }
   let h=PRES.h||[]; while(h.length>1 && now-h[1][0]>12000) h.shift(); PRES.h=h;   // ein Eintrag vor dem Fenster bleibt (stabiler Bezug)
   if(h.length && h[h.length-1][1]===lv) return;
-  // Grenz-Flackern: Wechsel zwischen denselben zwei Stufen merken (60 s); mehr als 2 davon = Rauschen, dann kein Abschatten fuer dieses Paar
-  const fl=(PRES.fl||[]).filter(e=>now-e[0]<60000); PRES.fl=fl;
-  if(h.length){ const pv=h[h.length-1][1]; fl.push([now,Math.min(pv,lv)+'-'+Math.max(pv,lv)]); }
-  const noisy=h.length ? fl.filter(e=>e[1]===fl[fl.length-1][1]).length>2 : false;
   let why='';
   const ramp=camLive()?3:2;
-  if(h.some((e,i)=>(i+1<h.length?h[i+1][0]:now)>=now-3000 && Math.abs(lv-e[1])>=ramp)) why='Rampe';
-  else if(!camLive() && h.length>=2){   // Abschatten: letzter Wert p (1 Stufe daneben) war nur kurz da, davor stand lv
-    const p=h[h.length-1][1], q=h[h.length-2];
-    const dt=now-h[h.length-1][0];   // Abweichung muss >= 0,6 s anhalten (kuerzer = Sensorzucken) und darf hoechstens 10 s dauern
-    if(Math.abs(p-lv)===1 && q[1]===lv && Math.max(p,lv)>=2 && dt>=600 && dt<=10000 && !noisy) why='Abschatten';
-  }
+  if(h.some((e,i)=>(i+1<h.length?h[i+1][0]:now)>=now-3000 && lv-e[1]>=ramp)) why='Licht an';
   h.push([now,lv]);
   if(!why || !NIGHT.on || now-PRES.t<PRES_GAP_MS) return;
   PRES.t=now; clog('Lichtaenderung '+(h.length>1?h[h.length-2][1]:lv)+' -> '+lv+' ('+why+') – Praesenz'); presence('light');

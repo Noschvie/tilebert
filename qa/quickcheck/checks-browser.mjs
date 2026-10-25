@@ -108,8 +108,13 @@ def({ id: 'QC-B04', stage: 'pre', role: K, must: true, mode: 'auto', title: 'Sen
   await o.pg.evaluate(u => { lpHost.type = 'tbview'; lpHost.prox = true; lpHost.shelly = true;
     const host = document.createElement('div'); host.className = 'sv-cam-frame'; host.style.cssText = 'position:fixed;left:20px;top:20px;width:320px;height:180px;z-index:99999;background:#222;overflow:hidden';
     const img = document.createElement('img'); img.id = 'tcam'; host.appendChild(img); document.body.appendChild(host); camStream(img, u + '#?id=test', 0); }, png);
-  const step = async (name, act, exp) => { if (act) await o.pg.evaluate(act); await o.pg.waitForTimeout(350); const r = await st();
-    for (const [k, v] of Object.entries(exp)) if (r[k] !== v) { bad.push(`Nachtkamera "${name}": ${k}=${r[k]} erwartet ${v}`); break; } };
+  // Auf den Sollzustand warten (Timeout 5 s) statt fester Pause: Bildladen/Kamera-Timer/Server-Nachrichten sind asynchron
+  const step = async (name, act, exp) => { if (act) await o.pg.evaluate(act); await o.pg.waitForTimeout(100);
+    const miss = r => Object.entries(exp).find(([k, v]) => r[k] !== v);
+    let r = await st(); for (const t0 = Date.now(); miss(r) && Date.now() - t0 < 5000;) { await o.pg.waitForTimeout(100); r = await st(); }
+    const m = miss(r); if (m) bad.push(`Nachtkamera "${name}": ${m[0]}=${r[m[0]]} erwartet ${m[1]}`); };
+  // Ausgangslage Tag: der Server kann vor dem Abfangen schon night.on=true gemeldet haben (Betriebsmodus/Uhrzeit) -> Kamera waere bei jedem camNightUpdate pausiert
+  await o.pg.evaluate(() => { __setNight(false); });
   await step('Laden', null, { live: true });
   await step('Nacht, fern', () => { lpHost._ev('prox', false); __setNight(true); }, { camnight: true, live: false, still: true, ov: true });
   await step('Annaeherung', () => lpHost._ev('prox', true), { camnight: false, live: true, still: false });
