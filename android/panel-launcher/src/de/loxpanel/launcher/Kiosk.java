@@ -61,6 +61,8 @@ import java.util.List;
 public class Kiosk extends Activity implements SensorEventListener {
     static final String KEY_MODE = "mode";      // "tbview" | "fully" (Standard: fully)
     private static final long RETRY_MS = 3000;
+    private static final long RAW_MUTE_MS = 4000, RAW_MUTE_DIM_MS = 20000;   // Stummzeit nach Aufhellen / Abdunkeln der Fensterhelligkeit
+    private static final long RAW_GAP_MS = 500;      // Praesenz-Rohstufe 'lightraw': hoechstens 1 je 500 ms
     private static final long LIGHT_HOLD_MS = 3000;   // Hysterese gegen kurze Lichtwechsel
     private static final float SHELLY_MIN_BRIGHT = 0.04f;   // kleinste Fensterhelligkeit, die der Shelly wirklich minimal umsetzt
 
@@ -84,8 +86,9 @@ public class Kiosk extends Activity implements SensorEventListener {
     private int fixPct = 0;               // feste Helligkeit in % (0 = nicht gesetzt -> Systemhelligkeit)
     private boolean touchSound;           // Android-Klickton bei Tipp (Panel-Einstellung sound.touch)
     private boolean luxSensor;            // Lichtsensor meldet Lux (Bereich gross) statt Stufen (Shelly: Bereich < 100)
+    private boolean stagePres;           // Praesenz ueber Rohstufen ('lightraw'): Stufen-Sensoren und Shelly (meldet maxRange >= 100, Helligkeitskurve bleibt luxNorm)
     private float lightNorm = -1f;        // 0..1 (Stufen: Anteil; Lux: logarithmisch)
-    private float luxRef = -1f, luxMuted; // Bezug fuer die relative Lux-Aenderung (Praesenz)
+    private float luxRef = -1f, luxMuted, luxLast; private long luxLastT; // Bezug fuer die relative Lux-Aenderung (Praesenz)
     private FrameLayout rootView;
     private WebView setupWeb;
     private float shown = -2f;   // zuletzt gesetzte Fensterhelligkeit
@@ -158,6 +161,7 @@ public class Kiosk extends Activity implements SensorEventListener {
                 float rg = light.getMaximumRange();
                 if (rg > 0 && rg < 100) lightMax = rg;   // Shelly: Stufen 0..16
                 else luxSensor = true;                    // Tablet: Lux -> logarithmisch auf Stufen 0..16 abgebildet
+                stagePres = !luxSensor || StockHome.isShelly();
             }
         }
         if (light == null) autoOn = false;
@@ -306,6 +310,7 @@ public class Kiosk extends Activity implements SensorEventListener {
     protected void onPause() {
         super.onPause();
         if (sm != null) sm.unregisterListener(this);
+        ui.removeCallbacks(rawFlush); rawPend = rawSent = -1;
     }
 
     @Override
@@ -366,8 +371,9 @@ public class Kiosk extends Activity implements SensorEventListener {
             js("prox", near ? "true" : "false");
         } else if (e.sensor.getType() == Sensor.TYPE_LIGHT) {
             float raw = e.values[0];
-            if (luxSensor) luxPresence(raw);
+            if (luxSensor && !stagePres) luxPresence(raw);
             int lv = luxSensor ? Math.round(luxNorm(raw) * 16f) : Math.round(raw);
+            if (stagePres) rawLight(Math.round(raw));
             long now = System.currentTimeMillis();
             if (lightLevel < 0 || Math.abs(lv - lightLevel) >= 3) { setLight(lv); return; }   // grosser Sprung sofort
             if (lv == lightLevel) { pendingLevel = -1; return; }
@@ -392,12 +398,32 @@ public class Kiosk extends Activity implements SensorEventListener {
         return Math.max(0f, Math.min(1f, (float) (Math.log10(Math.max(0f, lux) + 1.0) / 3.0)));
     }
 
-    /** Praesenz bei Lux-Sensoren: relative Aenderung >= 30 % und >= 5 lx gegen einen langsam nachgefuehrten Bezug. */
+    /** Praesenz bei Lux-Sensoren: relative Aenderung >= 20 % und >= 3 lx gegen einen langsam nachgefuehrten Bezug. */
     private void luxPresence(float lux) {
-        if (luxRef < 0f) { luxRef = lux; return; }
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (luxRef < 0f) { luxRef = luxLast = lux; luxLastT = now; return; }
+        // Bezug nur nachfuehren, wenn der Wert > 2 s stabil ist (Rampen/Aenderungen laufen nicht mit)
+        if (Math.abs(lux - luxLast) > Math.max(1f, 0.1f * luxLast)) { luxLast = lux; luxLastT = now; }
         float d = Math.abs(lux - luxRef);
-        if (d >= 5f && d >= 0.3f * Math.max(luxRef, 1f)) { luxRef = lux; js("lux", String.valueOf(Math.round(lux))); }
-        else luxRef += 0.2f * (lux - luxRef);
+        if (d >= 3f && d >= 0.2f * Math.max(luxRef, 1f)) { luxRef = luxLast = lux; luxLastT = now; js("lux", String.valueOf(Math.round(lux))); }
+        else if (now - luxLastT >= 2000) luxRef = lux;
+    }
+
+    /** Rohstufe fuer die Praesenz: jede Aenderung, gedrosselt auf 1 je RAW_GAP_MS (letzter Wert folgt verzoegert). Hysterese gilt nur fuer 'light'. */
+    private int rawSent = -1, rawPend = -1;
+    private long rawT, rawMuteUntil;
+    private final Runnable rawFlush = new Runnable() { public void run() { sendRaw(); } };
+    private void rawLight(int lv) {
+        if (lv == rawSent) { rawPend = -1; ui.removeCallbacks(rawFlush); return; }
+        rawPend = lv;
+        long wait = RAW_GAP_MS - (android.os.SystemClock.elapsedRealtime() - rawT);
+        ui.removeCallbacks(rawFlush);
+        if (wait <= 0) sendRaw(); else ui.postDelayed(rawFlush, wait);
+    }
+    private void sendRaw() {
+        if (rawPend < 0 || rawPend == rawSent) return;
+        rawSent = rawPend; rawPend = -1; rawT = android.os.SystemClock.elapsedRealtime();
+        js(rawT < rawMuteUntil ? "lightref" : "lightraw", String.valueOf(rawSent));
     }
 
     private void setLight(int lv) {
@@ -440,6 +466,8 @@ public class Kiosk extends Activity implements SensorEventListener {
         // Backlight 169/255 zurueck (gemessen: 0-2 % -> 169, 4 % -> 11, 25 % -> 65). Daher dort mind. 4 %.
         if (b >= 0f && b < SHELLY_MIN_BRIGHT && StockHome.isShelly()) b = SHELLY_MIN_BRIGHT;
         if (Math.abs(b - shown) < 0.005f) return;
+        // eigene Helligkeitsaenderung wirkt auf den Lichtsensor: Rohstufen bis dahin nur als Bezug ('lightref'), nicht als Praesenz
+        rawMuteUntil = android.os.SystemClock.elapsedRealtime() + (b < shown ? RAW_MUTE_DIM_MS : RAW_MUTE_MS);
         shown = b;
         WindowManager.LayoutParams lp = getWindow().getAttributes();
         lp.screenBrightness = b;
@@ -563,7 +591,7 @@ public class Kiosk extends Activity implements SensorEventListener {
             return "{\"app\":\"TbViewer\",\"ver\":\"" + version() + "\",\"model\":\"" + Build.MODEL
                     + "\",\"android\":\"" + Build.VERSION.RELEASE + "\",\"sdk\":" + Build.VERSION.SDK_INT
                     + ",\"prox\":" + (prox != null) + ",\"light\":" + (light != null)
-                    + ",\"shelly\":" + StockHome.isShelly() + ",\"lux\":" + luxSensor + ",\"lightMax\":" + lightMax + ",\"auto\":" + autoOn + ",\"min\":" + minPct
+                    + ",\"shelly\":" + StockHome.isShelly() + ",\"lux\":" + (luxSensor && !stagePres) + ",\"lightMax\":" + lightMax + ",\"auto\":" + autoOn + ",\"min\":" + minPct
                     + ",\"max\":" + maxPct + ",\"fix\":" + fixPct + ",\"proxWake\":" + proxWake + "}";
         }
         @JavascriptInterface public void reload(String t) { if (!trusted || !ok(t)) return; ui.post(new Runnable() { public void run() { load(); } }); }

@@ -805,7 +805,7 @@
   .svw .svw-wx .fc{padding:6px 4px;gap:4px;border-radius:var(--r-m);justify-content:center;min-height:0;}
   /* Schrift waechst mit der Einstellung, aber nie ueber die Kachel hinaus (Containerhoehe) */
   .svw.svw-weather-cell{container-type:size;}
-  .svw .svw-wx .fc .d{font-size:min(calc(var(--sv-fc-size,12.5) * 0.8 * 1px), 13px);font-size:min(calc(var(--sv-fc-size,12.5) * 0.8 * 1px), 9cqh);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+  .svw .svw-wx .fc .d{font-size:min(calc(var(--sv-fc-size,12.5) * 0.8 * 1px), 13px);font-size:min(calc(var(--sv-fc-size,12.5) * 0.8 * 1px), 9cqh, calc(((100cqw - 40px) / var(--fc,3) - 8px) / 5.4));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}   /* dritte Grenze: Tagesname ("Mo 26.10.") passt in die Spaltenbreite */
   .svw .svw-wx .fc .ico{flex:1 1 0;width:100%;height:auto;min-height:14px;max-height:64px;}
   /* Tag und Temperaturen behalten ihre Hoehe; nur das Symbol passt sich an
      (sonst drueckte ein grosses Symbol die Tageszeile auf wenige Pixel). */
@@ -5020,19 +5020,25 @@ async function deviceInfo(){
 // Abstand Server - Geraet (ms, per Ping nachgefuehrt), SRV_TZ = Zeitzone des
 // Servers. nowDate() liefert ein Date, dessen getHours()/getDate()... die
 // Wanduhr des Servers zeigen.
-let CLOCK_OFF=0, SRV_TZ='', SRV_UTCOFF=null, _tzFmt=null, CODE_BUILD='';
+let CLOCK_OFF=0, SRV_TZ='', SRV_UTCOFF=null, _tzFmt=null, _tzChk='', CODE_BUILD='';
 function setServerClock(now, sent, tz, utcoff){
   if(typeof now!=='number') return;
   const rtt=sent?Math.max(0,Date.now()-sent):0, off=now+rtt/2-Date.now();
   // kleine Schwankungen ignorieren (sonst springt die Sekunde)
-  if(Math.abs(off-CLOCK_OFF)>1500 || !sent) CLOCK_OFF=off;
+  const jump=Math.abs(off-CLOCK_OFF)>1500;
+  if(jump || !sent) CLOCK_OFF=off;
+  const oldTz=SRV_TZ, oldUo=SRV_UTCOFF;
   if(typeof utcoff==='number') SRV_UTCOFF=utcoff;
   if(tz && tz!==SRV_TZ){ try{ _tzFmt=new Intl.DateTimeFormat('en-US',{timeZone:tz,hourCycle:'h23',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}); SRV_TZ=tz; }catch(e){ _tzFmt=null; } }
   // Zonen-Name passt nicht zum tatsaechlichen UTC-Abstand des Servers (z. B.
   // "Etc/UTC" aus dem Container-Image)? Dann zaehlt der Abstand, nicht der Name.
-  if(_tzFmt && SRV_UTCOFF!==null){ try{ const p=_tzFmt.formatToParts(new Date()), g=k=>+(p.find(x=>x.type===k)||{}).value;
+  // nur pruefen, wenn sich Zone oder Abstand geaendert haben (Pong kommt alle 10 s, die Werte fast nie)
+  const chk=SRV_TZ+'|'+SRV_UTCOFF;
+  if(_tzFmt && SRV_UTCOFF!==null && chk!==_tzChk){ _tzChk=chk; try{ const p=_tzFmt.formatToParts(new Date()), g=k=>+(p.find(x=>x.type===k)||{}).value;
     const off=Math.round((Date.UTC(g('year'),g('month')-1,g('day'),g('hour')%24,g('minute'))-Math.floor(Date.now()/60000)*60000)/60000);
     if(Math.abs(off-SRV_UTCOFF)>1) _tzFmt=null; }catch(e){ _tzFmt=null; } }
+  // Uhr laeuft nur noch je Minute: Sprung der Serveruhr oder neue Zone/neuer Abstand sofort anzeigen
+  if(jump || SRV_TZ!==oldTz || SRV_UTCOFF!==oldUo) tickClock();
 }
 function nowDate(){
   const t=Date.now()+CLOCK_OFF;
@@ -5076,15 +5082,22 @@ function clog(m){ if(!DIAG) return; const t=new Date().toTimeString().slice(0,8)
 // DOM-Groesse - zeigt im Diagnose-Log, ob das Panel ueber Tage "zulaeuft".
 // Lange Rechenschritte (>50 ms, "Hänger") zaehlen: zeigt auf dem Geraet selbst, ob
 // die Seite ruckelt - Anzahl, Summe und laengster je 10 Minuten.
+// lpMark(name): Quelle der gerade laufenden Aufgabe merken (Ring, 24 Eintraege); der Hänger-Zähler
+// ordnet jeden Hänger der ersten Marke zu, die in seinem Zeitfenster liegt (sonst "sonst", kurz nach Start "Start").
+const _MK=[]; let LT_SRC={};
+function lpMark(n){ _MK.push([performance.now(),n]); if(_MK.length>24) _MK.shift(); }
 const LT={n:0,ms:0,max:0,drift:0,driftT:-1e9};   // drift: Haenger bis 1 s nach einem Einbrennschutz-Schritt (svDrift), nur Diagnose
 try{ new PerformanceObserver(l=>l.getEntries().forEach(e=>{ LT.n++; LT.ms+=e.duration; LT.max=Math.max(LT.max,e.duration);
-    if(e.startTime>=LT.driftT && e.startTime-LT.driftT<1000) LT.drift++; }))
+    if(e.startTime>=LT.driftT && e.startTime-LT.driftT<1000) LT.drift++;
+    const m=_MK.find(x=>x[0]>=e.startTime-2 && x[0]<=e.startTime+e.duration), k=m?m[1]:(e.startTime<8000?'Start':'sonst');
+    LT_SRC[k]=(LT_SRC[k]||0)+1; }))
   .observe({type:'longtask', buffered:false}); }catch(e){ LT.n=-1; }
 setInterval(()=>{ if(!DIAG) return; const m=performance.memory, mb=b=>Math.round(b/1048576);
   clog('Speicher · JS '+(m?mb(m.usedJSHeapSize)+'/'+mb(m.jsHeapSizeLimit)+' MB':'?')+' · Kamera-Streams '+camImgs.size+(CAM_DARK?' (angehalten)':'')+
     ' · DOM '+document.getElementsByTagName('*').length+' · offen '+Math.round(performance.now()/3600000)+' h'+
-    ' · Hänger '+(LT.n<0?'?':LT.n+'× / '+Math.round(LT.ms)+' ms (max '+Math.round(LT.max)+' ms, '+LT.drift+'× nach Drift)'));
-  if(LT.n>=0){ LT.n=0; LT.ms=0; LT.max=0; LT.drift=0; } }, 600000);
+    ' · Hänger '+(LT.n<0?'?':LT.n+'× / '+Math.round(LT.ms)+' ms (max '+Math.round(LT.max)+' ms, '+LT.drift+'× nach Drift)')+
+    (LT.n>0?' · Quellen '+Object.entries(LT_SRC).sort((a,b)=>b[1]-a[1]).map(x=>x[0]+' '+x[1]+'×').join(', '):''));
+  if(LT.n>=0){ LT.n=0; LT.ms=0; LT.max=0; LT.drift=0; LT_SRC={}; } }, 600000);
 function clogFlush(){ while(DIAG&&_clogQ.length&&ws&&ws.readyState===1){ try{ ws.send(JSON.stringify({t:'clog',msg:'(nachgereicht) '+_clogQ.shift()})); }catch(e){ break; } } }
 window.addEventListener('error',e=>clog('JS-Fehler: '+(e.message||e)+' @'+String(e.filename||'').split('/').pop()+':'+(e.lineno||'')));
 window.addEventListener('unhandledrejection',e=>clog('Promise-Fehler: '+((e.reason&&e.reason.message)||e.reason)));
@@ -5096,6 +5109,8 @@ function wsRestart(why){ clog('Verbindung neu aufgebaut: '+(why||'?')+' (letzte 
 // Pruefung, auch ausserhalb des Takts aufrufbar: haengt der Aufbau (> 15 s CONNECTING),
 // ist die Verbindung zu/geschlossen ohne onclose, oder kam 25 s nichts -> neu verbinden.
 function wsCheck(){
+  lpMark('Ping');
+  if(Math.floor((Date.now()+CLOCK_OFF)/60000)!==_clockMin) tickClock();   // Wachhund: Minutentimer nach Standby/Drosselung verspaetet -> nachziehen
   if(!ws){ connect(); return; }
   // Ausgeblendet (Tab im Hintergrund, Display dunkel): der Browser drosselt die Timer
   // auf ~1x/Minute - Pings gehen dann selten raus und "lange nichts gehoert" waere ein
@@ -5164,6 +5179,7 @@ function connect(){
     try{ msg=JSON.parse(e.data); }
     catch(err){ console.warn('LoxPanel: unlesbare Nachricht verworfen', err); return; }
     if(!msg || typeof msg!=='object') return;
+    lpMark(msg.t);
     if(msg.t==='camcrop'){ CAM_CROP=msg.map||{}; camCropAll(); return; }
     if(msg.t==='scale'){ uiScaleCfg=scaleCfg(msg.scale); applyScale(); return; }   // Geraete-Skalierung geaendert (ohne Neuladen)
     if(msg.t==='theme'){ LITE=!!msg.lite; document.documentElement.classList.toggle('lite',LITE); if(msg.camCrop){ CAM_CROP=msg.camCrop; camCropAll(); } const v=msg.vars||{}; for(const k in v){ if(v[k]) document.documentElement.style.setProperty(k,v[k]); }
@@ -5288,7 +5304,14 @@ function connect(){
 // ---- Screensaver: Uhr als Startseite, Tippen -> Favoriten ----
 const SAVER_IDLE_MS = 60000;   // nach 60 s Inaktivitaet zurueck zur Uhr
 let idleTimer=null;
+// Angezeigt werden nur Stunde:Minute und Datum (Sekunden nirgends): Takt auf die naechste
+// Minutengrenze statt jede Sekunde. Zusaetzliche Aufrufe (Sprache, Saver, Serveruhr) rechnen sofort.
+let _clockT=null, _clockMin=-1;
 function tickClock(){
+  clearTimeout(_clockT);
+  const n=Date.now()+CLOCK_OFF; _clockMin=Math.floor(n/60000);
+  _clockT=setTimeout(tickClock, 60050-n%60000);
+  lpMark('Uhr');
   const d=nowDate();
   const t=el('svTime'), dd=el('svDate');
   // Nur schreiben, wenn sich der Text aendert (sonst jede Sekunde neues Layout)
@@ -5296,7 +5319,7 @@ function tickClock(){
   if(t&&t.textContent!==ts) t.textContent=ts;
   const ds=fmtCached('dl').format(d);
   if(dd&&dd.textContent!==ds) dd.textContent=ds;
-  tickSaverClocks();   // Uhr-Widgets im Screensaver und in Tabs
+  tickSaverClocks(d);   // Uhr-Widgets im Screensaver und in Tabs
 }
 // ---- Front-Extras (Kalender/Wetter) auf dem Screensaver ----
 // Daten kommen vom Server ({t:'front', weather, events, calName}); das Panel
@@ -5347,6 +5370,7 @@ function ambientColors(mode){   // -> {top,bot,fg} oder null (keine Daten)
   return null;
 }
 function ambientApply(){
+  lpMark('Farbe');
   const sv=document.getElementById('saver'); if(!sv) return;
   const bg=ambientColors(AMB.bg), ck=ambientColors(AMB.clock);
   // Eigenes Bild: formatfuellend, leicht abgedunkelt (Uhr/Widgets bleiben lesbar)
@@ -5489,8 +5513,8 @@ function svClockHTML(it){
   return '<div class="svw-clock al-'+esc(it.align||'center')+'"><div class="t"></div>'+
     (it.date!=='none'?'<div class="d" data-fmt="'+esc(it.date||'short')+'"></div>':'')+'</div>';
 }
-function tickSaverClocks(){
-  const d=nowDate();
+function tickSaverClocks(d){
+  d=d||nowDate();
   document.querySelectorAll('.svw-clock').forEach(c=>{
     const t=c.querySelector('.t'), ts=fmtCached('t').format(d);
     if(t&&t.textContent!==ts) t.textContent=ts;
@@ -6283,6 +6307,7 @@ function camStream(img, src, reconnectH, onErr, onOk){
 // Einzelbild erst komplett laden, dann zeigen (Blob): das <img> dekodiert und zeichnet so jedes
 // Bild einmal statt bei jedem eintreffenden Netzwerkpaket ein Teilbild neu. Sichtbar gleich.
 function camFetch(img, u){
+  lpMark('Kamera');
   if(typeof AbortController!=='function'||!window.fetch||!window.URL||!URL.createObjectURL){ img.src=u; return; }   // alte WebViews: wie bisher
   if(img._camAbort) img._camAbort.abort();
   const ac=new AbortController(); img._camAbort=ac;
@@ -6333,7 +6358,7 @@ function camsDark(on){ _camScreenOff=!!on;
 function camsApply(){ const on=_camScreenOff||_camNight;
   document.documentElement.classList.toggle('camnight', _camNight && !_camScreenOff);
   if(CAM_DARK===on){ if(on) camStills(); return; }
-  CAM_DARK=on;
+  CAM_DARK=on; presMute(8000);   // Kamerabild an/aus aendert das Licht am Sensor
   if(on){ camStills(); camImgs.forEach(img=>{ clearTimeout(img._camTick); clearTimeout(img._camRetry); clearTimeout(img._camCycle);
     camFetchStop(img); if(img.getAttribute('src')) img.removeAttribute('src'); }); }   // ohne src: Laden bricht ab, ohne Fehler-Ereignis
   else { camStills(true); camsRefresh(); }
@@ -6795,9 +6820,9 @@ function svCover(){ clearTimeout(_svCoverT); const on=saverOn(), h=document.docu
 // Das Raster hat bei sichtbarem Dashboard eine eigene Ebene: der Schritt ist dann reine Kompositor-Arbeit.
 const SV_DRIFT=[[['#saver .sv-wrap'],90000,['-14px,-5px','14px,-5px','14px,5px','-14px,5px']],
   [['#svGrid','#svBar'],120000,['-3px,-2px','3px,-2px','3px,2px','-3px,2px']]];
-function svDrift(){ const now=Date.now(); let next=Infinity;
+function svDrift(){ const now=Date.now(); let next=Infinity; lpMark('Drift');
   SV_DRIFT.forEach(([sel,ms,pos])=>{ const v='translate('+pos[Math.floor(now/ms)%4]+')';
-    sel.forEach(q=>{ const e=document.querySelector(q); if(e && e._svd!==v){ e._svd=v; e.style.transform=v; LT.driftT=performance.now(); } });
+    sel.forEach(q=>{ const e=document.querySelector(q); if(e && e._svd!==v){ if(e._svd!==undefined) LT.driftT=performance.now(); e._svd=v; e.style.transform=v; } });
     next=Math.min(next, ms-now%ms); });
   setTimeout(svDrift, next+50); }
 svDrift();
@@ -6813,7 +6838,7 @@ svDrift();
 function applySaverSplit(){
   el('saver').classList.toggle('split', !!themeSplit && window.innerWidth > window.innerHeight && !isPhone());
 }
-function showSaver(){ tickClock();
+function showSaver(){ tickClock(); presMute();
   if(el('saver').classList.contains('hidden')) closeSheets();   // Popups nicht ueber dem Dashboard stehen lassen
   applySaverSplit();
   el('saver').classList.remove('hidden'); svCover();
@@ -6832,6 +6857,7 @@ let _saverClosedAt = 0;
 const SAVER_GUARD_MS = 500;
 function justLeftSaver(){ return (Date.now() - _saverClosedAt) < SAVER_GUARD_MS; }
 function hideSaver(){
+  presMute();
   const wasOn=!el('saver').classList.contains('hidden');
   el('saver').classList.add('hidden'); svCover();
   stopScreensaverCam();   // MJPEG-Stream sofort stoppen, sobald der Screensaver weg ist (spart Bandbreite/CPU)
@@ -6956,7 +6982,7 @@ function notifyBeep(){   // kurzer Hinweiston (nur wenn Audio schon freigeschalt
 }
 function phoneDev(){ return DEV_MODEL ? DEV_MODEL==='phone'
   : (lpHost.type!=='tbview' && /iPhone|iPod|Android.+Mobile/i.test(navigator.userAgent)); }
-const PRES = { last:-1, t:0, mute:0 }, PRES_MIN_STEP=1, PRES_GAP_MS=2000, PRES_MUTE_MS=2500;   // Praesenzerkennung: Lichtaenderung (Stufen 0..16), Entprellung
+const PRES = { last:-1, t:0, mute:0, h:[], fl:[], raw:false }, PRES_MIN_STEP=1, PRES_GAP_MS=2000, PRES_MUTE_MS=4000, PRES_MUTE_DIM_MS=20000;   // Praesenzerkennung: Lichtaenderung (Stufen 0..16), Entprellung
 let _dpmsIdle=false;   // TbViewer: Leerlauf am Tag erreicht (Dashboard statt aus), s. armDpms
 let nightEl=null, nightWakeTimer=null;
 function nightLayer(){
@@ -6972,11 +6998,12 @@ function nightLayer(){
 // kurz nach Praesenz (Annaeherung/Lichtaenderung) bzw. Beruehrung (awake, nightWake).
 // Tagsueber regelt auf dem Shelly die Auto-Helligkeit (App) nach dem Lichtsensor.
 let _lastDim=-1;
+function presMute(ms){ try{ PRES.mute=Math.max(PRES.mute, Date.now()+(ms||PRES_MUTE_MS)); }catch(e){} }   // eigene Aenderung am Display (Helligkeit, Kamerabild, Schoner) nicht als Praesenz werten (auch frueh im Start, vor PRES)
 function applyNight(awake){
   const dim=(NIGHT.on && NIGHT.dim>0 && !awake && !phoneDev()) ? Math.min(90,NIGHT.dim) : 0;
   // TbView: echte Fensterhelligkeit (Schwarz bleibt schwarz); lehnt die App ab, dunkelt das Overlay
   let real=false;
-  if(lpHost.type==='tbview'){ if(dim!==_lastDim){ _lastDim=dim; PRES.mute=Date.now()+PRES_MUTE_MS; }   // eigene Helligkeitsaenderung nicht als Praesenz werten
+  if(lpHost.type==='tbview'){ if(dim!==_lastDim){ _lastDim=dim; presMute(dim>0?PRES_MUTE_DIM_MS:0); }   // eigene Helligkeitsaenderung nicht als Praesenz werten
     try{ real=!!lpHost.api.setDisplayBrightness(100-dim); }catch(e){} }
   nightLayer().style.opacity = real ? 0 : dim/100;
 }
@@ -7028,12 +7055,37 @@ lpHost.on('prox', near=>{ lpHost.prox=true; lpHost.near=!!near;
   else PROX_LOG.skip++;
   if(near) presence('prox');
   if(SENS.prox!=='off') camNightOpen(near); });   // "Nichts tun": Annaeherung oeffnet die Nacht-Kamera nicht
-lpHost.on('light', v=>{ const lv=(+v>=0)?+v:-1, prev=PRES.last; lpHost.lightLevel=lv; lpHost.light=lv>=0||lpHost.light; PRES.last=lv;
+// Praesenz aus Licht (Stufen 0..16): TbViewer >= 5.16 liefert 'lightraw' (jede Stufe, gedrosselt); aeltere nur 'light' (mit Hysterese).
+// Verlauf PRES.h = [Zeit, Stufe] (ca. 12 s, dazu der letzte stabile Wert davor). Praesenz bei (1) Rampe: >= 2 Stufen innerhalb 3 s (Licht an/aus; mit laufendem Kamerabild >= 3),
+// (2) Abschatten: Aenderung um 1 Stufe, die innerhalb 10 s zurueckkehrt (nur ab Stufe 2, da 0<->1 rauscht; nicht bei laufendem Kamerabild, das flackert selbst).
+// Langsame Drift (z. B. Daemmerung, +1 Stufe je 30 s) erreicht beides nie. Abschatten gilt nur bei Abweichung >= 0,6 s und nicht fuer ein Stufenpaar, das in 60 s mehr als 2x gewechselt hat (Grenz-Flackern). Waehrend der Stummzeit wird der Verlauf verworfen.
+function camLive(){ try{ return !!(typeof camImgs!=='undefined' && [...camImgs].some(i=>i.getAttribute('src'))); }catch(e){ return false; } }
+function lightPres(lv, src){
   const now=Date.now();
-  if(lpHost.lux) return;   // Lux-Sensor (Tablet): Praesenz kommt als Ereignis 'lux' (relative Aenderung >= 30 %, >= 5 lx, in der App)
-  if(!NIGHT.on || lpHost.type!=='tbview' || lv<0 || prev<0 || Math.abs(lv-prev)<PRES_MIN_STEP) return;
-  if(now<PRES.mute || now-PRES.t<PRES_GAP_MS) return;
-  PRES.t=now; clog('Lichtaenderung '+prev+' -> '+lv+' – Praesenz'); presence('light'); });
+  if(lpHost.lux || lpHost.type!=='tbview' || lv<0) return;
+  if(now<PRES.mute){ PRES.h=[[now,lv]]; return; }
+  let h=PRES.h||[]; while(h.length>1 && now-h[1][0]>12000) h.shift(); PRES.h=h;   // ein Eintrag vor dem Fenster bleibt (stabiler Bezug)
+  if(h.length && h[h.length-1][1]===lv) return;
+  // Grenz-Flackern: Wechsel zwischen denselben zwei Stufen merken (60 s); mehr als 2 davon = Rauschen, dann kein Abschatten fuer dieses Paar
+  const fl=(PRES.fl||[]).filter(e=>now-e[0]<60000); PRES.fl=fl;
+  if(h.length){ const pv=h[h.length-1][1]; fl.push([now,Math.min(pv,lv)+'-'+Math.max(pv,lv)]); }
+  const noisy=h.length ? fl.filter(e=>e[1]===fl[fl.length-1][1]).length>2 : false;
+  let why='';
+  const ramp=camLive()?3:2;
+  if(h.some((e,i)=>(i+1<h.length?h[i+1][0]:now)>=now-3000 && Math.abs(lv-e[1])>=ramp)) why='Rampe';
+  else if(!camLive() && h.length>=2){   // Abschatten: letzter Wert p (1 Stufe daneben) war nur kurz da, davor stand lv
+    const p=h[h.length-1][1], q=h[h.length-2];
+    const dt=now-h[h.length-1][0];   // Abweichung muss >= 0,6 s anhalten (kuerzer = Sensorzucken) und darf hoechstens 10 s dauern
+    if(Math.abs(p-lv)===1 && q[1]===lv && Math.max(p,lv)>=2 && dt>=600 && dt<=10000 && !noisy) why='Abschatten';
+  }
+  h.push([now,lv]);
+  if(!why || !NIGHT.on || now-PRES.t<PRES_GAP_MS) return;
+  PRES.t=now; clog('Lichtaenderung '+(h.length>1?h[h.length-2][1]:lv)+' -> '+lv+' ('+why+') – Praesenz'); presence('light');
+}
+lpHost.on('lightraw', v=>{ PRES.raw=true; lightPres((+v>=0)?+v:-1, 'raw'); });
+lpHost.on('lightref', v=>{ PRES.h=[[Date.now(),(+v>=0)?+v:-1]]; });   // TbViewer: Display wurde gerade heller/dunkler gestellt -> Sensorwert nur als Bezug, keine Praesenz
+lpHost.on('light', v=>{ const lv=(+v>=0)?+v:-1; lpHost.lightLevel=lv; lpHost.light=lv>=0||lpHost.light; PRES.last=lv;
+  if(!PRES.raw) lightPres(lv, 'light'); });   // Rueckfall fuer aeltere TbViewer
 lpHost.on('lux', ()=>{ const now=Date.now();
   if(!NIGHT.on || lpHost.type!=='tbview' || now<PRES.mute || now-PRES.t<PRES_GAP_MS) return;
   PRES.t=now; clog('Lichtaenderung (Lux) – Praesenz'); presence('light'); });
@@ -7097,7 +7149,9 @@ function neuladenFaellig(jetzt){
 setInterval(()=>{ if(saverOn() && neuladenFaellig(Date.now())) location.reload(); }, 60*1000);
 // Server-Ereignis, das Aufmerksamkeit braucht: Display an, Uhr weg, Timer neu.
 function wake(){ screenOn(); nightWake(); hideSaver(); resetIdle(); camNightOpen(false, true); }
-setInterval(tickClock, 1000);
+tickClock();    // startet auch den Minutentakt
+// Nach Standby/Hintergrund laufen Timer verspaetet: beim Sichtbarwerden sofort nachziehen
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) tickClock(); });
 showSaver();     // Startseite = Uhr
 resetIdle();
 

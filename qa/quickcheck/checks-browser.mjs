@@ -309,8 +309,8 @@ def({ id: 'QC-B10', stage: 'pre', role: K, must: true, mode: 'auto', title: 'TbV
     NIGHT.dim = 60; NIGHT.wake = 1; DISP.dpmsOff = 1;
     __sn(false); hideSaver(); armDpms(); await w(1400); out.tagOff = calls.filter(c => c === 'off').length; out.tagSaver = saverOn();
     __sn(true); await w(200); hideSaver(); armDpms(); await w(1400); out.nachtOff = calls.filter(c => c === 'off').length; out.nachtSaver = saverOn(); out.nachtBri = bri.at(-1);
-    await w(2600);                                                                  // eigene Helligkeitsaenderung abklingen
-    lpHost._ev('light', 2); await w(150); out.luxAn = bri.at(-1) === 100; out.camnightAn = document.documentElement.classList.contains('camnight');   // Lichtaenderung = Praesenz
+    await w(19000);                                                                 // eigene Helligkeitsaenderung abklingen
+    lpHost._ev('light', 2); lpHost._ev('light', 5); await w(150); out.luxAn = bri.at(-1) === 100; out.camnightAn = document.documentElement.classList.contains('camnight');   // Lichtaenderung = Praesenz
     await w(1300); out.briDanach = bri.at(-1);
     showSaver(); await w(200); await w(2600); lpHost._ev('light', 5); await w(150); out.praesSaver = saverOn();   // Praesenz schliesst das Dashboard nie
     return out; });
